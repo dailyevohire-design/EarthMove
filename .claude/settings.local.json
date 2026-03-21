@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npx next:*)",
+      "Bash(find /home/earthmove/aggregatemarket -type f -name .env*)",
+      "Bash(npx supabase:*)",
+      "Bash(supabase projects:*)",
+      "Bash(stripe config:*)",
+      "Bash(xxd /home/earthmove/aggregatemarket/supabase/migrations/002_dfw_seed.sql)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(curl:*)",
+      "Bash(npx tsc:*)",
+      "Bash(gh --version)",
+      "Bash(git init:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

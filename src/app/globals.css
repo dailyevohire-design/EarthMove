@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   DESIGN SYSTEM — AggregateMarket
+   Dark industrial / amber accent. Premium logistics aesthetic.
+   ============================================================ */
+
+@layer base {
+  :root {
+    --font-sans: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  * { border-color: hsl(20 10% 18%); }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: hsl(20 14% 4%);
+    color: hsl(30 20% 95%);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: hsl(20 14% 4%); }
+  ::-webkit-scrollbar-thumb { background: hsl(20 10% 18%); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(38 92% 50%); }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg font-semibold
+           transition-all duration-150 select-none
+           focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-amber-500 focus-visible:ring-offset-2
+           focus-visible:ring-offset-stone-950
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none;
+  }
+  .btn-primary   { @apply btn bg-amber-500 text-stone-950 hover:bg-amber-400 active:scale-[0.98] shadow-lg shadow-amber-500/20; }
+  .btn-secondary { @apply btn bg-stone-800 text-stone-100 hover:bg-stone-700 border border-stone-700; }
+  .btn-ghost     { @apply btn text-stone-400 hover:bg-stone-800 hover:text-stone-100; }
+  .btn-danger    { @apply btn bg-red-600 text-white hover:bg-red-500; }
+  .btn-sm  { @apply text-xs  px-3   py-1.5; }
+  .btn-md  { @apply text-sm  px-4   py-2.5; }
+  .btn-lg  { @apply text-sm  px-5   py-3; }
+  .btn-xl  { @apply text-base px-7  py-4 font-bold; }
+
+  /* ── Cards ── */
+  .card       { @apply bg-stone-900 border border-stone-800 rounded-xl; }
+  .card-hover { @apply card transition-all duration-200 hover:border-stone-600 hover:bg-stone-800/80 hover:shadow-xl hover:shadow-black/30 cursor-pointer; }
+
+  /* ── Inputs ── */
+  .input {
+    @apply w-full bg-stone-800 border border-stone-700 rounded-lg px-3.5 py-2.5
+           text-stone-100 placeholder-stone-500 text-sm
+           focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
+           transition-all duration-150;
+  }
+  .input-label { @apply block text-sm font-medium text-stone-300 mb-1.5; }
+
+  /* ── Badges ── */
+  .badge        { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold; }
+  .badge-amber  { @apply badge bg-amber-500/15 text-amber-400 border border-amber-500/20; }
+  .badge-green  { @apply badge bg-emerald-500/15 text-emerald-400 border border-emerald-500/20; }
+  .badge-blue   { @apply badge bg-sky-500/15 text-sky-400 border border-sky-500/20; }
+  .badge-red    { @apply badge bg-red-500/15 text-red-400 border border-red-500/20; }
+  .badge-stone  { @apply badge bg-stone-700/50 text-stone-400 border border-stone-600; }
+
+  /* ── Layout ── */
+  .container-main { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+  .section        { @apply py-16 md:py-24; }
+
+  /* ── Typography ── */
+  .price-display { @apply font-bold text-amber-400 tabular-nums; }
+
+  /* ── Admin stat card ── */
+  .stat-card  { @apply card p-5 flex flex-col gap-1; }
+  .stat-label { @apply text-xs font-semibold text-stone-500 uppercase tracking-wider; }
+  .stat-value { @apply text-2xl font-bold text-stone-100 tabular-nums; }
+  .stat-sub   { @apply text-xs text-stone-500 mt-0.5; }
+}
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-up { animation: fadeUp 0.35s ease-out both; }
+.animate-fade-up-1 { animation: fadeUp 0.35s ease-out 0.05s both; }
+.animate-fade-up-2 { animation: fadeUp 0.35s ease-out 0.10s both; }
+.animate-fade-up-3 { animation: fadeUp 0.35s ease-out 0.15s both; }
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(20 12% 10%) 25%,
+    hsl(20 10% 14%) 50%,
+    hsl(20 12% 10%) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
+}
