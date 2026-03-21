@@ -23,7 +23,8 @@
       "Bash(sudo apt:*)",
       "Bash(gh auth:*)",
       "Bash(git remote:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(grep -oP '\\(Fill Dirt|Select Fill|Pea Gravel|Flex Base|\\\\$[0-9]+\\\\.[0-9]+\\)')"
     ]
   }
 }
