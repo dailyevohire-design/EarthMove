@@ -1,7 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency, unitLabel } from '@/lib/pricing-engine'
-import { ORDER_STATUS_CONFIG } from '@/types'
 import Link from 'next/link'
 import { Package, ChevronRight, User } from 'lucide-react'
 
@@ -20,40 +18,37 @@ export default async function AccountPage() {
 
   return (
     <div className="container-main py-10 max-w-3xl">
-      {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-stone-100">
+          <h1 className="text-2xl font-bold text-gray-900">
             {profile?.first_name ? `Hey, ${profile.first_name}` : 'My Account'}
           </h1>
-          <p className="text-stone-500 text-sm mt-1">{user.email}</p>
+          <p className="text-gray-500 text-sm mt-1">{user.email}</p>
         </div>
       </div>
 
-      {/* Profile card */}
       <div className="card p-5 mb-6 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-          <User size={20} className="text-amber-400" />
+        <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+          <User size={20} className="text-emerald-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-stone-200">
+          <div className="font-semibold text-gray-900">
             {profile?.first_name} {profile?.last_name}
           </div>
           {profile?.company_name && (
-            <div className="text-stone-500 text-sm">{profile.company_name}</div>
+            <div className="text-gray-500 text-sm">{profile.company_name}</div>
           )}
-          <div className="text-stone-600 text-xs">{user.email}</div>
+          <div className="text-gray-400 text-xs">{user.email}</div>
         </div>
       </div>
 
-      {/* Quick links */}
       <div className="mb-8">
         <Link href="/account/orders" className="card-hover flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <Package size={18} className="text-stone-500" />
-            <span className="font-medium text-stone-200 text-sm">My Orders</span>
+            <Package size={18} className="text-gray-400" />
+            <span className="font-medium text-gray-900 text-sm">My Orders</span>
           </div>
-          <ChevronRight size={15} className="text-stone-600" />
+          <ChevronRight size={15} className="text-gray-400" />
         </Link>
       </div>
     </div>

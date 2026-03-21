@@ -20,7 +20,7 @@ export function OrderStatusTimeline({ status }: { status: string }) {
 
   if (isPending) {
     return (
-      <div className="flex items-center gap-3 text-stone-400">
+      <div className="flex items-center gap-3 text-gray-500">
         <Clock size={17} className="text-amber-500" />
         <span className="text-sm">Awaiting payment confirmation…</span>
       </div>
@@ -29,7 +29,7 @@ export function OrderStatusTimeline({ status }: { status: string }) {
 
   if (isFailed) {
     return (
-      <div className="flex items-center gap-3 text-red-400">
+      <div className="flex items-center gap-3 text-red-500">
         <XCircle size={17} />
         <span className="text-sm capitalize">{status.replace(/_/g, ' ')}</span>
       </div>
@@ -47,18 +47,18 @@ export function OrderStatusTimeline({ status }: { status: string }) {
           <div key={step.key} className="flex items-center flex-1 last:flex-none">
             <div className="flex flex-col items-center gap-2">
               <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
-                done    ? 'bg-amber-500 border-amber-500 text-stone-950' :
-                current ? 'bg-amber-500/10 border-amber-500 text-amber-400' :
-                          'bg-stone-800 border-stone-700 text-stone-600'
+                done    ? 'bg-emerald-600 border-emerald-600 text-white' :
+                current ? 'bg-emerald-50 border-emerald-500 text-emerald-600' :
+                          'bg-gray-100 border-gray-200 text-gray-400'
               }`}>
                 <Icon size={15} />
               </div>
-              <span className={`text-xs font-medium ${done || current ? 'text-stone-300' : 'text-stone-600'}`}>
+              <span className={`text-xs font-medium ${done || current ? 'text-gray-700' : 'text-gray-400'}`}>
                 {step.label}
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-2 mb-5 transition-all ${currentIdx > i ? 'bg-amber-500' : 'bg-stone-800'}`} />
+              <div className={`flex-1 h-0.5 mx-2 mb-5 transition-all ${currentIdx > i ? 'bg-emerald-500' : 'bg-gray-200'}`} />
             )}
           </div>
         )

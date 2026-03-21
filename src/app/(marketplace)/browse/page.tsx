@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentMarket } from '@/lib/market'
 import { deriveDisplayPrice } from '@/lib/pricing-engine'
 import type { MarketMaterialCard } from '@/types'
 import { MaterialCard } from '@/components/marketplace/material-card'
@@ -8,11 +9,8 @@ interface BrowseProps {
   searchParams: Promise<{ category?: string; deals?: string }>
 }
 
-async function getDefaultMarketId() {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('markets').select('id').eq('is_active', true).limit(1).maybeSingle()
-  return data?.id ?? null
+async function getDefaultMarket() {
+  return getCurrentMarket()
 }
 
 async function getCards(marketId: string, categorySlug?: string, dealsOnly?: boolean) {
@@ -109,7 +107,8 @@ export const metadata = { title: 'Browse Materials' }
 
 export default async function BrowsePage({ searchParams }: BrowseProps) {
   const { category, deals } = await searchParams
-  const marketId = await getDefaultMarketId()
+  const market = await getDefaultMarket()
+  const marketId = market?.id ?? null
   const [cards, categories] = await Promise.all([
     marketId ? getCards(marketId, category, deals === '1') : [],
     getCategories(),
@@ -125,7 +124,7 @@ export default async function BrowsePage({ searchParams }: BrowseProps) {
           {deals === '1' ? "Today's Deals" : activeCategory ? activeCategory.name : 'All Materials'}
         </h1>
         <p className="text-gray-500 text-sm mt-1">
-          {cards.length} material{cards.length !== 1 ? 's' : ''} available · Dallas-Fort Worth
+          {cards.length} material{cards.length !== 1 ? 's' : ''} available · {market?.name ?? 'Your area'}
         </p>
       </div>
 

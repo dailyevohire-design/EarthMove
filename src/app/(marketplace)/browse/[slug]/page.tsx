@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentMarket } from '@/lib/market'
 import { deriveDisplayPrice, formatCurrency, unitLabel } from '@/lib/pricing-engine'
 import { resolveOffering } from '@/lib/fulfillment-resolver'
 import { MaterialOrderForm } from '@/components/marketplace/material-order-form'
@@ -11,7 +12,6 @@ interface Props { params: Promise<{ slug: string }> }
 async function getPageData(slug: string) {
   const supabase = await createClient()
 
-  // 1. Get canonical material
   const { data: material } = await supabase
     .from('material_catalog')
     .select('*, category:material_categories(*)')
@@ -21,12 +21,9 @@ async function getPageData(slug: string) {
 
   if (!material) return null
 
-  // 2. Get active market
-  const { data: market } = await supabase
-    .from('markets').select('id, name').eq('is_active', true).limit(1).maybeSingle()
+  const market = await getCurrentMarket()
   if (!market) return null
 
-  // 3. Get market material (for display config)
   const { data: mm } = await supabase
     .from('market_materials')
     .select('*')
@@ -38,14 +35,12 @@ async function getPageData(slug: string) {
 
   if (!mm) return null
 
-  // 4. Resolve preferred offering for pricing display
   let resolvedOffering: any = null
   try {
     const resolved = await resolveOffering(market.id, material.id)
     resolvedOffering = resolved.offering
-  } catch { /* no offering available — still show page with unavailable state */ }
+  } catch {}
 
-  // 5. Active promotion for this material
   const now = new Date().toISOString()
   const { data: promo } = await supabase
     .from('promotions')
@@ -81,21 +76,21 @@ export default async function MaterialDetailPage({ params }: Props) {
   return (
     <div className="container-main py-8">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-stone-500 mb-8">
-        <Link href="/browse" className="hover:text-stone-300 transition-colors">Materials</Link>
+      <nav className="flex items-center gap-1.5 text-sm text-gray-400 mb-8">
+        <Link href="/browse" className="hover:text-gray-700 transition-colors">Materials</Link>
         <ChevronRight size={13} />
-        <Link href={`/browse?category=${material.category?.slug}`} className="hover:text-stone-300 transition-colors">
+        <Link href={`/browse?category=${material.category?.slug}`} className="hover:text-gray-700 transition-colors">
           {material.category?.name}
         </Link>
         <ChevronRight size={13} />
-        <span className="text-stone-300">{material.name}</span>
+        <span className="text-gray-700">{material.name}</span>
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16">
         {/* ── Left: Info ── */}
         <div className="lg:col-span-3 space-y-6">
           {/* Image */}
-          <div className="aspect-[16/9] rounded-2xl bg-stone-800 border border-stone-700 overflow-hidden">
+          <div className="aspect-[16/9] rounded-2xl bg-gray-100 border border-gray-200 overflow-hidden">
             {(mm.display_image_url ?? resolvedOffering?.image_url) ? (
               <img
                 src={mm.display_image_url ?? resolvedOffering.image_url}
@@ -103,8 +98,8 @@ export default async function MaterialDetailPage({ params }: Props) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package size={52} className="text-stone-700" />
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                <Package size={52} className="text-gray-300" />
               </div>
             )}
           </div>
@@ -113,17 +108,17 @@ export default async function MaterialDetailPage({ params }: Props) {
           <div>
             <span className="badge-stone text-xs mb-3">{material.category?.name}</span>
             <div className="flex items-start justify-between gap-4 mt-2">
-              <h1 className="text-3xl font-bold text-stone-100">
+              <h1 className="text-3xl font-bold text-gray-900">
                 {mm.display_name ?? material.name}
               </h1>
               {displayPrice != null && (
                 <div className="text-right flex-shrink-0">
                   <div className="price-display text-2xl">{formatCurrency(displayPrice)}</div>
-                  <div className="text-stone-500 text-sm">per {unitLabel(unit, 1)}</div>
+                  <div className="text-gray-500 text-sm">per {unitLabel(unit, 1)}</div>
                 </div>
               )}
             </div>
-            <p className="text-stone-400 mt-3 leading-relaxed text-sm">
+            <p className="text-gray-500 mt-3 leading-relaxed text-sm">
               {mm.display_description ?? material.description}
             </p>
           </div>
@@ -131,16 +126,16 @@ export default async function MaterialDetailPage({ params }: Props) {
           {/* Load info */}
           {resolvedOffering?.typical_load_size && displayPrice != null && (
             <div className="card p-4 flex gap-4 items-start">
-              <div className="p-2 bg-amber-500/10 rounded-lg flex-shrink-0">
-                <Truck size={18} className="text-amber-500" />
+              <div className="p-2 bg-emerald-50 rounded-lg flex-shrink-0">
+                <Truck size={18} className="text-emerald-600" />
               </div>
               <div>
-                <div className="font-semibold text-stone-200 text-sm">
+                <div className="font-semibold text-gray-900 text-sm">
                   Typical load: {resolvedOffering.load_size_label ?? `${resolvedOffering.typical_load_size} ${unitLabel(unit, resolvedOffering.typical_load_size)}`}
                 </div>
-                <div className="text-stone-500 text-xs mt-0.5">
+                <div className="text-gray-500 text-xs mt-0.5">
                   Per-load price:{' '}
-                  <span className="text-stone-300 font-medium">
+                  <span className="text-gray-700 font-medium">
                     {formatCurrency(displayPrice * resolvedOffering.typical_load_size)}
                   </span>
                   {resolvedOffering.delivery_fee_base && (
@@ -157,8 +152,8 @@ export default async function MaterialDetailPage({ params }: Props) {
               [Shield, 'Secure payment'],
               [Truck, 'Reliable local delivery'],
             ].map(([Icon, label]) => (
-              <div key={label as string} className="flex items-center gap-2 text-xs text-stone-500">
-                <Icon size={13} className="text-stone-600" />
+              <div key={label as string} className="flex items-center gap-2 text-xs text-gray-500">
+                <Icon size={13} className="text-gray-400" />
                 {label as string}
               </div>
             ))}
@@ -180,10 +175,10 @@ export default async function MaterialDetailPage({ params }: Props) {
               />
             ) : (
               <div className="card p-6 text-center">
-                <p className="text-stone-400 font-medium mb-1">
+                <p className="text-gray-500 font-medium mb-1">
                   {mm.unavailable_reason ?? 'Currently unavailable in your area.'}
                 </p>
-                <p className="text-stone-600 text-sm">Check back soon or browse other materials.</p>
+                <p className="text-gray-400 text-sm">Check back soon or browse other materials.</p>
                 <Link href="/browse" className="btn-secondary btn-md mt-4 inline-flex">Browse Materials</Link>
               </div>
             )}

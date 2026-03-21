@@ -27,7 +27,9 @@
       "Bash(grep -oP '\\(Fill Dirt|Select Fill|Pea Gravel|Flex Base|\\\\$[0-9]+\\\\.[0-9]+\\)')",
       "Bash(npx vercel:*)",
       "Bash(grep -oP '\\(Fill Dirt|Select Fill|Pea Gravel|Flex Base|CONTRACTOR WEEK|\\\\$[0-9]+\\\\.[0-9]+\\)')",
-      "Bash(grep -oP '\\(Fill Dirt|Select Fill|Topsoil|Concrete Sand|Pea Gravel|Flex Base|Road Base|Washed River Rock|\\\\$[0-9]+\\\\.[0-9]+\\)')"
+      "Bash(grep -oP '\\(Fill Dirt|Select Fill|Topsoil|Concrete Sand|Pea Gravel|Flex Base|Road Base|Washed River Rock|\\\\$[0-9]+\\\\.[0-9]+\\)')",
+      "Bash(find /home/earthmove/aggregatemarket/src/components -type f -name *.tsx -o -name *.ts)",
+      "Bash(find /home/earthmove/aggregatemarket/src/lib -type f -name *.tsx -o -name *.ts)"
     ]
   }
 }

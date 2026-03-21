@@ -29,7 +29,6 @@ export function MaterialOrderForm({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
-  // Step: 'configure' → 'delivery' → 'review'
   const [step, setStep] = useState<'configure' | 'delivery' | 'review'>('configure')
   const [quantity, setQuantity] = useState(offering.minimum_order_quantity)
   const [deliveryType, setDeliveryType] = useState<DeliveryType>('asap')
@@ -59,7 +58,7 @@ export function MaterialOrderForm({
           quantity,
           fulfillment_method: 'delivery',
           delivery_type: deliveryType,
-          distance_miles: 15, // TODO: calculate from geocoded address
+          distance_miles: 15,
         }),
       })
       const data = await res.json()
@@ -100,7 +99,7 @@ export function MaterialOrderForm({
         requested_delivery_date: deliveryType === 'scheduled' ? deliveryDate : null,
         requested_delivery_window: deliveryType === 'scheduled' ? deliveryWindow : null,
         delivery_notes: address.notes || null,
-        distance_miles: 15, // TODO: real geocoding
+        distance_miles: 15,
       })
 
       if (result.success) {
@@ -121,10 +120,10 @@ export function MaterialOrderForm({
     <div className="card p-6 space-y-5">
       {/* Promo badge */}
       {promo && (
-        <div className="flex items-center gap-2 p-3 bg-amber-500/8 border border-amber-500/20 rounded-lg">
-          <Tag size={13} className="text-amber-400 flex-shrink-0" />
-          <span className="text-amber-300 text-xs font-semibold">{promo.badge_label ?? 'PROMOTION'}</span>
-          <span className="text-amber-400/70 text-xs truncate">{promo.title}</span>
+        <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <Tag size={13} className="text-emerald-600 flex-shrink-0" />
+          <span className="text-emerald-700 text-xs font-semibold">{promo.badge_label ?? 'PROMOTION'}</span>
+          <span className="text-emerald-600/70 text-xs truncate">{promo.title}</span>
         </div>
       )}
 
@@ -137,7 +136,7 @@ export function MaterialOrderForm({
               <button
                 onClick={() => adjustQty(-1)}
                 disabled={quantity <= offering.minimum_order_quantity}
-                className="w-10 h-10 flex items-center justify-center rounded-lg bg-stone-800 border border-stone-700 text-stone-300 hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               ><Minus size={15} /></button>
               <input
                 type="number"
@@ -149,10 +148,10 @@ export function MaterialOrderForm({
               />
               <button
                 onClick={() => adjustQty(1)}
-                className="w-10 h-10 flex items-center justify-center rounded-lg bg-stone-800 border border-stone-700 text-stone-300 hover:bg-stone-700 transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 transition-colors"
               ><Plus size={15} /></button>
             </div>
-            <p className="text-xs text-stone-600 mt-1.5">
+            <p className="text-xs text-gray-400 mt-1.5">
               {unitLabel(offering.unit, quantity)} · Min {offering.minimum_order_quantity} {unitLabel(offering.unit, offering.minimum_order_quantity)}
             </p>
           </div>
@@ -165,7 +164,7 @@ export function MaterialOrderForm({
                 <button
                   key={val}
                   onClick={() => setDeliveryType(val)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-all ${deliveryType === val ? 'bg-amber-500/10 border-amber-500 text-amber-400' : 'bg-stone-800 border-stone-700 text-stone-400 hover:border-stone-600'}`}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-all ${deliveryType === val ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'}`}
                 >
                   <Icon size={15} />{label}
                 </button>
@@ -174,12 +173,12 @@ export function MaterialOrderForm({
           </div>
 
           {/* Price preview */}
-          <div className="border-t border-stone-800 pt-4">
+          <div className="border-t border-gray-100 pt-4">
             <div className="flex justify-between items-baseline">
-              <span className="text-stone-400 text-sm">Estimated materials</span>
+              <span className="text-gray-500 text-sm">Estimated materials</span>
               <span className="price-display text-xl">{formatCurrency(estimatedSubtotal)}</span>
             </div>
-            <p className="text-stone-600 text-xs mt-1">+ delivery & service fee at checkout</p>
+            <p className="text-gray-400 text-xs mt-1">+ delivery & service fee at checkout</p>
           </div>
 
           {quoteError && <ErrorMsg message={quoteError} />}
@@ -198,7 +197,7 @@ export function MaterialOrderForm({
       {step === 'delivery' && (
         <>
           <BackButton onClick={() => setStep('configure')} />
-          <h3 className="font-semibold text-stone-200">Delivery Details</h3>
+          <h3 className="font-semibold text-gray-900">Delivery Details</h3>
 
           <div className="space-y-3">
             <div>
@@ -219,7 +218,7 @@ export function MaterialOrderForm({
               </div>
             </div>
             <div>
-              <label className="input-label">Access notes <span className="text-stone-600">(optional)</span></label>
+              <label className="input-label">Access notes <span className="text-gray-400">(optional)</span></label>
               <textarea className="input resize-none" rows={2}
                 placeholder="Gate code, truck access, drop location…"
                 value={address.notes}
@@ -259,25 +258,25 @@ export function MaterialOrderForm({
       {step === 'review' && quote && (
         <>
           <BackButton onClick={() => setStep('delivery')} />
-          <h3 className="font-semibold text-stone-200">Order Summary</h3>
+          <h3 className="font-semibold text-gray-900">Order Summary</h3>
 
           <div className="space-y-2">
             {quote.line_items.map((li: any, i: number) => (
               <div key={i} className="flex justify-between text-sm">
-                <span className={li.type === 'discount' ? 'text-emerald-400' : 'text-stone-400'}>{li.label}</span>
-                <span className={`font-medium ${li.type === 'discount' ? 'text-emerald-400' : 'text-stone-300'}`}>
+                <span className={li.type === 'discount' ? 'text-emerald-600' : 'text-gray-500'}>{li.label}</span>
+                <span className={`font-medium ${li.type === 'discount' ? 'text-emerald-600' : 'text-gray-700'}`}>
                   {li.amount < 0 ? `−${formatCurrency(Math.abs(li.amount))}` : formatCurrency(li.amount)}
                 </span>
               </div>
             ))}
-            <div className="flex justify-between font-bold text-stone-100 pt-3 border-t border-stone-800 text-lg">
+            <div className="flex justify-between font-bold text-gray-900 pt-3 border-t border-gray-200 text-lg">
               <span>Total</span>
               <span className="price-display">{formatCurrency(quote.total_amount)}</span>
             </div>
           </div>
 
           {quote.needs_review && (
-            <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-300">
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
               <AlertCircle size={13} className="flex-shrink-0 mt-0.5" />
               Large orders may require confirmation before dispatch. We'll be in touch.
             </div>
@@ -290,7 +289,7 @@ export function MaterialOrderForm({
               ? <><Loader2 size={16} className="animate-spin" />Processing…</>
               : `Pay ${formatCurrency(quote.total_amount)} →`}
           </button>
-          <p className="text-center text-xs text-stone-600">
+          <p className="text-center text-xs text-gray-400">
             Secure checkout via Stripe. You'll be redirected to complete payment.
           </p>
         </>
@@ -301,7 +300,7 @@ export function MaterialOrderForm({
 
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="text-stone-500 hover:text-stone-300 text-sm transition-colors">
+    <button onClick={onClick} className="text-gray-500 hover:text-gray-700 text-sm transition-colors">
       ← Back
     </button>
   )
@@ -309,9 +308,9 @@ function BackButton({ onClick }: { onClick: () => void }) {
 
 function ErrorMsg({ message }: { message: string }) {
   return (
-    <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-      <AlertCircle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
-      <span className="text-red-400 text-sm">{message}</span>
+    <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+      <AlertCircle size={14} className="text-red-500 flex-shrink-0 mt-0.5" />
+      <span className="text-red-600 text-sm">{message}</span>
     </div>
   )
 }
