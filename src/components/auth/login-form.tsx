@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
+import Link from 'next/link'
 
 export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter()
@@ -40,7 +41,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <label htmlFor="password" className="input-label mb-0">Password</label>
-          <Link href="/forgot-password" className="text-xs text-amber-400 hover:text-amber-300 transition-colors">Forgot?</Link>
+          <Link href="/forgot-password" className="text-xs text-emerald-600 hover:text-emerald-700 transition-colors">Forgot?</Link>
         </div>
         <div className="relative">
           <input
@@ -51,7 +52,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           />
           <button
             type="button" onClick={() => setShowPw(v => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
           >
             {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
@@ -59,7 +60,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
       </div>
 
       {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400">
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
           {error}
         </div>
       )}
@@ -70,6 +71,3 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
     </form>
   )
 }
-
-// tiny local import — avoids circular dep
-import Link from 'next/link'

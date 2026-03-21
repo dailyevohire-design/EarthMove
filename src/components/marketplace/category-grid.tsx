@@ -23,10 +23,10 @@ export async function CategoryGrid() {
           <Link
             key={cat.id}
             href={`/browse?category=${cat.slug}`}
-            className="flex-shrink-0 flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl bg-stone-800/60 hover:bg-stone-800 border border-stone-700/50 hover:border-stone-600 transition-all group"
+            className="flex-shrink-0 flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl bg-white hover:bg-emerald-50 border border-gray-200 hover:border-emerald-300 transition-all group"
           >
-            <Icon size={17} className="text-stone-500 group-hover:text-amber-400 transition-colors" />
-            <span className="text-[11px] font-medium text-stone-400 group-hover:text-stone-200 transition-colors whitespace-nowrap">
+            <Icon size={17} className="text-gray-400 group-hover:text-emerald-600 transition-colors" />
+            <span className="text-[11px] font-medium text-gray-500 group-hover:text-emerald-700 transition-colors whitespace-nowrap">
               {cat.name}
             </span>
           </Link>

@@ -12,10 +12,10 @@ export default function AdminLoading() {
         ))}
       </div>
       <div className="card">
-        <div className="px-6 py-4 border-b border-stone-800">
+        <div className="px-6 py-4 border-b border-gray-100">
           <div className="skeleton h-5 w-32 rounded" />
         </div>
-        <div className="divide-y divide-stone-800/40">
+        <div className="divide-y divide-gray-100">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 px-6 py-4">
               <div className="skeleton h-4 w-32 rounded" />

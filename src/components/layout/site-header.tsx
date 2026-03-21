@@ -19,25 +19,25 @@ export async function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-stone-800/80 bg-stone-950/90 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-md">
       <div className="container-main">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center group-hover:bg-amber-400 transition-colors">
-              <Mountain size={16} className="text-stone-950" strokeWidth={2.5} />
+            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-700 transition-colors">
+              <Mountain size={16} className="text-white" strokeWidth={2.5} />
             </div>
-            <span className="font-extrabold text-stone-100 tracking-tight text-lg leading-none">
-              Aggregate<span className="text-amber-400">Market</span>
+            <span className="font-extrabold text-gray-900 tracking-tight text-lg leading-none">
+              Aggregate<span className="text-emerald-600">Market</span>
             </span>
           </Link>
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/browse" className="text-sm text-stone-400 hover:text-stone-100 transition-colors font-medium">
+            <Link href="/browse" className="text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium">
               Materials
             </Link>
-            <Link href="/browse?deals=1" className="text-sm text-amber-400 hover:text-amber-300 transition-colors font-medium">
+            <Link href="/browse?deals=1" className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors font-medium">
               Today's Deals
             </Link>
           </nav>

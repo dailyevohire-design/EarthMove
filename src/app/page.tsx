@@ -7,7 +7,7 @@ import { SiteFooter } from '@/components/layout/site-footer'
 import { MaterialCard } from '@/components/marketplace/material-card'
 import { DealBanner } from '@/components/marketplace/deal-banner'
 import { CategoryGrid } from '@/components/marketplace/category-grid'
-import { MapPin, ShieldCheck, Truck, Zap } from 'lucide-react'
+import { MapPin, ShieldCheck, Truck, Zap, ArrowRight } from 'lucide-react'
 
 async function getFeaturedCards(marketId: string): Promise<MarketMaterialCard[]> {
   const supabase = await createClient()
@@ -37,9 +37,7 @@ async function getFeaturedCards(marketId: string): Promise<MarketMaterialCard[]>
 
   if (!data) return []
 
-  // Resolve preferred offering + build display cards
   const promos = await getActivePromotions(marketId)
-
   return (data as any[]).map(row => buildCard(row, promos)).filter(Boolean) as MarketMaterialCard[]
 }
 
@@ -136,33 +134,36 @@ export default async function HomePage() {
       <SiteHeader />
       <main>
         {/* ── HERO ── */}
-        <section className="relative overflow-hidden bg-stone-950 border-b border-stone-800/50">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_-20%,_hsl(38_92%_50%_/_0.10),_transparent_60%)]" />
+        <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50 to-white border-b border-gray-100">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_-20%,_hsl(160_84%_39%_/_0.08),_transparent_60%)]" />
           <div className="container-main relative py-20 md:py-32">
             <div className="max-w-3xl">
-              <div className="badge-amber mb-6 w-fit">
+              <div className="badge-green mb-6 w-fit">
                 <MapPin size={11} />
                 Now serving Dallas-Fort Worth
               </div>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-stone-50 leading-[1.1] tracking-tight mb-6">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 leading-[1.1] tracking-tight mb-6">
                 Bulk materials,<br />
-                <span className="text-amber-400">delivered</span> to your job site.
+                <span className="text-emerald-600">delivered</span> to your job site.
               </h1>
-              <p className="text-lg md:text-xl text-stone-400 max-w-xl mb-10 leading-relaxed">
+              <p className="text-lg md:text-xl text-gray-500 max-w-xl mb-10 leading-relaxed">
                 Fill dirt, gravel, road base, topsoil, and more — ordered online in minutes. No phone tag.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/browse" className="btn-primary btn-xl">Browse Materials</Link>
+                <Link href="/browse" className="btn-primary btn-xl">
+                  Browse Materials
+                  <ArrowRight size={16} />
+                </Link>
                 <Link href="/browse?deals=1" className="btn-secondary btn-xl">View Today's Deals</Link>
               </div>
-              <div className="mt-12 flex flex-wrap gap-6 text-sm text-stone-500">
+              <div className="mt-12 flex flex-wrap gap-6 text-sm text-gray-500">
                 {[
                   [ShieldCheck, 'Secure checkout'],
                   [Truck, 'Local delivery network'],
                   [Zap, 'Order in under 5 minutes'],
                 ].map(([Icon, label]) => (
                   <div key={label as string} className="flex items-center gap-2">
-                    <Icon size={15} className="text-amber-500" />
+                    <Icon size={15} className="text-emerald-600" />
                     {label as string}
                   </div>
                 ))}
@@ -173,7 +174,7 @@ export default async function HomePage() {
 
         {/* ── DEAL BANNER ── */}
         {dealOfDay && (
-          <section className="bg-amber-500/5 border-b border-stone-800">
+          <section className="bg-emerald-50/60 border-b border-gray-200">
             <div className="container-main py-3.5">
               <DealBanner promotion={dealOfDay} />
             </div>
@@ -181,7 +182,7 @@ export default async function HomePage() {
         )}
 
         {/* ── CATEGORY GRID ── */}
-        <section className="border-b border-stone-800 bg-stone-900/40">
+        <section className="border-b border-gray-100 bg-gray-50/50">
           <div className="container-main py-6">
             <CategoryGrid />
           </div>
@@ -192,18 +193,18 @@ export default async function HomePage() {
           <div className="container-main">
             <div className="flex items-end justify-between mb-8">
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-stone-100">Popular Materials</h2>
-                <p className="text-stone-500 mt-1 text-sm">In-stock and ready for delivery in DFW</p>
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Popular Materials</h2>
+                <p className="text-gray-500 mt-1 text-sm">In-stock and ready for delivery in DFW</p>
               </div>
               <Link href="/browse" className="btn-ghost btn-sm hidden sm:flex">View all →</Link>
             </div>
 
             {featuredCards.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {featuredCards.map(card => <MaterialCard key={card.market_material_id} card={card} />)}
               </div>
             ) : (
-              <div className="card p-12 text-center text-stone-500">
+              <div className="card p-12 text-center text-gray-400">
                 Materials coming soon to your area.
               </div>
             )}
@@ -215,9 +216,10 @@ export default async function HomePage() {
         </section>
 
         {/* ── HOW IT WORKS ── */}
-        <section className="section bg-stone-900/40 border-y border-stone-800">
+        <section className="section bg-gray-50 border-y border-gray-100">
           <div className="container-main">
-            <h2 className="text-2xl md:text-3xl font-bold text-stone-100 mb-12 text-center">Simple ordering, every time</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 text-center">Simple ordering, every time</h2>
+            <p className="text-gray-500 text-center mb-12 max-w-lg mx-auto">From browse to delivery in three easy steps. No phone calls, no back-and-forth.</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-4xl mx-auto">
               {[
                 { step: '01', title: 'Choose your material', body: 'Browse the catalog and select the material and quantity for your job.' },
@@ -225,10 +227,12 @@ export default async function HomePage() {
                 { step: '03', title: 'Pay and we deliver', body: 'Secure checkout. We handle dispatch and keep you updated on status.' },
               ].map(({ step, title, body }) => (
                 <div key={step} className="flex flex-col gap-4 animate-fade-up">
-                  <div className="text-5xl font-black text-amber-500/25 font-mono leading-none">{step}</div>
+                  <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                    <span className="text-lg font-bold text-emerald-700 font-mono">{step}</span>
+                  </div>
                   <div>
-                    <h3 className="font-bold text-stone-100 text-lg mb-2">{title}</h3>
-                    <p className="text-stone-400 text-sm leading-relaxed">{body}</p>
+                    <h3 className="font-bold text-gray-900 text-lg mb-2">{title}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed">{body}</p>
                   </div>
                 </div>
               ))}

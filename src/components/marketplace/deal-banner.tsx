@@ -12,23 +12,23 @@ export function DealBanner({ promotion }: { promotion: any }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex-shrink-0 flex items-center gap-1 px-2 py-1 bg-amber-500 rounded-full">
-          <Zap size={11} className="text-stone-950" />
-          <span className="text-[10px] font-black text-stone-950 uppercase tracking-wide">Deal</span>
+        <div className="flex-shrink-0 flex items-center gap-1 px-2 py-1 bg-emerald-600 rounded-full">
+          <Zap size={11} className="text-white" />
+          <span className="text-[10px] font-black text-white uppercase tracking-wide">Deal</span>
         </div>
         <div className="min-w-0 flex items-center gap-2">
-          <span className="font-bold text-amber-400 text-sm shrink-0">{label}</span>
-          <span className="text-stone-300 text-sm truncate">{promotion.title}</span>
+          <span className="font-bold text-emerald-700 text-sm shrink-0">{label}</span>
+          <span className="text-gray-600 text-sm truncate">{promotion.title}</span>
         </div>
       </div>
       {promotion.ends_at && (
-        <span className="flex-shrink-0 text-xs text-stone-500">
+        <span className="flex-shrink-0 text-xs text-gray-400">
           Ends {new Date(promotion.ends_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </span>
       )}
       <Link
         href="/browse?deals=1"
-        className="flex-shrink-0 flex items-center gap-1 text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+        className="flex-shrink-0 flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
       >
         Shop <ArrowRight size={13} />
       </Link>

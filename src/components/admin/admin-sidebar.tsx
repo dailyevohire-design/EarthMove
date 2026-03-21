@@ -30,15 +30,15 @@ export function AdminSidebar() {
   }
 
   return (
-    <aside className="w-56 flex-shrink-0 border-r border-stone-800 flex flex-col bg-stone-900/50 sticky top-0 h-screen">
-      <div className="h-16 flex items-center px-5 border-b border-stone-800">
+    <aside className="w-56 flex-shrink-0 border-r border-gray-200 flex flex-col bg-gray-50 sticky top-0 h-screen">
+      <div className="h-16 flex items-center px-5 border-b border-gray-200">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-amber-500 rounded-md flex items-center justify-center">
-            <Mountain size={13} className="text-stone-950" />
+          <div className="w-7 h-7 bg-emerald-600 rounded-md flex items-center justify-center">
+            <Mountain size={13} className="text-white" />
           </div>
           <div>
-            <div className="text-xs font-black text-stone-100 leading-tight">AggregateMarket</div>
-            <div className="text-[10px] text-amber-500/70">Admin</div>
+            <div className="text-xs font-black text-gray-900 leading-tight">AggregateMarket</div>
+            <div className="text-[10px] text-emerald-600">Admin</div>
           </div>
         </Link>
       </div>
@@ -52,25 +52,25 @@ export function AdminSidebar() {
               href={href}
               className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group ${
                 active
-                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/15'
-                  : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
               }`}
             >
-              <Icon size={15} className={active ? 'text-amber-400' : 'text-stone-500 group-hover:text-stone-300'} />
+              <Icon size={15} className={active ? 'text-emerald-600' : 'text-gray-400 group-hover:text-gray-600'} />
               {label}
-              {active && <ChevronRight size={12} className="ml-auto text-amber-500/40" />}
+              {active && <ChevronRight size={12} className="ml-auto text-emerald-400" />}
             </Link>
           )
         })}
       </nav>
 
-      <div className="px-2.5 py-4 border-t border-stone-800 space-y-0.5">
-        <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-stone-500 hover:bg-stone-800 hover:text-stone-300 transition-colors">
+      <div className="px-2.5 py-4 border-t border-gray-200 space-y-0.5">
+        <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors">
           <Truck size={13} /> View site
         </Link>
         <button
           onClick={signOut}
-          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-stone-500 hover:bg-stone-800 hover:text-red-400 transition-colors w-full text-left"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors w-full text-left"
         >
           <LogOut size={13} /> Sign out
         </button>

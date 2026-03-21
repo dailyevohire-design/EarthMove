@@ -43,7 +43,6 @@ async function getCards(marketId: string, categorySlug?: string, dealsOnly?: boo
   const { data: rows } = await query
   if (!rows) return []
 
-  // Fetch active promos
   const { data: promos } = await supabase
     .from('promotions')
     .select('*')
@@ -58,7 +57,6 @@ async function getCards(marketId: string, categorySlug?: string, dealsOnly?: boo
     const material = row.material
     if (!material) continue
 
-    // Category filter
     if (categorySlug && material.category?.slug !== categorySlug) continue
 
     const preferred = row.pool?.find((p: any) => p.is_preferred)
@@ -123,10 +121,10 @@ export default async function BrowsePage({ searchParams }: BrowseProps) {
     <div className="container-main py-8">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-stone-100">
+        <h1 className="text-2xl font-bold text-gray-900">
           {deals === '1' ? "Today's Deals" : activeCategory ? activeCategory.name : 'All Materials'}
         </h1>
-        <p className="text-stone-500 text-sm mt-1">
+        <p className="text-gray-500 text-sm mt-1">
           {cards.length} material{cards.length !== 1 ? 's' : ''} available · Dallas-Fort Worth
         </p>
       </div>
@@ -134,10 +132,10 @@ export default async function BrowsePage({ searchParams }: BrowseProps) {
       <div className="flex gap-8">
         {/* Sidebar */}
         <aside className="hidden lg:block w-52 flex-shrink-0 space-y-1">
-          <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider px-3 mb-3">Category</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-3">Category</p>
           <Link
             href="/browse"
-            className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${!category && deals !== '1' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/15' : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'}`}
+            className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${!category && deals !== '1' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
           >
             All Materials
           </Link>
@@ -145,7 +143,7 @@ export default async function BrowsePage({ searchParams }: BrowseProps) {
             <Link
               key={c.id}
               href={`/browse?category=${c.slug}`}
-              className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${category === c.slug ? 'bg-amber-500/10 text-amber-400 border border-amber-500/15' : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'}`}
+              className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${category === c.slug ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
             >
               {c.name}
             </Link>
@@ -156,19 +154,19 @@ export default async function BrowsePage({ searchParams }: BrowseProps) {
         <div className="flex-1 min-w-0">
           {/* Mobile category chips */}
           <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-5 -mx-4 px-4 scrollbar-none">
-            <Link href="/browse" className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!category ? 'bg-amber-500 text-stone-950' : 'bg-stone-800 text-stone-300'}`}>All</Link>
+            <Link href="/browse" className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!category ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'}`}>All</Link>
             {categories.map((c: any) => (
-              <Link key={c.id} href={`/browse?category=${c.slug}`} className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${category === c.slug ? 'bg-amber-500 text-stone-950' : 'bg-stone-800 text-stone-300'}`}>{c.name}</Link>
+              <Link key={c.id} href={`/browse?category=${c.slug}`} className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${category === c.slug ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'}`}>{c.name}</Link>
             ))}
           </div>
 
           {cards.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {cards.map(card => <MaterialCard key={card.market_material_id} card={card} />)}
             </div>
           ) : (
             <div className="card p-16 text-center">
-              <p className="text-stone-500">No materials found.</p>
+              <p className="text-gray-400">No materials found.</p>
               <Link href="/browse" className="btn-ghost btn-sm mt-4 inline-flex">View all materials</Link>
             </div>
           )}

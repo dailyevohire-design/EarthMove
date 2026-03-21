@@ -4,7 +4,7 @@
 
 /* ============================================================
    DESIGN SYSTEM — AggregateMarket
-   Dark industrial / amber accent. Premium logistics aesthetic.
+   Clean white / emerald accent. Professional marketplace.
    ============================================================ */
 
 @layer base {
@@ -13,21 +13,21 @@
     --font-mono: 'DM Mono', monospace;
   }
 
-  * { border-color: hsl(20 10% 18%); }
+  * { border-color: hsl(220 13% 91%); }
 
   html { scroll-behavior: smooth; }
 
   body {
-    background-color: hsl(20 14% 4%);
-    color: hsl(30 20% 95%);
+    background-color: hsl(0 0% 100%);
+    color: hsl(220 20% 20%);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: hsl(20 14% 4%); }
-  ::-webkit-scrollbar-thumb { background: hsl(20 10% 18%); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(38 92% 50%); }
+  ::-webkit-scrollbar-track { background: hsl(0 0% 98%); }
+  ::-webkit-scrollbar-thumb { background: hsl(220 13% 82%); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(160 84% 39%); }
 }
 
 @layer components {
@@ -36,13 +36,13 @@
     @apply inline-flex items-center justify-center gap-2 rounded-lg font-semibold
            transition-all duration-150 select-none
            focus-visible:outline-none focus-visible:ring-2
-           focus-visible:ring-amber-500 focus-visible:ring-offset-2
-           focus-visible:ring-offset-stone-950
+           focus-visible:ring-emerald-500 focus-visible:ring-offset-2
+           focus-visible:ring-offset-white
            disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none;
   }
-  .btn-primary   { @apply btn bg-amber-500 text-stone-950 hover:bg-amber-400 active:scale-[0.98] shadow-lg shadow-amber-500/20; }
-  .btn-secondary { @apply btn bg-stone-800 text-stone-100 hover:bg-stone-700 border border-stone-700; }
-  .btn-ghost     { @apply btn text-stone-400 hover:bg-stone-800 hover:text-stone-100; }
+  .btn-primary   { @apply btn bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98] shadow-md shadow-emerald-600/15; }
+  .btn-secondary { @apply btn bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 shadow-sm; }
+  .btn-ghost     { @apply btn text-gray-500 hover:bg-gray-100 hover:text-gray-900; }
   .btn-danger    { @apply btn bg-red-600 text-white hover:bg-red-500; }
   .btn-sm  { @apply text-xs  px-3   py-1.5; }
   .btn-md  { @apply text-sm  px-4   py-2.5; }
@@ -50,38 +50,38 @@
   .btn-xl  { @apply text-base px-7  py-4 font-bold; }
 
   /* ── Cards ── */
-  .card       { @apply bg-stone-900 border border-stone-800 rounded-xl; }
-  .card-hover { @apply card transition-all duration-200 hover:border-stone-600 hover:bg-stone-800/80 hover:shadow-xl hover:shadow-black/30 cursor-pointer; }
+  .card       { @apply bg-white border border-gray-200 rounded-xl shadow-sm; }
+  .card-hover { @apply card transition-all duration-200 hover:border-gray-300 hover:shadow-lg cursor-pointer; }
 
   /* ── Inputs ── */
   .input {
-    @apply w-full bg-stone-800 border border-stone-700 rounded-lg px-3.5 py-2.5
-           text-stone-100 placeholder-stone-500 text-sm
-           focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
+    @apply w-full bg-white border border-gray-300 rounded-lg px-3.5 py-2.5
+           text-gray-900 placeholder-gray-400 text-sm
+           focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
            transition-all duration-150;
   }
-  .input-label { @apply block text-sm font-medium text-stone-300 mb-1.5; }
+  .input-label { @apply block text-sm font-medium text-gray-700 mb-1.5; }
 
   /* ── Badges ── */
   .badge        { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold; }
-  .badge-amber  { @apply badge bg-amber-500/15 text-amber-400 border border-amber-500/20; }
-  .badge-green  { @apply badge bg-emerald-500/15 text-emerald-400 border border-emerald-500/20; }
-  .badge-blue   { @apply badge bg-sky-500/15 text-sky-400 border border-sky-500/20; }
-  .badge-red    { @apply badge bg-red-500/15 text-red-400 border border-red-500/20; }
-  .badge-stone  { @apply badge bg-stone-700/50 text-stone-400 border border-stone-600; }
+  .badge-amber  { @apply badge bg-emerald-50 text-emerald-700 border border-emerald-200; }
+  .badge-green  { @apply badge bg-emerald-50 text-emerald-700 border border-emerald-200; }
+  .badge-blue   { @apply badge bg-sky-50 text-sky-700 border border-sky-200; }
+  .badge-red    { @apply badge bg-red-50 text-red-700 border border-red-200; }
+  .badge-stone  { @apply badge bg-gray-100 text-gray-600 border border-gray-200; }
 
   /* ── Layout ── */
   .container-main { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
   .section        { @apply py-16 md:py-24; }
 
   /* ── Typography ── */
-  .price-display { @apply font-bold text-amber-400 tabular-nums; }
+  .price-display { @apply font-bold text-emerald-700 tabular-nums; }
 
   /* ── Admin stat card ── */
   .stat-card  { @apply card p-5 flex flex-col gap-1; }
-  .stat-label { @apply text-xs font-semibold text-stone-500 uppercase tracking-wider; }
-  .stat-value { @apply text-2xl font-bold text-stone-100 tabular-nums; }
-  .stat-sub   { @apply text-xs text-stone-500 mt-0.5; }
+  .stat-label { @apply text-xs font-semibold text-gray-500 uppercase tracking-wider; }
+  .stat-value { @apply text-2xl font-bold text-gray-900 tabular-nums; }
+  .stat-sub   { @apply text-xs text-gray-500 mt-0.5; }
 }
 
 /* ── Animations ── */
@@ -102,9 +102,9 @@
 .skeleton {
   background: linear-gradient(
     90deg,
-    hsl(20 12% 10%) 25%,
-    hsl(20 10% 14%) 50%,
-    hsl(20 12% 10%) 75%
+    hsl(220 14% 95%) 25%,
+    hsl(220 14% 90%) 50%,
+    hsl(220 14% 95%) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;

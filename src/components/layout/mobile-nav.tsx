@@ -30,7 +30,7 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
     <div className="md:hidden">
       <button
         onClick={() => setOpen(true)}
-        className="p-2 rounded-lg text-stone-400 hover:text-stone-100 hover:bg-stone-800 transition-colors"
+        className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
         aria-label="Open menu"
       >
         <Menu size={22} />
@@ -39,21 +39,21 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
       {open && (
         <>
           <div
-            className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm"
             onClick={close}
           />
-          <div className="fixed top-0 right-0 bottom-0 w-72 bg-stone-900 border-l border-stone-800 z-50 flex flex-col">
+          <div className="fixed top-0 right-0 bottom-0 w-72 bg-white border-l border-gray-200 z-50 flex flex-col shadow-2xl">
             {/* Header */}
-            <div className="flex items-center justify-between px-5 h-16 border-b border-stone-800">
+            <div className="flex items-center justify-between px-5 h-16 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-amber-500 rounded-md flex items-center justify-center">
-                  <Mountain size={13} className="text-stone-950" />
+                <div className="w-7 h-7 bg-emerald-600 rounded-md flex items-center justify-center">
+                  <Mountain size={13} className="text-white" />
                 </div>
-                <span className="font-bold text-stone-100 text-sm">AggregateMarket</span>
+                <span className="font-bold text-gray-900 text-sm">AggregateMarket</span>
               </div>
               <button
                 onClick={close}
-                className="p-1.5 rounded-lg text-stone-500 hover:text-stone-300 hover:bg-stone-800 transition-colors"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               >
                 <X size={18} />
               </button>
@@ -66,7 +66,7 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
 
               {isLoggedIn && (
                 <>
-                  <div className="h-px bg-stone-800 my-3" />
+                  <div className="h-px bg-gray-100 my-3" />
                   <NavLink href="/account" icon={<User size={15} />} onClick={close}>My Account</NavLink>
                   <NavLink href="/account/orders" icon={<Package size={15} />} onClick={close}>My Orders</NavLink>
                   {role === 'admin' && (
@@ -80,11 +80,11 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
             </nav>
 
             {/* Footer */}
-            <div className="px-3 py-4 border-t border-stone-800">
+            <div className="px-3 py-4 border-t border-gray-100">
               {isLoggedIn ? (
                 <button
                   onClick={signOut}
-                  className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm text-stone-400 hover:bg-stone-800 hover:text-red-400 transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors"
                 >
                   <LogOut size={15} />
                   Sign out
@@ -115,11 +115,11 @@ function NavLink({
       onClick={onClick}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
         accent
-          ? 'text-amber-400 hover:bg-amber-500/10'
-          : 'text-stone-300 hover:bg-stone-800 hover:text-stone-100'
+          ? 'text-emerald-600 hover:bg-emerald-50'
+          : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
       }`}
     >
-      {icon && <span className="text-stone-500">{icon}</span>}
+      {icon && <span className="text-gray-400">{icon}</span>}
       {children}
     </Link>
   )

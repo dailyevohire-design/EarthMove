@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${dmSans.variable} ${dmMono.variable}`}>
-      <body className="bg-stone-950 text-stone-100 antialiased min-h-screen flex flex-col">
+      <body className="bg-white text-gray-900 antialiased min-h-screen flex flex-col">
         {children}
         <Toaster />
       </body>
