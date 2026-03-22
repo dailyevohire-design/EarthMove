@@ -19,52 +19,54 @@ export async function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-md">
+    <header className="sticky top-0 z-40 bg-white border-b border-gray-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div className="container-main">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-700 transition-colors">
-              <Mountain size={16} className="text-white" strokeWidth={2.5} />
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center group-hover:bg-emerald-700 transition-colors shadow-sm">
+              <Mountain size={17} className="text-white" strokeWidth={2.5} />
             </div>
-            <span className="font-extrabold text-gray-900 tracking-tight text-lg leading-none">
-              Aggregate<span className="text-emerald-600">Market</span>
-            </span>
+            <div className="hidden sm:block">
+              <span className="font-extrabold text-gray-900 tracking-tight text-[17px] leading-none">
+                Earth<span className="text-emerald-600">Move</span>
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/browse" className="text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium">
+          {/* Center nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            <Link href="/browse" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium">
               Materials
             </Link>
-            <Link href="/browse?deals=1" className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors font-medium">
-              Today's Deals
+            <Link href="/browse?deals=1" className="px-4 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-all font-semibold flex items-center gap-1.5">
+              Deals
             </Link>
           </nav>
 
           {/* Right */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {user && profile ? (
               <>
                 {profile.role === 'admin' && (
-                  <Link href="/admin" className="hidden md:flex btn-secondary btn-sm">
+                  <Link href="/admin" className="hidden md:flex btn-ghost btn-sm text-xs">
                     Admin
                   </Link>
                 )}
                 {profile.role === 'supplier' && (
-                  <Link href="/portal" className="hidden md:flex btn-secondary btn-sm">
-                    Supplier Portal
+                  <Link href="/portal" className="hidden md:flex btn-ghost btn-sm text-xs">
+                    Portal
                   </Link>
                 )}
                 <UserMenu firstName={profile.first_name} />
               </>
             ) : (
               <>
-                <Link href="/login" className="btn-ghost btn-sm hidden md:flex">
-                  Sign in
+                <Link href="/login" className="btn-ghost btn-sm hidden md:flex text-xs">
+                  Log in
                 </Link>
-                <Link href="/signup" className="btn-primary btn-sm">
-                  Get Started
+                <Link href="/signup" className="btn-primary btn-sm text-xs">
+                  Sign up
                 </Link>
               </>
             )}

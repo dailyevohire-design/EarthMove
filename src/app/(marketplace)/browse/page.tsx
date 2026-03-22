@@ -2,22 +2,20 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentMarket } from '@/lib/market'
 import { deriveDisplayPrice } from '@/lib/pricing-engine'
 import type { MarketMaterialCard } from '@/types'
-import { MaterialCard } from '@/components/marketplace/material-card'
+import { MaterialCard, DealCard } from '@/components/marketplace/material-card'
+import { CategoryGrid } from '@/components/marketplace/category-grid'
 import Link from 'next/link'
+import { Zap, SlidersHorizontal } from 'lucide-react'
 
 interface BrowseProps {
   searchParams: Promise<{ category?: string; deals?: string }>
-}
-
-async function getDefaultMarket() {
-  return getCurrentMarket()
 }
 
 async function getCards(marketId: string, categorySlug?: string, dealsOnly?: boolean) {
   const supabase = await createClient()
   const now = new Date().toISOString()
 
-  let query = supabase
+  const { data: rows } = await supabase
     .from('market_materials')
     .select(`
       id, price_display_mode, custom_display_price, is_featured, sort_order,
@@ -38,7 +36,6 @@ async function getCards(marketId: string, categorySlug?: string, dealsOnly?: boo
     .order('is_featured', { ascending: false })
     .order('sort_order')
 
-  const { data: rows } = await query
   if (!rows) return []
 
   const { data: promos } = await supabase
@@ -54,12 +51,10 @@ async function getCards(marketId: string, categorySlug?: string, dealsOnly?: boo
   for (const row of rows as any[]) {
     const material = row.material
     if (!material) continue
-
     if (categorySlug && material.category?.slug !== categorySlug) continue
 
     const preferred = row.pool?.find((p: any) => p.is_preferred)
     const offering = preferred?.offering ?? row.pool?.[0]?.offering ?? null
-
     const displayPrice = deriveDisplayPrice(row.price_display_mode, row.custom_display_price, offering)
     if (displayPrice == null) continue
 
@@ -89,7 +84,6 @@ async function getCards(marketId: string, categorySlug?: string, dealsOnly?: boo
       promotion_id: promo?.id ?? null,
     })
   }
-
   return cards
 }
 
@@ -107,7 +101,7 @@ export const metadata = { title: 'Browse Materials' }
 
 export default async function BrowsePage({ searchParams }: BrowseProps) {
   const { category, deals } = await searchParams
-  const market = await getDefaultMarket()
+  const market = await getCurrentMarket()
   const marketId = market?.id ?? null
   const [cards, categories] = await Promise.all([
     marketId ? getCards(marketId, category, deals === '1') : [],
@@ -115,61 +109,80 @@ export default async function BrowsePage({ searchParams }: BrowseProps) {
   ])
 
   const activeCategory = categories.find((c: any) => c.slug === category)
+  const dealsCards = cards.filter(c => c.badge_label || c.is_deal_of_day)
+  const isDealsPage = deals === '1'
 
   return (
-    <div className="container-main py-8">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {deals === '1' ? "Today's Deals" : activeCategory ? activeCategory.name : 'All Materials'}
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          {cards.length} material{cards.length !== 1 ? 's' : ''} available · {market?.name ?? 'Your area'}
-        </p>
-      </div>
-
-      <div className="flex gap-8">
-        {/* Sidebar */}
-        <aside className="hidden lg:block w-52 flex-shrink-0 space-y-1">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-3">Category</p>
-          <Link
-            href="/browse"
-            className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${!category && deals !== '1' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
-          >
-            All Materials
-          </Link>
-          {categories.map((c: any) => (
+    <div className="bg-gray-50/30 min-h-screen">
+      {/* Sticky category bar */}
+      <div className="bg-white border-b border-gray-100 sticky top-16 z-20">
+        <div className="container-main py-3">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none">
             <Link
-              key={c.id}
-              href={`/browse?category=${c.slug}`}
-              className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${category === c.slug ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+              href="/browse"
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all ${!category && !isDealsPage ? 'bg-gray-900 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
             >
-              {c.name}
+              All
             </Link>
-          ))}
-        </aside>
-
-        {/* Grid */}
-        <div className="flex-1 min-w-0">
-          {/* Mobile category chips */}
-          <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-5 -mx-4 px-4 scrollbar-none">
-            <Link href="/browse" className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!category ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'}`}>All</Link>
+            <Link
+              href="/browse?deals=1"
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-1.5 ${isDealsPage ? 'bg-red-500 text-white shadow-md shadow-red-500/25' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+            >
+              <Zap size={12} className={isDealsPage ? 'fill-current' : ''} />
+              Deals
+            </Link>
             {categories.map((c: any) => (
-              <Link key={c.id} href={`/browse?category=${c.slug}`} className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${category === c.slug ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'}`}>{c.name}</Link>
+              <Link
+                key={c.id}
+                href={`/browse?category=${c.slug}`}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all ${category === c.slug ? 'bg-gray-900 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+              >
+                {c.name}
+              </Link>
             ))}
           </div>
-
-          {cards.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-              {cards.map(card => <MaterialCard key={card.market_material_id} card={card} />)}
-            </div>
-          ) : (
-            <div className="card p-16 text-center">
-              <p className="text-gray-400">No materials found.</p>
-              <Link href="/browse" className="btn-ghost btn-sm mt-4 inline-flex">View all materials</Link>
-            </div>
-          )}
         </div>
+      </div>
+
+      <div className="container-main py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-extrabold text-gray-900">
+            {isDealsPage ? "Today's Deals" : activeCategory ? activeCategory.name : 'All Materials'}
+          </h1>
+          <p className="text-gray-500 text-sm mt-1.5">
+            {cards.length} material{cards.length !== 1 ? 's' : ''} available in {market?.name ?? 'your area'}
+          </p>
+        </div>
+
+        {/* Deals carousel on browse page */}
+        {!isDealsPage && dealsCards.length > 0 && (
+          <div className="mb-10">
+            <div className="flex items-center gap-2 mb-5">
+              <div className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center">
+                <Zap size={14} className="text-white fill-white" />
+              </div>
+              <h2 className="text-lg font-extrabold text-gray-900">Deals near you</h2>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+              {dealsCards.map(card => <DealCard key={card.market_material_id} card={card} />)}
+            </div>
+          </div>
+        )}
+
+        {/* Grid */}
+        {cards.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {cards.map(card => <MaterialCard key={card.market_material_id} card={card} />)}
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-200 p-20 text-center">
+            <div className="text-4xl mb-4">🔍</div>
+            <p className="text-gray-600 font-medium mb-1">No materials found</p>
+            <p className="text-gray-400 text-sm mb-6">Try a different category or check back later.</p>
+            <Link href="/browse" className="btn-primary btn-md">View all materials</Link>
+          </div>
+        )}
       </div>
     </div>
   )
