@@ -2,10 +2,23 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Mountain, Waves, CircleDot, RouteOff, Gem, Hammer, Star, Layers } from 'lucide-react'
 
-const ICONS: Record<string, React.ComponentType<{ size?: number | string; className?: string }>> = {
-  mountain: Mountain, waves: Waves, 'circle-dot': CircleDot,
-  road: RouteOff, gem: Gem, hammer: Hammer, star: Star, layers: Layers,
+const CATEGORY_CONFIG: Record<string, {
+  icon: React.ComponentType<{ size?: number | string; className?: string }>;
+  bg: string;
+  text: string;
+  border: string;
+  iconColor: string;
+}> = {
+  fill:      { icon: Mountain,  bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',  iconColor: 'text-amber-500' },
+  sand:      { icon: Waves,     bg: 'bg-yellow-50',  text: 'text-yellow-700',  border: 'border-yellow-200', iconColor: 'text-yellow-500' },
+  gravel:    { icon: CircleDot, bg: 'bg-gray-100',   text: 'text-gray-700',    border: 'border-gray-300',   iconColor: 'text-gray-500' },
+  aggregate: { icon: RouteOff,  bg: 'bg-orange-50',  text: 'text-orange-700',  border: 'border-orange-200', iconColor: 'text-orange-500' },
+  rock:      { icon: Gem,       bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200',   iconColor: 'text-blue-500' },
+  recycled:  { icon: Hammer,    bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200',iconColor: 'text-emerald-500' },
+  specialty: { icon: Star,      bg: 'bg-purple-50',  text: 'text-purple-700',  border: 'border-purple-200', iconColor: 'text-purple-500' },
 }
+
+const DEFAULT_CONFIG = { icon: Layers, bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200', iconColor: 'text-gray-500' }
 
 export async function CategoryGrid() {
   const supabase = await createClient()
@@ -16,17 +29,18 @@ export async function CategoryGrid() {
     .order('sort_order')
 
   return (
-    <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+    <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
       {(data ?? []).map((cat: any) => {
-        const Icon = ICONS[cat.icon_name] ?? Mountain
+        const config = CATEGORY_CONFIG[cat.slug] ?? DEFAULT_CONFIG
+        const Icon = config.icon
         return (
           <Link
             key={cat.id}
             href={`/browse?category=${cat.slug}`}
-            className="flex-shrink-0 flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl bg-white hover:bg-emerald-50 border border-gray-200 hover:border-emerald-300 transition-all group"
+            className={`flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-2xl ${config.bg} border ${config.border} hover:shadow-md transition-all duration-200 group`}
           >
-            <Icon size={17} className="text-gray-400 group-hover:text-emerald-600 transition-colors" />
-            <span className="text-[11px] font-medium text-gray-500 group-hover:text-emerald-700 transition-colors whitespace-nowrap">
+            <Icon size={18} className={`${config.iconColor} transition-colors`} />
+            <span className={`text-sm font-semibold ${config.text} whitespace-nowrap`}>
               {cat.name}
             </span>
           </Link>

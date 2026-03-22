@@ -31,33 +31,36 @@ export function CitySelector({ cities, currentCity }: { cities: City[]; currentC
   }
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative inline-block" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 text-sm font-medium text-emerald-700 hover:text-emerald-800 transition-colors bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200"
+        className="flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white transition-colors bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20"
       >
-        <MapPin size={13} />
+        <MapPin size={14} className="text-emerald-400" />
         {currentCity.name}, {currentCity.state}
-        <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`text-white/50 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Select your market</p>
+        <div className="absolute left-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Delivering to</p>
           </div>
           <div className="max-h-72 overflow-y-auto py-1">
             {cities.map(city => (
               <button
                 key={city.id}
                 onClick={() => selectCity(city)}
-                className={`flex items-center justify-between w-full px-4 py-2.5 text-sm transition-colors ${
+                className={`flex items-center justify-between w-full px-4 py-3 text-sm transition-colors ${
                   city.id === currentCity.id
-                    ? 'bg-emerald-50 text-emerald-700 font-medium'
+                    ? 'bg-emerald-50 text-emerald-700 font-semibold'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <span>{city.name}, {city.state}</span>
+                <span className="flex items-center gap-2">
+                  <MapPin size={13} className={city.id === currentCity.id ? 'text-emerald-500' : 'text-gray-300'} />
+                  {city.name}, {city.state}
+                </span>
                 {city.id === currentCity.id && <Check size={14} className="text-emerald-600" />}
               </button>
             ))}
