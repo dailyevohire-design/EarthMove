@@ -9,6 +9,7 @@ import { SiteFooter } from '@/components/layout/site-footer'
 import { MaterialCard, DealCard } from '@/components/marketplace/material-card'
 import { CategoryGrid } from '@/components/marketplace/category-grid'
 import { CitySelector } from '@/components/marketplace/city-selector'
+import { TrustStats, CustomerReviews, WhyEarthMove } from '@/components/marketplace/trust-section'
 import { ShieldCheck, Truck, Clock, ArrowRight, MapPin, CheckCircle2, Zap, Star } from 'lucide-react'
 
 async function getCards(marketId: string, featuredOnly: boolean): Promise<MarketMaterialCard[]> {
@@ -237,6 +238,9 @@ export default async function HomePage() {
           </section>
         )}
 
+        {/* ── TRUST STATS ── */}
+        <TrustStats />
+
         {/* ── HOW IT WORKS ── */}
         <section className="py-16 md:py-20">
           <div className="container-main">
@@ -260,6 +264,12 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* ── WHY EARTHMOVE ── */}
+        <WhyEarthMove />
+
+        {/* ── REVIEWS ── */}
+        <CustomerReviews />
 
         {/* ── MARKETS ── */}
         {allMarkets.length > 1 && (

@@ -34,7 +34,12 @@
       "WebFetch(domain:unsplash.com)",
       "WebFetch(domain:api.unsplash.com)",
       "WebFetch(domain:www.pexels.com)",
-      "WebFetch(domain:images.unsplash.com)"
+      "WebFetch(domain:images.unsplash.com)",
+      "WebFetch(domain:hellogravel.com)",
+      "WebFetch(domain:www.hellogravel.com)",
+      "Bash(ls /home/earthmove/aggregatemarket/src/app/[city]/)",
+      "Bash(ls /home/earthmove/aggregatemarket/src/app/[city]/[material]/)",
+      "Bash(ls /home/earthmove/aggregatemarket/supabase/migrations/006* /home/earthmove/aggregatemarket/supabase/migrations/007*)"
     ]
   }
 }
