@@ -133,10 +133,19 @@ export function MaterialQuiz() {
     <div className="max-w-2xl mx-auto px-4 py-12 md:py-20">
       {!done ? (
         <>
+          {/* Header - only on first question */}
+          {step === 0 && (
+            <div className="text-center mb-10">
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Material Match</span>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-2 mb-3">Tell us about your project.<br />We'll find your perfect material.</h1>
+              <p className="text-gray-500 text-sm">Takes 60 seconds. Used by 12,000+ homeowners and contractors.</p>
+            </div>
+          )}
+
           {/* Progress */}
           <div className="mb-10">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Question {step + 1} of {QUESTIONS.length}</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Step {step + 1} of {QUESTIONS.length}</span>
               {step > 0 && (
                 <button onClick={() => setStep((step - 1) as Step)} className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors">
                   <ArrowLeft size={12} /> Back
@@ -205,7 +214,7 @@ export function MaterialQuiz() {
             <Link href="/browse" className="btn-primary btn-lg flex-1 justify-center">Browse All Materials</Link>
             <button onClick={() => { setDone(false); setStep(0); setAnswers({ project: '', size: '', budget: '', delivery: '', priority: '' }) }}
               className="btn-secondary btn-lg flex-1 justify-center">
-              Retake Quiz
+              Start Over
             </button>
           </div>
         </div>

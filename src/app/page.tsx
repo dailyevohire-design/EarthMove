@@ -152,8 +152,8 @@ export default async function HomePage() {
               <Link href="/browse" className="btn-primary btn-xl shadow-2xl shadow-emerald-500/30 text-base">
                 Browse Materials <ArrowRight size={18} />
               </Link>
-              <Link href="/quiz" className="btn bg-white/10 backdrop-blur text-white border border-white/20 hover:bg-white/20 btn-xl text-base">
-                <HelpCircle size={16} /> Take the Quiz
+              <Link href="/material-match" className="btn bg-white/10 backdrop-blur text-white border border-white/20 hover:bg-white/20 btn-xl text-base">
+                <HelpCircle size={16} /> Find My Material →
               </Link>
             </div>
 
@@ -267,6 +267,46 @@ export default async function HomePage() {
                   <p className="text-gray-500 text-sm leading-relaxed">{body}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── KNOWLEDGE CENTER ── */}
+        <section className="py-14 md:py-20 bg-white border-y border-gray-100">
+          <div className="container-main">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Knowledge Center</span>
+                <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mt-2">Learn before you order</h2>
+              </div>
+              <Link href="/learn" className="hidden sm:flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+                Browse all guides <ArrowRight size={14} />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { slug: 'driveway-gravel-guide', title: 'The Complete Guide to Driveway Gravel', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80', tag: 'Popular' },
+                { slug: 'spring-project-guide-2025', title: '2025 Spring Project Guide', image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80', tag: 'Seasonal' },
+                { slug: 'gravel-calculator', title: 'Free Gravel Calculator Tool', image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=600&q=80', tag: 'Calculator' },
+              ].map(a => (
+                <Link key={a.slug} href={`/learn/${a.slug}`} className="group block">
+                  <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      <Image src={a.image} alt={a.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
+                      <div className="absolute top-3 left-3">
+                        <span className="px-2.5 py-1 rounded-full bg-white/90 text-xs font-bold text-gray-700">{a.tag}</span>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">{a.title}</h3>
+                      <span className="text-xs font-semibold text-emerald-600 mt-3 inline-flex items-center gap-1">Read guide <ArrowRight size={12} /></span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-6 sm:hidden">
+              <Link href="/learn" className="btn-secondary btn-md w-full justify-center">Browse all guides</Link>
             </div>
           </div>
         </section>

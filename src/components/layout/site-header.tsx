@@ -46,8 +46,11 @@ export async function SiteHeader() {
               <Link href="/deals" className="px-4 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-all font-semibold flex items-center gap-1.5">
                 <Zap size={13} className="fill-current" /> Deals
               </Link>
-              <Link href="/quiz" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium flex items-center gap-1.5">
-                <HelpCircle size={13} /> Quiz
+              <Link href="/learn" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium">
+                Learn
+              </Link>
+              <Link href="/material-match" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium flex items-center gap-1.5">
+                <HelpCircle size={13} /> Material Match
               </Link>
             </nav>
           </div>
