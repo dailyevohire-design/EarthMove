@@ -10,7 +10,10 @@ import { MaterialCard, DealCard } from '@/components/marketplace/material-card'
 import { CategoryGrid } from '@/components/marketplace/category-grid'
 import { CitySelector } from '@/components/marketplace/city-selector'
 import { TrustStats, CustomerReviews, WhyEarthMove } from '@/components/marketplace/trust-section'
-import { ShieldCheck, Truck, Clock, ArrowRight, MapPin, CheckCircle2, Zap, Star } from 'lucide-react'
+import { LocationModal, LocationBanner } from '@/components/marketplace/location-modal'
+import { AnimatedStats } from '@/components/marketplace/animated-stats'
+import { UrgencyBanner } from '@/components/marketplace/urgency-banner'
+import { ShieldCheck, Truck, Clock, ArrowRight, MapPin, CheckCircle2, Zap, Star, HelpCircle } from 'lucide-react'
 
 async function getCards(marketId: string, featuredOnly: boolean): Promise<MarketMaterialCard[]> {
   const supabase = await createClient()
@@ -111,7 +114,10 @@ export default async function HomePage() {
 
   return (
     <>
+      <LocationModal cities={allMarkets} />
       <SiteHeader />
+      <LocationBanner />
+      <UrgencyBanner />
       <main className="bg-gray-50/30">
         {/* ── HERO ── */}
         <section className="relative overflow-hidden bg-gray-900">
@@ -146,8 +152,8 @@ export default async function HomePage() {
               <Link href="/browse" className="btn-primary btn-xl shadow-2xl shadow-emerald-500/30 text-base">
                 Browse Materials <ArrowRight size={18} />
               </Link>
-              <Link href="/signup" className="btn bg-white/10 backdrop-blur text-white border border-white/20 hover:bg-white/20 btn-xl text-base">
-                Create Account
+              <Link href="/quiz" className="btn bg-white/10 backdrop-blur text-white border border-white/20 hover:bg-white/20 btn-xl text-base">
+                <HelpCircle size={16} /> Take the Quiz
               </Link>
             </div>
 
@@ -238,8 +244,8 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* ── TRUST STATS ── */}
-        <TrustStats />
+        {/* ── ANIMATED STATS ── */}
+        <AnimatedStats />
 
         {/* ── HOW IT WORKS ── */}
         <section className="py-16 md:py-20">

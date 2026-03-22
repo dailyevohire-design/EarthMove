@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { UserMenu } from './user-menu'
 import { MobileNav } from './mobile-nav'
-import { Mountain } from 'lucide-react'
+import { LocationIndicator } from '@/components/marketplace/location-modal'
+import { Mountain, Zap, HelpCircle } from 'lucide-react'
 
 export async function SiteHeader() {
   const supabase = await createClient()
@@ -34,15 +35,22 @@ export async function SiteHeader() {
             </div>
           </Link>
 
-          {/* Center nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Link href="/browse" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium">
-              Materials
-            </Link>
-            <Link href="/browse?deals=1" className="px-4 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-all font-semibold flex items-center gap-1.5">
-              Deals
-            </Link>
-          </nav>
+          {/* Center: location + nav */}
+          <div className="hidden md:flex items-center gap-4">
+            <LocationIndicator />
+            <div className="w-px h-6 bg-gray-200" />
+            <nav className="flex items-center gap-1">
+              <Link href="/browse" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium">
+                Materials
+              </Link>
+              <Link href="/deals" className="px-4 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-all font-semibold flex items-center gap-1.5">
+                <Zap size={13} className="fill-current" /> Deals
+              </Link>
+              <Link href="/quiz" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium flex items-center gap-1.5">
+                <HelpCircle size={13} /> Quiz
+              </Link>
+            </nav>
+          </div>
 
           {/* Right */}
           <div className="flex items-center gap-2">

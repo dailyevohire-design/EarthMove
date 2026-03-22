@@ -39,7 +39,8 @@
       "WebFetch(domain:www.hellogravel.com)",
       "Bash(ls /home/earthmove/aggregatemarket/src/app/[city]/)",
       "Bash(ls /home/earthmove/aggregatemarket/src/app/[city]/[material]/)",
-      "Bash(ls /home/earthmove/aggregatemarket/supabase/migrations/006* /home/earthmove/aggregatemarket/supabase/migrations/007*)"
+      "Bash(ls /home/earthmove/aggregatemarket/supabase/migrations/006* /home/earthmove/aggregatemarket/supabase/migrations/007*)",
+      "Bash(ls:*)"
     ]
   }
 }
