@@ -1301,7 +1301,7 @@ const ARTICLES: Record<string, {
   'driveway-gravel-guide': {
     title: 'The Complete Guide to Driveway Gravel in 2025',
     description: 'Everything you need to know about choosing, calculating, and installing the right driveway material.',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1558618047-3c37c2d3b4b0?w=1200&q=80&fit=crop',
     readTime: '12 min read',
     category: 'Homeowner',
     content: DrivewayGravelGuide,
@@ -1317,7 +1317,7 @@ const ARTICLES: Record<string, {
   'french-drain-materials': {
     title: 'Best Materials for French Drains and Drainage Projects',
     description: 'Stop water damage before it starts. The complete guide to drainage materials.',
-    image: 'https://images.unsplash.com/photo-1595514535116-9b9b5db7cd22?w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=1200&q=80&fit=crop',
     readTime: '10 min read',
     category: 'Homeowner',
     content: FrenchDrainGuide,
@@ -1325,7 +1325,7 @@ const ARTICLES: Record<string, {
   'how-much-gravel-do-i-need': {
     title: 'How Much Gravel Do I Need? The Ultimate Calculator Guide',
     description: 'Never over-order or under-order again. Calculate exactly what your project needs.',
-    image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=1200&q=80&fit=crop',
     readTime: '6 min read',
     category: 'Calculator',
     content: HowMuchGravelGuide,
@@ -1333,7 +1333,7 @@ const ARTICLES: Record<string, {
   'spring-project-guide-2025': {
     title: '2025 Spring Project Guide: What to Order and When',
     description: 'Beat the price increases. Your seasonal planning guide for spring projects.',
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200&q=80&fit=crop',
     readTime: '9 min read',
     category: 'Seasonal',
     content: SpringProjectGuide,
@@ -1341,7 +1341,7 @@ const ARTICLES: Record<string, {
   'gravel-calculator': {
     title: 'Free Gravel and Aggregate Calculator',
     description: 'Calculate cubic yards, tons, and truckloads for any project. Free tool.',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=80&fit=crop',
     readTime: '2 min',
     category: 'Calculator',
     content: GravelCalculatorPage,
@@ -1349,7 +1349,7 @@ const ARTICLES: Record<string, {
   'material-grades-explained': {
     title: 'Understanding Aggregate Grades: A Contractor\'s Guide',
     description: '#57 stone, #67 stone, Grade 1 flex base — what do these numbers actually mean?',
-    image: 'https://images.unsplash.com/photo-1564419320461-6870880221ad?w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1568283096533-078a24bde253?w=1200&q=80&fit=crop',
     readTime: '7 min read',
     category: 'Contractor',
     content: MaterialGradesGuide,
@@ -1357,7 +1357,7 @@ const ARTICLES: Record<string, {
   'ordering-wrong-material': {
     title: 'The $3,000 Mistake: What Happens When You Order the Wrong Material',
     description: 'Real stories of costly material mistakes — and how to avoid them.',
-    image: 'https://images.unsplash.com/photo-1625664163372-24a5db9a9cb4?w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80&fit=crop',
     readTime: '8 min read',
     category: 'Homeowner',
     content: WrongMaterialStory,

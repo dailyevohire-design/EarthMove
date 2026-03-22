@@ -285,9 +285,9 @@ export default async function HomePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { slug: 'driveway-gravel-guide', title: 'The Complete Guide to Driveway Gravel', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80', tag: 'Popular' },
-                { slug: 'spring-project-guide-2025', title: '2025 Spring Project Guide', image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80', tag: 'Seasonal' },
-                { slug: 'gravel-calculator', title: 'Free Gravel Calculator Tool', image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=600&q=80', tag: 'Calculator' },
+                { slug: 'driveway-gravel-guide', title: 'The Complete Guide to Driveway Gravel', image: 'https://images.unsplash.com/photo-1558618047-3c37c2d3b4b0?w=600&q=80&fit=crop', tag: 'Popular' },
+                { slug: 'spring-project-guide-2025', title: '2025 Spring Project Guide', image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&q=80&fit=crop', tag: 'Seasonal' },
+                { slug: 'gravel-calculator', title: 'Free Gravel Calculator Tool', image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&fit=crop', tag: 'Calculator' },
               ].map(a => (
                 <Link key={a.slug} href={`/learn/${a.slug}`} className="group block">
                   <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
