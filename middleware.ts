@@ -31,7 +31,7 @@ function comingSoonHTML(origin: string) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EarthMove — Coming Soon</title>
+  <title>Under Construction</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -98,19 +98,12 @@ function comingSoonHTML(origin: string) {
 </head>
 <body>
   <div class="container">
-    <div class="logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="m8 3 4 8 5-5 2 15H2L8 3z"/>
-      </svg>
-    </div>
-    <h1>Earth<span>Move</span></h1>
-    <p>We're building something big. Bulk construction materials, delivered to your job site. Launching soon.</p>
+    <h1 style="font-size:20px;color:#374151;margin-bottom:24px;">This site is under construction.</h1>
     <form onsubmit="unlock(event)">
-      <input type="password" id="pw" placeholder="Enter access code" autocomplete="off" />
+      <input type="password" id="pw" placeholder="Password" autocomplete="off" />
       <button type="submit">Enter</button>
     </form>
-    <div class="error" id="err">Incorrect access code.</div>
-    <div class="sub">&copy; 2026 EarthMove. All rights reserved.</div>
+    <div class="error" id="err">Incorrect password.</div>
   </div>
   <script>
     async function unlock(e) {
