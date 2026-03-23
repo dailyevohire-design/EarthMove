@@ -40,7 +40,11 @@
       "Bash(ls /home/earthmove/aggregatemarket/src/app/[city]/)",
       "Bash(ls /home/earthmove/aggregatemarket/src/app/[city]/[material]/)",
       "Bash(ls /home/earthmove/aggregatemarket/supabase/migrations/006* /home/earthmove/aggregatemarket/supabase/migrations/007*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(mkdir -p /home/earthmove/aggregatemarket/src/app/\\\\\\(marketplace\\\\\\)/[city]/[material])",
+      "Bash(mv /home/earthmove/aggregatemarket/src/app/[city]/page.tsx /home/earthmove/aggregatemarket/src/app/\\\\\\(marketplace\\\\\\)/[city]/page.tsx)",
+      "Bash(mv /home/earthmove/aggregatemarket/src/app/[city]/[material]/page.tsx /home/earthmove/aggregatemarket/src/app/\\\\\\(marketplace\\\\\\)/[city]/[material]/page.tsx)",
+      "Bash(rm -rf /home/earthmove/aggregatemarket/src/app/[city])"
     ]
   }
 }
