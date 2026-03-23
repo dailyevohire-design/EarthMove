@@ -9,10 +9,8 @@ import { SiteFooter } from '@/components/layout/site-footer'
 import { MaterialCard, DealCard } from '@/components/marketplace/material-card'
 import { CategoryGrid } from '@/components/marketplace/category-grid'
 import { CitySelector } from '@/components/marketplace/city-selector'
-import { TrustStats, CustomerReviews, WhyEarthMove } from '@/components/marketplace/trust-section'
-import { LocationModal, LocationBanner } from '@/components/marketplace/location-modal'
+import { CustomerReviews, WhyEarthMove } from '@/components/marketplace/trust-section'
 import { AnimatedStats } from '@/components/marketplace/animated-stats'
-import { UrgencyBanner } from '@/components/marketplace/urgency-banner'
 import { ShieldCheck, Truck, Clock, ArrowRight, MapPin, CheckCircle2, Zap, Star, HelpCircle } from 'lucide-react'
 
 async function getCards(marketId: string, featuredOnly: boolean): Promise<MarketMaterialCard[]> {
@@ -94,23 +92,13 @@ function buildCard(row: any, promos: any[]): MarketMaterialCard | null {
   }
 }
 
-async function getDeals(marketId: string): Promise<MarketMaterialCard[]> {
-  const allCards = await getCards(marketId, false)
-  return allCards.filter(c => c.badge_label || c.is_deal_of_day)
-}
-
 export default async function HomePage() {
   const [market, allMarkets] = await Promise.all([getCurrentMarket(), getAllMarkets()])
 
-  const [featuredCards, allCards, deals] = market
-    ? await Promise.all([
-        getCards(market.id, true),
-        getCards(market.id, false),
-        getDeals(market.id),
-      ])
-    : [[], [], []]
-
-  const nonFeatured = allCards.filter(c => !featuredCards.find(f => f.market_material_id === c.market_material_id))
+  const allCards = market ? await getCards(market.id, false) : []
+  const featuredCards = allCards.filter(c => c.is_featured)
+  const deals = allCards.filter(c => c.badge_label || c.is_deal_of_day)
+  const nonFeatured = allCards.filter(c => !c.is_featured)
 
   return (
     <>
