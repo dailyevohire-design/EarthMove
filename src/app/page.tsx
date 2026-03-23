@@ -114,10 +114,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <LocationModal cities={allMarkets} />
       <SiteHeader />
-      <LocationBanner />
-      <UrgencyBanner />
       <main className="bg-gray-50/30">
         {/* ── HERO ── */}
         <section className="relative overflow-hidden bg-gray-900">
