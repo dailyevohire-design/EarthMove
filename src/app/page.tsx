@@ -106,16 +106,7 @@ export default async function HomePage() {
       <main className="bg-gray-50/30">
         {/* ── HERO ── */}
         <section className="relative overflow-hidden bg-gray-900">
-          <div className="absolute inset-0">
-            <Image
-              src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1920&q=80"
-              alt="Construction materials"
-              fill
-              className="object-cover opacity-40"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-gray-900/60 via-gray-900/80 to-gray-900" />
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-900/60 via-gray-900/80 to-gray-900" />
 
           <div className="container-main relative z-10 pt-12 pb-16 md:pt-16 md:pb-24">
             {/* City selector */}
