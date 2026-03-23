@@ -46,7 +46,8 @@
       "Bash(mv /home/earthmove/aggregatemarket/src/app/[city]/[material]/page.tsx /home/earthmove/aggregatemarket/src/app/\\\\\\(marketplace\\\\\\)/[city]/[material]/page.tsx)",
       "Bash(rm -rf /home/earthmove/aggregatemarket/src/app/[city])",
       "Bash(npm install:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); r=d[''''results''''][0]; print\\(r[''''id'''']\\); print\\(r[''''urls''''][''''regular'''']\\)\")"
     ]
   }
 }
