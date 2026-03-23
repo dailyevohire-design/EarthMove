@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   Menu, X, Mountain, Package, User,
-  LogOut, ShieldCheck, Building2
+  LogOut, ShieldCheck, Building2, Zap, BookOpen, Search
 } from 'lucide-react'
 
 interface MobileNavProps {
@@ -49,7 +49,7 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
                 <div className="w-7 h-7 bg-emerald-600 rounded-md flex items-center justify-center">
                   <Mountain size={13} className="text-white" />
                 </div>
-                <span className="font-bold text-gray-900 text-sm">AggregateMarket</span>
+                <span className="font-bold text-gray-900 text-sm">EarthMove</span>
               </div>
               <button
                 onClick={close}
@@ -61,8 +61,10 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
 
             {/* Nav */}
             <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
-              <NavLink href="/browse" onClick={close}>Materials</NavLink>
-              <NavLink href="/browse?deals=1" onClick={close} accent>Today's Deals</NavLink>
+              <NavLink href="/browse" icon={<Package size={15} />} onClick={close}>Materials</NavLink>
+              <NavLink href="/deals" icon={<Zap size={15} />} onClick={close} accent>Today's Deals</NavLink>
+              <NavLink href="/learn" icon={<BookOpen size={15} />} onClick={close}>Learn</NavLink>
+              <NavLink href="/material-match" icon={<Search size={15} />} onClick={close}>Material Match</NavLink>
 
               {isLoggedIn && (
                 <>
