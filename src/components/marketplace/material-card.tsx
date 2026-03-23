@@ -33,7 +33,7 @@ export function MaterialCard({ card, size = 'default' }: { card: MarketMaterialC
               fill
               className="object-cover group-hover:scale-[1.06] transition-transform duration-700 ease-out"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              unoptimized
             />
           ) : null}
 
