@@ -4,6 +4,7 @@ import { getCurrentMarket } from '@/lib/market'
 import { deriveDisplayPrice, formatCurrency, unitLabel } from '@/lib/pricing-engine'
 import { resolveOffering } from '@/lib/fulfillment-resolver'
 import { MaterialOrderForm } from '@/components/marketplace/material-order-form'
+import { getMaterialImage } from '@/lib/material-images'
 import { Package, ChevronRight, Truck, Shield } from 'lucide-react'
 import Link from 'next/link'
 
@@ -91,17 +92,11 @@ export default async function MaterialDetailPage({ params }: Props) {
         <div className="lg:col-span-3 space-y-6">
           {/* Image */}
           <div className="aspect-[16/9] rounded-2xl bg-gray-100 border border-gray-200 overflow-hidden">
-            {(mm.display_image_url ?? resolvedOffering?.image_url) ? (
-              <img
-                src={mm.display_image_url ?? resolvedOffering.image_url}
-                alt={material.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-                <Package size={52} className="text-gray-300" />
-              </div>
-            )}
+            <img
+              src={getMaterialImage(material.slug)}
+              alt={material.name}
+              className="w-full h-full object-cover"
+            />
           </div>
 
           {/* Title + price */}

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { QuantityCalculator } from '@/components/marketplace/quantity-calculator'
+import { getArticleImage } from '@/lib/material-images'
 import { ArrowRight, CheckCircle2, AlertTriangle, BookOpen, Clock, ChevronRight } from 'lucide-react'
 
 interface Props { params: Promise<{ slug: string }> }
@@ -1389,7 +1390,7 @@ export default async function LearnArticlePage({ params }: Props) {
     <article className="bg-white">
       {/* Hero */}
       <div className="relative h-[300px] md:h-[400px] overflow-hidden">
-        <Image src={article.image} alt={article.title} fill className="object-cover" />
+        <img src={getArticleImage(slug)} alt={article.title} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div className="absolute bottom-0 inset-x-0 p-6 md:p-10 max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-3">

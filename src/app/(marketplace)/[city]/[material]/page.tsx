@@ -6,6 +6,7 @@ import { SiteFooter } from '@/components/layout/site-footer'
 import { QuantityCalculator } from '@/components/marketplace/quantity-calculator'
 import Image from 'next/image'
 import Link from 'next/link'
+import { getMaterialImage } from '@/lib/material-images'
 import { Truck, ShieldCheck, Clock, MapPin, Star, CheckCircle2 } from 'lucide-react'
 
 interface Props {
@@ -116,12 +117,10 @@ export default async function LocationMaterialPage({ params }: Props) {
       <main className="bg-gray-50/30">
         {/* Hero */}
         <section className="relative overflow-hidden bg-gray-900 py-16 md:py-20">
-          {offering?.image_url && (
-            <div className="absolute inset-0">
-              <Image src={offering.image_url} alt={material.name} fill className="object-cover opacity-30" />
+          <div className="absolute inset-0">
+              <img src={getMaterialImage(material.slug)} alt={material.name} className="absolute inset-0 w-full h-full object-cover opacity-30" />
               <div className="absolute inset-0 bg-gradient-to-r from-gray-900/90 to-gray-900/60" />
-            </div>
-          )}
+          </div>
           <div className="container-main relative z-10">
             <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium mb-4">
               <MapPin size={14} />

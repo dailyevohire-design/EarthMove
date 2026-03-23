@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { MarketMaterialCard } from '@/types'
 import { formatCurrency, unitLabel } from '@/lib/pricing-engine'
+import { getMaterialImage } from '@/lib/material-images'
 import { Truck, Zap, Clock, Star, ArrowRight } from 'lucide-react'
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -22,20 +23,19 @@ const FALLBACK_GRADIENTS: Record<string, string> = {
 export function MaterialCard({ card }: { card: MarketMaterialCard }) {
   const catColor = CATEGORY_COLORS[card.category_name] ?? 'bg-gray-600'
   const fallbackGradient = FALLBACK_GRADIENTS[card.category_name] ?? 'linear-gradient(135deg, #374151, #6B7280)'
+  const imageUrl = getMaterialImage(card.slug)
 
   return (
     <Link href={`/browse/${card.slug}`} className="group block">
       <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01]">
         {/* Image */}
         <div className="relative overflow-hidden" style={{ height: 220, background: fallbackGradient }}>
-          {card.image_url && (
-            <img
-              src={card.image_url}
-              alt={card.name}
-              loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-            />
-          )}
+          <img
+            src={imageUrl}
+            alt={card.name}
+            loading="lazy"
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          />
 
           {/* Bottom gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
@@ -109,19 +109,18 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
 
 export function DealCard({ card }: { card: MarketMaterialCard }) {
   const fallbackGradient = FALLBACK_GRADIENTS[card.category_name] ?? 'linear-gradient(135deg, #374151, #6B7280)'
+  const imageUrl = getMaterialImage(card.slug)
 
   return (
     <Link href={`/browse/${card.slug}`} className="group block flex-shrink-0 w-[320px] sm:w-[360px]">
       <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
         <div className="relative overflow-hidden" style={{ height: 200, background: fallbackGradient }}>
-          {card.image_url && (
-            <img
-              src={card.image_url}
-              alt={card.name}
-              loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-            />
-          )}
+          <img
+            src={imageUrl}
+            alt={card.name}
+            loading="lazy"
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
           <div className="absolute top-3 left-3">

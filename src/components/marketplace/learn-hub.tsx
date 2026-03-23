@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { getArticleImage } from '@/lib/material-images'
 import {
   ArrowRight, Calculator, Search, Leaf, HardHat, Home,
   Grid3X3, Clock, TrendingUp, TrendingDown, Minus, Zap,
@@ -10,14 +11,14 @@ import {
 
 /* ─── ARTICLES DATA ─── */
 const ARTICLES = [
-  { slug: 'driveway-gravel-guide', title: 'The Complete Guide to Driveway Gravel in 2025', desc: 'Everything about choosing, calculating, and installing driveway materials.', image: 'https://images.unsplash.com/photo-1558618047-3c37c2d3b4b0?w=1200&q=80', time: '12 min', cat: 'Homeowner', featured: true },
-  { slug: 'fill-dirt-vs-topsoil', title: 'Fill Dirt vs Topsoil: Which One Do You Actually Need?', desc: 'The difference could save you thousands on your next project.', image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200&q=80', time: '8 min', cat: 'Homeowner', featured: true },
-  { slug: 'french-drain-materials', title: 'Best Materials for French Drains', desc: 'Stop water damage before it starts. Complete drainage guide.', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80', time: '10 min', cat: 'Homeowner', featured: false },
-  { slug: 'how-much-gravel-do-i-need', title: 'How Much Gravel Do I Need?', desc: 'Never over-order or under-order again.', image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=1200&q=80', time: '6 min', cat: 'Calculator', featured: false },
-  { slug: 'spring-project-guide-2025', title: '2025 Spring Project Guide', desc: 'Beat the price increases. Seasonal planning guide.', image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200&q=80', time: '9 min', cat: 'Seasonal', featured: false },
-  { slug: 'gravel-calculator', title: 'Free Gravel & Aggregate Calculator', desc: 'Calculate cubic yards, tons, and truckloads instantly.', image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=1200&q=80', time: '2 min', cat: 'Calculator', featured: false },
-  { slug: 'material-grades-explained', title: 'Aggregate Grades Explained', desc: '#57, #67, Grade 1 flex base — decoded for contractors.', image: 'https://images.unsplash.com/photo-1615811361523-1ba6a72fc1a3?w=1200&q=80', time: '7 min', cat: 'Contractor', featured: false },
-  { slug: 'ordering-wrong-material', title: 'The $3,000 Mistake', desc: 'Real stories of costly material mistakes and how to avoid them.', image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=80', time: '8 min', cat: 'Homeowner', featured: false },
+  { slug: 'driveway-gravel-guide', title: 'The Complete Guide to Driveway Gravel in 2025', desc: 'Everything about choosing, calculating, and installing driveway materials.', time: '12 min', cat: 'Homeowner', featured: true },
+  { slug: 'fill-dirt-vs-topsoil', title: 'Fill Dirt vs Topsoil: Which One Do You Actually Need?', desc: 'The difference could save you thousands on your next project.', time: '8 min', cat: 'Homeowner', featured: true },
+  { slug: 'french-drain-materials', title: 'Best Materials for French Drains', desc: 'Stop water damage before it starts. Complete drainage guide.', time: '10 min', cat: 'Homeowner', featured: false },
+  { slug: 'how-much-gravel-do-i-need', title: 'How Much Gravel Do I Need?', desc: 'Never over-order or under-order again.', time: '6 min', cat: 'Calculator', featured: false },
+  { slug: 'spring-project-guide-2025', title: '2025 Spring Project Guide', desc: 'Beat the price increases. Seasonal planning guide.', time: '9 min', cat: 'Seasonal', featured: false },
+  { slug: 'gravel-calculator', title: 'Free Gravel & Aggregate Calculator', desc: 'Calculate cubic yards, tons, and truckloads instantly.', time: '2 min', cat: 'Calculator', featured: false },
+  { slug: 'material-grades-explained', title: 'Aggregate Grades Explained', desc: '#57, #67, Grade 1 flex base — decoded for contractors.', time: '7 min', cat: 'Contractor', featured: false },
+  { slug: 'ordering-wrong-material', title: 'The $3,000 Mistake', desc: 'Real stories of costly material mistakes and how to avoid them.', time: '8 min', cat: 'Homeowner', featured: false },
 ]
 
 const FILTERS = [
@@ -257,7 +258,7 @@ export function LearnHub() {
               <Link href={`/learn/${heroArticle.slug}`} className="lg:col-span-3 group block">
                 <div className="rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all duration-300 h-full">
                   <div className="relative h-64 md:h-80 overflow-hidden">
-                    <img src={heroArticle.image} alt={heroArticle.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="eager" />
+                    <img src={getArticleImage(heroArticle.slug)} alt={heroArticle.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="eager" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     <div className="absolute top-4 left-4">
                       <span className="px-3 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold">{heroArticle.cat}</span>
@@ -282,7 +283,7 @@ export function LearnHub() {
                   <Link key={a.slug} href={`/learn/${a.slug}`} className="group block flex-1">
                     <div className="rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
                       <div className="relative h-36 overflow-hidden">
-                        <img src={a.image} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+                        <img src={getArticleImage(a.slug)} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
                         <div className="absolute top-3 left-3">
                           <span className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold">{a.cat}</span>
                         </div>
@@ -304,7 +305,7 @@ export function LearnHub() {
               <Link key={a.slug} href={`/learn/${a.slug}`} className="group block">
                 <div className={`rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${a.cat === 'Calculator' ? 'bg-gray-900 text-white' : 'bg-white'}`}>
                   <div className="relative h-44 overflow-hidden">
-                    <img src={a.image} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                    <img src={getArticleImage(a.slug)} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute top-3 left-3">
                       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
