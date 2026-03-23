@@ -88,7 +88,6 @@ export default async function HomePage() {
 
   return (
     <>
-      <SiteHeader />
       <main>
         {/* Hero */}
         <section className="bg-gray-900 py-16 md:py-24">
@@ -175,7 +174,6 @@ export default async function HomePage() {
           </div>
         </section>
       </main>
-      <SiteFooter />
     </>
   )
 }
