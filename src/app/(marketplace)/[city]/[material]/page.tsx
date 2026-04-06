@@ -7,6 +7,7 @@ import { QuantityCalculator } from '@/components/marketplace/quantity-calculator
 import Image from 'next/image'
 import Link from 'next/link'
 import { getMaterialImage } from '@/lib/material-images'
+import { productSchema, breadcrumbSchema, faqSchema, getMaterialFAQs } from '@/lib/structured-data'
 import { Truck, ShieldCheck, Clock, MapPin, Star, CheckCircle2 } from 'lucide-react'
 
 interface Props {
@@ -95,8 +96,13 @@ export async function generateMetadata({ params }: Props) {
   const displayPrice = deriveDisplayPrice(data.mm.price_display_mode, data.mm.custom_display_price, data.offering)
 
   return {
-    title: `${matName} Delivery in ${cityName} | EarthMove`,
-    description: `Order ${matName.toLowerCase()} for delivery in ${cityName}, ${data.market.state}. ${displayPrice ? `Starting at ${formatCurrency(displayPrice)} per ${data.material.default_unit}. ` : ''}Same-day delivery available. Order online in minutes.`,
+    title: `${matName} Delivery in ${cityName}`,
+    description: `Order ${matName.toLowerCase()} for delivery in ${cityName}, ${data.market.state}. ${displayPrice ? `Starting at ${formatCurrency(displayPrice)} per ${data.material.default_unit === 'cubic_yard' ? 'cubic yard' : 'ton'}. ` : ''}Same-day delivery available. Order online in minutes.`,
+    alternates: { canonical: `/${city}/${material}` },
+    openGraph: {
+      title: `${matName} Delivery in ${cityName} | EarthMove`,
+      description: `Order ${matName.toLowerCase()} for delivery in ${cityName}. ${displayPrice ? `From ${formatCurrency(displayPrice)}/${data.material.default_unit === 'cubic_yard' ? 'yd' : 'ton'}. ` : ''}Same-day delivery.`,
+    },
   }
 }
 
@@ -111,9 +117,27 @@ export default async function LocationMaterialPage({ params }: Props) {
   const density = DENSITY[material.slug] ?? 1.3
   const cityDisplay = market.name
 
+  const faqs = getMaterialFAQs(material.name, cityDisplay, displayPrice ?? undefined, unit)
+  const citySlugForUrl = city
+
   return (
     <>
       <SiteHeader />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+        productSchema({
+          name: `${material.name} in ${cityDisplay}`, slug: material.slug,
+          description: material.description, category: material.category?.name,
+          price: displayPrice, unit, image: getMaterialImage(material.slug),
+        })
+      ) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+        breadcrumbSchema([
+          { name: 'Home', url: '/' },
+          { name: cityDisplay, url: `/${citySlugForUrl}` },
+          { name: material.name, url: `/${citySlugForUrl}/${material.slug}` },
+        ])
+      ) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs)) }} />
       <main className="bg-gray-50/30">
         {/* Hero */}
         <section className="relative overflow-hidden bg-gray-900 py-16 md:py-20">
@@ -195,6 +219,24 @@ export default async function LocationMaterialPage({ params }: Props) {
                   <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700 text-sm font-medium">{uc}</span>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ for AEO */}
+        <section className="py-12 md:py-16">
+          <div className="container-main max-w-3xl">
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-6">{material.name} FAQ</h2>
+            <div className="space-y-3">
+              {faqs.map((faq, i) => (
+                <details key={i} className="group border border-gray-200 rounded-xl overflow-hidden bg-white">
+                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <span className="text-sm font-semibold text-gray-900 pr-4">{faq.question}</span>
+                    <span className="text-gray-400 flex-shrink-0 transition-transform group-open:rotate-90">&#8250;</span>
+                  </summary>
+                  <div className="px-4 pb-4 text-sm text-gray-600 leading-relaxed">{faq.answer}</div>
+                </details>
               ))}
             </div>
           </div>

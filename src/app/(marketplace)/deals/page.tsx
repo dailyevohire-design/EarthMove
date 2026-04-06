@@ -91,7 +91,15 @@ async function getDeals(marketId: string) {
   return { dealOfDay, deals: otherDeals }
 }
 
-export const metadata = { title: "Today's Deals" }
+export const metadata = {
+  title: "Today's Deals on Bulk Materials",
+  description: "Save on fill dirt, gravel, sand, and more. Flash sales, contractor deals, and limited-time promotions on bulk material delivery.",
+  alternates: { canonical: '/deals' },
+  openGraph: {
+    title: "Today's Deals | EarthMove",
+    description: 'Limited-time savings on bulk construction materials. Same-day delivery.',
+  },
+}
 
 export default async function DealsPage() {
   const market = await getCurrentMarket()

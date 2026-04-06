@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.supabase.in' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
     ],
-    unoptimized: true,
+    unoptimized: false,
   },
   experimental: {
     serverActions: {

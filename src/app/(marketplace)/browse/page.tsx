@@ -97,7 +97,15 @@ async function getCategories() {
   return data ?? []
 }
 
-export const metadata = { title: 'Browse Materials' }
+export const metadata = {
+  title: 'Browse Bulk Materials for Delivery',
+  description: 'Browse fill dirt, gravel, sand, topsoil, road base, crushed concrete and 9 more materials. Filter by category. Same-day delivery available.',
+  alternates: { canonical: '/browse' },
+  openGraph: {
+    title: 'Browse Bulk Materials | EarthMove',
+    description: 'Fill dirt, gravel, sand, topsoil, flex base, and more. 15 materials available for same-day delivery.',
+  },
+}
 
 export default async function BrowsePage({ searchParams }: BrowseProps) {
   const { category, deals } = await searchParams

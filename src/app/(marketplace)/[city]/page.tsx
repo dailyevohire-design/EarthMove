@@ -4,6 +4,7 @@ import { deriveDisplayPrice, formatCurrency, unitLabel } from '@/lib/pricing-eng
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { MaterialCard } from '@/components/marketplace/material-card'
+import { localBusinessSchema, breadcrumbSchema, faqSchema } from '@/lib/structured-data'
 import Link from 'next/link'
 import { MapPin, Truck, ShieldCheck, Clock } from 'lucide-react'
 import type { MarketMaterialCard } from '@/types'
@@ -66,8 +67,13 @@ export async function generateMetadata({ params }: Props) {
   const data = await getCityData(city)
   if (!data) return { title: 'Not Found' }
   return {
-    title: `Bulk Material Delivery in ${data.market.name}, ${data.market.state} | EarthMove`,
-    description: `Order fill dirt, gravel, sand, topsoil, road base and more for delivery in ${data.market.name}. Same-day delivery available. ${data.cards.length} materials in stock.`,
+    title: `Bulk Material Delivery in ${data.market.name}, ${data.market.state}`,
+    description: `Order fill dirt, gravel, sand, topsoil, road base and more for delivery in ${data.market.name}, ${data.market.state}. Same-day delivery available. ${data.cards.length} materials in stock.`,
+    alternates: { canonical: `/${city}` },
+    openGraph: {
+      title: `Bulk Material Delivery in ${data.market.name} | EarthMove`,
+      description: `${data.cards.length} materials available for same-day delivery in ${data.market.name}, ${data.market.state}.`,
+    },
   }
 }
 
@@ -77,9 +83,22 @@ export default async function CityPage({ params }: Props) {
   if (!data) notFound()
   const { market, cards } = data
 
+  const cityFaqs = [
+    { question: `What materials can I get delivered in ${market.name}?`, answer: `EarthMove delivers ${cards.length} materials in ${market.name}, ${market.state}, including fill dirt, gravel, sand, topsoil, flex base, road base, limestone, crushed concrete, and more. All available for same-day or scheduled delivery.` },
+    { question: `How fast can I get materials delivered in ${market.name}?`, answer: `Same-day delivery is available for most materials in ${market.name}. Orders placed before noon are typically delivered the same day. You can also schedule delivery for a future date.` },
+    { question: `What area does EarthMove serve around ${market.name}?`, answer: `We deliver within a 50-mile radius of ${market.name}, ${market.state}. Enter your ZIP code to check availability and get an instant delivery quote.` },
+  ]
+
   return (
     <>
       <SiteHeader />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+        localBusinessSchema({ name: market.name, state: market.state, slug: market.slug, materialCount: cards.length })
+      ) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+        breadcrumbSchema([{ name: 'Home', url: '/' }, { name: market.name, url: `/${city}` }])
+      ) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(cityFaqs)) }} />
       <main className="bg-gray-50/30">
         <section className="bg-gray-900 py-16 md:py-20">
           <div className="container-main">
@@ -131,6 +150,23 @@ export default async function CityPage({ params }: Props) {
                 >
                   {card.name} in {market.name}
                 </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+        {/* FAQ for AEO */}
+        <section className="py-10 md:py-14">
+          <div className="container-main">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+            <div className="space-y-3 max-w-3xl">
+              {cityFaqs.map((faq, i) => (
+                <details key={i} className="group border border-gray-200 rounded-xl overflow-hidden bg-white">
+                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <span className="text-sm font-semibold text-gray-900 pr-4">{faq.question}</span>
+                    <span className="text-gray-400 flex-shrink-0 transition-transform group-open:rotate-90">&#8250;</span>
+                  </summary>
+                  <div className="px-4 pb-4 text-sm text-gray-600 leading-relaxed">{faq.answer}</div>
+                </details>
               ))}
             </div>
           </div>

@@ -5,7 +5,7 @@ export async function getAllMarkets() {
   const supabase = await createClient()
   const { data } = await supabase
     .from('markets')
-    .select('id, name, slug, state')
+    .select('id, name, slug, state, center_lat, center_lng')
     .eq('is_active', true)
     .order('name')
   return data ?? []
@@ -20,7 +20,7 @@ export async function getCurrentMarket() {
   if (marketCookie) {
     const { data } = await supabase
       .from('markets')
-      .select('id, name, slug, state')
+      .select('id, name, slug, state, center_lat, center_lng')
       .eq('id', marketCookie)
       .eq('is_active', true)
       .single()
@@ -30,7 +30,7 @@ export async function getCurrentMarket() {
   // Fallback to first active market
   const { data } = await supabase
     .from('markets')
-    .select('id, name, slug, state')
+    .select('id, name, slug, state, center_lat, center_lng')
     .eq('is_active', true)
     .order('created_at')
     .limit(1)

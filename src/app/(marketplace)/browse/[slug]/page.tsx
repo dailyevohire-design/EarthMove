@@ -5,6 +5,7 @@ import { deriveDisplayPrice, formatCurrency, unitLabel } from '@/lib/pricing-eng
 import { resolveOffering } from '@/lib/fulfillment-resolver'
 import { MaterialOrderForm } from '@/components/marketplace/material-order-form'
 import { getMaterialImage } from '@/lib/material-images'
+import { productSchema, breadcrumbSchema, faqSchema, getMaterialFAQs } from '@/lib/structured-data'
 import { Package, ChevronRight, Truck, Shield } from 'lucide-react'
 import Link from 'next/link'
 
@@ -62,7 +63,15 @@ export async function generateMetadata({ params }: Props) {
   const supabase = await createClient()
   const { data } = await supabase.from('material_catalog').select('name, description').eq('slug', slug).single()
   if (!data) return { title: 'Material Not Found' }
-  return { title: data.name, description: data.description ?? undefined }
+  return {
+    title: data.name,
+    description: data.description ?? `Order ${data.name.toLowerCase()} for bulk delivery. Same-day delivery available.`,
+    alternates: { canonical: `/browse/${slug}` },
+    openGraph: {
+      title: `${data.name} — Bulk Delivery | EarthMove`,
+      description: data.description ?? `Order ${data.name.toLowerCase()} for bulk delivery. Same-day delivery available.`,
+    },
+  }
 }
 
 export default async function MaterialDetailPage({ params }: Props) {
@@ -74,8 +83,27 @@ export default async function MaterialDetailPage({ params }: Props) {
   const displayPrice = deriveDisplayPrice(mm.price_display_mode, mm.custom_display_price, resolvedOffering)
   const unit = resolvedOffering?.unit ?? material.default_unit
 
+  const faqs = getMaterialFAQs(material.name, market.name, displayPrice ?? undefined, unit)
+
   return (
     <div className="container-main py-8">
+      {/* JSON-LD */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+        productSchema({
+          name: material.name, slug: material.slug, description: material.description,
+          category: material.category?.name, price: displayPrice,
+          unit, image: getMaterialImage(material.slug),
+        })
+      ) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+        breadcrumbSchema([
+          { name: 'Materials', url: '/browse' },
+          { name: material.category?.name ?? 'Category', url: `/browse?category=${material.category?.slug}` },
+          { name: material.name, url: `/browse/${material.slug}` },
+        ])
+      ) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs)) }} />
+
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-gray-400 mb-8">
         <Link href="/browse" className="hover:text-gray-700 transition-colors">Materials</Link>
@@ -88,13 +116,13 @@ export default async function MaterialDetailPage({ params }: Props) {
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16">
-        {/* ── Left: Info ── */}
+        {/* Left: Info */}
         <div className="lg:col-span-3 space-y-6">
           {/* Image */}
           <div className="aspect-[16/9] rounded-2xl bg-gray-100 border border-gray-200 overflow-hidden">
             <img
               src={getMaterialImage(material.slug)}
-              alt={material.name}
+              alt={`${material.name} — bulk aggregate material available for delivery`}
               className="w-full h-full object-cover"
             />
           </div>
@@ -153,9 +181,25 @@ export default async function MaterialDetailPage({ params }: Props) {
               </div>
             ))}
           </div>
+
+          {/* FAQ section for AEO */}
+          <div className="border-t border-gray-100 pt-8 mt-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+            <div className="space-y-4">
+              {faqs.map((faq, i) => (
+                <details key={i} className="group border border-gray-200 rounded-xl overflow-hidden">
+                  <summary className="flex items-center justify-between p-4 cursor-pointer bg-white hover:bg-gray-50 transition-colors">
+                    <span className="text-sm font-semibold text-gray-900 pr-4">{faq.question}</span>
+                    <ChevronRight size={16} className="text-gray-400 flex-shrink-0 transition-transform group-open:rotate-90" />
+                  </summary>
+                  <div className="px-4 pb-4 text-sm text-gray-600 leading-relaxed">{faq.answer}</div>
+                </details>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* ── Right: Order form ── */}
+        {/* Right: Order form */}
         <div className="lg:col-span-2">
           <div className="sticky top-24">
             {resolvedOffering && displayPrice != null ? (
@@ -167,6 +211,9 @@ export default async function MaterialDetailPage({ params }: Props) {
                 offering={resolvedOffering}
                 displayPrice={displayPrice}
                 promo={promo}
+                marketState={market.state}
+                marketCenterLat={market.center_lat}
+                marketCenterLng={market.center_lng}
               />
             ) : (
               <div className="card p-6 text-center">
