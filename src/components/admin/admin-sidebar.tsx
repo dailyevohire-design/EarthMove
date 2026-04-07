@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, ShoppingCart, Layers, Package,
-  Tag, Truck, Upload, Settings, LogOut, Mountain,
+  Tag, Truck, Upload, Settings, LogOut,
   ChevronRight, Building2
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { LogoMark } from '@/components/layout/logo'
 
 const NAV = [
   { href: '/admin',              label: 'Dashboard',    icon: LayoutDashboard },
@@ -33,12 +34,10 @@ export function AdminSidebar() {
     <aside className="w-56 flex-shrink-0 border-r border-gray-200 flex flex-col bg-gray-50 sticky top-0 h-screen">
       <div className="h-16 flex items-center px-5 border-b border-gray-200">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-emerald-600 rounded-md flex items-center justify-center">
-            <Mountain size={13} className="text-white" />
-          </div>
+          <LogoMark size={18} />
           <div>
-            <div className="text-xs font-black text-gray-900 leading-tight">AggregateMarket</div>
-            <div className="text-[10px] text-emerald-600">Admin</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-900 leading-tight">EARTHMOVE</div>
+            <div className="text-[10px] text-emerald-600 tracking-wide">Admin</div>
           </div>
         </Link>
       </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Mountain } from 'lucide-react'
+import { Logo } from '@/components/layout/logo'
 import { SignupForm } from '@/components/auth/signup-form'
 
 export const metadata = { title: 'Create Account' }
@@ -8,14 +8,9 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16 bg-gray-50">
       <div className="w-full max-w-sm">
-        <Link href="/" className="flex items-center justify-center gap-2.5 mb-10">
-          <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center">
-            <Mountain size={18} className="text-white" />
-          </div>
-          <span className="font-extrabold text-gray-900 tracking-tight text-xl">
-            Aggregate<span className="text-emerald-600">Market</span>
-          </span>
-        </Link>
+        <div className="flex justify-center mb-10">
+          <Logo />
+        </div>
 
         <div className="card p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h1>

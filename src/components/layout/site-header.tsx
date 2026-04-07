@@ -2,8 +2,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { UserMenu } from './user-menu'
 import { MobileNav } from './mobile-nav'
+import { Logo } from './logo'
 import { LocationIndicator } from '@/components/marketplace/location-modal'
-import { Mountain, Zap, HelpCircle } from 'lucide-react'
+import { Zap, HelpCircle } from 'lucide-react'
 
 export async function SiteHeader() {
   const supabase = await createClient()
@@ -24,16 +25,7 @@ export async function SiteHeader() {
       <div className="container-main">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center group-hover:bg-emerald-700 transition-colors shadow-sm">
-              <Mountain size={17} className="text-white" strokeWidth={2.5} />
-            </div>
-            <div className="hidden sm:block">
-              <span className="font-extrabold text-gray-900 tracking-tight text-[17px] leading-none">
-                Earth<span className="text-emerald-600">Move</span>
-              </span>
-            </div>
-          </Link>
+          <Logo />
 
           {/* Center: location + nav */}
           <div className="hidden md:flex items-center gap-4">
