@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { constructWebhookEvent } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/server'
 import { enqueueOrder } from '@/lib/dispatch'
@@ -40,8 +40,26 @@ export async function POST(req: NextRequest) {
 
         if (!order) break  // already processed
 
-        // Enqueue for dispatch
-        await enqueueOrder(order as any)
+        // Enqueue for dispatch. If this fails we MUST NOT let Stripe retry the
+        // whole webhook — the idempotency guard above would skip re-processing
+        // and the order would sit "confirmed" but un-dispatched forever. Instead
+        // we record a dispatch_failed audit event and return 200; a human or
+        // recovery job can resolve from there.
+        try {
+          await enqueueOrder(order as any)
+        } catch (dispatchErr) {
+          console.error('[stripe-webhook] enqueueOrder failed, logging for manual dispatch:', dispatchErr)
+          await supabase.from('audit_events').insert({
+            event_type:  'order.dispatch_failed',
+            entity_type: 'orders',
+            entity_id:   orderId,
+            actor_role:  'admin',
+            payload:     {
+              stripe_session_id: session.id,
+              error:             dispatchErr instanceof Error ? dispatchErr.message : String(dispatchErr),
+            },
+          })
+        }
 
         // Update Stripe customer ID on profile
         if (session.customer) {
@@ -61,28 +79,36 @@ export async function POST(req: NextRequest) {
           payload:     { stripe_session_id: session.id, amount: session.amount_total },
         })
 
-        // Send order confirmation email (non-blocking)
+        // Send order confirmation email after the webhook responds.
+        // `after()` keeps the Fluid Compute instance alive to finish this work
+        // without blocking our 2xx back to Stripe (which must be fast, < 5s).
         if (order.customer_id) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('email, first_name, last_name')
-            .eq('id', order.customer_id)
-            .single()
-
-          if (profile?.email) {
-            const addr = order.delivery_address_snapshot as any
-            sendOrderConfirmation({
-              customerEmail: profile.email,
-              customerName: profile.first_name ?? 'Customer',
-              orderId: order.id,
-              materialName: order.material_name ?? 'Material',
-              quantity: order.quantity ?? 0,
-              unit: order.unit ?? 'ton',
-              totalAmount: session.amount_total ?? order.total_amount_cents ?? 0,
-              deliveryAddress: addr ? `${addr.city}, ${addr.state} ${addr.zip}` : undefined,
-              deliveryType: order.delivery_type ?? 'asap',
-            }).catch(err => console.error('[stripe-webhook] email send failed:', err))
-          }
+          const customerId = order.customer_id
+          const orderSnapshot = order
+          after(async () => {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('email, first_name, last_name')
+                .eq('id', customerId)
+                .single()
+              if (!profile?.email) return
+              const addr = orderSnapshot.delivery_address_snapshot as any
+              await sendOrderConfirmation({
+                customerEmail:   profile.email,
+                customerName:    profile.first_name ?? 'Customer',
+                orderId:         orderSnapshot.id,
+                materialName:    orderSnapshot.material_name ?? 'Material',
+                quantity:        orderSnapshot.quantity ?? 0,
+                unit:            orderSnapshot.unit ?? 'ton',
+                totalAmount:     session.amount_total ?? orderSnapshot.total_amount_cents ?? 0,
+                deliveryAddress: addr ? `${addr.city}, ${addr.state} ${addr.zip}` : undefined,
+                deliveryType:    orderSnapshot.delivery_type ?? 'asap',
+              })
+            } catch (err) {
+              console.error('[stripe-webhook] email send failed:', err)
+            }
+          })
         }
 
         break
