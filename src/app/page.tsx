@@ -6,9 +6,12 @@ import { SiteFooter } from '@/components/layout/site-footer'
 import { HeroSection } from '@/components/marketplace/hero-section'
 import { MaterialCard } from '@/components/marketplace/material-card'
 import { DealGrid } from '@/components/marketplace/deal-grid'
+import { PreZipPitch } from '@/components/marketplace/pre-zip-pitch'
+import { StickyZipBar } from '@/components/marketplace/sticky-zip-bar'
+import { LiveActivity } from '@/components/marketplace/live-activity'
 import { getDeals } from '@/lib/deals'
 import type { MarketMaterialCard } from '@/types'
-import { ArrowRight, Star, MapPin, Tag } from 'lucide-react'
+import { ArrowRight, Star, Tag } from 'lucide-react'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -87,6 +90,9 @@ export default async function HomePage() {
           marketState={market?.state ?? null}
         />
 
+        {/* Pre-ZIP: sell the product instead of showing an empty page */}
+        {!market && <PreZipPitch />}
+
         {/* Deals near you */}
         {allDeals.length > 0 && market && (
           <section className="py-12 bg-[#0a0a0a]">
@@ -148,41 +154,10 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Markets */}
-        {markets && markets.length > 1 && (
-          <section className="py-16 bg-gray-900">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3">Live in {markets.length} markets</h2>
-              <p className="text-gray-500 mb-10">Delivering bulk construction materials across the country.</p>
-              <div className="flex flex-wrap justify-center gap-3">
-                {markets.map(m => (
-                  <Link key={m.id} href={`/${m.name.toLowerCase().replace(/[^a-z]/g, '-').replace(/-+/g, '-')}`}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.07] text-white text-sm font-medium border border-white/10 hover:bg-white/[0.12] transition-colors">
-                    <MapPin size={12} className="text-emerald-400" />
-                    {m.name}, {m.state}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* CTA */}
-        <section className="py-16 bg-emerald-600">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-extrabold text-white mb-4">Ready to build?</h2>
-            <p className="text-emerald-100 mb-8">Get materials delivered to your job site.</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/browse" className="btn bg-white text-emerald-700 hover:bg-emerald-50 btn-xl font-bold shadow-xl">
-                Browse Materials <ArrowRight size={16} />
-              </Link>
-              <Link href="/learn" className="btn text-white border border-white/30 hover:bg-white/10 btn-xl">
-                Learn Center
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* Live activity — replaces "Live in 10 markets" + "Ready to build" */}
+        <LiveActivity markets={markets ?? []} />
       </main>
+      {!market && <StickyZipBar />}
       <SiteFooter />
     </>
   )

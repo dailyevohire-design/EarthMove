@@ -26,8 +26,13 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
   const imageUrl = getMaterialImage(card.slug)
 
   return (
-    <Link href={`/browse/${card.slug}`} className="group block">
-      <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01]">
+    <Link href={`/browse/${card.slug}`} className="group block touch-manipulation select-none">
+      <div className="relative rounded-2xl overflow-hidden bg-white border border-gray-200/80 transition-all duration-200 will-change-transform
+        shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.04),0_14px_28px_-14px_rgba(15,23,42,0.14)]
+        hover:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_4px_12px_rgba(15,23,42,0.08),0_28px_56px_-20px_rgba(16,185,129,0.28)]
+        hover:border-emerald-200 hover:-translate-y-1
+        active:translate-y-0 active:scale-[0.985] active:duration-75
+        active:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.06)]">
         {/* Image */}
         <div className="relative overflow-hidden" style={{ height: 220, background: fallbackGradient }}>
           <img
@@ -112,8 +117,13 @@ export function DealCard({ card }: { card: MarketMaterialCard }) {
   const imageUrl = getMaterialImage(card.slug)
 
   return (
-    <Link href={`/browse/${card.slug}`} className="group block flex-shrink-0 w-[320px] sm:w-[360px]">
-      <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+    <Link href={`/browse/${card.slug}`} className="group block flex-shrink-0 w-[320px] sm:w-[360px] touch-manipulation select-none">
+      <div className="rounded-2xl overflow-hidden bg-white border border-gray-200/80 transition-all duration-200 will-change-transform
+        shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.04),0_14px_28px_-14px_rgba(15,23,42,0.14)]
+        hover:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_4px_12px_rgba(15,23,42,0.08),0_28px_56px_-20px_rgba(239,68,68,0.3)]
+        hover:border-red-200 hover:-translate-y-1
+        active:translate-y-0 active:scale-[0.985] active:duration-75
+        active:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.06)]">
         <div className="relative overflow-hidden" style={{ height: 200, background: fallbackGradient }}>
           <img
             src={imageUrl}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Truck, CheckCircle2, ShieldCheck, Clock } from 'lucide-react'
+import { Truck, CheckCircle2, ShieldCheck, Clock } from 'lucide-react'
 import { HeroZipPicker } from './hero-zip-picker'
 
 interface HeroProps {
@@ -96,9 +96,6 @@ export function HeroSection({ marketCount, marketName, marketState }: HeroProps)
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
           <div className="max-w-2xl">
-            {/* ZIP picker (replaces static "Delivering to X" pill) */}
-            <HeroZipPicker currentMarketName={marketName} currentMarketState={marketState} />
-
             {/* Green accent line */}
             <div className="w-20 h-0.5 mb-6" style={{ background: 'rgba(16,185,129,0.6)' }} />
 
@@ -116,13 +113,20 @@ export function HeroSection({ marketCount, marketName, marketState }: HeroProps)
               Fill dirt, gravel, sand, topsoil, road base — ordered in minutes, delivered same-day to your job site.
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Link href="/browse" className="btn-primary btn-xl text-base shadow-2xl shadow-emerald-500/25">
-                Browse Materials <ArrowRight size={18} />
+            {/* Primary action: ZIP picker */}
+            <div id="hero-zip" className="mt-8">
+              <HeroZipPicker currentMarketName={marketName} currentMarketState={marketState} />
+            </div>
+
+            {/* Secondary links (demoted from big CTAs to tiny text) */}
+            <div className="mt-1 text-sm text-white/50">
+              Or{' '}
+              <Link href="/browse" className="text-white/80 hover:text-emerald-300 underline underline-offset-4 decoration-white/20 hover:decoration-emerald-300 font-medium">
+                browse all materials
               </Link>
-              <Link href="/material-match" className="btn bg-white/[0.08] text-white border border-white/[0.15] hover:bg-white/[0.15] btn-xl text-base backdrop-blur-sm">
-                Find My Material →
+              <span className="mx-2 text-white/20">·</span>
+              <Link href="/material-match" className="text-white/80 hover:text-emerald-300 underline underline-offset-4 decoration-white/20 hover:decoration-emerald-300 font-medium">
+                find my material
               </Link>
             </div>
           </div>
