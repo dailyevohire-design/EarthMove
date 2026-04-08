@@ -71,11 +71,23 @@ function useTimeProgress(): number {
   return progress
 }
 
+// Minimum savings required for the curiosity-gap "Unlock Deal" mechanic.
+// Below these thresholds we show the price openly so the unlock reveal stays
+// a high-signal experience — protects the mechanic from becoming the boy who
+// cried wolf when a "deal" only saves $0.50.
+const MIN_LOCK_SAVINGS_DOLLARS = 5
+const MIN_LOCK_SAVINGS_PERCENT = 0.05 // 5%
+
 function DealCard({ deal }: { deal: Deal }) {
-  const [unlocked, setUnlocked] = useState(false)
   const timeProgress = useTimeProgress()
   const timeRemaining = 1 - timeProgress
   const savings = deal.original_price - deal.deal_price
+  const savingsPercent = deal.original_price > 0 ? savings / deal.original_price : 0
+  const savingsAreMeaningful =
+    savings >= MIN_LOCK_SAVINGS_DOLLARS && savingsPercent >= MIN_LOCK_SAVINGS_PERCENT
+  // Cards with tiny savings start "unlocked" — no curiosity gap, just a normal
+  // discounted price card. Cards with real savings start locked.
+  const [unlocked, setUnlocked] = useState(!savingsAreMeaningful)
 
   return (
     <div
