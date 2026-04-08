@@ -10,16 +10,21 @@ import { PreZipPitch } from '@/components/marketplace/pre-zip-pitch'
 import { StickyZipBar } from '@/components/marketplace/sticky-zip-bar'
 import { LiveActivity } from '@/components/marketplace/live-activity'
 import { getDeals } from '@/lib/deals'
+import { LAUNCH_MARKET_SLUGS } from '@/lib/zip-market'
 import type { MarketMaterialCard } from '@/types'
 import { ArrowRight, Star, Tag } from 'lucide-react'
 
 export default async function HomePage() {
   const supabase = await createClient()
 
+  // Only show launch markets (DFW + Denver). Even if other rows exist
+  // in the markets table, they're not part of the launch and shouldn't
+  // appear anywhere on the homepage.
   const { data: markets } = await supabase
     .from('markets')
     .select('id, name, state')
     .eq('is_active', true)
+    .in('slug', LAUNCH_MARKET_SLUGS as unknown as string[])
     .order('name')
 
   // Pick the user's chosen market from cookie. No default — user must enter ZIP.

@@ -1,68 +1,52 @@
 // src/lib/zip-market.ts
-// Maps US zip code prefixes to EarthMove markets.
+// Maps US zip code prefixes to EarthMove launch markets.
+//
+// Launch markets: Dallas-Fort Worth + Denver only.
+// Coverage: roughly a 100-mile radius around each metro center.
 
 interface ZipMarket {
   market_slug: string
   market_name: string
+  /** 3-digit ZIP prefixes (numeric, 100-999) that resolve to this market */
   prefixes: number[]
 }
 
 function range(start: number, end: number): number[] {
-  const result: number[] = []
-  for (let i = start; i <= end; i++) result.push(i)
-  return result
+  const out: number[] = []
+  for (let i = start; i <= end; i++) out.push(i)
+  return out
 }
+
+/**
+ * The two launch markets. Keeping this list canonical here means we can
+ * point any other "list of active markets" query at it instead of trusting
+ * whatever rows happen to exist in the markets table.
+ */
+export const LAUNCH_MARKET_SLUGS = ['dallas-fort-worth', 'denver'] as const
+export type LaunchMarketSlug = typeof LAUNCH_MARKET_SLUGS[number]
 
 export const ALL_ZIP_MARKETS: ZipMarket[] = [
   {
     market_slug: 'dallas-fort-worth',
     market_name: 'Dallas-Fort Worth',
-    prefixes: [...range(750, 753), ...range(760, 763), 756],
-  },
-  {
-    market_slug: 'houston',
-    market_name: 'Houston',
-    prefixes: [...range(770, 775), 777],
-  },
-  {
-    market_slug: 'austin',
-    market_name: 'Austin',
-    prefixes: [...range(786, 789), 785],
-  },
-  {
-    market_slug: 'san-antonio',
-    market_name: 'San Antonio',
-    prefixes: [...range(780, 782), 783],
-  },
-  {
-    market_slug: 'phoenix',
-    market_name: 'Phoenix',
-    prefixes: [...range(850, 853), 855, 856, 857],
+    // ~100mi radius around DFW. Covers Dallas, Fort Worth, Plano, Frisco,
+    // McKinney, Arlington, Denton, Garland, Mesquite, Waxahachie, Sherman,
+    // Greenville, Tyler, Waco, Wichita Falls, Mineral Wells, Stephenville.
+    // Texas prefixes 750-758, 760-766, 768, 769.
+    prefixes: [
+      ...range(750, 758), // Dallas, Mesquite, Garland, Plano, McKinney, Greenville, Tyler, Palestine
+      ...range(760, 766), // Fort Worth, Arlington, Denton, Wichita Falls, Waco, Killeen-Temple north
+      768,                // Stephenville / Mineral Wells
+      769,                // Abilene fringe (kept for inclusivity, ~150mi but contractors travel)
+    ],
   },
   {
     market_slug: 'denver',
     market_name: 'Denver',
-    prefixes: [...range(800, 804), 805, 806, 808],
-  },
-  {
-    market_slug: 'atlanta',
-    market_name: 'Atlanta',
-    prefixes: [...range(300, 303), 304, 305, 306, 311, 312],
-  },
-  {
-    market_slug: 'nashville',
-    market_name: 'Nashville',
-    prefixes: [...range(370, 372), 373, 374],
-  },
-  {
-    market_slug: 'charlotte',
-    market_name: 'Charlotte',
-    prefixes: [...range(280, 282), 283, 284],
-  },
-  {
-    market_slug: 'tampa',
-    market_name: 'Tampa',
-    prefixes: [...range(335, 337), 338, 346, 347],
+    // ~100mi radius around Denver. Covers Denver, Aurora, Lakewood, Boulder,
+    // Longmont, Fort Collins, Greeley, Loveland, Castle Rock, Colorado Springs,
+    // Pueblo (borderline). Colorado prefixes 800-810.
+    prefixes: range(800, 810),
   },
 ]
 

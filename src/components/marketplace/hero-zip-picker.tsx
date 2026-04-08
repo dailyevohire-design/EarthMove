@@ -40,21 +40,34 @@ export function HeroZipPicker({ currentMarketName, currentMarketState }: Props) 
       return
     }
 
-    const supabase = createClient()
-    const { data: market } = await supabase
-      .from('markets')
-      .select('id')
-      .eq('slug', match.market_slug)
-      .eq('is_active', true)
-      .single()
+    let marketId: string | null = null
+    try {
+      const supabase = createClient()
+      const { data: market, error } = await supabase
+        .from('markets')
+        .select('id')
+        .eq('slug', match.market_slug)
+        .eq('is_active', true)
+        .maybeSingle()
+      if (error) {
+        // eslint-disable-next-line no-console
+        console.error('[hero-zip-picker] markets lookup failed:', error)
+      }
+      marketId = market?.id ?? null
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[hero-zip-picker] markets lookup threw:', err)
+    }
 
-    if (!market) {
+    if (!marketId) {
+      // Prefix matched but the DB row is missing/inactive.
+      // Surface this as not-found so the user gets feedback instead of silence.
       setMode('not-found')
       setLoading(false)
       return
     }
 
-    document.cookie = `market_id=${market.id}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
+    document.cookie = `market_id=${marketId}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
     startTransition(() => {
       router.refresh()
       setLoading(false)
