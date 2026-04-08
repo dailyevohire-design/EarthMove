@@ -126,16 +126,41 @@ function DealCard({ deal }: { deal: Deal }) {
           {deal.material_name}
         </h3>
 
-        {/* Pricing */}
-        <div className="flex items-baseline gap-3">
-          <span className="font-mono text-2xl font-black text-[#00ff88]">
-            {formatPrice(deal.deal_price)}
-          </span>
-          <span className="font-mono text-sm text-white/30 line-through decoration-red-500">
-            {formatPrice(deal.original_price)}
-          </span>
-          <span className="text-white/20 text-xs">/{unitDisplay(deal.unit)}</span>
-        </div>
+        {/* Pricing — locked vs revealed */}
+        {!unlocked ? (
+          <div className="space-y-1">
+            {/* Original price with strikethrough as the anchor */}
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono text-xl font-bold text-white/40 line-through decoration-red-500/80 decoration-2">
+                {formatPrice(deal.original_price)}
+              </span>
+              <span className="text-white/20 text-xs">/{unitDisplay(deal.unit)}</span>
+            </div>
+            {/* Locked discount tease */}
+            <div className="flex items-center gap-2 text-[11px] text-[#00ff88]/70 font-bold uppercase tracking-wider">
+              <Zap size={10} className="fill-current" />
+              <span>Tap to reveal your price</span>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-1 animate-[reveal_400ms_ease-out]">
+            {/* Discount price prominent */}
+            <div className="flex items-baseline gap-3">
+              <span className="font-mono text-2xl font-black text-[#00ff88]" style={{ textShadow: '0 0 24px rgba(0,255,136,0.5)' }}>
+                {formatPrice(deal.deal_price)}
+              </span>
+              <span className="font-mono text-sm text-white/30 line-through decoration-red-500">
+                {formatPrice(deal.original_price)}
+              </span>
+              <span className="text-white/20 text-xs">/{unitDisplay(deal.unit)}</span>
+            </div>
+            {savings > 0 && (
+              <div className="text-[11px] font-black text-[#00ff88] uppercase tracking-wider">
+                You save {formatPrice(savings)}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Time remaining bar */}
         <div className="space-y-1">
@@ -157,15 +182,17 @@ function DealCard({ deal }: { deal: Deal }) {
         {/* Action */}
         {!unlocked ? (
           <button
-            onClick={() => setUnlocked(true)}
-            className="w-full py-2.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-sm font-bold hover:bg-[#00ff88]/10 hover:border-[#00ff88]/30 hover:text-[#00ff88] transition-all"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUnlocked(true) }}
+            className="w-full py-3 rounded-full bg-[#00ff88]/15 border-2 border-[#00ff88]/50 text-[#00ff88] text-sm font-black uppercase tracking-wider hover:bg-[#00ff88]/25 hover:border-[#00ff88]/80 transition-all flex items-center justify-center gap-2"
+            style={{ boxShadow: '0 0 24px rgba(0,255,136,0.2), inset 0 1px 0 rgba(255,255,255,0.1)' }}
           >
+            <Zap size={14} className="fill-current" />
             Unlock Deal
           </button>
         ) : (
           <Link
             href={`/browse/${deal.material_slug}`}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-[#00ff88] text-black text-sm font-black hover:bg-[#00ff99] transition-colors shadow-md shadow-[#00ff88]/20"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-[#00ff88] text-black text-sm font-black hover:bg-[#00ff99] transition-colors shadow-md shadow-[#00ff88]/30 animate-[reveal_400ms_ease-out]"
           >
             <Check size={14} />
             Order Now
@@ -174,11 +201,16 @@ function DealCard({ deal }: { deal: Deal }) {
         )}
       </div>
 
-      {/* Keyframes for badge pulse */}
+      {/* Keyframes for badge pulse + reveal animation */}
       <style jsx>{`
         @keyframes deal-pulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); }
           50% { box-shadow: 0 0 12px 4px rgba(0, 255, 136, 0.15); }
+        }
+        @keyframes reveal {
+          0% { opacity: 0; transform: translateY(6px) scale(0.96); }
+          60% { opacity: 1; transform: translateY(-2px) scale(1.02); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
     </div>
