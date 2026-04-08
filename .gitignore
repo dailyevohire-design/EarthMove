@@ -29,3 +29,6 @@ next-env.d.ts
 supabase/.temp/
 .vercel
 .env*.local
+.env.vercel
+.env.vercel-*
+.gstack/
