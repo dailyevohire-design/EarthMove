@@ -59,6 +59,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${dmSans.variable} ${dmMono.variable}`}>
       <head>
+        {/* Preconnect hints — saves ~100-300ms on TTFB for cross-origin fetches */}
+        <link rel="preconnect" href="https://gaawvpzzmotimblyesfp.supabase.co" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://gaawvpzzmotimblyesfp.supabase.co" />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://js.stripe.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://js.stripe.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
