@@ -19,13 +19,11 @@ export default async function HomePage() {
     .eq('is_active', true)
     .order('name')
 
-  // Pick the user's chosen market from cookie if set, else default to first.
+  // Pick the user's chosen market from cookie. No default — user must enter ZIP.
   const cookieStore = await cookies()
   const cookieMarketId = cookieStore.get('market_id')?.value
   const market =
-    (cookieMarketId && markets?.find(m => m.id === cookieMarketId)) ||
-    markets?.[0] ||
-    null
+    (cookieMarketId && markets?.find(m => m.id === cookieMarketId)) || null
 
   let cards: MarketMaterialCard[] = []
   if (market) {
