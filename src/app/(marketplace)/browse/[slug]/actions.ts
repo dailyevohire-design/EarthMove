@@ -24,7 +24,60 @@ const Schema = z.object({
   requested_delivery_date:   z.string().optional().nullable(),
   requested_delivery_window: z.string().optional().nullable(),
   delivery_notes:            z.string().max(500).optional().nullable(),
+  // Optional guest checkout block. When present, the action will provision
+  // an auth.users row server-side via the admin client and use it as the
+  // order's customer. The user can claim the account later via magic link.
+  guest: z.object({
+    email:      z.string().email().max(200),
+    first_name: z.string().min(1).max(80),
+    last_name:  z.string().min(1).max(80),
+    phone:      z.string().max(40).optional(),
+  }).optional(),
 })
+
+/**
+ * Provision (or look up) an auth.users row for a guest checkout. Returns the
+ * user's id. Uses the service-role admin client.
+ */
+async function provisionGuestUser(guest: { email: string; first_name: string; last_name: string; phone?: string }): Promise<string | null> {
+  const admin = createAdminClient()
+
+  // Try to find an existing user with this email first.
+  try {
+    const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
+    const existing = list?.users?.find((u: any) => u.email?.toLowerCase() === guest.email.toLowerCase())
+    if (existing?.id) return existing.id
+  } catch (err) {
+    console.error('[provisionGuestUser] listUsers failed:', err)
+  }
+
+  // Create a new user with a random password. email_confirm:true so the user
+  // can be referenced immediately for orders without an email roundtrip. They
+  // can claim the account later via password reset / magic link.
+  const randomPassword = `guest-${crypto.randomUUID()}-${Date.now()}`
+  try {
+    const { data, error } = await admin.auth.admin.createUser({
+      email: guest.email,
+      password: randomPassword,
+      email_confirm: true,
+      user_metadata: {
+        first_name: guest.first_name,
+        last_name: guest.last_name,
+        phone: guest.phone ?? null,
+        was_guest_checkout: true,
+        guest_checkout_at: new Date().toISOString(),
+      },
+    })
+    if (error || !data?.user) {
+      console.error('[provisionGuestUser] createUser failed:', error)
+      return null
+    }
+    return data.user.id
+  } catch (err) {
+    console.error('[provisionGuestUser] createUser threw:', err)
+    return null
+  }
+}
 
 export async function createOrderAndCheckout(
   raw: unknown
@@ -35,7 +88,17 @@ export async function createOrderAndCheckout(
     const input = parsed.data
 
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user: authedUser } } = await supabase.auth.getUser()
+
+    // Resolve the customer: signed-in user OR guest provisioning OR auth required.
+    let user: { id: string } | null = authedUser
+    if (!user && input.guest) {
+      const guestId = await provisionGuestUser(input.guest)
+      if (!guestId) {
+        return { success: false, error: 'Could not create your guest account. Please try again or sign in.' }
+      }
+      user = { id: guestId }
+    }
     if (!user) return { success: false, error: 'Sign in to place an order.', code: 'AUTH_REQUIRED' }
 
     const adminClient = createAdminClient()

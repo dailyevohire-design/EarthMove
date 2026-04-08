@@ -83,6 +83,10 @@ export default async function MaterialDetailPage({ params }: Props) {
   const displayPrice = deriveDisplayPrice(mm.price_display_mode, mm.custom_display_price, resolvedOffering)
   const unit = resolvedOffering?.unit ?? material.default_unit
 
+  // Whether the visitor is signed in — controls guest checkout UI in the order form.
+  const supabase = await createClient()
+  const { data: { user: currentUser } } = await supabase.auth.getUser()
+
   const faqs = getMaterialFAQs(material.name, market.name, displayPrice ?? undefined, unit)
 
   return (
@@ -214,6 +218,7 @@ export default async function MaterialDetailPage({ params }: Props) {
                 marketState={market.state}
                 marketCenterLat={market.center_lat}
                 marketCenterLng={market.center_lng}
+                isAuthenticated={!!currentUser}
               />
             ) : (
               <div className="card p-6 text-center">

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { formatCurrency, unitLabel } from '@/lib/pricing-engine'
 import type { SupplierOffering, Promotion, DeliveryType, DELIVERY_WINDOWS } from '@/types'
 import { createOrderAndCheckout } from '@/app/(marketplace)/browse/[slug]/actions'
@@ -21,6 +22,8 @@ interface Props {
   marketState?: string
   marketCenterLat?: number
   marketCenterLng?: number
+  /** When false, the form shows guest checkout fields and a sign-in option. */
+  isAuthenticated?: boolean
 }
 
 const WINDOWS = ['Morning (7am–12pm)', 'Afternoon (12pm–5pm)', 'Anytime'] as const
@@ -29,6 +32,7 @@ export function MaterialOrderForm({
   marketMaterialId, marketId, materialCatalogId,
   materialName, offering, displayPrice, promo,
   marketState = 'TX', marketCenterLat, marketCenterLng,
+  isAuthenticated = false,
 }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -43,6 +47,11 @@ export function MaterialOrderForm({
   const [quoteError, setQuoteError] = useState<string | null>(null)
   const [orderError, setOrderError] = useState<string | null>(null)
   const [loadingQuote, setLoadingQuote] = useState(false)
+
+  // Guest checkout fields — used when isAuthenticated is false
+  const [guestEmail, setGuestEmail] = useState('')
+  const [guestFirstName, setGuestFirstName] = useState('')
+  const [guestLastName, setGuestLastName] = useState('')
 
   const adjustQty = (delta: number) =>
     setQuantity(q => Math.max(offering.minimum_order_quantity, +(q + delta).toFixed(1)))
@@ -100,6 +109,19 @@ export function MaterialOrderForm({
 
   const handleOrder = () => {
     setOrderError(null)
+
+    // Guest validation when not signed in
+    if (!isAuthenticated) {
+      if (!/^\S+@\S+\.\S+$/.test(guestEmail)) {
+        setOrderError('Please enter a valid email address.')
+        return
+      }
+      if (!guestFirstName.trim() || !guestLastName.trim()) {
+        setOrderError('First and last name are required.')
+        return
+      }
+    }
+
     startTransition(async () => {
       const result = await createOrderAndCheckout({
         market_material_id: marketMaterialId,
@@ -117,12 +139,21 @@ export function MaterialOrderForm({
         requested_delivery_window: deliveryType === 'scheduled' ? deliveryWindow : null,
         delivery_notes: address.notes || null,
         distance_miles: estimateDistance(),
+        ...(isAuthenticated ? {} : {
+          guest: {
+            email: guestEmail.trim(),
+            first_name: guestFirstName.trim(),
+            last_name: guestLastName.trim(),
+          },
+        }),
       })
 
       if (result.success) {
         window.location.href = result.data.checkout_url
       } else if (result.code === 'AUTH_REQUIRED') {
-        router.push(`/login?redirectTo=/browse/${window.location.pathname.split('/').pop()}`)
+        // Should only happen if guest provisioning fails — fall back to login.
+        const slug = window.location.pathname.split('/').pop() ?? ''
+        router.push(`/login?redirectTo=/browse/${slug}`)
       } else {
         setOrderError(result.error)
       }
@@ -299,6 +330,50 @@ export function MaterialOrderForm({
             </div>
           )}
 
+          {/* Guest checkout — only when not signed in */}
+          {!isAuthenticated && (
+            <div className="border-t border-gray-100 pt-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-gray-900 text-sm">Your details</h4>
+                <Link
+                  href={`/login?redirectTo=/browse/${typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : ''}`}
+                  className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold"
+                >
+                  Have an account? Sign in →
+                </Link>
+              </div>
+              <p className="text-xs text-gray-500 -mt-1.5">
+                Checking out as guest — we&apos;ll email you a link to claim your account afterward.
+              </p>
+              <div className="grid grid-cols-2 gap-2.5">
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="First name"
+                  value={guestFirstName}
+                  onChange={e => setGuestFirstName(e.target.value)}
+                  autoComplete="given-name"
+                />
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Last name"
+                  value={guestLastName}
+                  onChange={e => setGuestLastName(e.target.value)}
+                  autoComplete="family-name"
+                />
+              </div>
+              <input
+                type="email"
+                className="input"
+                placeholder="Email for receipts and dispatch updates"
+                value={guestEmail}
+                onChange={e => setGuestEmail(e.target.value)}
+                autoComplete="email"
+              />
+            </div>
+          )}
+
           {orderError && <ErrorMsg message={orderError} />}
 
           <button onClick={handleOrder} disabled={pending} className="btn-primary btn-xl w-full">
@@ -307,7 +382,7 @@ export function MaterialOrderForm({
               : `Pay ${formatCurrency(quote.total_amount)} →`}
           </button>
           <p className="text-center text-xs text-gray-400">
-            Secure checkout via Stripe. You'll be redirected to complete payment.
+            Secure checkout via Stripe. You&apos;ll be redirected to complete payment.
           </p>
         </>
       )}
