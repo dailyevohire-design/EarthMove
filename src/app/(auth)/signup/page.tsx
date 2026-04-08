@@ -9,7 +9,13 @@ export const metadata = {
 }
 
 interface Props {
-  searchParams: Promise<{ redirectTo?: string }>
+  searchParams: Promise<{
+    redirectTo?: string
+    email?: string
+    first_name?: string
+    last_name?: string
+    from_order?: string
+  }>
 }
 
 const BENEFITS = [
@@ -46,8 +52,9 @@ const BENEFITS = [
 ]
 
 export default async function SignupPage({ searchParams }: Props) {
-  const { redirectTo } = await searchParams
+  const { redirectTo, email, first_name, last_name, from_order } = await searchParams
   const loginHref = redirectTo ? `/login?redirectTo=${encodeURIComponent(redirectTo)}` : '/login'
+  const isClaimingGuest = !!from_order
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0a1628] via-[#0d2137] to-[#091a0e]">
@@ -122,11 +129,20 @@ export default async function SignupPage({ searchParams }: Props) {
                   '0 1px 0 0 rgba(255,255,255,0.9) inset, 0 4px 12px rgba(15,23,42,0.08), 0 32px 64px -24px rgba(0,0,0,0.6), 0 0 80px -20px rgba(16,185,129,0.4)',
               }}
             >
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-1">Create your account</h2>
+              <h2 className="text-2xl font-extrabold text-gray-900 mb-1">
+                {isClaimingGuest ? 'Claim your account' : 'Create your account'}
+              </h2>
               <p className="text-gray-500 text-sm mb-6">
-                Takes 30 seconds. Start saving on your next load.
+                {isClaimingGuest
+                  ? `Order #${from_order} is yours. Set a password to track delivery, reorder in one tap, and unlock member benefits.`
+                  : 'Takes 30 seconds. Start saving on your next load.'}
               </p>
-              <SignupForm redirectTo={redirectTo} />
+              <SignupForm
+                redirectTo={redirectTo}
+                prefillEmail={email}
+                prefillFirstName={first_name}
+                prefillLastName={last_name}
+              />
             </div>
 
             <p className="text-center text-white/50 text-sm mt-6">

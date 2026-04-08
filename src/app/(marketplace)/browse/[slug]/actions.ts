@@ -35,50 +35,6 @@ const Schema = z.object({
   }).optional(),
 })
 
-/**
- * Provision (or look up) an auth.users row for a guest checkout. Returns the
- * user's id. Uses the service-role admin client.
- */
-async function provisionGuestUser(guest: { email: string; first_name: string; last_name: string; phone?: string }): Promise<string | null> {
-  const admin = createAdminClient()
-
-  // Try to find an existing user with this email first.
-  try {
-    const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
-    const existing = list?.users?.find((u: any) => u.email?.toLowerCase() === guest.email.toLowerCase())
-    if (existing?.id) return existing.id
-  } catch (err) {
-    console.error('[provisionGuestUser] listUsers failed:', err)
-  }
-
-  // Create a new user with a random password. email_confirm:true so the user
-  // can be referenced immediately for orders without an email roundtrip. They
-  // can claim the account later via password reset / magic link.
-  const randomPassword = `guest-${crypto.randomUUID()}-${Date.now()}`
-  try {
-    const { data, error } = await admin.auth.admin.createUser({
-      email: guest.email,
-      password: randomPassword,
-      email_confirm: true,
-      user_metadata: {
-        first_name: guest.first_name,
-        last_name: guest.last_name,
-        phone: guest.phone ?? null,
-        was_guest_checkout: true,
-        guest_checkout_at: new Date().toISOString(),
-      },
-    })
-    if (error || !data?.user) {
-      console.error('[provisionGuestUser] createUser failed:', error)
-      return null
-    }
-    return data.user.id
-  } catch (err) {
-    console.error('[provisionGuestUser] createUser threw:', err)
-    return null
-  }
-}
-
 export async function createOrderAndCheckout(
   raw: unknown
 ): Promise<ApiResult<{ checkout_url: string }>> {
@@ -90,22 +46,20 @@ export async function createOrderAndCheckout(
     const supabase = await createClient()
     const { data: { user: authedUser } } = await supabase.auth.getUser()
 
-    // Resolve the customer: signed-in user OR guest provisioning OR auth required.
-    let user: { id: string } | null = authedUser
-    if (!user && input.guest) {
-      const guestId = await provisionGuestUser(input.guest)
-      if (!guestId) {
-        return { success: false, error: 'Could not create your guest account. Please try again or sign in.' }
-      }
-      user = { id: guestId }
+    // Resolve identity: either a signed-in user OR a guest block. We do NOT
+    // create an auth.users row for guests anymore — orders carry guest_*
+    // columns directly (see migration 014_guest_orders.sql). The CHECK
+    // constraint on the table enforces exactly one identity type.
+    if (!authedUser && !input.guest) {
+      return { success: false, error: 'Sign in or check out as guest to place an order.', code: 'AUTH_REQUIRED' }
     }
-    if (!user) return { success: false, error: 'Sign in to place an order.', code: 'AUTH_REQUIRED' }
 
     const adminClient = createAdminClient()
 
-    // Get profile
-    const { data: profile } = await supabase
-      .from('profiles').select('stripe_customer_id').eq('id', user.id).single()
+    // Get profile (only for authed users — guests have no profile)
+    const { data: profile } = authedUser
+      ? await supabase.from('profiles').select('stripe_customer_id').eq('id', authedUser.id).single()
+      : { data: null }
 
     // Get market_material to find market + catalog IDs
     const { data: mm } = await adminClient
@@ -177,11 +131,28 @@ export async function createOrderAndCheckout(
       throw err
     }
 
-    // Create order record
+    // Create order record. Guests get guest_* columns; authed users get customer_id.
+    // The CHECK constraint added in migration 014 enforces exactly one identity.
+    const identityFields = authedUser
+      ? {
+          customer_id:      authedUser.id,
+          guest_email:      null,
+          guest_first_name: null,
+          guest_last_name:  null,
+          guest_phone:      null,
+        }
+      : {
+          customer_id:      null,
+          guest_email:      input.guest!.email,
+          guest_first_name: input.guest!.first_name,
+          guest_last_name:  input.guest!.last_name,
+          guest_phone:      input.guest!.phone ?? null,
+        }
+
     const { data: order, error: orderErr } = await adminClient
       .from('orders')
       .insert({
-        customer_id:                user.id,
+        ...identityFields,
         market_id:                  mm.market_id,
         market_material_id:         input.market_material_id,
         resolved_offering_id:       resolved.offering.id,
@@ -234,8 +205,9 @@ export async function createOrderAndCheckout(
       stripeCustomerId: profile?.stripe_customer_id ?? null,
       lineItems:        stripeLineItems,
       metadata: {
-        order_id:   order.id,
-        customer_id: user.id,
+        order_id:    order.id,
+        customer_id: authedUser?.id ?? '',
+        guest_email: input.guest?.email ?? '',
         market_id:   mm.market_id,
       },
       successUrl: `${baseUrl}/orders/${order.id}?payment=success`,

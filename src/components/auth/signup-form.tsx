@@ -5,11 +5,25 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 
-export function SignupForm({ redirectTo }: { redirectTo?: string }) {
+export function SignupForm({
+  redirectTo,
+  prefillEmail,
+  prefillFirstName,
+  prefillLastName,
+}: {
+  redirectTo?: string
+  prefillEmail?: string
+  prefillFirstName?: string
+  prefillLastName?: string
+}) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [form, setForm] = useState({
-    first_name: '', last_name: '', company_name: '', email: '', password: '',
+    first_name: prefillFirstName ?? '',
+    last_name:  prefillLastName  ?? '',
+    company_name: '',
+    email:      prefillEmail     ?? '',
+    password:   '',
   })
   const [error, setError] = useState<string | null>(null)
 
