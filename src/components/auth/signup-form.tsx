@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 
-export function SignupForm() {
+export function SignupForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [form, setForm] = useState({
@@ -37,7 +37,9 @@ export function SignupForm() {
         }
       }
 
-      router.push('/browse')
+      // Honor the post-signup destination (e.g. back to the product page they
+      // were trying to check out from). Falls back to /browse.
+      router.push(redirectTo ?? '/browse')
       router.refresh()
     })
   }

@@ -22,8 +22,11 @@ export default async function LoginPage({ searchParams }: Props) {
         </div>
 
         <p className="text-center text-gray-500 text-sm mt-6">
-          Don't have an account?{' '}
-          <Link href="/signup" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+          Don&apos;t have an account?{' '}
+          <Link
+            href={redirectTo ? `/signup?redirectTo=${encodeURIComponent(redirectTo)}` : '/signup'}
+            className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+          >
             Create one free
           </Link>
         </p>
