@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
@@ -11,27 +10,24 @@ import { StickyZipBar } from '@/components/marketplace/sticky-zip-bar'
 import { LiveActivity } from '@/components/marketplace/live-activity'
 import { getDeals } from '@/lib/deals'
 import { LAUNCH_MARKET_SLUGS } from '@/lib/zip-market'
+import { getUserContext } from '@/lib/user-context'
 import type { MarketMaterialCard } from '@/types'
 import { ArrowRight, Star, Tag } from 'lucide-react'
 
 export default async function HomePage() {
   const supabase = await createClient()
 
-  // Only show launch markets (DFW + Denver). Even if other rows exist
-  // in the markets table, they're not part of the launch and shouldn't
-  // appear anywhere on the homepage.
+  // Personalization context (market, user, tier, loyalty) — single source of truth.
+  const ctx = await getUserContext()
+  const market = ctx.market
+
+  // Markets list for the LiveActivity strip (always restricted to launch markets).
   const { data: markets } = await supabase
     .from('markets')
     .select('id, name, state')
     .eq('is_active', true)
     .in('slug', LAUNCH_MARKET_SLUGS as unknown as string[])
     .order('name')
-
-  // Pick the user's chosen market from cookie. No default — user must enter ZIP.
-  const cookieStore = await cookies()
-  const cookieMarketId = cookieStore.get('market_id')?.value
-  const market =
-    (cookieMarketId && markets?.find(m => m.id === cookieMarketId)) || null
 
   let cards: MarketMaterialCard[] = []
   if (market) {
