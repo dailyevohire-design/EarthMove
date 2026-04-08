@@ -50,16 +50,43 @@ export function PreZipPitch() {
               return (
                 <div
                   key={s.title}
-                  className="relative p-7 rounded-2xl bg-gray-50 border border-gray-100 hover:border-emerald-200 hover:shadow-lg transition-all"
+                  className="group relative p-7 rounded-2xl bg-white border-2 border-emerald-500/40 transition-all duration-300 will-change-transform hover:-translate-y-1 hover:border-emerald-500/80 touch-manipulation"
+                  style={{
+                    boxShadow:
+                      '0 0 0 1px rgba(16,185,129,0.15), 0 0 32px rgba(16,185,129,0.22), 0 0 80px rgba(16,185,129,0.12), inset 0 1px 0 rgba(255,255,255,0.95), 0 12px 28px -16px rgba(15,23,42,0.18)',
+                  }}
                 >
-                  <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-emerald-500 text-white text-sm font-extrabold flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                  {/* Inner gradient wash */}
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 rounded-2xl pointer-events-none opacity-80"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(16,185,129,0) 45%, rgba(16,185,129,0.04) 100%)',
+                    }}
+                  />
+                  {/* Glowing step number */}
+                  <div
+                    className="absolute -top-3 -left-3 w-9 h-9 rounded-full bg-emerald-500 text-white text-sm font-black flex items-center justify-center z-10"
+                    style={{
+                      boxShadow:
+                        '0 0 0 4px rgba(16,185,129,0.15), 0 0 24px rgba(16,185,129,0.6), 0 8px 16px -4px rgba(16,185,129,0.4)',
+                    }}
+                  >
                     {i + 1}
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mb-4">
+                  {/* Glowing icon tile */}
+                  <div
+                    className="relative w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-4"
+                    style={{
+                      boxShadow:
+                        '0 0 20px rgba(16,185,129,0.25), inset 0 1px 0 rgba(255,255,255,0.6)',
+                    }}
+                  >
                     <Icon size={24} className="text-emerald-600" />
                   </div>
-                  <h3 className="text-lg font-extrabold text-gray-900 mb-2">{s.title}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{s.body}</p>
+                  <h3 className="relative text-lg font-extrabold text-gray-900 mb-2">{s.title}</h3>
+                  <p className="relative text-sm text-gray-600 leading-relaxed">{s.body}</p>
                 </div>
               )
             })}
