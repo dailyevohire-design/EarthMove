@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, MapPin, Truck, CheckCircle2, ShieldCheck, Clock } from 'lucide-react'
+import { ArrowRight, Truck, CheckCircle2, ShieldCheck, Clock } from 'lucide-react'
+import { HeroZipPicker } from './hero-zip-picker'
 
 interface HeroProps {
   marketCount: number
@@ -95,16 +96,8 @@ export function HeroSection({ marketCount, marketName, marketState }: HeroProps)
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
           <div className="max-w-2xl">
-            {/* Location bar */}
-            {marketName && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                <MapPin size={14} className="text-emerald-400" />
-                <span className="text-white/90 text-sm font-medium">Delivering to {marketName}, {marketState}</span>
-                <span className="text-white/30 mx-1">|</span>
-                <span className="text-emerald-400 text-sm font-semibold cursor-pointer hover:text-emerald-300 transition-colors">Change city →</span>
-              </div>
-            )}
+            {/* ZIP picker (replaces static "Delivering to X" pill) */}
+            <HeroZipPicker currentMarketName={marketName} currentMarketState={marketState} />
 
             {/* Green accent line */}
             <div className="w-20 h-0.5 mb-6" style={{ background: 'rgba(16,185,129,0.6)' }} />

@@ -1,11 +1,14 @@
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { HeroSection } from '@/components/marketplace/hero-section'
 import { MaterialCard } from '@/components/marketplace/material-card'
+import { DealGrid } from '@/components/marketplace/deal-grid'
+import { getDeals } from '@/lib/deals'
 import type { MarketMaterialCard } from '@/types'
-import { ArrowRight, Star, MapPin } from 'lucide-react'
+import { ArrowRight, Star, MapPin, Tag } from 'lucide-react'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -16,7 +19,13 @@ export default async function HomePage() {
     .eq('is_active', true)
     .order('name')
 
-  const market = markets?.[0] ?? null
+  // Pick the user's chosen market from cookie if set, else default to first.
+  const cookieStore = await cookies()
+  const cookieMarketId = cookieStore.get('market_id')?.value
+  const market =
+    (cookieMarketId && markets?.find(m => m.id === cookieMarketId)) ||
+    markets?.[0] ||
+    null
 
   let cards: MarketMaterialCard[] = []
   if (market) {
@@ -60,6 +69,15 @@ export default async function HomePage() {
   const featured = cards.filter(c => c.is_featured)
   const rest = cards.filter(c => !c.is_featured)
 
+  // Active deals for this market (returns empty if none)
+  const { dealOfDay, deals: otherDeals } = market
+    ? await getDeals(market.id)
+    : { dealOfDay: null, deals: [] }
+  const allDeals = [
+    ...(dealOfDay ? [dealOfDay] : []),
+    ...otherDeals,
+  ]
+
   return (
     <>
       <SiteHeader />
@@ -70,6 +88,29 @@ export default async function HomePage() {
           marketName={market?.name ?? null}
           marketState={market?.state ?? null}
         />
+
+        {/* Deals near you */}
+        {allDeals.length > 0 && market && (
+          <section className="py-12 bg-[#0a0a0a]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-end justify-between mb-8">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Tag size={16} className="text-[#00ff88]" />
+                    <span className="text-xs font-bold text-[#00ff88] uppercase tracking-wider">Deals near you</span>
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-white">
+                    Limited-time savings in {market.name}
+                  </h2>
+                </div>
+                <Link href="/deals" className="hidden sm:flex items-center gap-1 text-sm font-semibold text-[#00ff88] hover:text-emerald-300">
+                  See all deals <ArrowRight size={14} />
+                </Link>
+              </div>
+              <DealGrid deals={allDeals} />
+            </div>
+          </section>
+        )}
 
         {/* Featured Materials */}
         {featured.length > 0 && (
