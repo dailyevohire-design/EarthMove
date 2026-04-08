@@ -131,6 +131,90 @@ export function faqSchema(questions: { question: string; answer: string }[]) {
   }
 }
 
+export function articleSchema(article: {
+  title: string
+  description: string
+  slug: string
+  image: string
+  readTime?: string
+  category?: string
+  datePublished?: string
+  dateModified?: string
+}) {
+  const published = article.datePublished ?? '2025-01-01'
+  const modified = article.dateModified ?? new Date().toISOString().split('T')[0]
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.description,
+    image: article.image,
+    url: `${BASE_URL}/learn/${article.slug}`,
+    datePublished: published,
+    dateModified: modified,
+    author: {
+      '@type': 'Organization',
+      name: 'EarthMove',
+      url: BASE_URL,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'EarthMove',
+      logo: { '@type': 'ImageObject', url: `${BASE_URL}/logo.png` },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${BASE_URL}/learn/${article.slug}` },
+    ...(article.category && { articleSection: article.category }),
+  }
+}
+
+export function collectionPageSchema(collection: {
+  name: string
+  description: string
+  url: string
+  itemCount?: number
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: collection.name,
+    description: collection.description,
+    url: collection.url.startsWith('http') ? collection.url : `${BASE_URL}${collection.url}`,
+    isPartOf: { '@type': 'WebSite', name: 'EarthMove', url: BASE_URL },
+    ...(collection.itemCount != null && {
+      mainEntity: {
+        '@type': 'ItemList',
+        numberOfItems: collection.itemCount,
+      },
+    }),
+  }
+}
+
+export function itemListSchema(items: { name: string; url: string; image?: string; price?: number | null; unit?: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    numberOfItems: items.length,
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Product',
+        name: item.name,
+        url: item.url.startsWith('http') ? item.url : `${BASE_URL}${item.url}`,
+        ...(item.image && { image: item.image }),
+        ...(item.price != null && {
+          offers: {
+            '@type': 'Offer',
+            price: item.price,
+            priceCurrency: 'USD',
+            availability: 'https://schema.org/InStock',
+          },
+        }),
+      },
+    })),
+  }
+}
+
 // Pre-built FAQ content for material pages
 export function getMaterialFAQs(materialName: string, cityName?: string, price?: number, unit?: string): { question: string; answer: string }[] {
   const location = cityName ? ` in ${cityName}` : ''

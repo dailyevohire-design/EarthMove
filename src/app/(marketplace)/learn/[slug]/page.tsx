@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { QuantityCalculator } from '@/components/marketplace/quantity-calculator'
 import { getArticleImage } from '@/lib/material-images'
 import { ArrowRight, CheckCircle2, AlertTriangle, BookOpen, Clock, ChevronRight } from 'lucide-react'
+import { articleSchema, breadcrumbSchema } from '@/lib/structured-data'
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -1376,6 +1377,13 @@ export async function generateMetadata({ params }: Props) {
   return {
     title: article.title,
     description: article.description,
+    alternates: { canonical: `/learn/${slug}` },
+    openGraph: {
+      title: article.title,
+      description: article.description,
+      type: 'article',
+      images: [article.image],
+    },
   }
 }
 
@@ -1385,9 +1393,24 @@ export default async function LearnArticlePage({ params }: Props) {
   if (!article) notFound()
 
   const Content = article.content
+  const schema = articleSchema({
+    title: article.title,
+    description: article.description,
+    slug,
+    image: article.image,
+    category: article.category,
+    readTime: article.readTime,
+  })
+  const crumbs = breadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'Learn', url: '/learn' },
+    { name: article.title, url: `/learn/${slug}` },
+  ])
 
   return (
     <article className="bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
       {/* Hero */}
       <div className="relative h-[300px] md:h-[400px] overflow-hidden">
         <img src={getArticleImage(slug)} alt={article.title} className="absolute inset-0 w-full h-full object-cover" />

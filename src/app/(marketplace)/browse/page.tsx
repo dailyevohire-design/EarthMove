@@ -6,6 +6,7 @@ import { MaterialCard, DealCard } from '@/components/marketplace/material-card'
 import { CategoryGrid } from '@/components/marketplace/category-grid'
 import Link from 'next/link'
 import { Zap, SlidersHorizontal } from 'lucide-react'
+import { collectionPageSchema, itemListSchema, breadcrumbSchema } from '@/lib/structured-data'
 
 interface BrowseProps {
   searchParams: Promise<{ category?: string; deals?: string }>
@@ -120,8 +121,40 @@ export default async function BrowsePage({ searchParams }: BrowseProps) {
   const dealsCards = cards.filter(c => c.badge_label || c.is_deal_of_day)
   const isDealsPage = deals === '1'
 
+  const pageTitle = isDealsPage
+    ? "Today's Deals on Bulk Materials"
+    : activeCategory
+      ? `${activeCategory.name} Materials`
+      : 'All Bulk Materials'
+  const collectionSchema = collectionPageSchema({
+    name: pageTitle,
+    description: `${cards.length} bulk materials available for delivery${market ? ` in ${market.name}` : ''}.`,
+    url: `/browse${category ? `?category=${category}` : ''}${isDealsPage ? '?deals=1' : ''}`,
+    itemCount: cards.length,
+  })
+  const listSchema = itemListSchema(
+    cards.slice(0, 20).map(c => ({
+      name: c.name,
+      url: `/browse/${c.slug}`,
+      image: c.image_url ?? undefined,
+      price: c.display_price ?? null,
+      unit: c.unit,
+    }))
+  )
+  const crumbs = breadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'Browse', url: '/browse' },
+    ...(activeCategory ? [{ name: activeCategory.name, url: `/browse?category=${activeCategory.slug}` }] : []),
+    ...(isDealsPage ? [{ name: 'Deals', url: '/browse?deals=1' }] : []),
+  ])
+
   return (
     <div className="bg-gray-50/30 min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
+      {cards.length > 0 && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }} />
+      )}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
       {/* Sticky category bar */}
       <div className="bg-white border-b border-gray-100 sticky top-16 z-20">
         <div className="container-main py-3">

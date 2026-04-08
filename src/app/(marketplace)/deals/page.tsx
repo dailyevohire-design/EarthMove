@@ -3,6 +3,7 @@ import { getDeals } from '@/lib/deals'
 import { DealSlider } from '@/components/marketplace/deal-slider'
 import { DealGrid } from '@/components/marketplace/deal-grid'
 import { Zap } from 'lucide-react'
+import { collectionPageSchema, breadcrumbSchema } from '@/lib/structured-data'
 
 export const metadata = {
   title: "Today's Deals on Bulk Materials",
@@ -19,9 +20,23 @@ export default async function DealsPage() {
   if (!market) return <div>No market selected</div>
 
   const { dealOfDay, deals } = await getDeals(market.id)
+  const totalDeals = deals.length + (dealOfDay ? 1 : 0)
+
+  const collectionSchema = collectionPageSchema({
+    name: `Today's Deals in ${market.name}`,
+    description: `Limited-time savings on bulk construction materials in ${market.name}, ${market.state}. ${totalDeals} active deals.`,
+    url: '/deals',
+    itemCount: totalDeals,
+  })
+  const crumbs = breadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'Deals', url: '/deals' },
+  ])
 
   return (
     <div className="bg-[#0a0a0a] min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
       {/* Hero Deal */}
       {dealOfDay && (
         <DealSlider deal={dealOfDay} marketName={market.name} />
