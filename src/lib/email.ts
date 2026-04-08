@@ -103,3 +103,71 @@ export async function sendOrderConfirmation(data: OrderConfirmationData) {
     console.error('[email] Failed to send order confirmation:', err)
   }
 }
+
+interface GuestClaimAccountData {
+  customerEmail: string
+  customerName: string
+  recoveryLink: string
+  orderShortId: string
+}
+
+/**
+ * Sent after a guest checkout completes. The user has a real auth.users row
+ * (created silently during checkout) and this email gives them the link to
+ * set a password and claim it. Promotes future repeat purchases without
+ * forcing signup at the moment of checkout.
+ */
+export async function sendGuestClaimAccount(data: GuestClaimAccountData) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[email] RESEND_API_KEY not set, skipping guest claim email')
+    return
+  }
+  const from = process.env.RESEND_FROM_EMAIL ?? 'orders@earthmove.io'
+
+  try {
+    await getResend().emails.send({
+      from,
+      to: data.customerEmail,
+      subject: 'Claim your EarthMove account — track this order & save on the next one',
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 16px;">
+          <div style="text-align: center; margin-bottom: 32px;">
+            <h1 style="color: #059669; font-size: 24px; margin: 0;">EarthMove</h1>
+          </div>
+
+          <h2 style="color: #111827; font-size: 22px; margin: 0 0 12px;">Claim your account, ${esc(data.customerName)}</h2>
+          <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
+            We just emailed you the receipt for order #${esc(data.orderShortId)}. To track its status,
+            re-order the same load with one tap, and unlock member-only deals, claim your account
+            by setting a password below. Takes about 10 seconds.
+          </p>
+
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="${esc(data.recoveryLink)}" style="display: inline-block; background: #059669; color: white; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 12px; text-decoration: none;">
+              Claim My Account
+            </a>
+          </div>
+
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #166534; font-size: 13px; margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.05em;">Member benefits</h3>
+            <ul style="color: #374151; font-size: 14px; line-height: 1.7; margin: 0; padding-left: 20px;">
+              <li>Daily deal alerts on materials you order</li>
+              <li>Free delivery on first 3 orders</li>
+              <li>$10 back for every $500 spent</li>
+              <li>SMS dispatch updates when your truck rolls</li>
+              <li>One-tap reorder to the same job site</li>
+            </ul>
+          </div>
+
+          <p style="color: #9ca3af; font-size: 13px; text-align: center; margin-top: 32px; line-height: 1.5;">
+            This link expires in 24 hours. If you didn&apos;t place this order, ignore this email.<br>
+            EarthMove — Bulk materials delivered to your job site.
+          </p>
+        </div>
+      `,
+    })
+    console.log(`[email] Guest claim account sent to ${data.customerEmail}`)
+  } catch (err) {
+    console.error('[email] Failed to send guest claim email:', err)
+  }
+}

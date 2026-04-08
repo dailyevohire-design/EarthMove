@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server'
 import { constructWebhookEvent } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/server'
 import { enqueueOrder } from '@/lib/dispatch'
-import { sendOrderConfirmation } from '@/lib/email'
+import { sendOrderConfirmation, sendGuestClaimAccount } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
           payload:     { stripe_session_id: session.id, amount: session.amount_total },
         })
 
-        // Send order confirmation email after the webhook responds.
+        // Send post-payment emails after the webhook responds.
         // `after()` keeps the Fluid Compute instance alive to finish this work
         // without blocking our 2xx back to Stripe (which must be fast, < 5s).
         if (order.customer_id) {
@@ -87,26 +87,61 @@ export async function POST(req: NextRequest) {
           const orderSnapshot = order
           after(async () => {
             try {
+              // Email lives on auth.users, NOT on the profiles table — the
+              // previous version queried profile.email which doesn't exist
+              // and silently failed every time. Use admin.getUserById instead.
+              const { data: { user: authUser }, error: userErr } = await supabase.auth.admin.getUserById(customerId)
+              if (userErr || !authUser?.email) {
+                console.error('[stripe-webhook] could not fetch auth user for email:', userErr)
+                return
+              }
+
               const { data: profile } = await supabase
                 .from('profiles')
-                .select('email, first_name, last_name')
+                .select('first_name, last_name')
                 .eq('id', customerId)
-                .single()
-              if (!profile?.email) return
+                .maybeSingle()
+
+              const firstName = profile?.first_name
+                ?? (authUser.user_metadata as any)?.first_name
+                ?? 'Customer'
               const addr = orderSnapshot.delivery_address_snapshot as any
+
+              // 1. Order confirmation (always)
               await sendOrderConfirmation({
-                customerEmail:   profile.email,
-                customerName:    profile.first_name ?? 'Customer',
+                customerEmail:   authUser.email,
+                customerName:    firstName,
                 orderId:         orderSnapshot.id,
-                materialName:    orderSnapshot.material_name ?? 'Material',
+                materialName:    orderSnapshot.material_name_snapshot ?? orderSnapshot.material_name ?? 'Material',
                 quantity:        orderSnapshot.quantity ?? 0,
                 unit:            orderSnapshot.unit ?? 'ton',
                 totalAmount:     session.amount_total ?? orderSnapshot.total_amount_cents ?? 0,
                 deliveryAddress: addr ? `${addr.city}, ${addr.state} ${addr.zip}` : undefined,
                 deliveryType:    orderSnapshot.delivery_type ?? 'asap',
               })
+
+              // 2. Guest claim account (only for first-time guests)
+              const meta = (authUser.user_metadata ?? {}) as any
+              if (meta.was_guest_checkout && !meta.account_claimed) {
+                const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://earthmove.io'
+                const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
+                  type: 'recovery',
+                  email: authUser.email,
+                  options: { redirectTo: `${baseUrl}/account?claimed=1` },
+                })
+                if (linkErr || !linkData?.properties?.action_link) {
+                  console.error('[stripe-webhook] could not generate recovery link:', linkErr)
+                } else {
+                  await sendGuestClaimAccount({
+                    customerEmail: authUser.email,
+                    customerName:  firstName,
+                    recoveryLink:  linkData.properties.action_link,
+                    orderShortId:  orderSnapshot.id.slice(-8).toUpperCase(),
+                  })
+                }
+              }
             } catch (err) {
-              console.error('[stripe-webhook] email send failed:', err)
+              console.error('[stripe-webhook] post-payment email path failed:', err)
             }
           })
         }
