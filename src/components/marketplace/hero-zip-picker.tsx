@@ -3,8 +3,6 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { MapPin, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
-import { resolveMarketFromZip } from '@/lib/zip-market'
-import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   /** Currently selected market name, if any. Used as the resting state. */
@@ -19,13 +17,19 @@ interface Props {
  *   - editing: inline ZIP input
  *   - not-found: ZIP outside service area, with waitlist nudge
  */
+type ErrorState =
+  | { kind: 'out_of_area'; zip: string }
+  | { kind: 'db_error'; message: string }
+  | null
+
 export function HeroZipPicker({ currentMarketName, currentMarketState }: Props) {
   const router = useRouter()
-  const [mode, setMode] = useState<'resting' | 'editing' | 'not-found'>(
+  const [mode, setMode] = useState<'resting' | 'editing' | 'not-found' | 'error'>(
     currentMarketName ? 'resting' : 'editing'
   )
   const [zip, setZip] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<ErrorState>(null)
   const [, startTransition] = useTransition()
 
   const submit = async (e: React.FormEvent) => {
@@ -33,46 +37,50 @@ export function HeroZipPicker({ currentMarketName, currentMarketState }: Props) 
     if (zip.length !== 5) return
 
     setLoading(true)
-    const match = resolveMarketFromZip(zip)
-    if (!match) {
-      setMode('not-found')
-      setLoading(false)
-      return
-    }
+    setError(null)
 
-    let marketId: string | null = null
+    let result: any = null
     try {
-      const supabase = createClient()
-      const { data: market, error } = await supabase
-        .from('markets')
-        .select('id')
-        .eq('slug', match.market_slug)
-        .eq('is_active', true)
-        .maybeSingle()
-      if (error) {
-        // eslint-disable-next-line no-console
-        console.error('[hero-zip-picker] markets lookup failed:', error)
-      }
-      marketId = market?.id ?? null
+      const res = await fetch('/api/resolve-zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zip }),
+      })
+      result = await res.json()
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error('[hero-zip-picker] markets lookup threw:', err)
-    }
-
-    if (!marketId) {
-      // Prefix matched but the DB row is missing/inactive.
-      // Surface this as not-found so the user gets feedback instead of silence.
-      setMode('not-found')
+      console.error('[hero-zip-picker] resolve fetch failed:', err)
+      setError({ kind: 'db_error', message: 'Network error — please try again.' })
+      setMode('error')
       setLoading(false)
       return
     }
 
+    if (!result?.ok) {
+      const reason = result?.reason as string | undefined
+      if (reason === 'out_of_area' || reason === 'invalid_zip') {
+        setMode('not-found')
+      } else {
+        // eslint-disable-next-line no-console
+        console.error('[hero-zip-picker] resolve returned error:', result)
+        setError({
+          kind: 'db_error',
+          message: result?.detail ?? 'We could not load materials for that ZIP. Please try again.',
+        })
+        setMode('error')
+      }
+      setLoading(false)
+      return
+    }
+
+    const marketId: string = result.market.id
     document.cookie = `market_id=${marketId}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
     startTransition(() => {
       router.refresh()
       setLoading(false)
       setMode('resting')
       setZip('')
+      setError(null)
     })
   }
 
@@ -114,11 +122,39 @@ export function HeroZipPicker({ currentMarketName, currentMarketState }: Props) 
         <span className="text-white/30 mx-1">|</span>
         <button
           type="button"
-          onClick={() => { setMode('editing'); setZip('') }}
+          onClick={() => { setMode('editing'); setZip(''); setError(null) }}
           className="text-amber-300 text-sm font-semibold hover:text-amber-200 transition-colors"
         >
           Try another ZIP →
         </button>
+      </div>
+    )
+  }
+
+  if (mode === 'error') {
+    return (
+      <div
+        className="inline-flex flex-col gap-2 px-4 py-3 rounded-2xl mb-6 max-w-lg"
+        style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)' }}
+      >
+        <div className="flex items-center gap-2">
+          <AlertCircle size={16} className="text-red-400" />
+          <span className="text-white text-sm font-bold">Couldn&apos;t load materials for that ZIP.</span>
+        </div>
+        {error?.kind === 'db_error' && (
+          <div className="text-white/60 text-xs pl-6">
+            {error.message}
+          </div>
+        )}
+        <div className="pl-6">
+          <button
+            type="button"
+            onClick={() => { setMode('editing'); setZip(''); setError(null) }}
+            className="text-red-300 text-sm font-semibold hover:text-red-200 transition-colors"
+          >
+            Try again →
+          </button>
+        </div>
       </div>
     )
   }
