@@ -79,9 +79,7 @@ function DealCard({ deal }: { deal: Deal }) {
 
   return (
     <div
-      className="group relative rounded-2xl bg-white/[0.03] border border-white/[0.08] overflow-hidden transition-all duration-200 will-change-transform touch-manipulation
-        hover:bg-white/[0.05] hover:border-[#00ff88]/40 hover:-translate-y-1
-        active:translate-y-0 active:scale-[0.985] active:duration-75"
+      className="group relative rounded-2xl bg-white/[0.03] border border-white/[0.08] overflow-hidden transition-all duration-200 will-change-transform touch-manipulation hover:bg-white/[0.05] hover:border-[#00ff88]/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.985] active:duration-75"
       style={{
         boxShadow:
           '0 1px 0 0 rgba(255,255,255,0.06) inset, 0 1px 2px rgba(0,0,0,0.4), 0 16px 32px -16px rgba(0,0,0,0.6), 0 0 24px -8px rgba(0,255,136,0.15)',
