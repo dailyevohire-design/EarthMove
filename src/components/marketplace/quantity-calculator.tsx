@@ -112,7 +112,13 @@ export function QuantityCalculator({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div
+      className="relative bg-white rounded-2xl border border-gray-200/80 overflow-hidden"
+      style={{
+        boxShadow:
+          '0 1px 0 0 rgba(255,255,255,0.9) inset, 0 1px 3px rgba(15,23,42,0.05), 0 20px 40px -20px rgba(15,23,42,0.15), 0 0 40px -12px rgba(16,185,129,0.12)',
+      }}
+    >
       {/* Header */}
       <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50">
