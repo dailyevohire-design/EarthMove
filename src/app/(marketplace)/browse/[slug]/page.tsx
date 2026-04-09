@@ -5,7 +5,7 @@ import { deriveDisplayPrice, formatCurrency, unitLabel } from '@/lib/pricing-eng
 import { resolveOffering } from '@/lib/fulfillment-resolver'
 import { MaterialOrderForm } from '@/components/marketplace/material-order-form'
 import { getMaterialImage } from '@/lib/material-images'
-import { productSchema, breadcrumbSchema, faqSchema, getMaterialFAQs } from '@/lib/structured-data'
+import { productSchema, breadcrumbSchema, faqSchema, getMaterialFAQs, jsonLd } from '@/lib/structured-data'
 import { Package, ChevronRight, Truck, Shield } from 'lucide-react'
 import Link from 'next/link'
 
@@ -92,21 +92,21 @@ export default async function MaterialDetailPage({ params }: Props) {
   return (
     <div className="container-main py-8">
       {/* JSON-LD */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(
         productSchema({
           name: material.name, slug: material.slug, description: material.description,
           category: material.category?.name, price: displayPrice,
           unit, image: getMaterialImage(material.slug),
         })
       ) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(
         breadcrumbSchema([
           { name: 'Materials', url: '/browse' },
           { name: material.category?.name ?? 'Category', url: `/browse?category=${material.category?.slug}` },
           { name: material.name, url: `/browse/${material.slug}` },
         ])
       ) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(faqSchema(faqs)) }} />
 
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-gray-400 mb-8">

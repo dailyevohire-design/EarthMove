@@ -4,7 +4,7 @@ import { deriveDisplayPrice, formatCurrency, unitLabel } from '@/lib/pricing-eng
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { MaterialCard } from '@/components/marketplace/material-card'
-import { localBusinessSchema, breadcrumbSchema, faqSchema } from '@/lib/structured-data'
+import { localBusinessSchema, breadcrumbSchema, faqSchema, jsonLd } from '@/lib/structured-data'
 import Link from 'next/link'
 import { MapPin, Truck, ShieldCheck, Clock } from 'lucide-react'
 import type { MarketMaterialCard } from '@/types'
@@ -92,13 +92,13 @@ export default async function CityPage({ params }: Props) {
   return (
     <>
       <SiteHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(
         localBusinessSchema({ name: market.name, state: market.state, slug: market.slug, materialCount: cards.length })
       ) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(
         breadcrumbSchema([{ name: 'Home', url: '/' }, { name: market.name, url: `/${city}` }])
       ) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(cityFaqs)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(faqSchema(cityFaqs)) }} />
       <main className="bg-gray-50/30">
         <section className="bg-gray-900 py-16 md:py-20">
           <div className="container-main">

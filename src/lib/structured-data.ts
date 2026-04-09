@@ -3,6 +3,15 @@
 
 const BASE_URL = 'https://earthmove.io'
 
+/**
+ * Safely serialize a JSON-LD object for inline <script> injection.
+ * Escapes `<` so a user-supplied string containing `</script>` cannot
+ * break out of the script tag (XSS). Use with dangerouslySetInnerHTML.
+ */
+export function jsonLd(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, '\\u003c')
+}
+
 export function organizationSchema() {
   return {
     '@context': 'https://schema.org',

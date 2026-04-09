@@ -7,7 +7,7 @@ import { QuantityCalculator } from '@/components/marketplace/quantity-calculator
 import Image from 'next/image'
 import Link from 'next/link'
 import { getMaterialImage } from '@/lib/material-images'
-import { productSchema, breadcrumbSchema, faqSchema, getMaterialFAQs } from '@/lib/structured-data'
+import { productSchema, breadcrumbSchema, faqSchema, getMaterialFAQs, jsonLd } from '@/lib/structured-data'
 import { Truck, ShieldCheck, Clock, MapPin, Star, CheckCircle2 } from 'lucide-react'
 
 interface Props {
@@ -123,21 +123,21 @@ export default async function LocationMaterialPage({ params }: Props) {
   return (
     <>
       <SiteHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(
         productSchema({
           name: `${material.name} in ${cityDisplay}`, slug: material.slug,
           description: material.description, category: material.category?.name,
           price: displayPrice, unit, image: getMaterialImage(material.slug),
         })
       ) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(
         breadcrumbSchema([
           { name: 'Home', url: '/' },
           { name: cityDisplay, url: `/${citySlugForUrl}` },
           { name: material.name, url: `/${citySlugForUrl}/${material.slug}` },
         ])
       ) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(faqSchema(faqs)) }} />
       <main className="bg-gray-50/30">
         {/* Hero */}
         <section className="relative overflow-hidden bg-gray-900 py-16 md:py-20">

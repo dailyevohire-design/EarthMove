@@ -6,7 +6,7 @@ import { MaterialCard, DealCard } from '@/components/marketplace/material-card'
 import { CategoryGrid } from '@/components/marketplace/category-grid'
 import Link from 'next/link'
 import { Zap, SlidersHorizontal } from 'lucide-react'
-import { collectionPageSchema, itemListSchema, breadcrumbSchema } from '@/lib/structured-data'
+import { collectionPageSchema, itemListSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 
 interface BrowseProps {
   searchParams: Promise<{ category?: string; deals?: string }>
@@ -150,11 +150,11 @@ export default async function BrowsePage({ searchParams }: BrowseProps) {
 
   return (
     <div className="bg-gray-50/30 min-h-screen">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(collectionSchema) }} />
       {cards.length > 0 && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(listSchema) }} />
       )}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(crumbs) }} />
       {/* Sticky category bar */}
       <div className="bg-white border-b border-gray-100 sticky top-16 z-20">
         <div className="container-main py-3">

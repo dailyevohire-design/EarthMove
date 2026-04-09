@@ -3,7 +3,7 @@ import { getDeals } from '@/lib/deals'
 import { DealSlider } from '@/components/marketplace/deal-slider'
 import { DealGrid } from '@/components/marketplace/deal-grid'
 import { Zap } from 'lucide-react'
-import { collectionPageSchema, breadcrumbSchema } from '@/lib/structured-data'
+import { collectionPageSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 
 export const metadata = {
   title: "Today's Deals on Bulk Materials",
@@ -35,8 +35,8 @@ export default async function DealsPage() {
 
   return (
     <div className="bg-[#0a0a0a] min-h-screen">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(collectionSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(crumbs) }} />
       {/* Hero Deal */}
       {dealOfDay && (
         <DealSlider deal={dealOfDay} marketName={market.name} />

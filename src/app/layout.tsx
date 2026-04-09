@@ -4,7 +4,7 @@ import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { SupportWidget } from '@/components/layout/chat-widget'
 import { PromoBanner } from '@/components/layout/promo-banner'
-import { organizationSchema, websiteSchema } from '@/lib/structured-data'
+import { organizationSchema, websiteSchema, jsonLd } from '@/lib/structured-data'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -68,11 +68,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://js.stripe.com" />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
+          dangerouslySetInnerHTML={{ __html: jsonLd(organizationSchema()) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema()) }}
+          dangerouslySetInnerHTML={{ __html: jsonLd(websiteSchema()) }}
         />
       </head>
       <body className="bg-white text-gray-900 antialiased min-h-screen flex flex-col">

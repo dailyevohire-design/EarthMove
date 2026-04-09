@@ -1,5 +1,5 @@
 import { LearnHub } from '@/components/marketplace/learn-hub'
-import { collectionPageSchema, breadcrumbSchema } from '@/lib/structured-data'
+import { collectionPageSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 
 export const metadata = {
   title: 'Knowledge Center — Material Guides, Calculators & Intelligence',
@@ -23,8 +23,8 @@ export default function LearnPage() {
   ])
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collection) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(collection) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(crumbs) }} />
       <LearnHub />
     </>
   )

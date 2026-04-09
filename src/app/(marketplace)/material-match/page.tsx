@@ -1,5 +1,5 @@
 import { MaterialQuiz } from '@/components/marketplace/material-quiz'
-import { breadcrumbSchema } from '@/lib/structured-data'
+import { breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 
 export const metadata = {
   title: 'Material Match — Find Your Perfect Material',
@@ -31,8 +31,8 @@ export default function MaterialMatchPage() {
   }
   return (
     <main className="bg-gray-50/30 min-h-screen">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howTo) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(crumbs) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(howTo) }} />
       <MaterialQuiz />
     </main>
   )
