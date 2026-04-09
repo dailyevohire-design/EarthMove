@@ -8,6 +8,7 @@ interface Market {
   id: string
   name: string
   state: string
+  slug: string
 }
 
 interface Props {
@@ -139,7 +140,7 @@ export function LiveActivity({ markets }: Props) {
           {markets.map(m => (
             <Link
               key={m.id}
-              href={`/${m.name.toLowerCase().replace(/[^a-z]/g, '-').replace(/-+/g, '-')}`}
+              href={`/${m.slug}`}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/80 text-xs font-medium hover:bg-white/[0.08] hover:border-emerald-500/30 hover:text-white transition-all"
             >
               <MapPin size={10} className="text-emerald-400" />

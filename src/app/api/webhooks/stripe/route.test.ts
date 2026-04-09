@@ -60,7 +60,7 @@ vi.mock('@/lib/supabase/server', () => ({
   },
 }))
 
-const enqueueOrderMock = vi.fn(async () => {})
+const enqueueOrderMock = vi.fn(async (_o: any) => {})
 vi.mock('@/lib/dispatch', () => ({
   enqueueOrder: (o: any) => enqueueOrderMock(o),
 }))

@@ -13,7 +13,10 @@ interface Props {
   params: Promise<{ city: string }>
 }
 
+// Map URL slugs to canonical market slugs. Identity entries for canonical
+// slugs ensure /dallas-fort-worth resolves the same as /dallas or /dfw.
 const CITY_SLUGS: Record<string, string> = {
+  'dallas-fort-worth': 'dallas-fort-worth',
   'dallas': 'dallas-fort-worth', 'dfw': 'dallas-fort-worth', 'fort-worth': 'dallas-fort-worth',
   'houston': 'houston', 'austin': 'austin', 'san-antonio': 'san-antonio',
   'phoenix': 'phoenix', 'denver': 'denver', 'atlanta': 'atlanta',

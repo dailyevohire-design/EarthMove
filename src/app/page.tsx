@@ -24,7 +24,7 @@ export default async function HomePage() {
   // Markets list for the LiveActivity strip (always restricted to launch markets).
   const { data: markets } = await supabase
     .from('markets')
-    .select('id, name, state')
+    .select('id, name, state, slug')
     .eq('is_active', true)
     .in('slug', LAUNCH_MARKET_SLUGS as unknown as string[])
     .order('name')

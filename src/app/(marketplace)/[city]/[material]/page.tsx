@@ -16,6 +16,7 @@ interface Props {
 
 // Map URL slugs to market slugs
 const CITY_SLUGS: Record<string, string> = {
+  'dallas-fort-worth': 'dallas-fort-worth',
   'dallas': 'dallas-fort-worth',
   'dfw': 'dallas-fort-worth',
   'fort-worth': 'dallas-fort-worth',
