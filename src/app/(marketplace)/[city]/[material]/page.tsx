@@ -29,6 +29,11 @@ const CITY_SLUGS: Record<string, string> = {
   'nashville': 'nashville',
   'charlotte': 'charlotte',
   'tampa': 'tampa',
+  'orlando': 'orlando',
+  'las-vegas': 'las-vegas', 'vegas': 'las-vegas',
+  'raleigh': 'raleigh', 'raleigh-durham': 'raleigh',
+  'salt-lake-city': 'salt-lake-city', 'slc': 'salt-lake-city', 'salt-lake': 'salt-lake-city',
+  'boise': 'boise',
 }
 
 const DENSITY: Record<string, number> = {

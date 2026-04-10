@@ -5,7 +5,7 @@ const BASE = 'https://earthmove.io'
 
 // Fallback static lists used only if Supabase is unreachable at build time.
 // The dynamic query below is the source of truth when the DB is available.
-const FALLBACK_CITIES = ['dallas', 'houston', 'austin', 'san-antonio', 'phoenix', 'denver', 'atlanta', 'nashville', 'charlotte', 'tampa']
+const FALLBACK_CITIES = ['dallas', 'houston', 'austin', 'phoenix', 'denver', 'atlanta', 'tampa', 'orlando', 'las-vegas', 'raleigh', 'salt-lake-city', 'boise']
 const FALLBACK_MATERIALS = ['fill-dirt', 'select-fill', 'topsoil', 'concrete-sand', 'pea-gravel', 'flex-base', 'road-base', 'washed-river-rock', 'limestone', 'crushed-concrete', 'decomposed-granite', 'base-gravel-57', 'rip-rap', 'masonry-sand', 'utility-sand']
 
 const ARTICLES = ['driveway-gravel-guide', 'fill-dirt-vs-topsoil', 'french-drain-materials', 'how-much-gravel-do-i-need', 'spring-project-guide-2025', 'gravel-calculator', 'material-grades-explained', 'ordering-wrong-material']

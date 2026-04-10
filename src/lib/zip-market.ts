@@ -22,31 +22,77 @@ function range(start: number, end: number): number[] {
  * point any other "list of active markets" query at it instead of trusting
  * whatever rows happen to exist in the markets table.
  */
-export const LAUNCH_MARKET_SLUGS = ['dallas-fort-worth', 'denver'] as const
+export const LAUNCH_MARKET_SLUGS = [
+  'dallas-fort-worth', 'denver', 'phoenix', 'houston', 'atlanta',
+  'orlando', 'tampa', 'las-vegas', 'raleigh', 'salt-lake-city',
+  'austin', 'boise',
+] as const
 export type LaunchMarketSlug = typeof LAUNCH_MARKET_SLUGS[number]
 
 export const ALL_ZIP_MARKETS: ZipMarket[] = [
   {
     market_slug: 'dallas-fort-worth',
     market_name: 'Dallas-Fort Worth',
-    // ~100mi radius around DFW. Covers Dallas, Fort Worth, Plano, Frisco,
-    // McKinney, Arlington, Denton, Garland, Mesquite, Waxahachie, Sherman,
-    // Greenville, Tyler, Waco, Wichita Falls, Mineral Wells, Stephenville.
-    // Texas prefixes 750-758, 760-766, 768, 769.
     prefixes: [
-      ...range(750, 758), // Dallas, Mesquite, Garland, Plano, McKinney, Greenville, Tyler, Palestine
-      ...range(760, 766), // Fort Worth, Arlington, Denton, Wichita Falls, Waco, Killeen-Temple north
-      768,                // Stephenville / Mineral Wells
-      769,                // Abilene fringe (kept for inclusivity, ~150mi but contractors travel)
+      ...range(750, 758), // Dallas, Mesquite, Garland, Plano, McKinney
+      ...range(760, 766), // Fort Worth, Arlington, Denton, Waco
+      768, 769,
     ],
   },
   {
     market_slug: 'denver',
     market_name: 'Denver',
-    // ~100mi radius around Denver. Covers Denver, Aurora, Lakewood, Boulder,
-    // Longmont, Fort Collins, Greeley, Loveland, Castle Rock, Colorado Springs,
-    // Pueblo (borderline). Colorado prefixes 800-810.
-    prefixes: range(800, 810),
+    prefixes: range(800, 810), // Denver, Aurora, Boulder, Fort Collins, Colorado Springs
+  },
+  {
+    market_slug: 'phoenix',
+    market_name: 'Phoenix',
+    prefixes: [...range(850, 853), 855], // Phoenix, Mesa, Scottsdale, Tempe, Chandler, Gilbert
+  },
+  {
+    market_slug: 'houston',
+    market_name: 'Houston',
+    prefixes: [...range(770, 775), 777], // Houston, Katy, Sugar Land, Woodlands, Galveston
+  },
+  {
+    market_slug: 'atlanta',
+    market_name: 'Atlanta',
+    prefixes: [...range(300, 303), 311], // Atlanta, Marietta, Kennesaw, Decatur, Alpharetta
+  },
+  {
+    market_slug: 'orlando',
+    market_name: 'Orlando',
+    prefixes: [...range(327, 329), 347], // Orlando, Kissimmee, Sanford, Daytona Beach
+  },
+  {
+    market_slug: 'tampa',
+    market_name: 'Tampa',
+    prefixes: [...range(335, 337), 346], // Tampa, St Petersburg, Clearwater, Brandon, Lakeland
+  },
+  {
+    market_slug: 'las-vegas',
+    market_name: 'Las Vegas',
+    prefixes: range(889, 891), // Las Vegas, Henderson, North Las Vegas, Boulder City
+  },
+  {
+    market_slug: 'raleigh',
+    market_name: 'Raleigh',
+    prefixes: range(275, 277), // Raleigh, Durham, Chapel Hill, Cary, Wake Forest
+  },
+  {
+    market_slug: 'salt-lake-city',
+    market_name: 'Salt Lake City',
+    prefixes: [840, 841, 843], // Salt Lake City, Ogden, Provo
+  },
+  {
+    market_slug: 'austin',
+    market_name: 'Austin',
+    prefixes: [786, 787, 789], // Austin, Round Rock, Georgetown, San Marcos
+  },
+  {
+    market_slug: 'boise',
+    market_name: 'Boise',
+    prefixes: [836, 837], // Boise, Meridian, Nampa, Caldwell
   },
 ]
 

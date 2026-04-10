@@ -21,6 +21,11 @@ const CITY_SLUGS: Record<string, string> = {
   'houston': 'houston', 'austin': 'austin', 'san-antonio': 'san-antonio',
   'phoenix': 'phoenix', 'denver': 'denver', 'atlanta': 'atlanta',
   'nashville': 'nashville', 'charlotte': 'charlotte', 'tampa': 'tampa',
+  'orlando': 'orlando',
+  'las-vegas': 'las-vegas', 'vegas': 'las-vegas',
+  'raleigh': 'raleigh', 'raleigh-durham': 'raleigh',
+  'salt-lake-city': 'salt-lake-city', 'slc': 'salt-lake-city', 'salt-lake': 'salt-lake-city',
+  'boise': 'boise',
 }
 
 async function getCityData(citySlug: string) {
