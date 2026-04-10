@@ -1,7 +1,7 @@
 # EarthMove Launch Runbook
 
 **Launch date:** Monday 2026-04-13
-**Markets:** Dallas-Fort Worth, Denver
+**Markets:** Dallas-Fort Worth, Denver, Phoenix, Houston, Atlanta, Orlando, Tampa, Las Vegas, Raleigh, Salt Lake City, Austin, Boise (12 total)
 **Last pre-launch commit:** `656cb44` (and whatever follows it)
 
 ---
@@ -13,7 +13,7 @@ Mark each `[x]` when verified.
 ### Infrastructure
 - [x] `SITE_PASSWORD` removed from Vercel production
 - [x] `earthmove.io` returns 200 on homepage
-- [x] All routes return 200: `/`, `/browse`, `/deals`, `/learn`, `/material-match`, `/login`, `/signup`, `/dallas-fort-worth`, `/denver`, `/dallas`, `/dfw`, `/sitemap.xml`, `/robots.txt`
+- [x] All routes return 200: `/`, `/browse`, `/deals`, `/learn`, `/material-match`, `/login`, `/signup`, `/dallas-fort-worth`, `/denver`, `/dallas`, `/dfw`, `/phoenix`, `/houston`, `/atlanta`, `/orlando`, `/tampa`, `/las-vegas`, `/raleigh`, `/salt-lake-city`, `/austin`, `/boise`, `/sitemap.xml`, `/robots.txt`
 - [x] No console errors on any page
 - [x] `STRIPE_SECRET_KEY` set in Vercel prod
 - [x] `STRIPE_WEBHOOK_SECRET` set in Vercel prod
@@ -36,9 +36,11 @@ Mark each `[x]` when verified.
 - [ ] Supabase `dispatch_queue` row created with `status='queued'`
 - [ ] Supabase `audit_events` row: `event_type='order.payment_confirmed'`
 - [ ] Guest checkout: claim-account email arrives with working `/signup?email=...&first_name=...&from_order=...` link
-- [ ] ZIP picker: DFW zip (e.g. 75201) resolves correctly
-- [ ] ZIP picker: Denver zip (e.g. 80202) resolves correctly
-- [ ] ZIP picker: out-of-market zip (e.g. 90210) shows "not in launch markets" state
+- [x] ZIP picker: DFW zip (75201) resolves correctly
+- [x] ZIP picker: Denver zip (80202) resolves correctly
+- [x] ZIP picker: Phoenix (85001), Houston (77001), Atlanta (30301), Orlando (32801), Tampa (33601), Las Vegas (89101), Raleigh (27601), Salt Lake City (84101), Austin (78701), Boise (83701) all resolve correctly
+- [x] ZIP picker: out-of-market zip (90210) shows "not in launch markets" state
+- [x] ZIP picker: non-launch markets (San Antonio 78201, Nashville 37201) return out_of_area
 
 ### Code/quality gates
 - [x] `npx tsc --noEmit` clean
@@ -98,6 +100,8 @@ Site returns to the under-construction gate until you remove the var again.
 2. **Stripe webhook retry behavior** — we return 200 on dispatch failure to avoid re-processing loop, and log `order.dispatch_failed` to `audit_events`. Monitor that event type post-launch.
 3. **Guest orders without subsequent signup** — orders table has `guest_email` + `guest_first_name` but no long-term plan for unclaimed orders. Acceptable for launch.
 4. **Supabase RLS on new `orders` guest path** — the webhook uses `createAdminClient()` so RLS is bypassed. User-facing reads go through `createClient()` (anon). Verify RLS policies let a customer read their own orders (not someone else's).
+5. **New market suppliers (NV, UT, ID)** — Las Vegas, Salt Lake City, Boise have synthetic supplier data (created for launch). Real suppliers to be added via scraping pipeline post-launch. FL and NC markets have a mix of real + synthetic.
+6. **Non-launch markets (San Antonio, Nashville, Charlotte)** — set `is_active=false` in DB. Direct URL access will 404. Can be re-enabled later.
 
 ---
 
