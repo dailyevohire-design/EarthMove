@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Logo } from './logo'
+import { Logo, LogoMark } from './logo'
 
 function ArrowRight() {
   return (
@@ -22,7 +22,10 @@ export function SiteFooter() {
             <div className="rounded-2xl bg-gradient-to-br from-emerald-900 to-emerald-800 p-8 md:p-10 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-emerald-700/20 -translate-y-10 translate-x-10" />
               <div className="relative">
-                <span className="inline-block text-xs font-bold tracking-widest uppercase text-emerald-400 mb-3">For Drivers</span>
+                <div className="flex items-center gap-2 mb-4">
+                  <LogoMark size={20} color="#ffffff" />
+                  <span className="text-xs font-bold tracking-widest uppercase text-emerald-400">For Drivers</span>
+                </div>
                 <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2 leading-tight">
                   Your truck. Your schedule.<br className="hidden sm:block" />
                   <span className="text-emerald-400">Same-day pay.</span>
@@ -44,7 +47,10 @@ export function SiteFooter() {
             <div className="rounded-2xl bg-gradient-to-br from-stone-800 to-stone-700 p-8 md:p-10 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-stone-600/20 -translate-y-10 translate-x-10" />
               <div className="relative">
-                <span className="inline-block text-xs font-bold tracking-widest uppercase text-emerald-400 mb-3">For Contractors</span>
+                <div className="flex items-center gap-2 mb-4">
+                  <LogoMark size={20} color="#ffffff" />
+                  <span className="text-xs font-bold tracking-widest uppercase text-emerald-400">For Contractors</span>
+                </div>
                 <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2 leading-tight">
                   Your crew. Your terms.<br className="hidden sm:block" />
                   <span className="text-emerald-400">Better clients.</span>
