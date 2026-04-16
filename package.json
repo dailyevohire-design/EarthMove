@@ -13,6 +13,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
     "@radix-ui/react-label": "^2.1.0",
@@ -24,18 +25,24 @@
     "@stripe/stripe-js": "^4.9.0",
     "@supabase/ssr": "^0.5.1",
     "@supabase/supabase-js": "^2.46.1",
+    "@types/opossum": "^8.1.9",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.37.0",
     "autoprefixer": "^10.4.27",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "h3-js": "^4.4.0",
     "lucide-react": "^0.460.0",
     "next": "^16.2.1",
+    "opossum": "^9.0.0",
+    "p-limit": "^7.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "resend": "^4.0.0",
     "stripe": "^17.3.1",
     "tailwind-merge": "^2.5.4",
     "twilio": "^5.3.6",
-    "zod": "^3.23.8",
+    "zod": "^3.25.76",
     "zustand": "^5.0.1"
   },
   "devDependencies": {
