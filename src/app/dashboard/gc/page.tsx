@@ -28,7 +28,7 @@ export default async function GCDashboardPage() {
     .order('created_at', { ascending: false })
     .limit(5)
 
-  const highRisk = (reports ?? []).filter(r => r.risk_level === 'HIGH' || r.risk_level === 'CRITICAL').length
+  const highRisk = ((reports ?? []) as any[]).filter(r => r.risk_level === 'HIGH' || r.risk_level === 'CRITICAL').length
   const exposure = highRisk * 47000
 
   const RISK_COLOR: Record<string, string> = {
