@@ -71,7 +71,7 @@ export default async function GCDashboardPage() {
           { label: 'Orders placed',         value: (orders ?? []).length,  icon: <ShoppingCart size={16} /> },
           { label: 'Avg cost per incident', value: '$47K',                 icon: <TrendingUp size={16} /> },
         ].map(s => (
-          <div key={s.label} className="card p-4">
+          <div key={s.label} className="bg-stone-900/60 border border-stone-800 rounded-xl p-4">
             <div className="flex items-center gap-2 text-stone-500 text-xs mb-2">
               {s.icon}<span>{s.label}</span>
             </div>
@@ -82,7 +82,7 @@ export default async function GCDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent contractor checks */}
-        <div className="card overflow-hidden">
+        <div className="bg-stone-900/60 border border-stone-800 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-stone-800 flex items-center justify-between">
             <div className="font-semibold text-stone-200 text-sm">Recent Contractor Checks</div>
             <Link href="/dashboard/gc/contractors" className="text-xs text-emerald-500 hover:text-emerald-400">
@@ -119,7 +119,7 @@ export default async function GCDashboardPage() {
         </div>
 
         {/* Recent orders */}
-        <div className="card overflow-hidden">
+        <div className="bg-stone-900/60 border border-stone-800 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-stone-800 flex items-center justify-between">
             <div className="font-semibold text-stone-200 text-sm">Recent Orders</div>
             <Link href="/browse" className="text-xs text-emerald-500 hover:text-emerald-400">

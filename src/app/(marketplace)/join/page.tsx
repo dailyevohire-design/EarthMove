@@ -297,27 +297,6 @@ export default function JoinPage() {
       fontFamily: "'DM Sans', -apple-system, sans-serif",
       padding: 0,
     }}>
-      <div style={{
-        padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between",
-        borderBottom: "1px solid #e5e7eb", background: "rgba(255,255,255,0.9)",
-        backdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 50,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{
-            width: "32px", height: "32px", borderRadius: "10px",
-            background: "linear-gradient(135deg, #059669, #047857)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontWeight: 800, fontSize: "14px",
-          }}>E</div>
-          <span style={{ fontWeight: 700, fontSize: "16px", color: "#111827", letterSpacing: "-0.01em" }}>
-            earthmove<span style={{ color: "#059669" }}>.io</span>
-          </span>
-        </div>
-        <a href="/" style={{ fontSize: "13px", color: "#059669", textDecoration: "none", fontWeight: 600 }}>
-          ← Back to Marketplace
-        </a>
-      </div>
-
       <div style={{ textAlign: "center", padding: "48px 24px 0", maxWidth: "640px", margin: "0 auto" }}>
         <div style={{
           display: "inline-flex", alignItems: "center", gap: "6px",

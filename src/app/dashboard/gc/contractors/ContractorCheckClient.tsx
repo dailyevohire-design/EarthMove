@@ -66,22 +66,22 @@ export default function ContractorCheckClient({ initialHistory }: { initialHisto
         </p>
       </div>
 
-      {/* Loss framing stats */}
+      {/* Loss framing stats — red-tinted for urgency */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
           { val: '$47,000', label: 'Average cost per unverified sub incident' },
           { val: '1 in 4',  label: 'GCs burned by unverified subs last year' },
           { val: '30 sec',  label: 'Time to run a full AI verification' },
         ].map(s => (
-          <div key={s.label} className="card p-3">
-            <div className="text-lg font-bold text-stone-100">{s.val}</div>
-            <div className="text-xs text-stone-600 mt-0.5">{s.label}</div>
+          <div key={s.label} className="bg-red-950/20 border border-red-900/30 rounded-xl p-3">
+            <div className="text-lg font-bold text-red-200">{s.val}</div>
+            <div className="text-xs text-stone-500 mt-0.5">{s.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Search form */}
-      <div className="card p-5 mb-5">
+      {/* Search form — emerald border draws the eye to the action */}
+      <div className="bg-stone-900/60 border border-emerald-800/50 rounded-xl p-5 mb-5 shadow-lg shadow-emerald-900/10">
         <div className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-3">Run a check</div>
         <div className="flex gap-2 flex-wrap">
           <input
@@ -115,7 +115,7 @@ export default function ContractorCheckClient({ initialHistory }: { initialHisto
 
       {/* Live search progress */}
       {(loading || (searches.length > 0 && !report)) && (
-        <div className="card p-4 mb-5">
+        <div className="bg-stone-900/60 border border-stone-800 rounded-xl p-4 mb-5">
           <div className="text-xs font-semibold text-stone-600 uppercase tracking-wider mb-3">
             {loading ? '🔍 Live Investigation' : '✓ Complete'}
           </div>
@@ -147,7 +147,7 @@ export default function ContractorCheckClient({ initialHistory }: { initialHisto
       {report && rs && (
         <div className="space-y-4">
           {/* Score card */}
-          <div className={`card p-5 border ${rs.border}`}>
+          <div className={`bg-stone-900/60 rounded-xl p-5 border ${rs.border}`}>
             <div className="flex items-start gap-5 flex-wrap">
               <div className={`text-5xl font-black ${rs.text}`}>{report.trust_score}</div>
               <div className="flex-1 min-w-[200px]">
@@ -216,7 +216,7 @@ export default function ContractorCheckClient({ initialHistory }: { initialHisto
                 { l: 'Serious',     v: report.osha_violations?.serious_count },
               ]},
             ].map(card => (
-              <div key={card.title} className="card p-4">
+              <div key={card.title} className="bg-stone-900/60 border border-stone-800 rounded-xl p-4">
                 <div className="text-xs font-semibold text-stone-600 uppercase tracking-wider mb-3">{card.title}</div>
                 {card.rows.map(row => (
                   <div key={row.l} className="flex justify-between items-center py-1">
@@ -239,10 +239,10 @@ export default function ContractorCheckClient({ initialHistory }: { initialHisto
 
       {/* Empty state */}
       {!loading && !report && !error && (
-        <div className="text-center py-16 text-stone-700">
-          <ShieldCheck size={40} className="mx-auto mb-4 opacity-40" />
-          <div className="text-base font-medium text-stone-500 mb-1">Enter a contractor name above</div>
-          <div className="text-sm">AI searches 7 sources and returns a full risk report in ~30 seconds</div>
+        <div className="text-center py-16 text-stone-400">
+          <ShieldCheck size={40} className="mx-auto mb-4 text-stone-600" />
+          <div className="text-base font-medium text-stone-300 mb-1">Enter a contractor name above</div>
+          <div className="text-sm text-stone-500">AI searches 7 sources and returns a full risk report in ~30 seconds</div>
         </div>
       )}
 
@@ -260,7 +260,7 @@ export default function ContractorCheckClient({ initialHistory }: { initialHisto
                 <button
                   key={h.id ?? i}
                   onClick={() => setReport(h)}
-                  className="w-full card px-4 py-3 flex items-center justify-between hover:bg-stone-800/60 transition-colors text-left"
+                  className="w-full bg-stone-900/60 border border-stone-800 rounded-xl px-4 py-3 flex items-center justify-between hover:bg-stone-800/60 transition-colors text-left"
                 >
                   <div>
                     <span className="text-sm font-medium text-stone-200">{h.contractor_name}</span>
