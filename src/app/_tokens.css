@@ -1,0 +1,49 @@
+/* Design tokens — driver dashboard v2
+   Source of truth: design/mockups/driver-dashboard-v2.html
+   Copied verbatim. Do not fork into Tailwind config. */
+
+:root {
+  /* Earth — primary brand greens */
+  --earth-950: #081510;
+  --earth-900: #0D1F17;
+  --earth-800: #153A28;
+  --earth-700: #1E5235;
+  --earth-600: #2A6B47;
+  --earth-500: #3E8B5E;
+  --earth-400: #6BAA86;
+  --earth-300: #9AC9AE;
+  --earth-200: #CDE3D6;
+  --earth-100: #E8F0EA;
+
+  /* Clay — warm accents */
+  --clay-700: #7A3F1A;
+  --clay-600: #9E5525;
+  --clay-500: #C76A30;
+
+  /* Safety — CTA amber */
+  --safety-700: #A6620D;
+  --safety-600: #C77A12;
+  --safety-500: #E89318;
+
+  /* Bone — paper-like neutrals */
+  --bone-50:  #FAF6EC;
+  --bone-100: #F3EDDB;
+  --bone-200: #E8DFC7;
+
+  /* Ink — text / dark surfaces */
+  --ink-950: #0A0F0C;
+  --ink-900: #141A16;
+  --ink-700: #2A352E;
+  --ink-500: #56655B;
+  --ink-300: #8A9690;
+
+  /* Type stacks */
+  --font-sys: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-num: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
+
+  /* Radii */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+}

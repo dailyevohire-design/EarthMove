@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>earthmove — driver</title>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root{--earth-950:#081510;--earth-900:#0D1F17;--earth-800:#153A28;--earth-700:#1E5235;--earth-600:#2A6B47;--earth-500:#3E8B5E;--earth-400:#6BAA86;--earth-300:#9AC9AE;--earth-200:#CDE3D6;--earth-100:#E8F0EA;--clay-700:#7A3F1A;--clay-600:#9E5525;--clay-500:#C76A30;--safety-700:#A6620D;--safety-600:#C77A12;--safety-500:#E89318;--bone-50:#FAF6EC;--bone-100:#F3EDDB;--bone-200:#E8DFC7;--ink-950:#0A0F0C;--ink-900:#141A16;--ink-700:#2A352E;--ink-500:#56655B;--ink-300:#8A9690;--font-sys:"Inter",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;--font-num:"JetBrains Mono","SF Mono",ui-monospace,Menlo,monospace;--r-sm:10px;--r-md:14px;--r-lg:20px;--r-xl:28px}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#f5f1e6;min-height:100vh;font-family:var(--font-sys);color:var(--ink-950);font-feature-settings:'cv11','ss01','tnum'}
+body{display:flex;align-items:flex-start;justify-content:center;padding:40px 20px}
+button{font:inherit;color:inherit;border:0;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.em-stage{display:flex;gap:28px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.em-stage__controls{flex:0 0 260px;max-width:260px;background:var(--bone-100);border:.5px solid rgba(10,15,12,.12);border-radius:var(--r-md);padding:16px}
+.em-stage__controls h3{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin:0 0 10px}
+.em-ctrl-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:.5px solid rgba(10,15,12,.08);font-size:13px;color:var(--ink-900)}
+.em-ctrl-row:last-child{border-bottom:0}
+.em-tswitch{width:40px;height:22px;border-radius:999px;background:var(--ink-300);position:relative;transition:background .18s;flex-shrink:0}
+.em-tswitch::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .18s}
+.em-tswitch.on{background:var(--earth-700)}
+.em-tswitch.on::after{transform:translateX(18px)}
+.em-ctrl-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px}
+.em-ctrl-btns button{padding:8px 10px;border:.5px solid rgba(10,15,12,.15);border-radius:var(--r-sm);font-size:12px;background:#fff;color:var(--ink-900)}
+.em-ctrl-btns button:hover{background:var(--bone-50)}
+.em-ctrl-hint{font-size:11px;color:var(--ink-500);margin-top:10px;line-height:1.5}
+.em-phone{flex:0 0 auto;width:390px;height:780px;background:var(--ink-950);border-radius:48px;padding:12px;box-shadow:0 0 0 .5px rgba(10,15,12,.25),0 30px 60px -30px rgba(10,15,12,.35);position:relative}
+.em-phone__screen{width:100%;height:100%;border-radius:38px;background:var(--bone-50);overflow:hidden;position:relative}
+.em-phone__notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:110px;height:28px;background:var(--ink-950);border-radius:20px;z-index:100;pointer-events:none}
+.em-status{position:absolute;top:0;left:0;right:0;height:40px;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:14px 28px 0;font-size:13px;font-weight:600;color:var(--ink-950);pointer-events:none}
+.em-status__right{display:flex;align-items:center;gap:5px}
+.em-status svg{width:16px;height:11px}
+.em-app{position:absolute;inset:0;display:flex;flex-direction:column;padding-top:40px}
+.em-header{padding:14px 20px 12px;display:flex;justify-content:space-between;align-items:flex-start;background:var(--bone-50);z-index:10}
+.em-header__greeting{font-size:15px;color:var(--ink-500);font-weight:500;letter-spacing:-.01em}
+.em-header__title{font-size:26px;font-weight:600;letter-spacing:-.025em;color:var(--ink-950);line-height:1}
+.em-header__earn{font-family:var(--font-num);font-size:22px;font-weight:600;color:var(--earth-800);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.em-header__earn-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);text-align:right;margin-bottom:2px;font-weight:600}
+.em-header__right{display:flex;flex-direction:column;align-items:flex-end}
+.em-header__menu{display:flex;gap:6px;margin-top:6px}
+.em-chip-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;background:var(--bone-100);font-size:11px;font-weight:600;color:var(--ink-700);letter-spacing:.02em;border:.5px solid rgba(10,15,12,.08)}
+.em-chip-btn.live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--earth-500);animation:emPulse 1.8s infinite}
+@keyframes emPulse{0%,100%{opacity:1}50%{opacity:.45}}
+.em-pages{flex:1;position:relative;overflow:hidden}
+.em-page{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.em-page.active{display:flex;animation:emFade .25s ease}
+@keyframes emFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.em-scroll{flex:1;overflow-y:auto;padding-bottom:110px;-webkit-overflow-scrolling:touch}
+.em-scroll::-webkit-scrollbar{width:0}
+.em-map{position:relative;height:220px;background:var(--earth-900);margin:0 16px;border-radius:var(--r-lg);overflow:hidden;color:var(--bone-50)}
+.em-map__topo{position:absolute;inset:0;opacity:.32}
+.em-map__truck{position:absolute;width:36px;height:36px;left:30%;top:55%;display:grid;place-items:center;transition:left 12s linear,top 12s linear;z-index:5}
+.em-map__truck-dot{width:16px;height:16px;border-radius:50%;background:var(--safety-500);border:3px solid var(--bone-50);box-shadow:0 0 0 6px rgba(232,147,24,.28);animation:emTruckPulse 2s infinite}
+@keyframes emTruckPulse{0%,100%{box-shadow:0 0 0 6px rgba(232,147,24,.28)}50%{box-shadow:0 0 0 11px rgba(232,147,24,.08)}}
+.em-map__pin{position:absolute;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--font-num);font-size:10px;color:var(--bone-50);font-weight:600;letter-spacing:.06em}
+.em-map__pin-dot{width:10px;height:10px;border-radius:50%;background:var(--bone-50);border:2px solid var(--earth-900)}
+.em-map__pin-label{background:rgba(10,15,12,.6);padding:2px 6px;border-radius:4px}
+.em-map__pin--pickup{left:14%;top:28%}
+.em-map__pin--drop{right:10%;top:40%}
+.em-map__line{position:absolute;left:14%;top:32%;width:72%;height:40%;pointer-events:none}
+.em-map__stat{position:absolute;bottom:12px;left:12px;background:rgba(10,15,12,.65);backdrop-filter:blur(8px);padding:8px 12px;border-radius:10px;font-size:11px;color:var(--bone-50);font-family:var(--font-num);letter-spacing:.04em}
+.em-map__stat strong{color:var(--safety-500);font-weight:600}
+.em-map__recenter{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:12px;background:rgba(250,246,236,.12);backdrop-filter:blur(6px);display:grid;place-items:center;border:.5px solid rgba(250,246,236,.14)}
+.em-map__recenter svg{width:18px;height:18px;stroke:var(--bone-50)}
+.em-load-card{margin:16px;padding:20px;background:#fff;border-radius:var(--r-lg);border:.5px solid rgba(10,15,12,.1);position:relative}
+.em-load-card__top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.em-load-card__badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--earth-100);color:var(--earth-800);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.em-load-card__badge-icon{width:6px;height:6px;border-radius:50%;background:var(--earth-600)}
+.em-load-card__chunk{font-family:var(--font-num);font-size:12px;color:var(--ink-500);font-weight:600;letter-spacing:.06em}
+.em-load-card__pay{font-family:var(--font-num);font-size:44px;font-weight:600;color:var(--ink-950);letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:4px}
+.em-load-card__pay-sub{font-family:var(--font-num);font-size:12px;color:var(--ink-500);letter-spacing:.04em;margin-bottom:16px}
+.em-route{display:grid;grid-template-columns:20px 1fr;gap:12px;padding:12px 0;border-top:.5px solid rgba(10,15,12,.08)}
+.em-route__col{display:flex;flex-direction:column;align-items:center;padding-top:3px}
+.em-route__dot{width:10px;height:10px;border-radius:50%;background:var(--earth-600);border:2px solid var(--bone-50);box-shadow:0 0 0 1px var(--earth-600)}
+.em-route__line{width:2px;flex:1;background:var(--bone-200);margin:4px 0;min-height:18px}
+.em-route__dot--end{background:var(--safety-500);box-shadow:0 0 0 1px var(--safety-500)}
+.em-route__label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);font-weight:600;margin-bottom:2px}
+.em-route__place{font-size:16px;color:var(--ink-950);font-weight:600;letter-spacing:-.015em;line-height:1.2}
+.em-route__meta{font-family:var(--font-num);font-size:11px;color:var(--ink-500);letter-spacing:.04em;margin-top:3px}
+.em-beats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px;padding-top:16px;border-top:.5px solid rgba(10,15,12,.08)}
+.em-beat{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border-radius:var(--r-md);background:var(--bone-100);position:relative}
+.em-beat.done{background:var(--earth-100)}
+.em-beat.current{background:var(--safety-500)}
+.em-beat__icon{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#fff;color:var(--ink-500);font-size:11px;font-weight:600}
+.em-beat.done .em-beat__icon{background:var(--earth-700);color:#fff}
+.em-beat.current .em-beat__icon{background:var(--ink-950);color:var(--safety-500)}
+.em-beat__label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--ink-700)}
+.em-beat.done .em-beat__label{color:var(--earth-800)}
+.em-beat.current .em-beat__label{color:var(--ink-950)}
+.em-swipe{margin:0 16px 16px;height:72px;background:var(--ink-950);border-radius:20px;position:relative;overflow:hidden;user-select:none;box-shadow:0 0 0 .5px rgba(10,15,12,.12);touch-action:none}
+.em-swipe__track{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--bone-50);font-size:17px;font-weight:600;letter-spacing:-.01em;pointer-events:none}
+.em-swipe__thumb{position:absolute;top:6px;left:6px;bottom:6px;width:60px;border-radius:16px;background:var(--safety-500);display:grid;place-items:center;color:var(--ink-950);transition:width 0s,background .2s;z-index:2}
+.em-swipe__thumb svg{width:22px;height:22px;stroke:var(--ink-950);stroke-width:2.5}
+.em-swipe__fill{position:absolute;top:6px;left:6px;bottom:6px;width:60px;border-radius:16px;background:var(--safety-500);opacity:.3;z-index:1}
+.em-swipe.armed .em-swipe__thumb{background:var(--earth-500)}
+.em-swipe.armed .em-swipe__fill{background:var(--earth-500);opacity:.4}
+.em-tab-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(250,246,236,.92);backdrop-filter:blur(18px) saturate(140%);border-top:.5px solid rgba(10,15,12,.08);padding:10px 12px 26px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;z-index:40}
+.em-tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:12px;color:var(--ink-500)}
+.em-tab svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.8;fill:none}
+.em-tab__label{font-size:11px;font-weight:600;letter-spacing:.02em}
+.em-tab.active{color:var(--earth-800)}
+.em-active-pill{position:absolute;left:14px;right:14px;bottom:92px;background:var(--ink-950);color:var(--bone-50);border-radius:16px;padding:10px 14px;display:flex;align-items:center;gap:12px;z-index:30;box-shadow:0 10px 30px -10px rgba(10,15,12,.55)}
+.em-active-pill__dot{width:8px;height:8px;border-radius:50%;background:var(--safety-500);flex-shrink:0;animation:emPulse 1.6s infinite}
+.em-active-pill__text{flex:1;min-width:0;font-size:13px;font-weight:600;letter-spacing:-.01em}
+.em-active-pill__text span{font-family:var(--font-num);color:var(--safety-500);margin-left:6px;font-weight:600}
+.em-active-pill__arrow{font-family:var(--font-num);color:var(--earth-300);font-size:14px}
+.em-offline-banner{position:absolute;left:14px;right:14px;bottom:148px;background:var(--safety-500);color:var(--ink-950);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;z-index:30;font-size:12px;font-weight:600}
+.em-offline-banner svg{width:16px;height:16px;flex-shrink:0}
+.em-offline-banner strong{font-weight:700;margin-right:4px}
+.em-offline-banner span{font-family:var(--font-num);font-size:11px;margin-left:auto;opacity:.75}
+.em-toast{position:absolute;top:80px;left:20px;right:20px;padding:12px 16px;border-radius:14px;background:var(--earth-900);color:var(--bone-50);font-size:13px;font-weight:600;z-index:200;animation:emToast 3s ease}
+@keyframes emToast{0%{transform:translateY(-12px);opacity:0}10%,90%{transform:translateY(0);opacity:1}100%{transform:translateY(-12px);opacity:0}}
+.em-earn-modal{position:absolute;inset:0;z-index:300;background:var(--earth-900);color:var(--bone-50);display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;overflow:hidden}
+.em-earn-modal.active{display:flex;animation:emEarnIn .4s cubic-bezier(.22,1,.36,1)}
+@keyframes emEarnIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.em-earn-modal__topo{position:absolute;inset:0;opacity:.18}
+.em-earn-modal__check{width:88px;height:88px;border-radius:50%;background:var(--safety-500);display:grid;place-items:center;margin-bottom:28px;z-index:2;animation:emCheckPop .5s cubic-bezier(.22,1,.36,1) .1s backwards}
+@keyframes emCheckPop{from{transform:scale(0)}to{transform:scale(1)}}
+.em-earn-modal__check svg{width:44px;height:44px;stroke:var(--ink-950);stroke-width:3;fill:none}
+.em-earn-modal__label{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--earth-300);font-weight:600;margin-bottom:8px;z-index:2}
+.em-earn-modal__amount{font-family:var(--font-num);font-size:72px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--bone-50);font-variant-numeric:tabular-nums;z-index:2}
+.em-earn-modal__meta{margin-top:24px;display:flex;gap:24px;z-index:2}
+.em-earn-modal__meta div{text-align:center}
+.em-earn-modal__meta strong{display:block;font-family:var(--font-num);font-size:20px;font-weight:600;color:var(--bone-50);letter-spacing:-.02em}
+.em-earn-modal__meta span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--earth-300);margin-top:3px;display:block;font-weight:600}
+.em-earn-modal__cta{position:absolute;bottom:40px;left:24px;right:24px;height:60px;background:var(--safety-500);color:var(--ink-950);border-radius:18px;font-size:17px;font-weight:600;z-index:2}
+.em-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+.em-confetti i{position:absolute;width:8px;height:14px;opacity:0;animation:emConf 1.6s ease-out forwards}
+@keyframes emConf{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--cx),var(--cy)) rotate(var(--cr));opacity:0}}
+.em-findwork__filters{display:flex;gap:6px;padding:8px 16px 12px;overflow-x:auto;scrollbar-width:none}
+.em-findwork__filters::-webkit-scrollbar{display:none}
+.em-filter{flex-shrink:0;padding:9px 14px;border-radius:999px;background:var(--bone-100);color:var(--ink-700);font-size:13px;font-weight:600;white-space:nowrap}
+.em-filter.active{background:var(--ink-950);color:var(--bone-50)}
+.em-job{margin:0 16px 10px;padding:16px 18px;background:#fff;border-radius:var(--r-lg);border:.5px solid rgba(10,15,12,.1);display:grid;grid-template-columns:1fr auto;gap:12px}
+.em-job__type{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--earth-700);font-weight:600;margin-bottom:4px}
+.em-job__route{font-size:16px;color:var(--ink-950);font-weight:600;letter-spacing:-.015em;line-height:1.2;margin-bottom:4px}
+.em-job__meta{font-family:var(--font-num);font-size:11px;color:var(--ink-500);letter-spacing:.04em}
+.em-job__meta span::before{content:'  ·  ';color:var(--ink-300)}
+.em-job__meta span:first-child::before{display:none}
+.em-job__pay{font-family:var(--font-num);font-size:22px;color:var(--ink-950);font-weight:600;letter-spacing:-.02em;line-height:1;text-align:right;font-variant-numeric:tabular-nums}
+.em-job__per{font-family:var(--font-num);font-size:10px;color:var(--ink-500);margin-top:4px;text-align:right}
+.em-job__backhaul{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:2px 7px;border-radius:4px;background:var(--safety-500);color:var(--ink-950);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.em-money-hero{margin:0 16px 14px;padding:24px;background:var(--ink-950);color:var(--bone-50);border-radius:var(--r-lg);position:relative;overflow:hidden}
+.em-money-hero__topo{position:absolute;inset:0;opacity:.15}
+.em-money-hero>*:not(.em-money-hero__topo){position:relative;z-index:1}
+.em-money-hero__label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--earth-300);font-weight:600;margin-bottom:8px}
+.em-money-hero__num{font-family:var(--font-num);font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--bone-50);font-variant-numeric:tabular-nums}
+.em-money-hero__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;padding-top:16px;border-top:.5px solid rgba(250,246,236,.12)}
+.em-money-hero__stat strong{display:block;font-family:var(--font-num);font-size:20px;font-weight:600;color:var(--bone-50);letter-spacing:-.02em}
+.em-money-hero__stat span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--earth-300);font-weight:600;display:block;margin-top:3px}
+.em-money-hero__payout{margin-top:16px;padding-top:14px;border-top:.5px solid rgba(250,246,236,.12);display:flex;justify-content:space-between;align-items:center}
+.em-money-hero__payout-label{font-size:11px;letter-spacing:.08em;color:var(--earth-300);font-weight:600}
+.em-money-hero__payout-date{font-family:var(--font-num);font-size:13px;color:var(--safety-500);font-weight:600}
+.em-seg{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin:0 16px 14px;padding:3px;background:var(--bone-200);border-radius:12px}
+.em-seg button{padding:9px;border-radius:9px;font-size:12px;font-weight:600;color:var(--ink-700)}
+.em-seg button.active{background:var(--bone-50);color:var(--ink-950);box-shadow:0 1px 2px rgba(10,15,12,.06)}
+.em-chart{margin:0 16px 14px;padding:16px 16px 10px;background:#fff;border-radius:var(--r-lg);border:.5px solid rgba(10,15,12,.1)}
+.em-chart__head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.em-chart__label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-500);font-weight:600}
+.em-chart__delta{font-family:var(--font-num);font-size:13px;color:var(--earth-700);font-weight:600}
+.em-chart__bars{display:flex;align-items:flex-end;gap:6px;height:110px}
+.em-chart__bar{flex:1;background:var(--earth-700);border-radius:3px 3px 0 0;min-height:4px}
+.em-chart__bar.today{background:var(--safety-500)}
+.em-chart__bar.future{background:var(--bone-200)}
+.em-chart__days{display:flex;gap:6px;margin-top:8px}
+.em-chart__days span{flex:1;text-align:center;font-family:var(--font-num);font-size:11px;color:var(--ink-500);font-weight:600}
+.em-chart__days span.today-label{color:var(--safety-600);font-weight:700}
+.em-earn-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:.5px solid rgba(10,15,12,.08)}
+.em-earn-row__top{font-size:15px;color:var(--ink-950);font-weight:600;letter-spacing:-.01em;margin-bottom:2px}
+.em-earn-row__sub{font-family:var(--font-num);font-size:11px;color:var(--ink-500);letter-spacing:.04em}
+.em-earn-row__amt{font-family:var(--font-num);font-size:18px;color:var(--ink-950);font-weight:600;letter-spacing:-.02em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.em-earn-row__amt.bonus{color:var(--safety-600)}
+.em-earn-row__amt.pending{color:var(--ink-500)}
+.em-sec-label{padding:20px 16px 8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);font-weight:600;display:flex;justify-content:space-between}
+.em-trust-field{margin:0 16px 12px;padding:5px;background:#fff;border-radius:16px;border:.5px solid rgba(10,15,12,.15);display:grid;grid-template-columns:1fr auto;gap:5px}
+.em-trust-field input{padding:14px 16px;border:0;outline:0;background:transparent;font-size:15px;font-weight:500;letter-spacing:-.01em;width:100%;font-family:var(--font-sys)}
+.em-trust-field input::placeholder{color:var(--ink-500);font-weight:400}
+.em-trust-field button{padding:12px 18px;border-radius:12px;background:var(--ink-950);color:var(--bone-50);font-size:14px;font-weight:600}
+.em-trust-chips{display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
+.em-trust-chips::-webkit-scrollbar{display:none}
+.em-trust-chip{flex-shrink:0;padding:8px 12px;border-radius:999px;background:var(--bone-100);font-size:12px;font-weight:600;color:var(--ink-700);white-space:nowrap}
+.em-trust-card{margin:0 16px 14px;background:#fff;border-radius:var(--r-lg);border:.5px solid rgba(10,15,12,.1);overflow:hidden}
+.em-trust-head{padding:18px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-bottom:.5px solid rgba(10,15,12,.08);background:linear-gradient(180deg,var(--bone-100),#fff)}
+.em-trust-head__kicker{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--earth-700);font-weight:600;margin-bottom:4px}
+.em-trust-head__name{font-size:20px;color:var(--ink-950);font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.em-trust-head__loc{font-family:var(--font-num);font-size:11px;color:var(--ink-500);letter-spacing:.04em;margin-top:4px}
+.em-trust-score{text-align:right;flex-shrink:0}
+.em-trust-score__num{font-family:var(--font-num);font-size:44px;font-weight:700;line-height:1;color:var(--earth-800);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.em-trust-score__label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-500);font-weight:600;margin-top:3px}
+.em-trust-rows{padding:12px 20px 16px;display:flex;flex-direction:column;gap:2px}
+.em-trust-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:9px 0;font-size:13px;color:var(--ink-900)}
+.em-trust-row__dot{width:7px;height:7px;border-radius:50%;background:var(--earth-600)}
+.em-trust-row__dot.warn{background:var(--safety-500)}
+.em-trust-row__val{font-family:var(--font-num);font-size:11px;color:var(--ink-500);letter-spacing:.04em}
+.em-trust-upgrade{margin:0 16px;padding:14px;border:.5px dashed var(--clay-600);border-radius:var(--r-md);color:var(--clay-700);font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.em-trust-upgrade strong{font-weight:700}
+.glove .em-swipe{height:88px}
+.glove .em-swipe__thumb{width:72px}
+.glove .em-swipe__fill{width:72px}
+.glove .em-swipe__track{font-size:19px}
+.glove .em-tab{padding:10px 4px}
+.glove .em-tab svg{width:28px;height:28px}
+.glove .em-tab__label{font-size:12px}
+.glove .em-filter{padding:11px 16px;font-size:14px}
+.dark .em-phone__screen{background:var(--ink-900)}
+.dark .em-header{background:var(--ink-900)}
+.dark .em-header__greeting,.dark .em-sec-label,.dark .em-chart__label{color:var(--ink-300)}
+.dark .em-header__title,.dark .em-header__earn{color:var(--bone-50)}
+.dark .em-status{color:var(--bone-50)}
+.dark .em-chip-btn{background:rgba(250,246,236,.08);color:var(--bone-200);border-color:rgba(250,246,236,.12)}
+.dark .em-load-card,.dark .em-job,.dark .em-chart,.dark .em-trust-card,.dark .em-trust-field{background:var(--ink-700);border-color:rgba(250,246,236,.1)}
+.dark .em-load-card__pay,.dark .em-route__place,.dark .em-job__route,.dark .em-job__pay,.dark .em-earn-row__top,.dark .em-earn-row__amt,.dark .em-trust-head__name{color:var(--bone-50)}
+.dark .em-beat{background:rgba(250,246,236,.06)}
+.dark .em-filter{background:rgba(250,246,236,.08);color:var(--bone-200)}
+.dark .em-seg{background:rgba(250,246,236,.08)}
+.dark .em-seg button.active{background:var(--ink-900);color:var(--bone-50)}
+.dark .em-trust-field input{color:var(--bone-50)}
+.dark .em-tab-bar{background:rgba(20,26,22,.92);border-top-color:rgba(250,246,236,.08)}
+.dark .em-trust-head{background:linear-gradient(180deg,rgba(250,246,236,.04),var(--ink-700))}
+.dark .em-trust-score__num{color:var(--bone-50)}
+.dark .em-trust-row{color:var(--bone-200)}
+@media (max-width:700px){body{padding:20px 12px}.em-stage{gap:16px}.em-stage__controls{flex:1 1 100%;max-width:100%}.em-phone{width:360px;height:720px}}
+</style>
+</head>
+<body>
+<div class="em-stage">
+<div class="em-stage__controls">
+<h3>Driver sim controls</h3>
+<div class="em-ctrl-row"><span>Glove mode</span><button class="em-tswitch" data-toggle="glove"></button></div>
+<div class="em-ctrl-row"><span>Dark (cab) mode</span><button class="em-tswitch" data-toggle="dark"></button></div>
+<div class="em-ctrl-row"><span>Offline state</span><button class="em-tswitch" data-toggle="offline"></button></div>
+<div class="em-ctrl-btns"><button data-action="reset-load">Reset load</button><button data-action="fire-earn">Fire earnings</button></div>
+<div class="em-ctrl-hint">Swipe the bottom bar to advance through the 5 load states. Earnings moment fires on ticket submit.</div>
+</div>
+<div class="em-phone"><div class="em-phone__screen"><div class="em-phone__notch"></div>
+<div class="em-status"><span>9:42</span><div class="em-status__right">
+<svg viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4" y="2" width="3" height="10" rx="1"/><rect x="8" y="0" width="3" height="12" rx="1"/><rect x="12" y="0" width="3" height="12" rx="1"/></svg>
+<svg viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 4.5Q8 -1 15 4.5M3 7Q8 3 13 7M5.5 9.5Q8 8 10.5 9.5" stroke-linecap="round"/></svg>
+<svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="0.5" y="0.5" width="21" height="11" rx="2.5"/><rect x="2" y="2" width="17" height="8" rx="1" fill="currentColor"/><rect x="22" y="3.5" width="1.5" height="5" rx="0.5" fill="currentColor"/></svg>
+</div></div>
+<div class="em-app">
+<div class="em-header"><div><div class="em-header__greeting">Good morning</div><div class="em-header__title">Marcus</div></div>
+<div class="em-header__right"><div class="em-header__earn-label">Today</div><div class="em-header__earn" data-today-earn>$0.00</div><div class="em-header__menu"><div class="em-chip-btn live">On shift</div></div></div></div>
+<div class="em-pages">
+<section class="em-page active" data-page="today"><div class="em-scroll">
+<div class="em-map">
+<svg class="em-map__topo" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice"><g stroke="#6BAA86" stroke-width="0.6" fill="none"><path d="M-20 180 Q 50 140 140 160 T 300 150 T 420 180"/><path d="M-20 200 Q 60 160 160 180 T 310 170 T 420 200"/><path d="M-20 220 Q 70 180 180 200 T 320 190 T 420 220"/><path d="M-20 240 Q 80 200 200 220 T 330 210 T 420 240"/><path d="M-20 150 Q 100 110 220 130 T 370 130 T 420 160"/><path d="M-20 120 Q 120 80 240 100 T 380 100 T 420 130"/><path d="M-20 90 Q 140 60 260 70 T 390 70 T 420 100"/></g></svg>
+<svg class="em-map__line" viewBox="0 0 400 200" preserveAspectRatio="none"><path d="M20 30 Q 200 70 380 100" stroke="#E89318" stroke-width="3" fill="none" stroke-dasharray="6 4" opacity="0.85"/></svg>
+<div class="em-map__pin em-map__pin--pickup"><div class="em-map__pin-dot"></div><div class="em-map__pin-label">ARVADA S&amp;G</div></div>
+<div class="em-map__pin em-map__pin--drop"><div class="em-map__pin-dot"></div><div class="em-map__pin-label">LoHi site</div></div>
+<div class="em-map__truck"><div class="em-map__truck-dot"></div></div>
+<div class="em-map__stat"><strong>4.2 mi</strong>  ·  11 min  ·  52 mph</div>
+<button class="em-map__recenter"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+</div>
+<div class="em-load-card">
+<div class="em-load-card__top"><div class="em-load-card__badge"><span class="em-load-card__badge-icon"></span><span>Clean fill  ·  22 tons</span></div><div class="em-load-card__chunk">Load 4 of 9</div></div>
+<div class="em-load-card__pay">$420</div>
+<div class="em-load-card__pay-sub">$19.09 / ton  ·  paid Tuesday</div>
+<div class="em-route"><div class="em-route__col"><div class="em-route__dot"></div><div class="em-route__line"></div><div class="em-route__dot em-route__dot--end"></div></div>
+<div><div class="em-route__label">Pickup</div><div class="em-route__place">Arvada Sand &amp; Gravel</div><div class="em-route__meta">Bay 3  ·  scale ticket required</div><div style="height:14px"></div><div class="em-route__label">Deliver</div><div class="em-route__place">LoHi site  ·  1847 Platte St</div><div class="em-route__meta">Gate 4729  ·  super Ron Kaplan</div></div></div>
+<div class="em-beats">
+<div class="em-beat current" data-beat="pickup"><div class="em-beat__icon">1</div><div class="em-beat__label">Pickup</div></div>
+<div class="em-beat" data-beat="deliver"><div class="em-beat__icon">2</div><div class="em-beat__label">Deliver</div></div>
+<div class="em-beat" data-beat="ticket"><div class="em-beat__icon">3</div><div class="em-beat__label">Ticket</div></div>
+</div></div>
+<div class="em-sec-label"><span>Next up  ·  loads 5–9</span><span style="color:var(--earth-700);font-family:var(--font-num);">+$1,480</span></div>
+<div class="em-job" style="margin-bottom:8px;"><div><div class="em-job__type">Road base  ·  cl 6</div><div class="em-job__route">Bestway → Aurora Site 3</div><div class="em-job__meta"><span>18 tons</span><span>11 mi</span><span>10:45 AM</span></div></div><div><div class="em-job__pay">$285</div><div class="em-job__per">$15.83/ton</div></div></div>
+<div class="em-job"><div><div class="em-job__type">Concrete sand</div><div class="em-job__route">Martin Marietta → DTC</div><div class="em-job__meta"><span>24 tons</span><span>8 mi</span><span>12:20 PM</span></div><span class="em-job__backhaul">↻ backhaul possible</span></div><div><div class="em-job__pay">$560</div><div class="em-job__per">$23.33/ton</div></div></div>
+</div>
+<div class="em-swipe" data-swipe><div class="em-swipe__fill" data-swipe-fill></div><div class="em-swipe__track"><span data-swipe-label>Swipe — I'm at the pickup</span></div><div class="em-swipe__thumb" data-swipe-thumb><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
+</section>
+
+<section class="em-page" data-page="findwork"><div class="em-scroll">
+<div style="padding:4px 16px 12px;"><div style="font-size:22px;font-weight:600;letter-spacing:-.02em;">Find work</div><div style="font-size:13px;color:var(--ink-500);margin-top:4px;">14 loads within 25 mi  ·  auto-matched to your Kenworth tri-axle</div></div>
+<div class="em-findwork__filters"><button class="em-filter active">All  ·  14</button><button class="em-filter">&lt; 5 mi</button><button class="em-filter">$300+</button><button class="em-filter">+ backhaul</button><button class="em-filter">Fill dirt</button><button class="em-filter">Base</button></div>
+<div class="em-job"><div><div class="em-job__type">Clean fill  ·  tri-axle</div><div class="em-job__route">Arvada → LoHi site</div><div class="em-job__meta"><span>22 tons</span><span>14 mi</span><span>~38 min</span></div><span class="em-job__backhaul">↻ backhaul $340</span></div><div><div class="em-job__pay">$420</div><div class="em-job__per">$19.09/ton</div></div></div>
+<div class="em-job"><div><div class="em-job__type">Concrete sand  ·  urgent</div><div class="em-job__route">Martin Marietta → DTC</div><div class="em-job__meta"><span>24 tons</span><span>8 mi</span><span>~22 min</span></div></div><div><div class="em-job__pay">$560</div><div class="em-job__per">$23.33/ton</div></div></div>
+<div class="em-job"><div><div class="em-job__type">Pea gravel  ·  ⅜"</div><div class="em-job__route">Front Range → Highlands</div><div class="em-job__meta"><span>20 tons</span><span>6 mi</span><span>~18 min</span></div></div><div><div class="em-job__pay">$312</div><div class="em-job__per">$15.60/ton</div></div></div>
+<div class="em-job"><div><div class="em-job__type">Screened topsoil</div><div class="em-job__route">Pioneer → Cherry Creek</div><div class="em-job__meta"><span>16 tons</span><span>12 mi</span><span>~28 min</span></div><span class="em-job__backhaul">↻ backhaul $210</span></div><div><div class="em-job__pay">$375</div><div class="em-job__per">$23.44/ton</div></div></div>
+<div class="em-job"><div><div class="em-job__type">Rip rap 6–12"</div><div class="em-job__route">Colorado Mat. → S. Platte</div><div class="em-job__meta"><span>14 tons</span><span>9 mi</span><span>~26 min</span></div></div><div><div class="em-job__pay">$298</div><div class="em-job__per">$21.29/ton</div></div></div>
+<div class="em-job"><div><div class="em-job__type">Road base  ·  cl 6</div><div class="em-job__route">Bestway → Aurora Site 3</div><div class="em-job__meta"><span>18 tons</span><span>11 mi</span><span>~32 min</span></div></div><div><div class="em-job__pay">$285</div><div class="em-job__per">$15.83/ton</div></div></div>
+</div></section>
+
+<section class="em-page" data-page="money"><div class="em-scroll">
+<div style="padding:4px 16px 12px;"><div style="font-size:22px;font-weight:600;letter-spacing:-.02em;">Money</div><div style="font-size:13px;color:var(--ink-500);margin-top:4px;">YTD  ·  $48,721  ·  paid every Tuesday</div></div>
+<div class="em-seg"><button>Today</button><button class="active">Week</button><button>Month</button><button>All</button></div>
+<div class="em-money-hero">
+<svg class="em-money-hero__topo" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice"><g stroke="#9AC9AE" stroke-width="0.5" fill="none"><path d="M-20 120 Q 80 90 200 110 T 420 120"/><path d="M-20 150 Q 100 120 220 140 T 420 150"/><path d="M-20 180 Q 120 150 240 170 T 420 180"/></g></svg>
+<div class="em-money-hero__label">Week of apr 14–20</div>
+<div class="em-money-hero__num">$3,842<span style="font-size:28px;color:var(--earth-300);letter-spacing:0;">.50</span></div>
+<div class="em-money-hero__grid"><div class="em-money-hero__stat"><strong>11</strong><span>Loads</span></div><div class="em-money-hero__stat"><strong>38.5</strong><span>Hours</span></div><div class="em-money-hero__stat"><strong>$99.80</strong><span>Per hr</span></div></div>
+<div class="em-money-hero__payout"><div class="em-money-hero__payout-label">Next payout  ·  Chase ••2847</div><div class="em-money-hero__payout-date">Tue 8:00 AM</div></div>
+</div>
+<div class="em-chart"><div class="em-chart__head"><span class="em-chart__label">Daily  ·  mon → sun</span><span class="em-chart__delta">+18% vs last wk</span></div>
+<div class="em-chart__bars"><div class="em-chart__bar" style="height:55%"></div><div class="em-chart__bar" style="height:72%"></div><div class="em-chart__bar" style="height:68%"></div><div class="em-chart__bar" style="height:84%"></div><div class="em-chart__bar today" style="height:46%"></div><div class="em-chart__bar future" style="height:14%"></div><div class="em-chart__bar future" style="height:8%"></div></div>
+<div class="em-chart__days"><span>M</span><span>T</span><span>W</span><span>T</span><span class="today-label">F</span><span>S</span><span>S</span></div>
+</div>
+<div class="em-sec-label">Loads this week  ·  11</div>
+<div class="em-earn-row"><div><div class="em-earn-row__top">LoHi delivery  ·  DSP-8847</div><div class="em-earn-row__sub">Clean fill  ·  22t  ·  today 7:29 AM</div></div><div class="em-earn-row__amt pending">pending</div></div>
+<div class="em-earn-row"><div><div class="em-earn-row__top">Cherry Creek  ·  DSP-8846</div><div class="em-earn-row__sub">Topsoil  ·  16t  ·  mon 4:12 PM</div></div><div class="em-earn-row__amt">$375</div></div>
+<div class="em-earn-row"><div><div class="em-earn-row__top">On-time bonus  ·  week</div><div class="em-earn-row__sub">11/11 deliveries on time</div></div><div class="em-earn-row__amt bonus">+$120</div></div>
+<div class="em-earn-row"><div><div class="em-earn-row__top">Aurora backhaul  ·  DSP-8844</div><div class="em-earn-row__sub">Road base  ·  18t  ·  mon 11:15 AM</div></div><div class="em-earn-row__amt">$285</div></div>
+<div class="em-earn-row"><div><div class="em-earn-row__top">DTC foundation  ·  DSP-8843</div><div class="em-earn-row__sub">Concrete sand  ·  24t  ·  sun 2:40 PM</div></div><div class="em-earn-row__amt">$560</div></div>
+</div></section>
+
+<section class="em-page" data-page="trust"><div class="em-scroll">
+<div style="padding:4px 16px 12px;"><div style="font-size:22px;font-weight:600;letter-spacing:-.02em;">Trust lookup</div><div style="font-size:13px;color:var(--ink-500);margin-top:4px;">Check any broker, contractor, or site before you haul.</div></div>
+<div class="em-trust-field"><input placeholder="Company, EIN, or license #"><button>Run</button></div>
+<div class="em-trust-chips"><div class="em-trust-chip">Bemas Construction</div><div class="em-trust-chip">PCL Denver</div><div class="em-trust-chip">Weitz Co.</div><div class="em-trust-chip">I-Kota</div></div>
+<div class="em-trust-card"><div class="em-trust-head"><div><div class="em-trust-head__kicker">Trust report  ·  live</div><div class="em-trust-head__name">Bemas Construction</div><div class="em-trust-head__loc">Englewood, CO  ·  est. 1985</div></div><div class="em-trust-score"><div class="em-trust-score__num">86</div><div class="em-trust-score__label">Trust score</div></div></div>
+<div class="em-trust-rows">
+<div class="em-trust-row"><div class="em-trust-row__dot"></div><div>CO Sec. of State  ·  active</div><div class="em-trust-row__val">41 yrs</div></div>
+<div class="em-trust-row"><div class="em-trust-row__dot"></div><div>Licensed &amp; insured  ·  COI on file</div><div class="em-trust-row__val">2026</div></div>
+<div class="em-trust-row"><div class="em-trust-row__dot"></div><div>BBB rating  ·  A+</div><div class="em-trust-row__val">0 cmpl</div></div>
+<div class="em-trust-row"><div class="em-trust-row__dot warn"></div><div>OSHA  ·  1 citation resolved</div><div class="em-trust-row__val">2021</div></div>
+<div class="em-trust-row"><div class="em-trust-row__dot"></div><div>Pays drivers on time  ·  earthmove net</div><div class="em-trust-row__val">net-15</div></div>
+<div class="em-trust-row"><div class="em-trust-row__dot"></div><div>No active UCC liens</div><div class="em-trust-row__val">clean</div></div>
+</div></div>
+<div class="em-trust-upgrade"><div><strong>Deep dive</strong>  ·  court filings, federal litigation, 14 extra sources</div><div style="font-family:var(--font-num);font-weight:700;">$2.00</div></div>
+</div></section>
+</div>
+
+<div class="em-offline-banner" data-offline-banner style="display:none;">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 3.7-2.5M19 12.9a10 10 0 0 0-8.5-2.7M2 8.8a15 15 0 0 1 4.2-2.6M21.9 8.8a15 15 0 0 0-7-4"/></svg>
+<strong>Offline</strong> 3 tickets queued, will sync <span data-offline-count></span>
+</div>
+<div class="em-active-pill" data-pill style="display:none;"><div class="em-active-pill__dot"></div><div class="em-active-pill__text">Load 4  ·  4.2 mi to Arvada  ·  <span>$420</span></div><div class="em-active-pill__arrow">›</div></div>
+<nav class="em-tab-bar">
+<button class="em-tab active" data-tab="today"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-7H10v7H5a2 2 0 0 1-2-2z" stroke-linejoin="round"/></svg><span class="em-tab__label">Today</span></button>
+<button class="em-tab" data-tab="findwork"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3" stroke-linecap="round"/></svg><span class="em-tab__label">Find work</span></button>
+<button class="em-tab" data-tab="money"><svg viewBox="0 0 24 24"><path d="M12 2v20M6 6h9a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h9" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="em-tab__label">Money</span></button>
+<button class="em-tab" data-tab="trust"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="em-tab__label">Trust</span></button>
+</nav>
+<div class="em-earn-modal" data-earn-modal>
+<svg class="em-earn-modal__topo" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice"><g stroke="#9AC9AE" stroke-width="0.6" fill="none"><path d="M-20 300 Q 100 240 220 260 T 420 280"/><path d="M-20 350 Q 120 290 240 310 T 420 330"/><path d="M-20 400 Q 140 340 260 360 T 420 380"/><path d="M-20 450 Q 160 390 280 410 T 420 430"/><path d="M-20 500 Q 180 440 300 460 T 420 480"/></g></svg>
+<div class="em-confetti" data-confetti></div>
+<div class="em-earn-modal__check"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg></div>
+<div class="em-earn-modal__label">Load 4 delivered</div>
+<div class="em-earn-modal__amount" data-earn-amount>$420.00</div>
+<div class="em-earn-modal__meta"><div><strong>22.14t</strong><span>Actual</span></div><div><strong>38 min</strong><span>Haul</span></div><div><strong>98%</strong><span>On-time</span></div></div>
+<button class="em-earn-modal__cta" data-earn-next>Next load  ·  Bestway → Aurora</button>
+</div>
+<div data-toast-slot></div>
+</div></div></div>
+</div>
+<script>
+(function(){
+var state={beat:0,todayEarn:0,offline:false,glove:false,dark:false};
+var beats=[{label:"Swipe — I'm at the pickup"},{label:"Swipe — loaded &amp; weighed"},{label:"Swipe — I'm at the site"},{label:"Swipe — dumped"},{label:"Swipe — submit ticket"}];
+var beatMap=[{beat:'pickup',prior:[]},{beat:'pickup',prior:[]},{beat:'deliver',prior:['pickup']},{beat:'deliver',prior:['pickup']},{beat:'ticket',prior:['pickup','deliver']}];
+var tabs=document.querySelectorAll('[data-tab]'),pages=document.querySelectorAll('.em-page');
+tabs.forEach(function(t){t.addEventListener('click',function(){var target=t.getAttribute('data-tab');tabs.forEach(function(x){x.classList.toggle('active',x===t)});pages.forEach(function(p){p.classList.toggle('active',p.getAttribute('data-page')===target)});updatePill()})});
+document.querySelectorAll('[data-toggle]').forEach(function(btn){btn.addEventListener('click',function(){var key=btn.getAttribute('data-toggle');state[key]=!state[key];btn.classList.toggle('on',state[key]);if(key==='glove')document.body.classList.toggle('glove',state.glove);if(key==='dark')document.body.classList.toggle('dark',state.dark);if(key==='offline'){document.querySelector('[data-offline-banner]').style.display=state.offline?'flex':'none';document.querySelector('[data-offline-count]').textContent=state.offline?'2.3 MB':'';toast(state.offline?'Offline — saving tickets locally':'Back online — syncing 3 tickets')}})});
+document.querySelector('[data-action="reset-load"]').addEventListener('click',resetLoad);
+document.querySelector('[data-action="fire-earn"]').addEventListener('click',function(){fireEarnings(420)});
+function updateBeatsUI(){var b=document.querySelectorAll('[data-beat]');var cfg=beatMap[Math.min(state.beat,beatMap.length-1)];b.forEach(function(el){el.classList.remove('done','current');var key=el.getAttribute('data-beat');if(cfg.prior.indexOf(key)>-1)el.classList.add('done');else if(cfg.beat===key)el.classList.add('current')})}
+function updateSwipeUI(){var tr=document.querySelector('[data-swipe-label]'),cfg=beats[Math.min(state.beat,beats.length-1)];if(tr)tr.innerHTML=cfg.label}
+function updatePill(){var a=document.querySelector('.em-tab.active').getAttribute('data-tab'),pill=document.querySelector('[data-pill]');pill.style.display=(a!=='today'&&state.beat<5)?'flex':'none'}
+function resetLoad(){state.beat=0;updateBeatsUI();updateSwipeUI();document.querySelector('[data-swipe-thumb]').style.width=(state.glove?72:60)+'px';document.querySelector('[data-swipe-fill]').style.width=(state.glove?72:60)+'px';document.querySelector('.em-swipe').classList.remove('armed')}
+function advanceBeat(){state.beat++;if(state.beat>=5){fireEarnings(420);state.todayEarn+=420;updateHeaderEarn();setTimeout(resetLoad,300);return}updateBeatsUI();updateSwipeUI();var th=document.querySelector('[data-swipe-thumb]'),fi=document.querySelector('[data-swipe-fill]');th.style.transition='none';fi.style.transition='none';th.style.width=(state.glove?72:60)+'px';fi.style.width=(state.glove?72:60)+'px';document.querySelector('.em-swipe').classList.remove('armed');requestAnimationFrame(function(){th.style.transition='';fi.style.transition=''});updatePill()}
+function updateHeaderEarn(){document.querySelector('[data-today-earn]').textContent='$'+state.todayEarn.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+var swipe=document.querySelector('[data-swipe]'),thumb=document.querySelector('[data-swipe-thumb]'),fill=document.querySelector('[data-swipe-fill]'),dragging=false,startX=0,currentX=0;
+function getMax(){return swipe.offsetWidth-(state.glove?72:60)-12}
+function down(e){if(state.beat>=5)return;dragging=true;startX=(e.clientX||(e.touches&&e.touches[0].clientX))||0;thumb.style.transition='none';fill.style.transition='none';if(e.cancelable)e.preventDefault()}
+function move(e){if(!dragging)return;var x=(e.clientX||(e.touches&&e.touches[0].clientX))||0,max=getMax();currentX=Math.max(0,Math.min(max,x-startX));var w=(state.glove?72:60)+currentX;thumb.style.width=w+'px';fill.style.width=w+'px';swipe.classList.toggle('armed',currentX>max*.85);if(e.cancelable)e.preventDefault()}
+function up(){if(!dragging)return;dragging=false;thumb.style.transition='';fill.style.transition='';var max=getMax();if(currentX>max*.85){thumb.style.width=(swipe.offsetWidth-12)+'px';fill.style.width=(swipe.offsetWidth-12)+'px';setTimeout(advanceBeat,180)}else{thumb.style.width=(state.glove?72:60)+'px';fill.style.width=(state.glove?72:60)+'px';swipe.classList.remove('armed')}currentX=0}
+swipe.addEventListener('pointerdown',down);window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
+swipe.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
+function fireEarnings(amount){var m=document.querySelector('[data-earn-modal]');document.querySelector('[data-earn-amount]').textContent='$'+amount.toFixed(2);m.classList.add('active');spawnConfetti();setTimeout(function(){m.classList.remove('active')},3800)}
+document.querySelector('[data-earn-next]').addEventListener('click',function(){document.querySelector('[data-earn-modal]').classList.remove('active')});
+function spawnConfetti(){var wrap=document.querySelector('[data-confetti]');wrap.innerHTML='';var colors=['#E89318','#3E8B5E','#FAF6EC','#9E5525','#9AC9AE'];for(var i=0;i<40;i++){var el=document.createElement('i');el.style.setProperty('--cx',((Math.random()-.5)*500)+'px');el.style.setProperty('--cy',((Math.random()-.2)*600+200)+'px');el.style.setProperty('--cr',((Math.random()-.5)*900)+'deg');el.style.background=colors[i%colors.length];el.style.left='50%';el.style.top='30%';el.style.animationDelay=(Math.random()*.2)+'s';wrap.appendChild(el)}}
+function toast(msg){var slot=document.querySelector('[data-toast-slot]');slot.innerHTML='';var t=document.createElement('div');t.className='em-toast';t.textContent=msg;slot.appendChild(t);setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},3000)}
+updateBeatsUI();updateSwipeUI();updatePill();
+})();
+</script>
+</body>
+</html>
