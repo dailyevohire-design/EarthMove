@@ -1,4 +1,4 @@
-import { TopoPattern } from './TopoPattern'
+import { TopoPattern } from '@/components/shared/TopoPattern'
 
 type Props = {
   pickupLabel: string

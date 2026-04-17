@@ -1,6 +1,8 @@
-/* Design tokens — driver dashboard v2
-   Source of truth: design/mockups/driver-dashboard-v2.html
+/* Design tokens — shared by driver v2 + contractor v1
+   Source of truth: design/mockups/driver-dashboard-v2.html + contractor-dashboard-v1.html
    Copied verbatim. Do not fork into Tailwind config. */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&display=swap');
 
 :root {
   /* Earth — primary brand greens */
@@ -38,12 +40,17 @@
   --ink-300: #8A9690;
 
   /* Type stacks */
-  --font-sys: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-num: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
+  --font-sys:     "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-num:     "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
 
   /* Radii */
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 20px;
   --r-xl: 28px;
+
+  /* Edges — 0.5px hairlines. Use these instead of 1px borders. */
+  --edge:        0.5px solid rgba(10, 15, 12, 0.10);
+  --edge-strong: 0.5px solid rgba(10, 15, 12, 0.18);
 }

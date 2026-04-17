@@ -1,7 +1,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getEarnings } from '@/lib/services/earthmove-dispatch.service'
-import { TopoPattern } from '@/components/driver/TopoPattern'
+import { TopoPattern } from '@/components/shared/TopoPattern'
 
 export default async function MoneyPage() {
   const supabase = await createClient()

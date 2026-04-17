@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>earthmove — contractor (v1)</title>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+:root{
+  --earth-950:#081510;--earth-900:#0D1F17;--earth-800:#153A28;--earth-700:#1E5235;--earth-600:#2A6B47;
+  --earth-500:#3E8B5E;--earth-400:#6BAA86;--earth-300:#9AC9AE;--earth-200:#CDE3D6;--earth-100:#E8F0EA;
+  --clay-700:#7A3F1A;--clay-600:#9E5525;--clay-500:#C76A30;
+  --safety-700:#A6620D;--safety-600:#C77A12;--safety-500:#E89318;
+  --bone-50:#FAF6EC;--bone-100:#F3EDDB;--bone-200:#E8DFC7;
+  --ink-950:#0A0F0C;--ink-900:#141A16;--ink-700:#2A352E;--ink-500:#56655B;--ink-300:#8A9690;
+  --font-sys:"Inter",system-ui,sans-serif;
+  --font-num:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --font-display:"Fraunces",Georgia,serif;
+  --edge:0.5px solid rgba(10,15,12,0.10);--edge-strong:0.5px solid rgba(10,15,12,0.18);
+  --r-md:14px;--r-lg:20px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bone-50);font-family:var(--font-sys);color:var(--ink-950);font-feature-settings:'cv11','ss01','tnum'}
+body{padding:24px;display:flex;flex-direction:column;gap:48px;max-width:1500px;margin:0 auto}
+h2.screen{font-family:var(--font-display);font-weight:500;font-size:22px;letter-spacing:-0.01em;margin:0 0 16px;padding-bottom:10px;border-bottom:var(--edge-strong)}
+h2.screen em{font-style:italic;color:var(--earth-700)}
+.stage{background:#fff;border:var(--edge);border-radius:var(--r-lg);overflow:hidden}
+.app{display:grid;grid-template-columns:232px 1fr;grid-template-rows:56px 1fr;grid-template-areas:"sidebar topbar" "sidebar main";min-height:800px}
+.sidebar{grid-area:sidebar;background:#fff;border-right:var(--edge);display:flex;flex-direction:column}
+.brand{padding:18px 20px;border-bottom:var(--edge);display:flex;align-items:center;gap:10px}
+.brand-mark{width:28px;height:28px;border-radius:8px;background:var(--earth-800);color:var(--bone-50);display:grid;place-items:center;font-family:var(--font-display);font-weight:600;font-size:16px}
+.brand-name{font-family:var(--font-display);font-size:17px;font-weight:600;letter-spacing:-0.01em}
+.brand-name em{font-style:italic;color:var(--earth-700);font-weight:500}
+.nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:13.5px;font-weight:500;color:var(--ink-700)}
+.navlink.active{background:var(--earth-100);color:var(--earth-800);font-weight:600}
+.navlink svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.75;fill:none}
+.tag{margin-left:auto;font-family:var(--font-num);font-size:10px;color:var(--ink-300);letter-spacing:0.06em;text-transform:uppercase;font-weight:600}
+.topbar{grid-area:topbar;background:rgba(250,246,236,0.85);border-bottom:var(--edge);display:flex;align-items:center;gap:16px;padding:0 24px}
+.search{flex:1;max-width:560px;display:flex;align-items:center;gap:10px;padding:7px 14px;background:#fff;border:var(--edge-strong);border-radius:999px;font-size:13.5px;color:var(--ink-500)}
+.bell,.avatar{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:#fff;border:var(--edge)}
+.avatar{border-radius:999px;background:var(--earth-700);color:var(--bone-50);font-weight:600;font-size:13px}
+.main{grid-area:main;padding:28px 32px;overflow-y:auto}
+.inner{max-width:1440px;margin:0 auto}
+.pagehead{margin-bottom:24px}
+.kicker{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--earth-700);font-weight:600;margin-bottom:8px}
+.title{font-family:var(--font-display);font-size:36px;font-weight:500;line-height:1.1;letter-spacing:-0.02em;margin:0}
+.title em{font-style:italic;color:var(--earth-700);font-weight:500}
+.subtitle{margin-top:8px;font-size:14.5px;color:var(--ink-500)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c8{grid-column:span 8}
+.metric{background:#fff;border:var(--edge);border-radius:var(--r-md);padding:18px;display:flex;flex-direction:column;gap:8px;min-height:120px}
+.mlabel{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-500);font-weight:600}
+.mval{font-family:var(--font-num);font-size:30px;font-weight:600;letter-spacing:-0.025em;font-variant-numeric:tabular-nums}
+.mfoot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-500);margin-top:auto}
+.delta{padding:3px 7px;border-radius:6px;font-family:var(--font-num);font-size:11px;font-weight:600}
+.delta.up{background:var(--earth-100);color:var(--earth-800)}
+.delta.down{background:rgba(158,85,37,0.1);color:var(--clay-700)}
+.section{background:#fff;border:var(--edge);border-radius:var(--r-md);overflow:hidden}
+.shead{padding:16px 20px;border-bottom:var(--edge);display:flex;justify-content:space-between;align-items:baseline}
+.stitle{font-family:var(--font-display);font-size:17px;font-weight:500}
+.stitle em{font-style:italic;color:var(--earth-700)}
+.smeta{font-family:var(--font-num);font-size:12px;color:var(--ink-500)}
+.map{height:420px;background:linear-gradient(135deg,#0D1F17,#153A28);position:relative;overflow:hidden}
+.map::after{content:"OpenFreeMap • Liberty style";position:absolute;bottom:12px;right:16px;font-family:var(--font-num);font-size:10px;color:rgba(250,246,236,0.6)}
+.map-stat{position:absolute;bottom:16px;left:16px;background:rgba(10,15,12,0.65);color:var(--bone-50);padding:7px 12px;border-radius:8px;font-family:var(--font-num);font-size:11px}
+.map-stat strong{color:var(--safety-500);margin-right:4px}
+.qrow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 20px;border-bottom:var(--edge);font-size:13.5px}
+.qrow:last-child{border-bottom:0}
+.qdot{width:7px;height:7px;border-radius:50%;background:var(--earth-600)}
+.qdot.warn{background:var(--safety-500)}.qdot.alert{background:var(--clay-600)}
+.qcta{font-size:12px;font-weight:600;color:var(--earth-800);padding:5px 10px;border-radius:8px;background:var(--earth-100)}
+.proj{padding:16px 20px;border-bottom:var(--edge)}.proj:last-child{border-bottom:0}
+.ptop{display:flex;justify-content:space-between;align-items:baseline}
+.pname{font-family:var(--font-display);font-size:16px;font-weight:500}
+.pphase{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-500);font-weight:600}
+.pbar{height:4px;border-radius:2px;background:var(--bone-200);margin:8px 0;overflow:hidden}
+.pfill{height:100%;background:var(--earth-600);border-radius:2px}
+.pmoney{display:flex;justify-content:space-between;font-family:var(--font-num);font-size:12px;color:var(--ink-500)}
+.pmoney strong{color:var(--ink-950);font-weight:600;font-size:13px}
+.order{display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;padding:14px 20px;border-bottom:var(--edge);font-size:13.5px}
+.order:last-child{border-bottom:0}
+.swatch{width:14px;height:14px;border-radius:4px;border:var(--edge)}
+.ometa{font-family:var(--font-num);font-size:11px;color:var(--ink-500)}
+.oamt{font-family:var(--font-num);font-weight:600;font-variant-numeric:tabular-nums}
+.chip{padding:3px 8px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase}
+.chip.conf{background:var(--earth-100);color:var(--earth-800)}
+.chip.disp{background:rgba(232,147,24,0.14);color:var(--safety-700)}
+.chip.rev{background:rgba(158,85,37,0.14);color:var(--clay-700)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;border:0;cursor:pointer}
+.btn.primary{background:var(--ink-950);color:var(--bone-50)}
+.btn.secondary{background:#fff;color:var(--ink-950);border:var(--edge-strong)}
+.stepper{display:grid;grid-template-columns:repeat(5,1fr);margin-bottom:28px;background:#fff;border:var(--edge);border-radius:var(--r-md);overflow:hidden}
+.step{padding:14px 18px;display:flex;align-items:center;gap:10px;border-right:var(--edge)}
+.step:last-child{border-right:0}
+.snum{width:24px;height:24px;border-radius:999px;background:var(--bone-100);color:var(--ink-500);display:grid;place-items:center;font-family:var(--font-num);font-weight:600;font-size:12px}
+.step.done .snum{background:var(--earth-700);color:var(--bone-50)}
+.step.current .snum{background:var(--ink-950);color:var(--safety-500)}
+.step.done .slabel{color:var(--earth-800)}
+.step.current .slabel{color:var(--ink-950);font-weight:600}
+.slabel{font-size:13px;color:var(--ink-500)}
+.wiz{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px}
+.summary{background:#fff;border:var(--edge);border-radius:var(--r-md);padding:18px;display:flex;flex-direction:column;gap:14px}
+.summary h3{font-family:var(--font-display);font-size:16px;font-weight:500;margin:0 0 4px}
+.summary h3 em{font-style:italic;color:var(--earth-700)}
+.sumrow{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-500)}
+.sumrow strong{color:var(--ink-950);font-weight:600}
+.sumtotal{padding-top:14px;border-top:var(--edge);display:flex;justify-content:space-between;align-items:baseline}
+.sumtotal .v{font-family:var(--font-num);font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+.supplier{padding:16px 18px;background:#fff;border:var(--edge);border-radius:var(--r-md);margin-bottom:10px;display:grid;grid-template-columns:20px 1fr auto;gap:14px}
+.supplier.sel{border:0.5px solid var(--earth-700);box-shadow:0 0 0 1px var(--earth-700) inset;background:var(--earth-100)}
+.radio{width:16px;height:16px;border-radius:999px;border:1.5px solid var(--ink-300);margin-top:3px;position:relative}
+.sel .radio{border-color:var(--earth-700)}.sel .radio::after{content:'';position:absolute;inset:3px;border-radius:999px;background:var(--earth-700)}
+.sname{font-size:15px;font-weight:600;margin-bottom:3px}.syard{font-size:12.5px;color:var(--ink-500);margin-bottom:6px}
+.smeta2{font-family:var(--font-num);font-size:11px;color:var(--ink-500);letter-spacing:0.04em}
+.spriceval{font-family:var(--font-num);font-size:20px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.verif{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-top:8px;background:var(--earth-100);color:var(--earth-800)}
+.autosave{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-num);font-size:11px;color:var(--ink-500)}
+.autodot{width:6px;height:6px;border-radius:999px;background:var(--earth-500)}
+</style>
+</head>
+<body>
+<h2 class="screen">Screen 1 — Command <em>dashboard</em></h2>
+<div class="stage"><div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">E</span><span class="brand-name">Earth<em>move</em></span></div>
+    <nav class="nav">
+      <a class="navlink active"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-7H10v7H5a2 2 0 0 1-2-2z"/></svg>Command</a>
+      <a class="navlink"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>Place Order</a>
+      <a class="navlink"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></svg>Track Live<span class="tag">T2</span></a>
+      <a class="navlink"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>Trust<span class="tag">T2</span></a>
+      <a class="navlink"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projects<span class="tag">T2</span></a>
+      <a class="navlink"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Marketplace<span class="tag">T3</span></a>
+      <a class="navlink"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/></svg>Team<span class="tag">T3</span></a>
+      <a class="navlink"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 10h4.5a1.5 1.5 0 0 1 0 3H10a1.5 1.5 0 0 0 0 3h5"/></svg>Billing<span class="tag">T3</span></a>
+    </nav>
+  </aside>
+  <header class="topbar">
+    <div class="search">🔍 Search projects, orders, suppliers…</div>
+    <div style="margin-left:auto;display:flex;gap:10px">
+      <div class="bell">🔔</div><div class="avatar">JB</div>
+    </div>
+  </header>
+  <main class="main"><div class="inner">
+    <div class="pagehead">
+      <div class="kicker">Contractor OS</div>
+      <h1 class="title">Good morning, <em>Juan</em></h1>
+      <p class="subtitle">Here's what's waiting for you today.</p>
+    </div>
+
+    <div class="grid" style="margin-bottom:24px">
+      <div class="c3"><div class="metric"><div class="mlabel">Active orders</div><div class="mval">7</div><div class="mfoot"><span>confirmed + dispatched</span><span class="delta up">↑ 12%</span></div></div></div>
+      <div class="c3"><div class="metric"><div class="mlabel">Trucks en route</div><div class="mval">3</div><div class="mfoot"><span>on the road now</span></div></div></div>
+      <div class="c3"><div class="metric"><div class="mlabel">This week spend</div><div class="mval">$48,219</div><div class="mfoot"><span>paid orders</span><span class="delta up">↑ 18%</span></div></div></div>
+      <div class="c3"><div class="metric"><div class="mlabel">Avg delivery time</div><div class="mval">4h 22m</div><div class="mfoot"><span>last 30 days</span><span class="delta down">↓ 8m</span></div></div></div>
+    </div>
+
+    <div class="grid" style="margin-bottom:24px">
+      <div class="c8"><div class="map"><div class="map-stat"><strong>7</strong>active  ·  <strong>3</strong>en route</div></div></div>
+      <div class="c4"><div class="section">
+        <div class="shead"><h2 class="stitle">Needs your <em>attention</em></h2><span class="smeta">4</span></div>
+        <div class="qrow"><span class="qdot warn"></span><span>Driver Marcus arrived at Oakwood Crossing</span><span class="qcta">Confirm</span></div>
+        <div class="qrow"><span class="qdot alert"></span><span>LoHi order needs approval ($8,400 over limit)</span><span class="qcta">Approve</span></div>
+        <div class="qrow"><span class="qdot warn"></span><span>Bid due in 2 days on Cherry Creek site work</span><span class="qcta">Open</span></div>
+        <div class="qrow"><span class="qdot"></span><span>New supplier verified in your market: Pioneer Sand</span><span class="qcta">View</span></div>
+      </div></div>
+    </div>
+
+    <div class="grid">
+      <div class="c6"><div class="section">
+        <div class="shead"><h2 class="stitle">Active <em>projects</em></h2><span class="smeta">All projects →</span></div>
+        <div class="proj"><div class="ptop"><span class="pname">Oakwood Crossing</span><span class="pphase">Foundation</span></div><div class="pbar"><div class="pfill" style="width:62%"></div></div><div class="pmoney"><span><strong>$184,200</strong> spent</span><span>of $295,000</span></div></div>
+        <div class="proj"><div class="ptop"><span class="pname">LoHi Mixed-Use</span><span class="pphase">Grading</span></div><div class="pbar"><div class="pfill" style="width:38%"></div></div><div class="pmoney"><span><strong>$72,800</strong> spent</span><span>of $190,000</span></div></div>
+        <div class="proj"><div class="ptop"><span class="pname">Cherry Creek Plaza</span><span class="pphase">Base prep</span></div><div class="pbar"><div class="pfill" style="width:19%"></div></div><div class="pmoney"><span><strong>$28,100</strong> spent</span><span>of $148,000</span></div></div>
+      </div></div>
+      <div class="c6"><div class="section">
+        <div class="shead"><h2 class="stitle">Recent <em>orders</em></h2><span class="smeta">+ New</span></div>
+        <div class="order"><span class="swatch" style="background:var(--earth-700)"></span><div><div style="font-size:13.5px;font-weight:600">Clean fill</div><div class="ometa">Arvada Sand & Gravel  ·  22 ton</div></div><span class="oamt">$460.00</span><span class="chip disp">dispatched</span></div>
+        <div class="order"><span class="swatch" style="background:var(--safety-600)"></span><div><div style="font-size:13.5px;font-weight:600">Road base cl 6</div><div class="ometa">Bestway Materials  ·  18 ton</div></div><span class="oamt">$312.00</span><span class="chip conf">confirmed</span></div>
+        <div class="order"><span class="swatch" style="background:var(--clay-500)"></span><div><div style="font-size:13.5px;font-weight:600">Concrete sand</div><div class="ometa">Martin Marietta  ·  24 ton</div></div><span class="oamt">$612.50</span><span class="chip rev">review</span></div>
+        <div class="order"><span class="swatch" style="background:var(--earth-500)"></span><div><div style="font-size:13.5px;font-weight:600">Screened topsoil</div><div class="ometa">Pioneer Sand  ·  16 ton</div></div><span class="oamt">$408.00</span><span class="chip disp">dispatched</span></div>
+        <div class="order"><span class="swatch" style="background:var(--ink-500)"></span><div><div style="font-size:13.5px;font-weight:600">Pea gravel ⅜"</div><div class="ometa">Front Range Materials  ·  20 ton</div></div><span class="oamt">$340.00</span><span class="chip conf">confirmed</span></div>
+      </div></div>
+    </div>
+  </div></main>
+</div></div>
+
+<h2 class="screen">Screen 2 — Place <em>Order</em> wizard (Step 3: Supplier)</h2>
+<div class="stage"><div class="app">
+  <aside class="sidebar"><div class="brand"><span class="brand-mark">E</span><span class="brand-name">Earth<em>move</em></span></div>
+    <nav class="nav">
+      <a class="navlink"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-7H10v7H5a2 2 0 0 1-2-2z"/></svg>Command</a>
+      <a class="navlink active"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>Place Order</a>
+      <a class="navlink">Track Live<span class="tag">T2</span></a><a class="navlink">Trust<span class="tag">T2</span></a><a class="navlink">Projects<span class="tag">T2</span></a>
+    </nav>
+  </aside>
+  <header class="topbar"><div class="search">🔍 Search</div><div style="margin-left:auto;display:flex;gap:10px"><div class="bell">🔔</div><div class="avatar">JB</div></div></header>
+  <main class="main"><div class="inner">
+    <div class="pagehead">
+      <div class="kicker">New order</div><h1 class="title">Place an <em>order</em></h1>
+      <p class="subtitle">Autosaved as you go. Resume from any device.</p>
+    </div>
+
+    <div class="stepper">
+      <div class="step done"><span class="snum">1</span><span class="slabel">Material</span></div>
+      <div class="step done"><span class="snum">2</span><span class="slabel">Quantity</span></div>
+      <div class="step current"><span class="snum">3</span><span class="slabel">Supplier</span></div>
+      <div class="step"><span class="snum">4</span><span class="slabel">Delivery</span></div>
+      <div class="step"><span class="snum">5</span><span class="slabel">Review</span></div>
+    </div>
+
+    <div class="wiz">
+      <div>
+        <div class="supplier sel"><span class="radio"></span>
+          <div><div class="sname">Arvada Sand & Gravel</div><div class="syard">North yard  ·  Arvada, CO</div>
+            <div class="smeta2">4.2 mi  ·  delivery $48  ·  max 25 mi</div>
+            <span class="verif">verified 2d ago</span>
+          </div>
+          <div><div class="spriceval">$19.00</div><div class="smeta2" style="text-align:right">per ton</div></div>
+        </div>
+        <div class="supplier"><span class="radio"></span>
+          <div><div class="sname">Pioneer Sand Co.</div><div class="syard">Cherry Creek yard  ·  Denver, CO</div>
+            <div class="smeta2">7.1 mi  ·  delivery $62  ·  max 30 mi</div>
+            <span class="verif">verified 5h ago</span>
+          </div>
+          <div><div class="spriceval">$18.50</div><div class="smeta2" style="text-align:right">per ton</div></div>
+        </div>
+        <div class="supplier"><span class="radio"></span>
+          <div><div class="sname">Bestway Materials</div><div class="syard">Aurora yard  ·  Aurora, CO</div>
+            <div class="smeta2">11.4 mi  ·  delivery $89  ·  max 20 mi</div>
+            <span class="verif">verified 3w ago</span>
+          </div>
+          <div><div class="spriceval">$17.25</div><div class="smeta2" style="text-align:right">per ton</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px">
+          <button class="btn secondary">← Back</button><button class="btn primary">Continue →</button>
+        </div>
+      </div>
+      <aside class="summary">
+        <h3>Order <em>summary</em></h3>
+        <div class="sumrow"><span>Material</span><strong><span class="swatch" style="background:var(--earth-700);display:inline-block;vertical-align:-2px;margin-right:6px"></span>Clean fill</strong></div>
+        <div class="sumrow"><span>Quantity</span><strong>22 ton</strong></div>
+        <div class="sumrow"><span>Supplier</span><strong>Arvada Sand & Gravel<br><span style="font-weight:400;color:var(--ink-500);font-size:12px">North yard</span></strong></div>
+        <div class="sumrow"><span>Price / ton</span><strong>$19.00</strong></div>
+        <div class="sumrow"><span>Delivery</span><strong>$48.00</strong></div>
+        <div class="sumtotal"><span class="mlabel">Total</span><span class="v">$493.82</span></div>
+        <div class="autosave"><span class="autodot"></span>Saved 9:42 AM</div>
+      </aside>
+    </div>
+  </div></main>
+</div></div>
+
+<p style="text-align:center;font-family:var(--font-num);font-size:11px;color:var(--ink-500);margin-top:16px">contractor-dashboard-v1.html · binding visual contract for Tranche 1</p>
+</body>
+</html>
