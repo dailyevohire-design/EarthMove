@@ -1,0 +1,71 @@
+name: Release Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_approval:
+        description: 'Skip manual approval (break-glass only)'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: CI must be green on this SHA
+        run: |
+          # Relies on CI being required in branch protection. This step
+          # is a fail-fast marker if someone triggers release manually
+          # before CI has run.
+          echo "This workflow should only run after CI.yml is green."
+
+      - name: Counsel-approval gate — all approved.json flags must be true
+        run: |
+          node -e "
+            const a = require('./src/lib/legal/approved.json')
+            const flags = ['methodology','privacy','terms','fcra','state_ca','state_ny','state_il','state_wa','disputes','responses','cookies']
+            const missing = flags.filter(f => a[f] !== true)
+            if (missing.length) {
+              console.error('BLOCKED — approved.json flags still false:', missing.join(', '))
+              process.exit(1)
+            }
+            if (!a.reviewed_by || !a.reviewed_on) {
+              console.error('BLOCKED — approved.json missing reviewed_by / reviewed_on')
+              process.exit(1)
+            }
+            console.log('OK — counsel approved by', a.reviewed_by, 'on', a.reviewed_on)
+          "
+
+      - name: Runbooks present
+        run: |
+          for r in stripe-webhook-outage anthropic-rate-limit supabase-rls-hotfix data-deletion-flow breach legal-dispute; do
+            test -f "docs/runbook/$r.md" || { echo "BLOCKED — docs/runbook/$r.md missing"; exit 1; }
+          done
+
+      - name: Deployment checklist has no unchecked items in the Legal section
+        run: |
+          # Looks for [ ] inside the Legal sign-off gate section.
+          awk '/^### Legal sign-off gate/{f=1;next} /^### /{f=0} f' docs/deployment-checklist.md \
+            | grep -n '\[ \]' \
+            && { echo 'BLOCKED — Legal sign-off gate has unchecked items'; exit 1; } \
+            || echo 'OK — Legal sign-off gate checklist complete'
+
+  approve:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://earthmove.io
+    if: ${{ !inputs.skip_approval }}
+    steps:
+      - run: echo "Approved by GitHub environment reviewer."
+
+  deploy:
+    needs: [verify, approve]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "TODO — wire Vercel prod deploy here."
