@@ -12,7 +12,6 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { latLngToCell } from 'h3-js';
 import { createAdminClient } from '@/lib/supabase/server';
@@ -34,8 +33,8 @@ const BodySchema = z.object({
 const SESSION_COOKIE = 'em_driver_session';
 
 export async function POST(req: NextRequest) {
-  // Auth: cookie presence
-  const token = cookies().get(SESSION_COOKIE)?.value;
+  // Auth: cookie from request (house pattern)
+  const token = req.cookies.get(SESSION_COOKIE)?.value;
   if (!token) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   }
@@ -92,13 +91,14 @@ export async function POST(req: NextRequest) {
     prev ? { lat: prev.lat, lng: prev.lng, recorded_at: prev.recorded_at } : null
   );
 
-  // Compute H3 r9 (returns hex string, convert to bigint)
-  let h3_r9: bigint | null = null;
+  // Compute H3 r9 (h3-js v4 returns hex string; BigInt('0x'+hex) for bigint column).
+  // Stored as decimal string via toString() — matches Uber h3-pg convention;
+  // use to_hex(h3_r9) in SQL when hex display is needed.
+  let h3_r9: string | null = null;
   try {
     const h3Hex = latLngToCell(body.lat, body.lng, 9);
-    h3_r9 = BigInt('0x' + h3Hex);
+    h3_r9 = BigInt('0x' + h3Hex).toString();
   } catch {
-    // If h3-js throws (shouldn't with valid lat/lng), proceed without H3
     flags.push('h3_compute_failed');
   }
 
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
     recorded_at: body.recorded_at,
     lat: body.lat,
     lng: body.lng,
-    h3_r9: h3_r9 ? h3_r9.toString() : null, // bigint as string for supabase-js
+    h3_r9,
     accuracy_m: body.accuracy_m,
     speed_mps: body.speed_mps,
     heading_deg: body.heading_deg,
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'insert_failed', detail: insertErr.message }, { status: 500 });
   }
 
-  // Fire-and-forget updates (don't block response on these)
+  // Fire-and-forget updates (don't block response)
   Promise.all([
     supabase
       .from('driver_sessions')
@@ -140,10 +140,10 @@ export async function POST(req: NextRequest) {
       .eq('id', session.driver_id)
       .or(`current_location_updated_at.is.null,current_location_updated_at.lt.${body.recorded_at}`),
   ]).catch(() => {
-    // Log to Sentry in real deployment; fire-and-forget for now
+    // TODO: ship to Sentry; fire-and-forget for now
   });
 
-  // 204 No Content, but with anomaly flags in header for PWA debugging
+  // 204 No Content with anomaly flags in header for PWA debug logging
   const res = new NextResponse(null, { status: 204 });
   if (flags.length > 0) {
     res.headers.set('x-em-anomaly-flags', flags.join(','));

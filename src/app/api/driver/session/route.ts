@@ -13,7 +13,6 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies, headers } from 'next/headers';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/server';
 import { generateDriverToken, hashToken, computeFingerprint } from '@/lib/driver/tokens';
@@ -33,9 +32,9 @@ const SESSION_COOKIE = 'em_driver_session';
 const SESSION_MAX_AGE_S = 8 * 60 * 60; // 8h
 
 export async function POST(req: NextRequest) {
-  const h = headers();
-  const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? h.get('x-real-ip') ?? null;
-  const ua = h.get('user-agent');
+  // Read IP + UA from the request (house pattern: no next/headers import)
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? null;
+  const ua = req.headers.get('user-agent');
 
   // Rate limit by IP
   if (ip) {
@@ -148,16 +147,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'consent_record_failed' }, { status: 500 });
   }
 
-  // Set HttpOnly cookie
-  cookies().set(SESSION_COOKIE, sessionToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: SESSION_MAX_AGE_S,
-  });
-
-  return NextResponse.json(
+  // Build response with HttpOnly cookie set on the response object (house pattern)
+  const res = NextResponse.json(
     {
       dispatch_id: updated.dispatch_id,
       driver_id: updated.driver_id,
@@ -166,4 +157,14 @@ export async function POST(req: NextRequest) {
     },
     { status: 200 }
   );
+  res.cookies.set({
+    name: SESSION_COOKIE,
+    value: sessionToken,
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: SESSION_MAX_AGE_S,
+  });
+  return res;
 }
