@@ -123,7 +123,7 @@ Penalty deltas are applied on top of the 100-point scorecard by the LLM at repor
 | **UCC-1 lien or state/federal tax lien** found | **−3 to −10** (LLM chooses by volume + amount) | `legal_record` | sources listed in `lien_check` | Plus, Deep Dive, Forensic |
 | **Domain-age mismatch** (claimed ">10 years" but domain or Wayback first-seen <2 yrs) | **−5** | `business_legitimacy` | adds to `red_flags`; `digital_forensics.age_mismatch_flag = true` | Plus, Deep Dive, Forensic |
 | **Principal overlap ≥ 3** shared-business indicators (phone/address/website/DOT) | **−5** | `business_legitimacy` | flag "entity network — investigate" | Plus, Deep Dive, Forensic |
-| **Felony conviction** related to construction/fraud | **CAP `trust_score` at 34** | `trust_score` (ceiling) | forces `score_tier = "not_recommended"` | Deep Dive, Forensic |
+| **Verified felony conviction within last 7 years** — narrow scope (see "Felony trigger" definition below) | **CAP `trust_score` at 34** (court-record evidenceUrl required; without URL apply **−10 to `legal_record`** instead + "unverifiable felony signal" red flag) | `trust_score` (ceiling) | forces `not_recommended`; evidenceUrl mandatory; **suppressed entirely in CA/NY/IL/WA** per legal guardrails | Deep Dive, Forensic |
 | **Active license suspension or revocation** | **CAP `trust_score` at 49** | `trust_score` (ceiling) | forces `score_tier ≤ "use_caution"` | Deep Dive, Forensic |
 | **Bankruptcy within 3 years** | **−10** | `legal_record` | adds to `red_flags` | Deep Dive, Forensic |
 | **Chameleon-carrier pattern** (dissolved entity re-registered within 24 months; same phone/address/principals) | **−15** | `business_legitimacy` | `extended_principal_network.chameleon_carrier_flag = true` | Deep Dive, Forensic |
@@ -136,6 +136,24 @@ Consistency notes:
 - All caps align with the updated score bands (`not_recommended` 0-39, `use_caution` 40-54). Cap-at-34 / cap-at-29 both land in not_recommended. Cap-at-49 lands at the top of use_caution.
 - Penalty-target fields are named per the scorecard subkeys in `src/lib/trust/schemas.ts` (`HomeownerScorecardSchema`).
 - Plus-tier penalties cascade into Deep Dive and Forensic prompts because those prompts explicitly include the Plus module output (and apply the same deltas).
+
+### Trigger definitions
+
+**Felony trigger (narrow).** The felony cap fires only when ALL of the following hold:
+1. Conviction is for one of: (a) fraud, (b) theft, (c) embezzlement, (d) statutory contractor fraud, or (e) serious bodily injury caused while operating the business.
+2. Date of conviction is within the last 7 years from the report date.
+3. A court-record URL is available as evidence and included in the report's evidence trail.
+4. The contractor's primary state of registration is NOT CA, NY, IL, or WA. In those four jurisdictions the felony trigger is **suppressed entirely** per the legal guardrails (§10B "Non-negotiable legal guardrails").
+
+DUI alone does NOT qualify unless it matches the serious-bodily-injury path (driver was operating the business at the time AND caused bodily injury). Drug possession does NOT qualify. Misdemeanors do NOT qualify. If the court-record URL is not available, DO NOT apply the cap — apply the soft penalty (−10 to `legal_record` + "unverifiable felony signal" red flag) instead.
+
+**Chameleon carrier pattern.** Fires when: prior entity was dissolved within 24 months AND the new entity shares **≥ 2** of: phone, address, principals, DOT number, website.
+
+**Shell-game pattern (2+ criteria).** Fires when **2 or more** of the following are detected simultaneously:
+- chameleon carrier pattern (as defined above)
+- ≥ 5 linked entities via shared infrastructure (phone/address/website)
+- principal overlap ≥ 3 indicators
+- domain-age mismatch with claimed operating history
 
 > **Status:** inferred by Agent 2 on 2026-04-17. Awaiting Juan's review before Agent 3 runs. (Section 11 item #3.)
 
