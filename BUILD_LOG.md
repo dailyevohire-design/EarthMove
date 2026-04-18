@@ -521,3 +521,112 @@ All seven match to the second. Transaction rolled back — zero production rows 
 - None material. The 022 RPC update ran cleanly via `CREATE OR REPLACE FUNCTION`. The 023 verification needed a real `auth.users` row for the FK — two users exist (4 days post-launch), so no synthetic-user gymnastics required.
 - The "cap at 34" (felony) and "cap at 49" (license suspension) from the prompts remain consistent with the updated score bands (not_recommended 0-39, use_caution 40-54). No cascade needed.
 
+---
+
+> **HAND-OFF RECONSTRUCTION NOTE (2026-04-18):** during Agent 7 and Agent 8 editing turns, a run of BUILD_LOG.md Edit tool calls did not land in the working tree. The Agent 3 / A1 / Agent 4 / Agent 5 / Agent 6 hand-offs ARE fully committed in git history (see `a8225a8`, `bfc2cce`, `678db17`, `5bc81a1`). The Agent 7 / Phase-A-pre-Agent-6 / Agent 8 entries below are the authoritative logs. Rely on `git log --oneline --all` + commit messages for full provenance.
+
+---
+
+## 2026-04-17 — Phase A hardening (pre-Agent-6, RECONSTRUCTED)
+Commit `dccf800`.
+- `.env.example`: `INNGEST_EVENT_KEY` + `INNGEST_SIGNING_KEY` with inline doc on silent-failure risk if missing.
+- `src/inngest/client.ts`: runtime assertion. Production + missing keys → **throw**. Dev + missing keys → `console.warn`.
+- `docs/deployment-checklist.md`: canonical pre-promotion checklist — env vars, migration order, Stripe seed, webhook + Inngest app registration, smoke tests. Agent 10 release-gate input.
+
+---
+
+## 2026-04-17 — Agent 7 — Verified Contractor claim + $29/mo subscription (HAND-OFF, RECONSTRUCTED)
+
+Commit `d757281`.
+
+### Migration 029 applied + verified (backfill 2/2)
+- `contractors` canonical table (slug, legal_name, normalized_name, state_code, city, phone_e164, website, primary_category). `UNIQUE (normalized_name, state_code)`. SQL helpers `normalize_contractor_name()` (strips LLC/Inc/Corp suffixes) and `contractor_slug()` (matches Agent 4's `slugifyContractor` byte-for-byte).
+- `contractor_id` FK added to `trust_reports`, `verified_contractors`, `prehire_watches`, `trust_report_access`; backfilled via normalized-name + state join. Legacy `contractor_name + state_code` columns kept live (one-release-cycle back-compat).
+- Verification columns on `verified_contractors`: `verification_code_hash / _salt / _expires_at / _attempts / _passed_at / _call_sid`.
+- `contractor_profiles`, `contractor_responses`, `contractor_hints` — RLS: public SELECT (responses filtered to `auto_approved`); writes require a verified-claim EXISTS JOIN.
+
+### Files shipped
+- **Libraries:** `src/lib/groundcheck/verification.ts` (crypto-secure code gen, per-claim salt, constant-time compare, phone masking, spoken-digit TTS format), `twilio-call.ts` (inline TwiML outbound call, fails closed), `moderation.ts` (tiered: rules → Haiku on URL-carrying responses; fail-safe default = `flagged_for_review`), `contractor-lookup.ts`, `contractor-responses.ts`.
+- **API:** `/api/contractor/claim/{start,call,verify}`, `/api/contractor/responses`, `/api/contractor/billing/portal`.
+- **UI:** `/groundcheck/claim/[slug]` landing + `<ClaimStartButton>` inline flow; `/contractor/portal` with tabs (Profile/Responses/Updates/Billing), past-due banner with Stripe portal link.
+- **Component patches:** `FullReportView` accepts `contractorResponses?: Record<finding_ref, {text, published_at, citation_url?}>`; red flags render inline "Response from verified contractor" blocks. Dispute button suppressed when a response covers the flag. Wired in both `/groundcheck/report/[id]` and `/groundcheck/share/[token]`.
+- **Stripe handler extension:** `invoice.paid` now only flips `claim_status='verified'` when `verification_passed_at IS NOT NULL`. Otherwise `subscription_status='active'` still lands (we have their money), `claim_status` stays `pending`, audit warn written. Mirror gate in `/verify` route: if subscription is already active when verification passes, promote `claim_status='verified'` in the same UPDATE.
+- **TEST_BYPASS_CODE** gated strictly on `NODE_ENV === 'test'`. Prod cannot bypass.
+
+### Verification rate limits + safety
+- 10-minute code TTL, 3-attempt lockout (reset on new code request).
+- Twilio: 1 call / 10 min per claim (via `last_verification_call_at`), 5 / day per claim (tracked in `audit_events`).
+- Constant-time hex compare on hash verification.
+- Haiku moderation fail-safe: API error → `flagged_for_review` (never `auto_approved`).
+
+### Tests + typecheck
+- `npx vitest run` → 142/142 green across 17 files (+20 Agent 7 tests: 12 verification + 8 moderation).
+- `npx tsc --noEmit` → clean.
+
+### Notes to other agents (Agent 7)
+- **Agent 8:** Canonical URL is `/groundcheck/c/<contractors.slug>`. Exclude `/contractor/**`, `/groundcheck/claim/*`, `/groundcheck/report/*`, `/groundcheck/library`, `/groundcheck/watches/*`, `/groundcheck/share/*` from sitemap.
+- **Agent 9:** Methodology page must explain Verified Contractor program + response policy; dispute process page references `contractor_responses` too.
+- **Agent 10:** Audit (1) claim verification cannot be bypassed by forging claim_id, (2) response insertion requires ownership, (3) moderation cannot be bypassed client-side, (4) Twilio call rate limits enforced, (5) subscription lifecycle gates badge visibility.
+
+### Surprises (Agent 7)
+1. **`phone_e164` not populated on existing 2 contractors.** Trust-reports backfill didn't carry phone data. Claim flow surfaces `NO_PUBLIC_PHONE` 409 with contact-support fallback until phone enrichment.
+2. **Profile-edit PATCH + logo upload deferred.** Portal renders read-only; API stub only. Scope trade-off.
+3. **Hints UI deferred** — table + RLS live, UI + POST route stub.
+4. **`NODE_ENV === 'test'` (not production)** required for TEST_BYPASS_CODE. Playwright config must set NODE_ENV=test.
+5. **Haiku moderation default = `flagged_for_review`** on API error, not `auto_approved`. Fail-safe for unmoderated-content safety.
+
+---
+
+## 2026-04-18 — Agent 8 — Pre-warm cron + programmatic SEO (HAND-OFF)
+
+Commit `bbc5477`.
+
+### Migration 030 applied + verified
+- `events_pageview` (id, url, contractor_id FK → contractors, viewed_at, session_hash, referer, user_agent). Partial index on `(contractor_id, viewed_at DESC) WHERE contractor_id IS NOT NULL` for target selection. Full index on `viewed_at` for analytics. RLS on; no public SELECT — service-role writes only.
+- Applied via MCP on `gaawvpzzmotimblyesfp`.
+
+### Pre-warm (workstream A)
+- `src/lib/analytics/pageview.ts` — fire-and-forget server logger; fails closed on DB error.
+- Wired into `/groundcheck/page.tsx` (landing), `/groundcheck/c/[slug]/page.tsx` (teaser with contractor_id), `/api/trust/resolve/route.ts` (high-confidence resolutions → logs against the canonical contractor row as `url='/api/trust/resolve'` demand signal).
+- `src/inngest/functions/prewarm_daily.ts` — cron `TZ=America/New_York 0 3 * * *`. Selects ≤500 contractors with ≥5 pageviews in 7d OR ≥1 resolver-query hit. Excludes contractors with a fresh Standard report in last 24h. Fan-out deterministic id `prewarm-<contractor_id>-<YYYYMMDD>`. Audits each run.
+- `src/inngest/functions/prewarm_contractor.ts` — concurrency 5, throttle 30/1m (stricter than prehire sweep — pre-warm is background). Freshness recheck inside the step writes `prewarm.cache_hit` audit and short-circuits. On generate: runs `runTrustEngine({ tier: 'standard', persona: 'homeowner', budgetMode: 'full' })`, persists with `user_id = null` (tenant-neutral baseline).
+- Inngest serve endpoint registers both new functions alongside Agent 6's.
+- **Cron collisions checked: none.** 1am prehire-expiry, 3am prewarm, 9am prehire-sweep.
+- Cache-hit telemetry: `audit_events` rows of `prewarm.cache_hit` and `prewarm.generated`. Ratio = hits / (hits + generated). Target ≥60% after 2 weeks.
+
+### Programmatic SEO (workstream B)
+- `src/lib/seo/programmatic.ts` — 50 US states + 15 categories; `topContractorsByStateCategory`, `topContractorsByCityCategory`, `listCitiesWithActivity`.
+- `src/lib/seo/jsonld.ts` — `breadcrumbList`, `itemList`, `localBusiness`, `jsonLdScript` (escapes `</` → `\u003c`).
+- `/groundcheck/[state]` — SSG over all 50 states, 24h ISR, top 10 + category tiles + schema.
+- `/groundcheck/[state]/[category]` — ISR on-demand (`generateStaticParams` returns `[]` at MVP); `dynamicParams=true`. **Returns 404 when <5 qualifying contractors** (no thin content). ItemList + BreadcrumbList schema.
+- `/groundcheck/best-[category]/[city]` — long-tail city landings. City slug format `<city>-<stateCode>` (e.g., `denver-co`). Same 404-on-thin rule.
+- `/groundcheck/contractors` — directory with featured Verified Contractors + state grid.
+- `src/app/groundcheck/sitemap.ts` rewritten: static + 50 state indexes + state×category combos with ≥5 qualifying contractors + best-[category]/[city] combos for cities with ≥5 contractors + top 20k teasers. Excludes all authed + payment-flow URLs.
+- `src/app/robots.ts` updated: allow `/groundcheck`, `/groundcheck/c/`, `/groundcheck/best-`; disallow report/library/watches/alerts/share/claim/buy/contractor. Dual sitemap reference.
+
+### Sitemap URL count (live DB today)
+- 4 static marketing + 50 state indexes + 0 state×category + 0 best-[category]/[city] + 2 contractor teasers = **56 URLs**. Expands automatically as pre-warm cron fills `trust_reports`.
+
+### Tests + typecheck
+- `npx vitest run` → **151/151 green** across 18 files (+9 Agent 8 tests: 5 static-catalog + 4 JSON-LD).
+- `npx tsc --noEmit` → clean.
+
+### Notes to other agents (Agent 8)
+- **Agent 9:** Methodology page `/groundcheck/methodology` is linked from every programmatic-page footer. Breadcrumb schema expects it to exist. Also wire `/groundcheck/legal/[state]` referenced by `GeoGateBanner`.
+- **Agent 10 release gate:**
+  1. Sitemap build time — state×category generation is O(50 × 15) DB queries per build. Fine at current data volume; materialize as view when contractor count grows.
+  2. robots.txt — verify all authed paths are disallowed (spot-check `/groundcheck/report`, `/contractor`, `/groundcheck/library`, `/groundcheck/watches`).
+  3. No authed URLs in sitemap XML.
+  4. Pre-warm freshness recheck works: run the cron twice, second run should emit only cache-hit audits (zero new reports).
+  5. Thin-content pages 404 correctly.
+
+### Surprises (Agent 8)
+1. **State×category sitemap query is O(50 × 15) per build.** Milliseconds at current data; will slow as contractor count grows. Flag materialized-view optimization for Agent 10 polish.
+2. **`generateStaticParams` returns `[]` for state/category + best-[category]/[city] pages.** Deliberate — building 750 state×category pages on every deploy when most 404 (insufficient contractors) wastes build time. `dynamicParams=true` renders on demand with 24h ISR.
+3. **LocalBusiness JSON-LD helper not wired into teaser yet** — Agent 9/10 polish with Google Rich Results validation.
+4. **Pre-warm pageview logging on landing page** fires on every render — watch `events_pageview` row rate.
+5. **Resolver high-confidence hit logging** only fires when the resolved contractor already exists in canonical `contractors`. First-time resolutions for unknown contractors miss the demand signal until a later pageview; later enrichment pass could seed `contractors` from resolver output.
+
+### Status
+Agent 8 complete. Awaiting Juan's approval before Agent 9.
+
