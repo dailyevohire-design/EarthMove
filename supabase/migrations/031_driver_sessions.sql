@@ -1,4 +1,4 @@
--- Migration 021: driver_sessions
+-- Migration 031: driver_sessions (prod version 20260418173029)
 -- Applied to prod 2026-04-18 via Supabase MCP (commit pending).
 -- Purpose: SMS-link -> PWA session bootstrap with one-time token + device fingerprint binding.
 
