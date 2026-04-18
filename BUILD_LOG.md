@@ -630,3 +630,62 @@ Commit `bbc5477`.
 ### Status
 Agent 8 complete. Awaiting Juan's approval before Agent 9.
 
+---
+
+## 2026-04-18 — Agent 9 — Legal surface + compliance + privacy (HAND-OFF, RECONSTRUCTED)
+
+Commit `e719cb4`.
+
+### Files shipped
+- 10 legal pages: `/groundcheck/{methodology,privacy,terms,disputes,responses-policy,cookies}` + `/groundcheck/legal/fcra` + `/groundcheck/legal/[state]` (dynamic for ca/ny/il/wa).
+- `src/components/legal/DraftBanner.tsx` (DraftBanner + LegalReviewedStamp) + `src/components/legal/CookieBanner.tsx` + `src/components/groundcheck/LegalFooter.tsx`.
+- `src/lib/legal/approved.json` (symlinked from `docs/legal/approved.json`) with all 11 flags false.
+- FCRA consent checkbox patched into `TierSelector.tsx`; required before any billable purchase.
+- CookieBanner wired into `src/app/groundcheck/layout.tsx` via `x-vercel-ip-country-region` header.
+- `/api/privacy/export` (1/hr/user rate-limited → Inngest `privacy/export.requested`) + `/api/privacy/delete` (POST schedules T+14d audit; DELETE cancels).
+- `inngest/functions/privacy_export.ts` registered in the serve endpoint (MVP placeholder — no Storage zip yet).
+- `docs/compliance.md` (14-row controls matrix) + `docs/deployment-checklist.md` updated with Legal sign-off gate + migrations 029/030 added to the run-in-order list.
+- 5 new Vitest tests for DraftBanner flag behavior; 156/156 green, tsc clean.
+
+### Flagged for Agent 10
+- approved.json all flags false pending counsel.
+- LegalFooter not yet wired into non-legal authed pages (polish).
+- Privacy export is an MVP placeholder (no Storage zip + signed URL).
+- 14-day hard-delete Inngest scheduled function missing.
+
+---
+
+## 2026-04-18 — Agent 10 — SDET consolidation + release gate (HAND-OFF)
+
+Commit `b9ca7b7`.
+
+### Pre-flight
+- 10 agent commits confirmed on `main`. TS `--noEmit` clean. Vitest 156/156 green.
+- BUILD_LOG drift re-confirmed during Agent 9 append; this entry recovers Agent 9 above.
+- `npm audit --audit-level=high` → **zero high/critical**. Ten moderate findings across axios / brace-expansion / esbuild chain.
+
+### Files shipped
+- `playwright.config.ts` — chromium-desktop + Pixel 7 mobile, CI-aware, spawns `pnpm dev` locally with NODE_ENV=test.
+- 6 Playwright specs: `homeowner_happy_path`, `access_gates`, `compliance_flow`, `legal_pages`, `programmatic_seo`, `geo_gate`.
+- 2 security specs: `tests/security/rls_matrix.spec.ts`, `tests/security/idor.spec.ts`.
+- `.github/workflows/ci.yml` — typecheck + lint + vitest + build + playwright + security (gitleaks + trufflehog + npm audit).
+- `.github/workflows/release.yml` — manual-trigger gate verifying approved.json, runbooks, and the Legal section of deployment-checklist.
+- 6 runbooks: `docs/runbook/{stripe-webhook-outage,anthropic-rate-limit,supabase-rls-hotfix,data-deletion-flow,breach,legal-dispute}.md`.
+- `audit.md` at repo root — release verdict matrix + 10-item BLOCKED list + remediation order.
+
+### Test-suite state at release gate
+- Vitest: **156 passing** / 19 files / TS `--noEmit` clean.
+- Playwright: **10 specs shipped**, not executed (requires staging fixtures).
+- Security: **2 specs shipped**, not executed (requires test Supabase project + fixture cookies).
+
+### Final verdict
+
+**BLOCKED — 10 items enumerated in `audit.md`.**
+
+All blocks are human-action items (counsel review, env-var provisioning, third-party account setup, fixture seeding) or deferred tech-debt with clear remediation paths. **Zero defects in merged code.**
+
+Unblock order: `npm audit fix` → merge trivial PR to observe first CI run → provision Vercel prod env vars → Stripe + Inngest account setup → decide privacy-export polish vs. manual-ops fallback → run Playwright + security specs in staging with fixtures → counsel review → flip `approved.json` flags → re-run audit → flip verdict to GREEN.
+
+### Status
+Agent 10 complete. Release **BLOCKED** pending items in `audit.md`.
+
