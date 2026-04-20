@@ -143,7 +143,7 @@ export async function runFreeTier(
       tools: [{
         type: 'web_search_20250305' as any,
         name: 'web_search',
-        max_uses: 7,
+        max_uses: 12,
         user_location: { type: 'approximate', city, region: state, country: 'US' }
       }],
       messages,

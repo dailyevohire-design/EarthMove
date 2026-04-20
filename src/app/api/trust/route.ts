@@ -5,7 +5,7 @@ import { getRateLimiter } from '@/lib/trust/rate-limiter'
 import { runFreeTier } from '@/lib/trust/trust-engine'
 
 export const runtime = 'nodejs'
-export const maxDuration = 60
+export const maxDuration = 180
 
 export async function POST(req: NextRequest) {
   const start = Date.now()
