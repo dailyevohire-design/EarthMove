@@ -1,113 +1,115 @@
-import { Ratelimit } from '@upstash/ratelimit'
-import { Redis } from '@upstash/redis'
+import { createAdminClient } from '@/lib/supabase/server'
 
-/**
- * Validate env var shape at module load so malformed values fail the build loudly
- * instead of throwing a cryptic URL parser error deep in the Upstash client.
- * Does NOT require the vars to be set — missing is a runtime problem, caught in getRedis().
- */
-function validateEnvShape() {
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
-
-  if (url !== undefined) {
-    if (url.startsWith('"') || url.endsWith('"') || url.startsWith("'") || url.endsWith("'")) {
-      throw new Error(
-        'UPSTASH_REDIS_REST_URL contains literal quote characters — strip quotes in the Vercel dashboard.'
-      )
-    }
-    if (url && !url.startsWith('https://')) {
-      throw new Error(
-        `UPSTASH_REDIS_REST_URL must start with https:// — got: ${url.slice(0, 30)}...`
-      )
-    }
-  }
-
-  if (token !== undefined) {
-    if (token.startsWith('"') || token.endsWith('"') || token.startsWith("'") || token.endsWith("'")) {
-      throw new Error(
-        'UPSTASH_REDIS_REST_TOKEN contains literal quote characters — strip quotes in the Vercel dashboard.'
-      )
-    }
-  }
+// Tier-aware rate limits (per 60s window). Preserves free=5/min, pro=20/min from
+// the prior Upstash implementation.
+const TIER_RATE_LIMITS: Record<string, { max: number; windowSeconds: number }> = {
+  free:       { max: 5,  windowSeconds: 60 },
+  pro:        { max: 20, windowSeconds: 60 },
+  enterprise: { max: 20, windowSeconds: 60 },
 }
 
-validateEnvShape()
-
-let _redis: Redis | null = null
-function getRedis(): Redis {
-  if (_redis) return _redis
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
-  if (!url || !token) {
-    throw new Error(
-      `Upstash env missing at runtime. URL present=${!!url} TOKEN present=${!!token}. ` +
-        'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Vercel → Settings → Environment Variables → Production.'
-    )
-  }
-  _redis = new Redis({ url, token })
-  return _redis
+// Daily cost caps (USD). Preserves values from the prior Upstash implementation.
+const TIER_COST_CAPS: Record<string, number> = {
+  free:       2.0,
+  pro:        25.0,
+  enterprise: 200.0,
 }
 
-const cache = new Map()
+// Upstash-compatible result shape. /api/trust/route.ts destructures { success }.
+interface RateLimitResult {
+  success:   boolean
+  limit:     number
+  remaining: number
+  reset:     number  // ms since epoch
+}
 
-let _freeRateLimiter: Ratelimit | null = null
-let _proRateLimiter: Ratelimit | null = null
+interface TierLimiter {
+  limit(identifier: string): Promise<RateLimitResult>
+}
 
-export function getRateLimiter(tier: string): Ratelimit {
-  if (tier === 'pro' || tier === 'enterprise') {
-    if (!_proRateLimiter) {
-      _proRateLimiter = new Ratelimit({
-        redis: getRedis(),
-        limiter: Ratelimit.slidingWindow(20, '1 m'),
-        prefix: 'rl:trust:pro',
-        ephemeralCache: cache,
+function buildLimiter(tier: string): TierLimiter {
+  const cfg = TIER_RATE_LIMITS[tier] ?? TIER_RATE_LIMITS.free
+  return {
+    async limit(identifier: string): Promise<RateLimitResult> {
+      const db = createAdminClient()
+      const { data, error } = await db.rpc('check_trust_rate_limit', {
+        p_identifier:     identifier,
+        p_bucket:         tier,
+        p_max_requests:   cfg.max,
+        p_window_seconds: cfg.windowSeconds,
       })
-    }
-    return _proRateLimiter
+      if (error) throw new Error(`check_trust_rate_limit failed: ${error.message}`)
+      const row = Array.isArray(data) ? data[0] : data
+      return {
+        success:   Boolean(row?.allowed),
+        limit:     cfg.max,
+        remaining: Number(row?.remaining ?? 0),
+        reset:     row?.reset_at
+          ? new Date(row.reset_at).getTime()
+          : Date.now() + cfg.windowSeconds * 1000,
+      }
+    },
   }
-  if (!_freeRateLimiter) {
-    _freeRateLimiter = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(5, '1 m'),
-      prefix: 'rl:trust:free',
-      ephemeralCache: cache,
-    })
-  }
-  return _freeRateLimiter
+}
+
+const _limiters: Record<string, TierLimiter> = {}
+
+export function getRateLimiter(tier: string): TierLimiter {
+  const key = TIER_RATE_LIMITS[tier] ? tier : 'free'
+  if (!_limiters[key]) _limiters[key] = buildLimiter(key)
+  return _limiters[key]
 }
 
 export async function checkDailyCostCap(
   userId: string,
   tier: string
 ): Promise<{ allowed: boolean; used: number; cap: number }> {
-  const caps: Record<string, number> = { free: 2.0, pro: 25.0, enterprise: 200.0 }
-  const cap = caps[tier] ?? 2.0
-  const key = `cost:${userId}:${new Date().toISOString().slice(0, 10)}`
-  const used = parseFloat((await getRedis().get<string>(key)) ?? '0')
-  return { allowed: used < cap, used, cap }
-}
-
-export async function recordCost(userId: string, costUsd: number): Promise<void> {
-  const redis = getRedis()
-  const key = `cost:${userId}:${new Date().toISOString().slice(0, 10)}`
-  await redis.incrbyfloat(key, costUsd)
-  await redis.expire(key, 86400 * 2)
-}
-
-let _trustLimiter: Ratelimit | null = null
-/**
- * Check rate limit for a given identifier (IP, user ID, contractor query, etc.).
- * Returns { success, limit, remaining, reset } from Upstash.
- */
-export async function checkTrustRateLimit(identifier: string) {
-  if (!_trustLimiter) {
-    _trustLimiter = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(10, '60 s'),
-      analytics: true,
-      prefix: 'gc:trust',
-    })
+  const cap = TIER_COST_CAPS[tier] ?? TIER_COST_CAPS.free
+  const db = createAdminClient()
+  const { data, error } = await db.rpc('check_trust_daily_cost_cap', {
+    p_user_id: userId,
+    p_cap_usd: cap,
+  })
+  if (error) throw new Error(`check_trust_daily_cost_cap failed: ${error.message}`)
+  const row = Array.isArray(data) ? data[0] : data
+  return {
+    allowed: Boolean(row?.allowed),
+    used:    Number(row?.used_usd ?? 0),
+    cap:     Number(row?.cap_usd ?? cap),
   }
-  return _trustLimiter.limit(identifier)
+}
+
+/**
+ * No-op. Cost is recorded by /api/trust/route.ts inserting directly into
+ * trust_api_usage. Kept for API compatibility with callsites.
+ * check_trust_daily_cost_cap RPC sums trust_api_usage.cost_usd for enforcement.
+ */
+export async function recordCost(_userId: string, _costUsd: number): Promise<void> {
+  return
+}
+
+/**
+ * Check rate limit for a given identifier using a shared 'gc:trust' bucket.
+ * Returns Upstash-compatible shape.
+ */
+export async function checkTrustRateLimit(identifier: string): Promise<RateLimitResult> {
+  const max = 10
+  const windowSeconds = 60
+  const db = createAdminClient()
+  const { data, error } = await db.rpc('check_trust_rate_limit', {
+    p_identifier:     identifier,
+    p_bucket:         'gc:trust',
+    p_max_requests:   max,
+    p_window_seconds: windowSeconds,
+  })
+  if (error) throw new Error(`check_trust_rate_limit failed: ${error.message}`)
+  const row = Array.isArray(data) ? data[0] : data
+  return {
+    success:   Boolean(row?.allowed),
+    limit:     max,
+    remaining: Number(row?.remaining ?? 0),
+    reset:     row?.reset_at
+      ? new Date(row.reset_at).getTime()
+      : Date.now() + windowSeconds * 1000,
+  }
 }
