@@ -19,14 +19,28 @@ export async function POST(req: NextRequest) {
   try { body = await req.json() }
   catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
 
-  const { contractor_name, city, state_code, tier = 'free' } = body
+  const {
+    contractor_name,
+    city,
+    state_code,
+    tier = 'free',
+    address,
+    principal,
+    license_number,
+    ein_last4,
+  } = body
 
   // Validate + sanitize inputs (prompt injection defense)
-  const validation = validateInput(contractor_name ?? '', city ?? '', state_code ?? '')
+  const validation = validateInput(
+    contractor_name ?? '',
+    city ?? '',
+    state_code ?? '',
+    { address, principal, license_number, ein_last4 },
+  )
   if (!validation.valid) {
     return NextResponse.json({ error: validation.error }, { status: 400 })
   }
-  const { name, city: sCity, state } = validation.clean!
+  const { name, city: sCity, state, hints } = validation.clean!
 
   // Tier validation
   if (!['free', 'pro', 'enterprise'].includes(tier)) {
@@ -92,7 +106,7 @@ export async function POST(req: NextRequest) {
   let cacheCreationTokens = 0
 
   try {
-    const result = await runFreeTier(name, sCity, state, q => searches.push(q))
+    const result = await runFreeTier(name, sCity, state, q => searches.push(q), hints)
     report              = result.report
     costUsd             = result.costUsd
     cacheReadTokens     = result.cacheReadTokens
