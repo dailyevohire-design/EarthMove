@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHash } from 'crypto'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { validateInput } from '@/lib/trust/prompt-guards'
 import { getRateLimiter } from '@/lib/trust/rate-limiter'
@@ -86,12 +87,25 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  // Hint fingerprint — included in cache key so disambiguation retries
+  // don't hit stale cache for the no-hint version of the same query.
+  const hintParts = [
+    hints?.address        ?? '',
+    hints?.principal      ?? '',
+    hints?.license_number ?? '',
+    hints?.ein_last4      ?? '',
+  ].join('|')
+  const hintHash = hintParts.replace(/\|/g, '')
+    ? createHash('md5').update(hintParts).digest('hex')
+    : ''
+
   // Cache check (skip enterprise — always fresh)
   if (tier !== 'enterprise') {
     const { data: cached } = await admin.rpc('get_cached_trust_report', {
       p_contractor: name,
       p_state: state,
       p_tier: tier,
+      p_hint_hash: hintHash,
     })
     if (cached) {
       return NextResponse.json({ ...cached, cached: true })
@@ -161,6 +175,7 @@ export async function POST(req: NextRequest) {
         p_state: state,
         p_tier: tier,
         p_payload: report,
+        p_hint_hash: hintHash,
       })
     }
   } catch (dbErr) {
