@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { ShieldCheck, ShoppingCart, AlertTriangle, TrendingUp, ChevronRight } from 'lucide-react'
+import { ShieldCheck, ShoppingCart, AlertTriangle, ChevronRight } from 'lucide-react'
 
 export const metadata = { title: 'Dashboard — earthmove.io' }
 
@@ -27,7 +27,6 @@ export default async function GCDashboardPage() {
     .limit(5)
 
   const highRisk = ((reports ?? []) as any[]).filter(r => r.risk_level === 'HIGH' || r.risk_level === 'CRITICAL').length
-  const exposure = highRisk * 47000
 
   const RISK_COLOR: Record<string, string> = {
     LOW:      'text-emerald-600',
@@ -58,9 +57,6 @@ export default async function GCDashboardPage() {
             <div className="text-sm font-bold text-red-800">
               {highRisk} high-risk contractor{highRisk > 1 ? 's' : ''} in your recent lookups
             </div>
-            <div className="text-xs text-red-600 mt-0.5">
-              Estimated exposure: <span className="font-bold">${exposure.toLocaleString()}</span> avg cost per unverified incident
-            </div>
           </div>
           <Link href="/dashboard/gc/contractors" className="text-xs font-bold text-red-700 hover:text-red-900 transition-colors whitespace-nowrap">
             Review now →
@@ -69,12 +65,11 @@ export default async function GCDashboardPage() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Contractors checked',  value: (reports ?? []).length, icon: <ShieldCheck size={16} /> },
-          { label: 'High risk found',       value: highRisk,               icon: <AlertTriangle size={16} /> },
-          { label: 'Orders placed',         value: (orders ?? []).length,  icon: <ShoppingCart size={16} /> },
-          { label: 'Avg cost per incident', value: '$47K',                 icon: <TrendingUp size={16} /> },
+          { label: 'Contractors checked', value: (reports ?? []).length, icon: <ShieldCheck size={16} /> },
+          { label: 'High risk found',     value: highRisk,               icon: <AlertTriangle size={16} /> },
+          { label: 'Orders placed',       value: (orders ?? []).length,  icon: <ShoppingCart size={16} /> },
         ].map(s => (
           <div key={s.label} className="bg-white border border-gray-200/80 rounded-2xl shadow-sm p-4">
             <div className="flex items-center gap-2 text-gray-500 text-xs mb-2">
