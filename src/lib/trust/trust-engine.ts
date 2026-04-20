@@ -125,6 +125,8 @@ fraud-class openers and do NOT emit class-level red flags.
 
 If ROOFER_CLASS triggered (and AMBIGUOUS_IDENTITY did not), at least one entry in red_flags MUST address class-level risk using specific language that distinguishes the class signal from the company judgment (e.g., "Multi-state storm-corridor roofer footprint is the storm-chaser class signature; specific operator credentials are strong but cross-state AG history must be verified per required sources").
 
+red_flags[] must only contain identity-gap signals or actual risk signals. NEVER include absence-of-fraud statements (e.g., "no fraud-class markers detected") as red_flags entries. Those belong in summary only.
+
 Return this exact JSON:
 {
   "contractor_name": "string",
