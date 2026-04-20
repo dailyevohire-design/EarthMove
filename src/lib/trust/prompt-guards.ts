@@ -1,3 +1,29 @@
+// Confusables — non-Latin code points that visually resemble Latin letters
+// and are commonly used to bypass keyword filters. Mapped back to Latin after
+// NFKC normalization so the injection regexes can still match.
+const CONFUSABLES: Record<string, string> = {
+  // Greek lowercase
+  'α': 'a', 'β': 'b', 'γ': 'g', 'ε': 'e', 'ζ': 'z', 'η': 'n',
+  'ι': 'i', 'κ': 'k', 'μ': 'u', 'ν': 'v', 'ο': 'o', 'ρ': 'p',
+  'σ': 'o', 'τ': 't', 'υ': 'u', 'χ': 'x',
+  // Greek uppercase
+  'Α': 'A', 'Β': 'B', 'Ε': 'E', 'Ζ': 'Z', 'Η': 'H', 'Ι': 'I',
+  'Κ': 'K', 'Μ': 'M', 'Ν': 'N', 'Ο': 'O', 'Ρ': 'P', 'Τ': 'T',
+  'Υ': 'Y', 'Χ': 'X',
+  // Cyrillic lowercase
+  'а': 'a', 'в': 'b', 'е': 'e', 'к': 'k', 'м': 'm', 'н': 'h',
+  'о': 'o', 'р': 'p', 'с': 'c', 'т': 't', 'у': 'y', 'х': 'x',
+  // Cyrillic uppercase
+  'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н': 'H',
+  'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T', 'У': 'Y', 'Х': 'X',
+}
+
+function normalizeConfusables(s: string): string {
+  let out = ''
+  for (const ch of s) out += CONFUSABLES[ch] ?? ch
+  return out
+}
+
 const INJECTION_PATTERNS = [
   /ignore\s+(all\s+)?(previous\s+)?instructions/gi,
   /you\s+are\s+now/gi,
@@ -8,16 +34,33 @@ const INJECTION_PATTERNS = [
   /forget\s+(everything|all|your)/gi,
   /disregard\s+(all|previous)/gi,
   /jailbreak/gi,
+  /new\s+directive/gi,
+  /override/gi,
+  /updated?\s+(rules|instructions|directives?)/gi,
+  /trust_score/gi,
+  /risk_level/gi,
+  /\[end\s+data\]/gi,
 ]
 
 export function sanitizeInput(raw: string, maxLen = 200): string {
-  return raw
+  const s = raw
     .trim()
     .slice(0, maxLen)
     .normalize('NFKC')
     .replace(/<[^>]*>/g, '')
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-    .replace(/\s{3,}/g, '  ')
+    // All C0/C1 controls incl \t \n \r → space (old version preserved these,
+    // which enabled the data-boundary breakout attack class).
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ')
+    // Zero-width, joiner, BOM — defeat keyword regexes by splitting words.
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '')
+    // Bidirectional formatting / isolate / override — hide content from humans
+    // and some toolchains.
+    .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
+    // Collapse whitespace runs to single space.
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  return normalizeConfusables(s)
 }
 
 export function detectInjection(input: string): boolean {
@@ -46,5 +89,5 @@ export function buildPrompt(name: string, city: string, state: string): string {
 Contractor: ${name}
 City: ${city}
 State: ${state}
-[END DATA — Run 7 searches per system prompt. Return only JSON.]`
+[END DATA — Run searches per system prompt. Return only JSON.]`
 }
