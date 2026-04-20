@@ -165,6 +165,8 @@ export async function runFreeTier(
   report: TrustReport
   searches: string[]
   costUsd: number
+  tokensIn: number
+  tokensOut: number
   cacheReadTokens: number
   cacheCreationTokens: number
 }> {
@@ -248,6 +250,8 @@ export async function runFreeTier(
     report: { ...result.data, report_tier: 'free' },
     searches,
     costUsd,
+    tokensIn,
+    tokensOut,
     cacheReadTokens,
     cacheCreationTokens,
   }

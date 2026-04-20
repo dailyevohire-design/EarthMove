@@ -116,6 +116,8 @@ export async function POST(req: NextRequest) {
   const searches: string[] = []
   let report: any
   let costUsd = 0
+  let tokensIn = 0
+  let tokensOut = 0
   let cacheReadTokens = 0
   let cacheCreationTokens = 0
 
@@ -123,6 +125,8 @@ export async function POST(req: NextRequest) {
     const result = await runFreeTier(name, sCity, state, q => searches.push(q), hints)
     report              = result.report
     costUsd             = result.costUsd
+    tokensIn            = result.tokensIn
+    tokensOut           = result.tokensOut
     cacheReadTokens     = result.cacheReadTokens
     cacheCreationTokens = result.cacheCreationTokens
   } catch (err: any) {
@@ -190,6 +194,15 @@ export async function POST(req: NextRequest) {
     cached: false,
     cache_read_tokens: cacheReadTokens,
     cache_creation_tokens: cacheCreationTokens,
+    meta: {
+      cost_usd:              Number(costUsd.toFixed(4)),
+      tokens_in:             tokensIn,
+      tokens_out:            tokensOut,
+      cache_read_tokens:     cacheReadTokens,
+      cache_creation_tokens: cacheCreationTokens,
+      searches_performed:    searches.length,
+      processing_ms:         processingMs,
+    },
   })
 }
 
