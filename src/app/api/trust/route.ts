@@ -53,19 +53,24 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Daily cost cap
-  if (user) {
-    const { allowed, used, cap } = await checkDailyCostCap(user.id, tier)
-    if (!allowed) {
-      return NextResponse.json(
-        { error: `Daily lookup limit reached ($${used.toFixed(2)} / $${cap}). Resets at midnight UTC.` },
-        { status: 429 }
-      )
-    }
-  }
-
   // Admin client for cache + writes (bypasses RLS)
   const admin = createAdminClient()
+
+  // Daily cost cap (anon shares a pooled NULL-user bucket; authed has a per-user cap)
+  const capUsd = user
+    ? Number(process.env.TRUST_USER_DAILY_CAP_USD ?? '25')
+    : Number(process.env.TRUST_ANON_DAILY_CAP_USD ?? '50')
+  const { data: capData } = await admin.rpc('check_trust_daily_cost_cap', {
+    p_user_id: user?.id ?? null,
+    p_cap_usd: capUsd,
+  })
+  const capRow = Array.isArray(capData) ? capData[0] : capData
+  if (capRow && !capRow.allowed) {
+    return NextResponse.json(
+      { error: `Daily lookup limit reached ($${Number(capRow.used_usd).toFixed(2)} / $${Number(capRow.cap_usd)}). Resets at midnight UTC.` },
+      { status: 429 }
+    )
+  }
 
   // Cache check (skip enterprise — always fresh)
   if (tier !== 'enterprise') {
@@ -123,15 +128,15 @@ export async function POST(req: NextRequest) {
       processing_ms: processingMs,
     }).select('id').maybeSingle()
 
+    await admin.from('trust_api_usage').insert({
+      user_id: user?.id ?? null,
+      report_id: saved?.id ?? null,
+      api_provider: 'anthropic',
+      searches_used: searches.length,
+      cost_usd: costUsd,
+      status: 'success',
+    })
     if (user) {
-      await admin.from('trust_api_usage').insert({
-        user_id: user.id,
-        report_id: saved?.id ?? null,
-        api_provider: 'anthropic',
-        searches_used: searches.length,
-        cost_usd: costUsd,
-        status: 'success',
-      })
       await recordCost(user.id, costUsd)
     }
 
