@@ -3,8 +3,8 @@ import { z } from 'zod'
 export const TrustReportSchema = z.object({
   contractor_name:  z.string().min(1).max(300),
   location:         z.string().min(1).max(200),
-  trust_score:      z.number().int().min(0).max(100),
-  risk_level:       z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
+  trust_score:      z.number().int().min(0).max(100).nullable(),
+  risk_level:       z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'AMBIGUOUS']).nullable(),
   confidence_level: z.enum(['HIGH', 'MEDIUM', 'LOW']),
   report_tier:      z.enum(['free', 'pro', 'enterprise']),
   business_registration: z.object({
@@ -49,6 +49,14 @@ export const TrustReportSchema = z.object({
   summary:               z.string().max(2000),
   data_sources_searched: z.array(z.string().max(500)).max(30),
   disclaimer:            z.string().max(1000),
+  ambiguous_candidates:  z.array(z.object({
+    name:                z.string().max(300),
+    entity_id:           z.string().max(100).nullable(),
+    address:             z.string().max(300).nullable(),
+    principal:           z.string().max(200).nullable(),
+    formation_year:      z.number().int().nullable(),
+    distinguishing_note: z.string().max(500),
+  })).max(10).nullable().default(null),
 }).strict()
 
 export type TrustReport = z.infer<typeof TrustReportSchema>
@@ -143,14 +151,42 @@ const OSHA_ALIASES: Record<string, 'CLEAN' | 'VIOLATIONS_FOUND' | 'UNKNOWN'> = {
 
 // ---------- Normalizer ----------
 
+function normalizeCandidates(arr: unknown): Array<{
+  name: string
+  entity_id: string | null
+  address: string | null
+  principal: string | null
+  formation_year: number | null
+  distinguishing_note: string
+}> | null {
+  if (arr == null) return null
+  if (!Array.isArray(arr)) return null
+  const out = []
+  for (const raw of arr.slice(0, 10)) {
+    if (!raw || typeof raw !== 'object') continue
+    const c = raw as Record<string, unknown>
+    const name = truncString(c.name, 300)
+    if (!name) continue
+    out.push({
+      name,
+      entity_id:           truncStringOrNull(c.entity_id, 100),
+      address:             truncStringOrNull(c.address, 300),
+      principal:           truncStringOrNull(c.principal, 200),
+      formation_year:      intOrNull(c.formation_year),
+      distinguishing_note: truncString(c.distinguishing_note, 500),
+    })
+  }
+  return out.length ? out : null
+}
+
 function normalizeReport(p: any): any {
   if (!p || typeof p !== 'object') p = {}
 
   return {
     contractor_name:  truncString(p.contractor_name, 300) || 'Unknown',
     location:         truncString(p.location, 200) || 'Unknown',
-    trust_score:      Math.round(clampNum(p.trust_score, 0, 100, 0)),
-    risk_level:       pickEnum(p.risk_level, ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const, 'MEDIUM'),
+    trust_score:      p.trust_score == null ? null : Math.round(clampNum(p.trust_score, 0, 100, 0)),
+    risk_level:       p.risk_level == null ? null : pickEnum(p.risk_level, ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'AMBIGUOUS'] as const, 'MEDIUM'),
     confidence_level: pickEnum(p.confidence_level, ['HIGH', 'MEDIUM', 'LOW'] as const, 'LOW'),
     report_tier:      pickEnum(p.report_tier, ['free', 'pro', 'enterprise'] as const, 'free'),
     business_registration: {
@@ -195,6 +231,7 @@ function normalizeReport(p: any): any {
     summary:               truncString(p.summary, 2000) || 'Verification data incomplete.',
     data_sources_searched: truncArrayString(p.data_sources_searched, 30, 500),
     disclaimer:            truncString(p.disclaimer, 1000) || 'For informational purposes only.',
+    ambiguous_candidates:  normalizeCandidates(p.ambiguous_candidates),
   }
 }
 

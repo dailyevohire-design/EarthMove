@@ -88,11 +88,15 @@ export async function POST(req: NextRequest) {
   const searches: string[] = []
   let report: any
   let costUsd = 0
+  let cacheReadTokens = 0
+  let cacheCreationTokens = 0
 
   try {
     const result = await runFreeTier(name, sCity, state, q => searches.push(q))
-    report = result.report
-    costUsd = result.costUsd
+    report              = result.report
+    costUsd             = result.costUsd
+    cacheReadTokens     = result.cacheReadTokens
+    cacheCreationTokens = result.cacheCreationTokens
   } catch (err: any) {
     console.error('[TrustAPI]', err.message)
     return NextResponse.json({ error: err.message ?? 'Verification failed' }, { status: 500 })
@@ -155,6 +159,8 @@ export async function POST(req: NextRequest) {
     searches_performed: searches.length,
     processing_ms: processingMs,
     cached: false,
+    cache_read_tokens: cacheReadTokens,
+    cache_creation_tokens: cacheCreationTokens,
   })
 }
 
