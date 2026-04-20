@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { recalculatePoolScores } from '@/lib/fulfillment-resolver'
-import type { ApiResult, MaterialUnit } from '@/types'
+import type { ApiResult } from '@/types'
 
 // ── Create batch ──────────────────────────────────────────────
 

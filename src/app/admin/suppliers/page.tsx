@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Plus, ArrowRight, Building2, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { Plus, ArrowRight, Building2 } from 'lucide-react'
 
 export const metadata = { title: 'Suppliers — Admin' }
 

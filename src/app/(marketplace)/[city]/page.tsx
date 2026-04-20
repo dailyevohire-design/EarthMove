@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { deriveDisplayPrice, formatCurrency, unitLabel } from '@/lib/pricing-engine'
+import { deriveDisplayPrice } from '@/lib/pricing-engine'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { MaterialCard } from '@/components/marketplace/material-card'

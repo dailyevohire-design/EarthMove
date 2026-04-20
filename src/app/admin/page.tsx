@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server'
-import { formatCurrency, unitLabel } from '@/lib/pricing-engine'
+import { formatCurrency } from '@/lib/pricing-engine'
 import { ORDER_STATUS_CONFIG } from '@/types'
 import Link from 'next/link'
 import {

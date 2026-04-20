@@ -6,7 +6,7 @@ import { resolveOffering } from '@/lib/fulfillment-resolver'
 import { MaterialOrderForm } from '@/components/marketplace/material-order-form'
 import { getMaterialImage } from '@/lib/material-images'
 import { productSchema, breadcrumbSchema, faqSchema, getMaterialFAQs, jsonLd } from '@/lib/structured-data'
-import { Package, ChevronRight, Truck, Shield } from 'lucide-react'
+import { ChevronRight, Truck, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 interface Props { params: Promise<{ slug: string }> }

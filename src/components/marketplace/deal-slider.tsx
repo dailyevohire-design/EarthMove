@@ -121,7 +121,7 @@ export function DealSlider({ deal, marketName }: DealSliderProps) {
   }, [isDragging, sliderProgress, getProgressFromEvent])
 
   // Touch handlers
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  const handleTouchStart = useCallback((_e: React.TouchEvent) => {
     if (isUnlocked) return
     setIsDragging(true)
   }, [isUnlocked])

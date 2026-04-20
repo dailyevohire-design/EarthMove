@@ -4,11 +4,11 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatCurrency, unitLabel } from '@/lib/pricing-engine'
-import type { SupplierOffering, Promotion, DeliveryType, DELIVERY_WINDOWS } from '@/types'
+import type { SupplierOffering, Promotion, DeliveryType } from '@/types'
 import { createOrderAndCheckout } from '@/app/(marketplace)/browse/[slug]/actions'
 import {
-  Minus, Plus, Truck, Package, CalendarDays,
-  Zap, Loader2, AlertCircle, Tag, ChevronDown
+  Minus, Plus, CalendarDays,
+  Zap, Loader2, AlertCircle, Tag,
 } from 'lucide-react'
 
 interface Props {
@@ -30,7 +30,7 @@ const WINDOWS = ['Morning (7am–12pm)', 'Afternoon (12pm–5pm)', 'Anytime'] as
 
 export function MaterialOrderForm({
   marketMaterialId, marketId, materialCatalogId,
-  materialName, offering, displayPrice, promo,
+  materialName: _materialName, offering, displayPrice, promo,
   marketState = 'TX', marketCenterLat, marketCenterLng,
   isAuthenticated = false,
 }: Props) {

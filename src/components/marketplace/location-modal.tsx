@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { MapPin, X, Search, CheckCircle2 } from 'lucide-react'
+import { MapPin, Search } from 'lucide-react'
 import { resolveMarketFromZip } from '@/lib/zip-market'
 
 interface City {
@@ -114,9 +114,7 @@ export function LocationModal({ cities }: { cities: City[] }) {
 
 /** Header location indicator */
 export function LocationIndicator() {
-  const router = useRouter()
   const [city, setCity] = useState<{ name: string; state: string } | null>(null)
-  const [showChange, setShowChange] = useState(false)
 
   useEffect(() => {
     const name = localStorage.getItem('earthmove_market_name')

@@ -80,15 +80,6 @@ export async function checkDailyCostCap(
 }
 
 /**
- * No-op. Cost is recorded by /api/trust/route.ts inserting directly into
- * trust_api_usage. Kept for API compatibility with callsites.
- * check_trust_daily_cost_cap RPC sums trust_api_usage.cost_usd for enforcement.
- */
-export async function recordCost(_userId: string, _costUsd: number): Promise<void> {
-  return
-}
-
-/**
  * Check rate limit for a given identifier using a shared 'gc:trust' bucket.
  * Returns Upstash-compatible shape.
  */

@@ -9,7 +9,7 @@ interface Rule { id: string; rule_type: string; config: any; market?: { name: st
 
 export function PricingRulesEditor({
   rules,
-  markets,
+  markets: _markets,
 }: {
   rules: Rule[]
   markets: Array<{ id: string; name: string }>

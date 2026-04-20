@@ -4,9 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { getArticleImage } from '@/lib/material-images'
 import {
-  ArrowRight, Calculator, Search, Leaf, HardHat, Home,
-  Grid3X3, Clock, TrendingUp, TrendingDown, Minus, Zap,
-  BarChart3, MapPin, AlertTriangle, ChevronRight
+  ArrowRight, Calculator, Leaf, HardHat, Home,
+  Grid3X3, Clock, TrendingUp, Zap,
 } from 'lucide-react'
 
 /* ─── ARTICLES DATA ─── */
@@ -124,8 +123,6 @@ export function LearnHub() {
   const [hoveredProject, setHoveredProject] = useState<string | null>(null)
 
   const weeklyLearners = useCountUp(847, 1500)
-  const articlesCount = useCountUp(8, 1000)
-  const citiesCount = useCountUp(10, 1200)
 
   useEffect(() => {
     const t = setInterval(() => setTipIdx(i => (i + 1) % TIPS.length), 5000)

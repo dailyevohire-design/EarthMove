@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { SupplierEditor } from '@/components/admin/supplier-editor'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/pricing-engine'
-import { ArrowRight, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 interface Props { params: Promise<{ id: string }> }
 

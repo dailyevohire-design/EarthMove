@@ -3,9 +3,8 @@ import { getCurrentMarket } from '@/lib/market'
 import { deriveDisplayPrice } from '@/lib/pricing-engine'
 import type { MarketMaterialCard } from '@/types'
 import { MaterialCard, DealCard } from '@/components/marketplace/material-card'
-import { CategoryGrid } from '@/components/marketplace/category-grid'
 import Link from 'next/link'
-import { Zap, SlidersHorizontal } from 'lucide-react'
+import { Zap } from 'lucide-react'
 import { collectionPageSchema, itemListSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 
 interface BrowseProps {

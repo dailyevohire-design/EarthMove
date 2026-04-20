@@ -24,10 +24,9 @@ export default async function ImportBatchPage({ params }: Props) {
     .order('created_at')
 
   // Fetch lookup data for review selectors
-  const [{ data: suppliers }, { data: catalog }, { data: markets }] = await Promise.all([
+  const [{ data: suppliers }, { data: catalog }] = await Promise.all([
     supabase.from('suppliers').select('id, name').eq('status', 'active').order('name'),
     supabase.from('material_catalog').select('id, name, slug').eq('is_active', true).order('name'),
-    supabase.from('markets').select('id, name').eq('is_active', true),
   ])
 
   const pending   = (records ?? []).filter((r: any) => r.status === 'pending_review').length

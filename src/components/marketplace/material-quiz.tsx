@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ArrowLeft, CheckCircle2, Truck, Home, Droplets, HardHat, Shovel } from 'lucide-react'
+import { ArrowRight, ArrowLeft, CheckCircle2 } from 'lucide-react'
 
 type Step = 0 | 1 | 2 | 3 | 4
 type Answers = {

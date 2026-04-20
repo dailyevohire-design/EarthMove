@@ -1,9 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/server'
 import { OfferingEditor } from '@/components/admin/offering-editor'
-import { formatCurrency } from '@/lib/pricing-engine'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
 
 interface Props { params: Promise<{ id: string; yardId: string }> }
 

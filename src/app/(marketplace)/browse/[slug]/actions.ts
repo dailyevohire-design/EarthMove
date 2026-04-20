@@ -5,7 +5,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { resolveOffering, FulfillmentError } from '@/lib/fulfillment-resolver'
 import { buildPriceQuote, PricingError } from '@/lib/pricing-engine'
 import { createCheckoutSession } from '@/lib/stripe'
-import type { ApiResult, OrderCreateInput } from '@/types'
+import type { ApiResult } from '@/types'
 
 const Schema = z.object({
   market_material_id:       z.string().uuid(),

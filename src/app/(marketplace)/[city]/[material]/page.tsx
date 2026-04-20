@@ -4,11 +4,10 @@ import { deriveDisplayPrice, formatCurrency, unitLabel } from '@/lib/pricing-eng
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { QuantityCalculator } from '@/components/marketplace/quantity-calculator'
-import Image from 'next/image'
 import Link from 'next/link'
 import { getMaterialImage } from '@/lib/material-images'
 import { productSchema, breadcrumbSchema, faqSchema, getMaterialFAQs, jsonLd } from '@/lib/structured-data'
-import { Truck, ShieldCheck, Clock, MapPin, Star, CheckCircle2 } from 'lucide-react'
+import { MapPin, CheckCircle2 } from 'lucide-react'
 
 interface Props {
   params: Promise<{ city: string; material: string }>

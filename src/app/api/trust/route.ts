@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { validateInput } from '@/lib/trust/prompt-guards'
-import { getRateLimiter, checkDailyCostCap, recordCost } from '@/lib/trust/rate-limiter'
+import { getRateLimiter } from '@/lib/trust/rate-limiter'
 import { runFreeTier } from '@/lib/trust/trust-engine'
 
 export const runtime = 'nodejs'
@@ -136,9 +136,6 @@ export async function POST(req: NextRequest) {
       cost_usd: costUsd,
       status: 'success',
     })
-    if (user) {
-      await recordCost(user.id, costUsd)
-    }
 
     if (tier !== 'enterprise') {
       await admin.rpc('set_cached_trust_report', {
