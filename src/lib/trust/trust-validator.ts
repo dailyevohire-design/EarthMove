@@ -53,6 +53,153 @@ export const TrustReportSchema = z.object({
 
 export type TrustReport = z.infer<typeof TrustReportSchema>
 
+// ---------- Normalizer helpers ----------
+
+function truncString(s: unknown, max: number): string {
+  if (typeof s !== 'string') return ''
+  return s.length > max ? s.slice(0, max - 1) + '…' : s
+}
+
+function truncStringOrNull(s: unknown, max: number): string | null {
+  if (s == null || typeof s !== 'string' || s.length === 0) return null
+  return s.length > max ? s.slice(0, max - 1) + '…' : s
+}
+
+function intOrNull(n: unknown): number | null {
+  if (n == null) return null
+  const v = Number(n)
+  return Number.isFinite(v) && v >= 0 ? Math.floor(v) : null
+}
+
+function clampNum(n: unknown, min: number, max: number, fallback: number): number {
+  const v = Number(n)
+  if (!Number.isFinite(v)) return fallback
+  return Math.max(min, Math.min(max, v))
+}
+
+function truncArrayString(arr: unknown, maxLen: number, maxStr: number): string[] {
+  if (!Array.isArray(arr)) return []
+  const out: string[] = []
+  for (const item of arr) {
+    if (typeof item === 'string' && item.length > 0) {
+      out.push(item.length > maxStr ? item.slice(0, maxStr - 1) + '…' : item)
+      if (out.length >= maxLen) break
+    }
+  }
+  return out
+}
+
+function pickEnum<T extends string>(
+  v: unknown,
+  options: readonly T[],
+  fallback: T,
+  aliases: Record<string, T> = {},
+): T {
+  if (typeof v !== 'string') return fallback
+  if (options.includes(v as T)) return v as T
+  const up = v.toUpperCase().replace(/[-\s]+/g, '_')
+  if (options.includes(up as T)) return up as T
+  return aliases[v] ?? aliases[up] ?? fallback
+}
+
+function pickEnumOrNull<T extends string>(
+  v: unknown,
+  options: readonly T[],
+  aliases: Record<string, T> = {},
+): T | null {
+  if (v == null || typeof v !== 'string') return null
+  if (options.includes(v as T)) return v as T
+  const up = v.toUpperCase().replace(/[-\s]+/g, '_')
+  if (options.includes(up as T)) return up as T
+  return aliases[v] ?? aliases[up] ?? null
+}
+
+// ---------- Alias tables for enum values Claude emits in non-canonical form ----------
+
+const BBB_ALIASES: Record<string, 'A+' | 'A' | 'B' | 'C' | 'D' | 'F' | 'NR'> = {
+  'A_PLUS':    'A+',
+  'NOT_RATED': 'NR',
+  'N/A':       'NR',
+  'NONE':      'NR',
+  'UNRATED':   'NR',
+}
+
+const LEGAL_ALIASES: Record<string, 'CLEAN' | 'ISSUES_FOUND' | 'UNKNOWN'> = {
+  'NO_ISSUES':          'CLEAN',
+  'NONE_FOUND':         'CLEAN',
+  'NO_RECORDS':         'CLEAN',
+  'ISSUES':             'ISSUES_FOUND',
+  'MINOR_ISSUES_NOTED': 'ISSUES_FOUND',
+  'MAJOR_ISSUES':       'ISSUES_FOUND',
+  'FOUND':              'ISSUES_FOUND',
+  'LITIGATION':         'ISSUES_FOUND',
+}
+
+const OSHA_ALIASES: Record<string, 'CLEAN' | 'VIOLATIONS_FOUND' | 'UNKNOWN'> = {
+  'NO_VIOLATIONS': 'CLEAN',
+  'VIOLATIONS':    'VIOLATIONS_FOUND',
+  'FOUND':         'VIOLATIONS_FOUND',
+}
+
+// ---------- Normalizer ----------
+
+function normalizeReport(p: any): any {
+  if (!p || typeof p !== 'object') p = {}
+
+  return {
+    contractor_name:  truncString(p.contractor_name, 300) || 'Unknown',
+    location:         truncString(p.location, 200) || 'Unknown',
+    trust_score:      Math.round(clampNum(p.trust_score, 0, 100, 0)),
+    risk_level:       pickEnum(p.risk_level, ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const, 'MEDIUM'),
+    confidence_level: pickEnum(p.confidence_level, ['HIGH', 'MEDIUM', 'LOW'] as const, 'LOW'),
+    report_tier:      pickEnum(p.report_tier, ['free', 'pro', 'enterprise'] as const, 'free'),
+    business_registration: {
+      status:           pickEnum(p.business_registration?.status, ['VERIFIED', 'NOT_FOUND', 'INACTIVE', 'UNKNOWN'] as const, 'UNKNOWN'),
+      entity_type:      truncStringOrNull(p.business_registration?.entity_type, 100),
+      formation_date:   truncStringOrNull(p.business_registration?.formation_date, 50),
+      registered_agent: truncStringOrNull(p.business_registration?.registered_agent, 200),
+      source:           truncString(p.business_registration?.source, 500),
+    },
+    licensing: {
+      status:         pickEnum(p.licensing?.status, ['VERIFIED', 'NOT_FOUND', 'EXPIRED', 'UNKNOWN'] as const, 'UNKNOWN'),
+      license_number: truncStringOrNull(p.licensing?.license_number, 100),
+      expiration:     truncStringOrNull(p.licensing?.expiration, 50),
+      source:         truncString(p.licensing?.source, 500),
+    },
+    bbb_profile: {
+      rating:            pickEnumOrNull(p.bbb_profile?.rating, ['A+', 'A', 'B', 'C', 'D', 'F', 'NR'] as const, BBB_ALIASES),
+      accredited:        typeof p.bbb_profile?.accredited === 'boolean' ? p.bbb_profile.accredited : null,
+      complaint_count:   intOrNull(p.bbb_profile?.complaint_count),
+      years_in_business: intOrNull(p.bbb_profile?.years_in_business),
+      source:            truncString(p.bbb_profile?.source, 500),
+    },
+    reviews: {
+      average_rating: p.reviews?.average_rating == null ? null : clampNum(p.reviews.average_rating, 0, 5, 0),
+      total_reviews:  intOrNull(p.reviews?.total_reviews),
+      sentiment:      pickEnum(p.reviews?.sentiment, ['POSITIVE', 'MIXED', 'NEGATIVE', 'INSUFFICIENT_DATA'] as const, 'INSUFFICIENT_DATA'),
+      sources:        truncArrayString(p.reviews?.sources, 10, 300),
+    },
+    legal_records: {
+      status:   pickEnum(p.legal_records?.status, ['CLEAN', 'ISSUES_FOUND', 'UNKNOWN'] as const, 'UNKNOWN', LEGAL_ALIASES),
+      findings: truncArrayString(p.legal_records?.findings, 20, 500),
+      sources:  truncArrayString(p.legal_records?.sources, 10, 300),
+    },
+    osha_violations: {
+      status:          pickEnum(p.osha_violations?.status, ['CLEAN', 'VIOLATIONS_FOUND', 'UNKNOWN'] as const, 'UNKNOWN', OSHA_ALIASES),
+      violation_count: intOrNull(p.osha_violations?.violation_count),
+      serious_count:   intOrNull(p.osha_violations?.serious_count),
+      findings:        truncArrayString(p.osha_violations?.findings, 20, 500),
+    },
+    red_flags:             truncArrayString(p.red_flags, 20, 500),
+    positive_indicators:   truncArrayString(p.positive_indicators, 20, 500),
+    summary:               truncString(p.summary, 2000) || 'Verification data incomplete.',
+    data_sources_searched: truncArrayString(p.data_sources_searched, 30, 500),
+    disclaimer:            truncString(p.disclaimer, 1000) || 'For informational purposes only.',
+  }
+}
+
+// ---------- Entry point ----------
+
 export function parseReport(raw: string): { ok: true; data: TrustReport } | { ok: false; error: string } {
   try {
     let json = raw.trim()
@@ -61,39 +208,11 @@ export function parseReport(raw: string): { ok: true; data: TrustReport } | { ok
     if (si === -1 || ei === -1) throw new Error('No JSON found')
     json = json.slice(si, ei + 1)
     const parsed = JSON.parse(json)
-    const result = TrustReportSchema.safeParse(parsed)
-    if (!result.success) {
-      // Salvage with defaults
-      const s = salvage(parsed)
-      const r2 = TrustReportSchema.safeParse(s)
-      if (r2.success) return { ok: true, data: r2.data }
-      return { ok: false, error: result.error.message }
-    }
+    const normalized = normalizeReport(parsed)
+    const result = TrustReportSchema.safeParse(normalized)
+    if (!result.success) return { ok: false, error: result.error.message }
     return { ok: true, data: result.data }
-  } catch (e: any) {
-    return { ok: false, error: e.message }
-  }
-}
-
-function salvage(p: any): any {
-  const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n))
-  return {
-    contractor_name: p.contractor_name ?? 'Unknown',
-    location: p.location ?? 'Unknown',
-    trust_score: clamp(p.trust_score ?? 0, 0, 100),
-    risk_level: ['LOW','MEDIUM','HIGH','CRITICAL'].includes(p.risk_level) ? p.risk_level : 'UNKNOWN',
-    confidence_level: ['HIGH','MEDIUM','LOW'].includes(p.confidence_level) ? p.confidence_level : 'LOW',
-    report_tier: p.report_tier ?? 'free',
-    business_registration: p.business_registration ?? { status:'UNKNOWN', entity_type:null, formation_date:null, registered_agent:null, source:'' },
-    licensing: p.licensing ?? { status:'UNKNOWN', license_number:null, expiration:null, source:'' },
-    bbb_profile: p.bbb_profile ?? { rating:null, accredited:null, complaint_count:null, years_in_business:null, source:'' },
-    reviews: p.reviews ?? { average_rating:null, total_reviews:null, sentiment:'INSUFFICIENT_DATA', sources:[] },
-    legal_records: p.legal_records ?? { status:'UNKNOWN', findings:[], sources:[] },
-    osha_violations: p.osha_violations ?? { status:'UNKNOWN', violation_count:null, serious_count:null, findings:[] },
-    red_flags: p.red_flags ?? [],
-    positive_indicators: p.positive_indicators ?? [],
-    summary: p.summary ?? 'Verification data incomplete.',
-    data_sources_searched: p.data_sources_searched ?? [],
-    disclaimer: p.disclaimer ?? 'For informational purposes only.',
+  } catch (e: unknown) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) }
   }
 }
