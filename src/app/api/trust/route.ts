@@ -39,7 +39,10 @@ export async function POST(req: NextRequest) {
   }
 
   // Rate limiting
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anon'
+  const ip =
+    req.headers.get('x-real-ip') ??
+    req.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ??
+    'anon'
   const rlKey = user?.id ?? ip
   const limiter = getRateLimiter(tier)
   const { success: rlOk } = await limiter.limit(rlKey)
