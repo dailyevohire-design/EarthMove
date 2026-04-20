@@ -11,9 +11,32 @@ export const maxDuration = 180
 export async function POST(req: NextRequest) {
   const start = Date.now()
 
+  // CVE-2025-29927 defense-in-depth: reject any request carrying the
+  // middleware-subrequest header. Next 16 blocks this at the framework level;
+  // this is layer 2.
+  if (req.headers.get('x-middleware-subrequest')) {
+    return NextResponse.json({ error: 'malformed_request' }, { status: 400 })
+  }
+
   // Re-verify auth inside handler (CVE-2025-29927 hardening — never trust middleware alone)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Server-side activeness check. Anonymous free-tier callers are preserved by
+  // the !user skip — no profile lookup happens for them.
+  if (user) {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, is_active')
+      .eq('id', user.id)
+      .single()
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'profile_not_found' }, { status: 403 })
+    }
+    if (!profile.is_active) {
+      return NextResponse.json({ error: 'account_inactive' }, { status: 403 })
+    }
+  }
 
   // Parse body
   let body: any
