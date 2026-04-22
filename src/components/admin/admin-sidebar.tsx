@@ -5,20 +5,21 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, ShoppingCart, Layers, Package,
   Tag, Truck, Upload, Settings, LogOut,
-  ChevronRight, Building2
+  ChevronRight, Building2, Rocket
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { LogoMark } from '@/components/layout/logo'
 
 const NAV = [
-  { href: '/admin',              label: 'Dashboard',    icon: LayoutDashboard },
-  { href: '/admin/orders',       label: 'Orders',       icon: ShoppingCart },
-  { href: '/admin/marketplace',  label: 'Marketplace',  icon: Layers },
-  { href: '/admin/suppliers',    label: 'Suppliers',    icon: Building2 },
-  { href: '/admin/offerings',    label: 'Offerings',    icon: Package },
-  { href: '/admin/promotions',   label: 'Promotions',   icon: Tag },
-  { href: '/admin/import',       label: 'Import',       icon: Upload },
-  { href: '/admin/pricing',      label: 'Pricing',      icon: Settings },
+  { href: '/admin',                label: 'Dashboard',      icon: LayoutDashboard },
+  { href: '/admin/command-center', label: 'Command Center', icon: Rocket },
+  { href: '/admin/orders',         label: 'Orders',         icon: ShoppingCart },
+  { href: '/admin/marketplace',    label: 'Marketplace',    icon: Layers },
+  { href: '/admin/suppliers',      label: 'Suppliers',      icon: Building2 },
+  { href: '/admin/offerings',      label: 'Offerings',      icon: Package },
+  { href: '/admin/promotions',     label: 'Promotions',     icon: Tag },
+  { href: '/admin/import',         label: 'Import',         icon: Upload },
+  { href: '/admin/pricing',        label: 'Pricing',        icon: Settings },
 ]
 
 export function AdminSidebar() {
