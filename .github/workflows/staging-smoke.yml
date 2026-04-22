@@ -1,0 +1,45 @@
+name: Staging Smoke
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+concurrency:
+  group: staging-smoke-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  wait-for-vercel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      url: ${{ steps.wait.outputs.url }}
+    steps:
+      - id: wait
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max_timeout: 600
+
+  smoke:
+    needs: wait-for-vercel
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE_URL: ${{ needs.wait-for-vercel.outputs.url }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_BRANCH_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_BRANCH_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_BRANCH_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_BRANCH_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Make smoke-test executable
+        run: chmod +x scripts/smoke-test.sh
+      - name: Run smoke-test
+        run: ./scripts/smoke-test.sh
