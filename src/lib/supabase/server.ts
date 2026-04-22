@@ -31,7 +31,6 @@ export async function createClient() {
  * SERVER-SIDE ONLY. Never expose service role key to client.
  */
 export function createAdminClient() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
