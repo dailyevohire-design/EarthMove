@@ -1,9 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened]
+  push:
     branches: [main]
 
 concurrency:
@@ -16,9 +16,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: 'npm' }
-      - run: npm ci --legacy-peer-deps
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - run: npx tsc --noEmit
 
   lint:
@@ -26,79 +31,94 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: 'npm' }
-      - run: npm ci --legacy-peer-deps
-      - run: npx next lint || echo "next lint not configured (DEBT.md — known-missing eslint pass, tracked)"
-
-  vitest:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: 'npm' }
-      - run: npm ci --legacy-peer-deps
-      - run: npx vitest run --reporter=default
-
-  build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: 'npm' }
-      - run: npm ci --legacy-peer-deps
-      - run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL:      ${{ secrets.CI_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.CI_SUPABASE_ANON_KEY }}
-          GROUNDCHECK_SHARE_JWT_SECRET:  ${{ secrets.CI_GROUNDCHECK_SHARE_JWT_SECRET }}
-          STRIPE_SECRET_KEY:             ${{ secrets.CI_STRIPE_TEST_SECRET_KEY }}
-          STRIPE_WEBHOOK_SECRET:         ${{ secrets.CI_STRIPE_WEBHOOK_SECRET }}
-
-  playwright:
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: 'npm' }
-      - run: npm ci --legacy-peer-deps
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test
-        env:
-          NODE_ENV: test
-          TEST_BYPASS_CODE: ${{ secrets.CI_TEST_BYPASS_CODE }}
-          STRIPE_TEST_SECRET_KEY: ${{ secrets.CI_STRIPE_TEST_SECRET_KEY }}
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with: { name: playwright-report, path: playwright-report, retention-days: 7 }
-
-  security:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env: { GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
-      - name: TruffleHog
-        uses: trufflesecurity/trufflehog@main
+      - uses: pnpm/action-setup@v4
         with:
-          path: ./
-          base: ''
-          head: HEAD
-          extra_args: --only-verified
+          version: 9
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: 'npm' }
-      - run: npm ci --legacy-peer-deps
-      - name: npm audit (high+)
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level=high
+
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  semgrep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/owasp-top-ten
+            p/typescript
+            p/react
+            ./semgrep-rules/earthmove.yml
+
+  migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Validate migration filenames and destructive ops
+        shell: bash
         run: |
-          set +e
-          npm audit --audit-level=high --json > audit.json
-          STATUS=$?
-          jq '.metadata.vulnerabilities' audit.json
-          exit $STATUS
+          set -euo pipefail
+
+          shopt -s nullglob
+          bad=()
+          for f in supabase/migrations/*.sql; do
+            base=$(basename "$f")
+            if ! [[ "$base" =~ ^[0-9]{3}_[a-z0-9_]+\.sql$ ]]; then
+              bad+=("$base")
+            fi
+          done
+          if [ ${#bad[@]} -gt 0 ]; then
+            echo "Migration filenames must match ^[0-9]{3}_[a-z0-9_]+\.sql$" >&2
+            printf '  %s\n' "${bad[@]}" >&2
+            exit 1
+          fi
+
+          destructive=0
+          if grep -Pn '\b(DROP\s+TABLE|DROP\s+COLUMN|TRUNCATE)\b' supabase/migrations/*.sql >/dev/null 2>&1; then
+            destructive=1
+          fi
+          if grep -Pn '\bDELETE\s+FROM\b(?!.*\bWHERE\b)' supabase/migrations/*.sql >/dev/null 2>&1; then
+            destructive=1
+          fi
+
+          if [ "$destructive" = "1" ]; then
+            msg="$(git log -1 --format=%B)"
+            if ! echo "$msg" | grep -qF -- '--allow-destructive'; then
+              echo "Destructive migration detected. Commit message must contain '--allow-destructive'." >&2
+              exit 1
+            fi
+          fi

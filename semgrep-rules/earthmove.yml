@@ -1,0 +1,44 @@
+rules:
+  - id: no-rls-wildcard-allow
+    languages: [generic]
+    paths:
+      include:
+        - "supabase/migrations/*.sql"
+    pattern: FOR ALL USING (true)
+    message: "RLS policy allows unconditional access. Scope to auth.uid() or role."
+    severity: ERROR
+
+  - id: no-service-role-outside-server
+    languages: [typescript, tsx]
+    paths:
+      exclude:
+        - "src/app/api/**"
+        - "src/lib/supabase/server.ts"
+        - "src/lib/supabase/admin.ts"
+        - "scripts/**"
+    pattern: process.env.SUPABASE_SERVICE_ROLE_KEY
+    message: "service_role key must never leave server routes."
+    severity: ERROR
+
+  - id: no-free-form-sms-send
+    languages: [typescript]
+    patterns:
+      - pattern: $CLIENT.messages.create({ body: $B, ... })
+      - pattern-not: $CLIENT.messages.create({ body: render(...), ... })
+    message: "Outbound SMS must use template render<K>() for TCPA compliance."
+    severity: ERROR
+
+  - id: no-next-headers-import
+    languages: [typescript, tsx]
+    pattern: import { ... } from "next/headers"
+    message: "House convention: use req.cookies.get / req.headers.get."
+    severity: WARNING
+
+  - id: no-unscoped-exists-same-table-rls
+    languages: [generic]
+    paths:
+      include:
+        - "supabase/migrations/*.sql"
+    pattern: EXISTS (SELECT 1 FROM $T WHERE ...)
+    message: "Unaliased EXISTS on same table in RLS causes recursion. Alias the inner table."
+    severity: WARNING
