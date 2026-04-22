@@ -11,7 +11,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:security": "vitest run tests/security",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "ci:audit": "pnpm audit --audit-level=high",
+    "ci:secrets": "gitleaks detect --source . --config .gitleaks.toml --verbose",
+    "ci:semgrep": "semgrep --config=semgrep-rules/earthmove.yml --config=p/owasp-top-ten ."
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

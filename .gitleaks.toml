@@ -1,0 +1,32 @@
+title = "earthmove gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "supabase-service-role"
+description = "Supabase service_role key"
+regex = '''sb-[a-z0-9]+-service-role'''
+tags = ["key", "supabase"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API key"
+regex = '''sk-ant-[a-zA-Z0-9_-]{20,}'''
+tags = ["key", "anthropic"]
+
+[[rules]]
+id = "supabase-jwt"
+description = "Supabase-style JWT"
+regex = '''eyJhbGciOiJIUzI1NiI[a-zA-Z0-9._-]{50,}'''
+tags = ["key", "supabase", "jwt"]
+
+[allowlist]
+description = "Paths excluded from secret scanning"
+paths = [
+  '''tests/''',
+  '''.*\.test\.ts$''',
+  '''.*\.test\.tsx$''',
+  '''\.env\.example$''',
+  '''docs/''',
+]
