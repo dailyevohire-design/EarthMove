@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHash } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { validateInput } from '@/lib/trust/prompt-guards'
 import { getRateLimiter } from '@/lib/trust/rate-limiter'
@@ -72,13 +72,20 @@ export async function POST(req: NextRequest) {
   }
   const { name, city: sCity, state, hints } = validation.clean!
 
-  // Tier validation
-  if (!['free', 'pro', 'enterprise'].includes(tier)) {
+  // Tier validation. {standard, plus, deep_dive} are the credit-backed paid
+  // tiers introduced alongside GROUNDCHECK_CHECKOUT_ENABLED — they redeem a
+  // row from trust_credits_ledger and enqueue a background trust_job instead
+  // of running the synchronous free-tier Claude path.
+  const REDEMPTION_TIERS = new Set(['standard', 'plus', 'deep_dive'])
+  if (
+    !['free', 'pro', 'enterprise'].includes(tier) &&
+    !REDEMPTION_TIERS.has(tier)
+  ) {
     return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
   }
 
   // Paid tiers require auth
-  if ((tier === 'pro' || tier === 'enterprise') && !user) {
+  if ((tier === 'pro' || tier === 'enterprise' || REDEMPTION_TIERS.has(tier)) && !user) {
     return NextResponse.json({ error: 'Sign in required for paid tiers' }, { status: 401 })
   }
 
@@ -167,6 +174,67 @@ export async function POST(req: NextRequest) {
       { error: `Daily lookup limit reached ($${Number(capRow.used_usd).toFixed(2)} / $${Number(capRow.cap_usd)}). Resets at midnight UTC.` },
       { status: 429 }
     )
+  }
+
+  // Credit-redemption branch for {standard, plus, deep_dive}. user is non-null
+  // here (paid-tiers-require-auth guard above). Redeem atomically from the
+  // ledger; on INSUFFICIENT_CREDITS return 402 so the client can route to
+  // /api/trust/checkout. Otherwise enqueue a background trust_job and return
+  // its id for the client to poll via /api/trust/job/[id].
+  if (REDEMPTION_TIERS.has(tier)) {
+    const idempotency_key: string =
+      (typeof body.idempotency_key === 'string' && body.idempotency_key.length > 0)
+        ? body.idempotency_key
+        : 'req:' + randomUUID()
+
+    const { data: redeemData, error: redeemErr } = await admin.rpc('redeem_credit_atomic', {
+      p_user_id:         user!.id,
+      p_tier:            tier,
+      p_contractor_name: name,
+      p_state_code:      state,
+      p_idempotency_key: idempotency_key,
+    })
+
+    if (redeemErr) {
+      const msg  = redeemErr.message ?? ''
+      const code = (redeemErr as any).code
+      if (code === '23514' || /INSUFFICIENT_CREDITS/i.test(msg)) {
+        return NextResponse.json(
+          { error: 'insufficient_credits', tier, checkout_url: '/api/trust/checkout' },
+          { status: 402 }
+        )
+      }
+      console.error('[TrustAPI] redeem_credit_atomic failed', { tier, err: msg, code })
+      return NextResponse.json({ error: 'redemption_failed' }, { status: 500 })
+    }
+
+    const redeemRow = Array.isArray(redeemData) ? redeemData[0] : redeemData
+    if (!redeemRow?.ledger_id) {
+      console.error('[TrustAPI] redeem_credit_atomic returned no ledger_id', { redeemRow })
+      return NextResponse.json({ error: 'redemption_failed' }, { status: 500 })
+    }
+
+    const { data: jobData, error: jobErr } = await admin.rpc('enqueue_trust_job', {
+      p_contractor_name: name,
+      p_state_code:      state,
+      p_city:            sCity || null,
+      p_tier:            tier,
+      p_user_id:         user!.id,
+      p_credit_id:       redeemRow.ledger_id,
+      p_idempotency_key: 'job:' + idempotency_key,
+    })
+
+    if (jobErr) {
+      console.error('[TrustAPI] enqueue_trust_job failed', { err: jobErr.message })
+      return NextResponse.json({ error: 'enqueue_failed' }, { status: 500 })
+    }
+
+    const jobRow = Array.isArray(jobData) ? jobData[0] : jobData
+    return NextResponse.json({
+      job_id:            jobRow?.id ?? null,
+      already_redeemed:  Boolean(redeemRow.already_redeemed),
+      new_balance:       Number(redeemRow.new_balance ?? 0),
+    })
   }
 
   // Hint fingerprint — included in cache key so disambiguation retries

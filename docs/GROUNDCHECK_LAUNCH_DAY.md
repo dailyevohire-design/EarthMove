@@ -391,7 +391,7 @@ Notes:
 
 Do not flip `GROUNDCHECK_CHECKOUT_ENABLED=true` until every box is checked:
 
-- [ ] Redemption API deployed: `/api/trust/redeem` calls `redeem_credit_atomic(...)` and returns report id.
+- [x] Redemption commit landed (see §8) — `/api/trust` paid-tier branch + `/api/trust/checkout/success` call `redeem_credit_atomic(...)` and enqueue `trust_jobs` rows.
 - [ ] `/account/gc` credit-balance page deployed and reads `user_credit_balance(user_id, tier)`.
 - [ ] Stripe dashboard live-mode products created for all four tiers (standard / plus / deep_dive / forensic).
 - [ ] `STRIPE_PRICE_GC_STANDARD`, `_PLUS`, `_DEEP_DIVE`, `_FORENSIC` env vars set in Vercel production with the live price IDs.
@@ -412,3 +412,39 @@ vercel --prod
 ```
 
 Result: paid checkout returns 410 again, pricing UI returns to placeholder, free lookup stays live. Purchases already in flight settle via Stripe webhook → `grant_credit_from_stripe_event` → credits wait in `trust_credits_ledger` until redemption is reachable again.
+
+## §8. Redemption Flow
+
+End-to-end sequence for a credit-backed GroundCheck report:
+
+1. **User clicks a paid tier** in the dashboard (driver `/dashboard/driver/trust` or GC `/dashboard/gc/contractors`).
+2. **Client POSTs** `/api/trust/checkout` with `{ tier, contractor_name, state_code, return_path }`.
+3. **Checkout route** validates the tier/name/state, runs `assertEntityOnly` (422 on natural-person queries — no Stripe session opened for blocked queries), resolves a per-tier price ID from `STRIPE_PRICE_TRUST_*` env vars, and calls `stripe.checkout.sessions.create(...)` with `client_reference_id=user.id`, metadata `{ tier, contractor_name, state_code, user_id, product_family: 'ground_check' }`, and a per-minute idempotency key.
+4. **Stripe Checkout** collects payment.
+5. **Stripe webhook** (Supabase Edge Function `stripe-webhook-groundcheck`) calls `grant_credit_from_stripe_event` which inserts into `trust_credits_ledger` + `trust_stripe_events` atomically. (Unchanged by this commit.)
+6. **Stripe redirects** the browser to `/api/trust/checkout/success?session_id=…`.
+7. **Success route** retrieves the session from Stripe, verifies `status=complete`, `payment_status=paid`, and `client_reference_id=auth.uid()`, then calls `redeem_credit_atomic(..., p_idempotency_key='checkout:<session_id>')`.
+8. On `INSUFFICIENT_CREDITS` (SQLSTATE `23514`) the handler assumes the webhook hasn't landed yet and 303-redirects to `/dashboard/<role>/trust/processing?session_id=<id>`. That page polls `/api/trust/checkout/success?session_id=…&format=json` every 3 s, up to 5 min.
+9. On successful redemption, the handler calls `enqueue_trust_job(..., p_idempotency_key='job:checkout:<session_id>')` and 303-redirects to `/dashboard/<role>/{contractors|trust}?job_id=<id>&auto=1`.
+10. **Dashboard clients** pick up `job_id` + `auto=1`, polling `/api/trust/job/[id]` every 2 s until `status ∈ {completed, failed}`, then render the final report.
+
+### §8.1 Stripe Price ID Env Vars
+
+Three per-tier env vars plus one allowlist:
+
+- `STRIPE_PRICE_TRUST_STANDARD` — Stripe price ID for the $0.19 Standard report.
+- `STRIPE_PRICE_TRUST_PLUS` — Stripe price ID for the Plus report (final price TBD).
+- `STRIPE_PRICE_TRUST_DEEP_DIVE` — Stripe price ID for the $2.00 Deep Dive report.
+- `STRIPE_ALLOWED_ORIGINS` — comma-separated allowlist of origins permitted for `success_url` / `cancel_url` host derivation. Falls back to `NEXT_PUBLIC_SITE_URL` when unset.
+
+Juan creates the three Products in the Stripe dashboard (Standard $0.19, Plus TBD, Deep Dive $2.00), copies each price ID, and sets the env vars in Vercel prod + preview. Price IDs never land in source.
+
+### §8.2 Activation Procedure
+
+1. Create the three Stripe Products + live-mode Prices (Standard $0.19, Plus TBD, Deep Dive $2.00).
+2. Set `STRIPE_PRICE_TRUST_STANDARD`, `STRIPE_PRICE_TRUST_PLUS`, `STRIPE_PRICE_TRUST_DEEP_DIVE` in Vercel prod + preview.
+3. Set `STRIPE_ALLOWED_ORIGINS` (e.g. `https://earthmove.io`).
+4. Verify `/api/trust/checkout` still returns HTTP 410 `checkout_disabled` — flag is still off.
+5. Flip `GROUNDCHECK_CHECKOUT_ENABLED=true` in Vercel production.
+6. Redeploy (`vercel --prod`).
+7. Smoke test: log in as `test-gc@earthmove.io` → search "Acme Construction LLC" CO → click Standard upgrade → complete Stripe test card `4242 4242 4242 4242` → confirm the webhook lands a `trust_credits_ledger` row, the success route redeems atomically, and the dashboard auto-opens the enqueued job to completion.

@@ -1,5 +1,29 @@
 import { z } from 'zod'
 
+// FCRA / entity-only gate. Same regex used inline in /api/trust/route.ts, now
+// exported so callers that open paid Stripe sessions (/api/trust/checkout) can
+// reject natural-person queries before any money moves. See commit deb9bf4
+// for rationale (P0-7).
+const ENTITY_SUFFIX_RE =
+  /\b(LLC|L\.L\.C\.?|INC|INCORPORATED|CORP|CORPORATION|LTD|LIMITED|CO\.?|COMPANY|GROUP|HOLDINGS|ENTERPRISES|LP|LLP|PLLC|PC|P\.C\.|ASSOCIATES|PARTNERS|SOLUTIONS|SERVICES|CONSTRUCTION|CONTRACTING|BUILDERS|EXCAVATION|GRADING|HAULING|MATERIALS|AGGREGATES)\b/i
+
+export class EntityOnlyError extends Error {
+  constructor(public readonly contractorName: string) {
+    super('entity_only')
+    this.name = 'EntityOnlyError'
+  }
+}
+
+export function isEntityName(name: string): boolean {
+  if (typeof name !== 'string') return false
+  const cleaned = name.replace(/[.,]/g, ' ')
+  return ENTITY_SUFFIX_RE.test(cleaned)
+}
+
+export function assertEntityOnly(name: string): void {
+  if (!isEntityName(name)) throw new EntityOnlyError(name)
+}
+
 export const TrustReportSchema = z.object({
   contractor_name:  z.string().min(1).max(300),
   location:         z.string().min(1).max(200),

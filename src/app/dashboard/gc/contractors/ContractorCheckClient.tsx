@@ -1,9 +1,27 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   ShieldCheck, AlertTriangle, Search, Clock, ChevronRight, CheckCircle2,
   XCircle, Lock, Download, Zap, Crown, ArrowRight, Loader2
 } from 'lucide-react'
+
+type PaidTier = 'standard' | 'plus' | 'deep_dive'
+const UPGRADE_TIER_MAP: Record<'pro' | 'enterprise', PaidTier> = {
+  pro:        'standard',
+  enterprise: 'deep_dive',
+}
+const JOB_POLL_MS = 2000
+
+type ActiveJob = {
+  id: string
+  status: string
+  tier?: string
+  sources_completed?: number | null
+  total_sources_planned?: number | null
+  report_id?: string | null
+  error_message?: string | null
+}
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
 
@@ -58,7 +76,78 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
   const [error, setError] = useState<string | null>(null)
   const [history, setHistory] = useState(initialHistory)
   const [showPlans, setShowPlans] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const [activeJob, setActiveJob] = useState<ActiveJob | null>(null)
+  const [upgrading, setUpgrading] = useState(false)
   const reportRef = useRef<HTMLDivElement>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const router = useRouter()
+  const params = useSearchParams()
+
+  useEffect(() => {
+    const jobId = params.get('job_id')
+    const auto = params.get('auto')
+    const checkoutStatus = params.get('checkout')
+    if (checkoutStatus === 'cancelled') setToast('Checkout cancelled.')
+    if (checkoutStatus === 'invalid')   setToast('Checkout session invalid. Contact support.')
+    if (jobId && auto === '1') {
+      startPollingJob(jobId)
+      router.replace('/dashboard/gc/contractors')
+    }
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function startPollingJob(id: string) {
+    setActiveJob({ id, status: 'pending' })
+    if (pollRef.current) clearInterval(pollRef.current)
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/trust/job/${encodeURIComponent(id)}`, { cache: 'no-store' })
+        if (!res.ok) return
+        const data = (await res.json()) as ActiveJob
+        setActiveJob(data)
+        if (data.status === 'completed' || data.status === 'failed') {
+          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+        }
+      } catch { /* transient */ }
+    }
+    poll()
+    pollRef.current = setInterval(poll, JOB_POLL_MS)
+  }
+
+  async function upgradeToCheckout(paidTier: PaidTier) {
+    if (!checkoutEnabled) { setToast('Paid tiers launching soon.'); return }
+    if (!name.trim()) { setToast('Enter a contractor name first.'); return }
+    setUpgrading(true)
+    try {
+      const res = await fetch('/api/trust/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier:             paidTier,
+          contractor_name:  name.trim(),
+          state_code:       state,
+          return_path:      '/dashboard/gc/contractors',
+        }),
+      })
+      if (res.status === 200) {
+        const data = await res.json()
+        if (data?.url) { window.location.assign(data.url); return }
+        setToast('Checkout unavailable — try again in a moment.')
+      } else if (res.status === 422) {
+        setToast('We can only run reports on businesses, not individuals.')
+      } else if (res.status === 410) {
+        setToast('Paid tiers launching soon.')
+      } else {
+        setToast('Checkout unavailable — try again in a moment.')
+      }
+    } catch {
+      setToast('Checkout unavailable — try again in a moment.')
+    } finally {
+      setUpgrading(false)
+    }
+  }
 
   async function runCheck() {
     if (!name.trim() || !city.trim() || loading) return
@@ -69,6 +158,15 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contractor_name: name.trim(), city: city.trim(), state_code: state, tier }),
       })
+      if (res.status === 402) {
+        const data = await res.json().catch(() => ({}))
+        if (checkoutEnabled && data?.checkout_url) {
+          await upgradeToCheckout(UPGRADE_TIER_MAP[tier as 'pro' | 'enterprise'] ?? 'standard')
+          return
+        }
+        setToast('Paid tiers launching soon.')
+        return
+      }
       if (!res.ok) { const e = await res.json(); throw new Error(e.error ?? `Error ${res.status}`) }
       const data = await res.json()
       setReport(data)
@@ -153,7 +251,11 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
             </div>
             {tier!=='free'
               ? (checkoutEnabled
-                  ? <button className={`px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:shadow-lg ${tier==='pro'?'bg-blue-600 hover:bg-blue-700':'bg-amber-600 hover:bg-amber-700'}`}>Upgrade to {ct.label} →</button>
+                  ? <button
+                      onClick={() => upgradeToCheckout(UPGRADE_TIER_MAP[tier as 'pro' | 'enterprise'])}
+                      disabled={upgrading}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:shadow-lg disabled:opacity-60 ${tier==='pro'?'bg-blue-600 hover:bg-blue-700':'bg-amber-600 hover:bg-amber-700'}`}
+                    >{upgrading ? 'Opening Stripe…' : `Upgrade to ${ct.label} →`}</button>
                   : <span className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-gray-600 bg-gray-100 border border-gray-200">Paid tiers launching soon — free lookup available</span>)
               :<button onClick={()=>setShowPlans(!showPlans)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">{showPlans?'Hide plans':'Compare plans →'}</button>}
           </div>
@@ -171,7 +273,17 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
               <div className="mb-4"><span className="text-3xl font-black text-gray-900">{t.price}</span><span className="text-sm text-gray-400">{t.period}</span></div>
               <div className="text-xs text-gray-500 mb-3 font-medium">{t.lookups} lookups/month</div>
               <ul className="space-y-2 mb-5">{t.features.map(f=><li key={f} className="flex items-start gap-2 text-xs text-gray-600"><CheckCircle2 size={12} className={`mt-0.5 flex-shrink-0 ${key==='free'?'text-emerald-500':key==='pro'?'text-blue-500':'text-amber-500'}`}/>{f}</li>)}</ul>
-              <button onClick={()=>{setTier(key);setShowPlans(false)}} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${key==='free'?'bg-gray-100 text-gray-700 hover:bg-gray-200':key==='pro'?'bg-blue-600 text-white hover:bg-blue-700 shadow-sm':'bg-amber-600 text-white hover:bg-amber-700 shadow-sm'}`}>
+              <button
+                onClick={() => {
+                  if (key === 'free') { setTier(key); setShowPlans(false); return }
+                  if (checkoutEnabled) {
+                    upgradeToCheckout(UPGRADE_TIER_MAP[key as 'pro' | 'enterprise'])
+                  } else {
+                    setTier(key); setShowPlans(false)
+                  }
+                }}
+                disabled={upgrading}
+                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-60 ${key==='free'?'bg-gray-100 text-gray-700 hover:bg-gray-200':key==='pro'?'bg-blue-600 text-white hover:bg-blue-700 shadow-sm':'bg-amber-600 text-white hover:bg-amber-700 shadow-sm'}`}>
                 {key==='free'?'Current Plan':key===tier?'Selected':`Get ${t.label}`}
               </button>
             </div>
@@ -214,6 +326,16 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
           <div className="space-y-2">{searches.map((q,i)=><div key={i} className="flex items-center gap-2.5 text-sm"><CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0"/><span className="text-gray-600 font-mono text-xs">{q}</span></div>)}
             {loading&&<div className="flex items-center gap-2.5 text-sm"><Loader2 size={14} className="text-emerald-500 animate-spin flex-shrink-0"/><span className="text-gray-400 text-xs">Searching...</span></div>}
           </div></div>}
+
+        {/* Toast */}
+        {toast && <div role="status" className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-4 text-xs text-amber-800">{toast}</div>}
+
+        {/* Active job (from ?job_id=&auto=1 or the redemption path) */}
+        {activeJob && <div className="bg-white border border-emerald-200 rounded-2xl p-4 mb-6">
+          <div className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">Deep-dive report</div>
+          <div className="text-sm text-gray-900">Job {activeJob.id.slice(0,8)} — {activeJob.status}{activeJob.sources_completed!=null && activeJob.total_sources_planned!=null ? ` · ${activeJob.sources_completed}/${activeJob.total_sources_planned} sources` : ''}</div>
+          {activeJob.status === 'failed' && activeJob.error_message && <div className="text-xs text-red-700 mt-1">{activeJob.error_message}</div>}
+        </div>}
 
         {/* Error */}
         {error&&<div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex items-start gap-3"><XCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0"/><div><div className="text-sm font-semibold text-red-800">Verification Failed</div><div className="text-xs text-red-600 mt-0.5">{error}</div></div></div>}
@@ -269,7 +391,7 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
           {tier==='free' && checkoutEnabled && <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-5 text-white">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div><div className="text-sm font-bold">Want deeper intelligence?</div><div className="text-xs text-blue-200 mt-1">Pro unlocks real-time fresh searches, court records, OSHA deep scans, and downloadable PDF reports.</div></div>
-              <button onClick={()=>{setTier('pro');setShowPlans(true);window.scrollTo({top:0,behavior:'smooth'})}} className="flex items-center gap-2 px-5 py-2.5 bg-white text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-50 transition-all shadow-sm"><Zap size={13}/>Upgrade to Pro — $29/mo<ArrowRight size={13}/></button>
+              <button onClick={()=>upgradeToCheckout('standard')} disabled={upgrading} className="flex items-center gap-2 px-5 py-2.5 bg-white text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-50 transition-all shadow-sm disabled:opacity-60"><Zap size={13}/>{upgrading ? 'Opening Stripe…' : 'Upgrade to Standard Report'}<ArrowRight size={13}/></button>
             </div>
           </div>}
           {tier==='free' && !checkoutEnabled && <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 text-gray-700">
