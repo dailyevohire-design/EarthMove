@@ -1,0 +1,305 @@
+'use client'
+
+import DisambiguationPicker, { type AmbiguousCandidate } from './DisambiguationPicker'
+
+// Inline row type — matches select('*') on trust_reports. Kept here rather
+// than in types.ts because this view is the only consumer.
+export interface TrustReport {
+  id: string
+  user_id: string | null
+  contractor_name: string
+  city: string | null
+  state_code: string
+  tier: string | null
+  contractor_id: string | null
+  trust_score: number | null
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'AMBIGUOUS' | null
+  confidence_level: 'HIGH' | 'MEDIUM' | 'LOW' | null
+  biz_status: string | null
+  biz_entity_type: string | null
+  biz_formation_date: string | null
+  lic_status: string | null
+  lic_license_number: string | null
+  bbb_rating: string | null
+  bbb_accredited: boolean | null
+  bbb_complaint_count: number | null
+  review_avg_rating: number | null
+  review_total: number | null
+  review_sentiment: string | null
+  legal_status: string | null
+  legal_findings: string[] | null
+  osha_status: string | null
+  osha_violation_count: number | null
+  osha_serious_count: number | null
+  red_flags: string[] | null
+  positive_indicators: string[] | null
+  summary: string | null
+  data_sources_searched: string[] | null
+  raw_report: Record<string, unknown> | null
+  searches_performed: number | null
+  processing_ms: number | null
+  created_at: string
+  report_version: number | null
+  evidence_ids: string[] | null
+  synthesis_model: string | null
+  structured_source_hit_rate: number | null
+}
+
+// ---------- small inline presentational components ----------
+
+function TierBadge({ tier }: { tier: string | null }) {
+  const t = (tier ?? '').toLowerCase()
+  let cls = 'bg-gray-100 text-gray-700'
+  if (t === 'standard' || t === 'plus' || t === 'pro') cls = 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+  if (t === 'deep_dive' || t === 'forensic')           cls = 'bg-emerald-600 text-white'
+  const label = tier && tier.length > 0 ? tier.replace(/_/g, ' ') : '—'
+  return (
+    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${cls}`}>
+      {label}
+    </span>
+  )
+}
+
+function RiskPill({ level }: { level: TrustReport['risk_level'] }) {
+  // Trust-surface color rules: emerald-only accent; non-emerald reserved for
+  // risk semantics. LOW=emerald, MEDIUM=stone (neutral), HIGH=red, CRITICAL=red-deep,
+  // AMBIGUOUS=stone. No bright-spectrum accents (amber/blue/orange mid-shades) anywhere.
+  const map: Record<string, string> = {
+    LOW:        'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    MEDIUM:     'bg-stone-100 text-stone-800 border border-stone-300',
+    HIGH:       'bg-red-50 text-red-700 border border-red-200',
+    CRITICAL:   'bg-red-100 text-red-800 border border-red-300',
+    AMBIGUOUS:  'bg-stone-100 text-stone-700 border border-stone-200',
+  }
+  const label = level ?? 'UNKNOWN'
+  const cls = level ? map[level] : 'bg-stone-100 text-stone-700 border border-stone-200'
+  return (
+    <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${cls}`}>
+      {label}
+    </span>
+  )
+}
+
+function ConfidenceLabel({ level }: { level: TrustReport['confidence_level'] }) {
+  if (!level) return null
+  return (
+    <span className="text-xs text-stone-500">
+      Confidence: <span className="font-semibold text-stone-700">{level.toLowerCase()}</span>
+    </span>
+  )
+}
+
+function ScoreRing({ score, risk }: { score: number | null; risk: TrustReport['risk_level'] }) {
+  const s = score ?? 0
+  let color = 'text-stone-400'
+  if (score == null) color = 'text-stone-400'
+  else if (s >= 80) color = 'text-emerald-600'
+  else if (s >= 60) color = 'text-stone-700'
+  else color = 'text-red-600'
+
+  const label = score == null
+    ? (risk === 'AMBIGUOUS' ? '—' : 'N/A')
+    : String(s)
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className={`w-24 h-24 rounded-full border-4 flex items-center justify-center border-current ${color}`}>
+        <span className={`text-3xl font-black ${color}`}>{label}</span>
+      </div>
+      <div className="mt-1 text-[10px] font-bold text-stone-500 uppercase tracking-wider">Trust score</div>
+    </div>
+  )
+}
+
+function Panel({ title, icon, children }: { title: string; icon?: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-stone-200 bg-white p-4">
+      <div className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+        {icon && <span>{icon}</span>}
+        <span>{title}</span>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function Row({ k, v }: { k: string; v: React.ReactNode }) {
+  return (
+    <div className="flex justify-between items-center py-1.5 border-b border-stone-100 last:border-0 text-sm">
+      <span className="text-stone-500 text-xs">{k}</span>
+      <span className="font-medium text-stone-900">{v || <span className="text-stone-400">—</span>}</span>
+    </div>
+  )
+}
+
+function List({ items, emptyText, itemClass }: { items: string[] | null | undefined; emptyText: string; itemClass?: string }) {
+  if (!items || items.length === 0) return <p className="text-sm text-stone-500">{emptyText}</p>
+  return (
+    <ul className="space-y-1.5">
+      {items.map((s, i) => (
+        <li key={i} className={`text-sm ${itemClass ?? 'text-stone-800'}`}>• {s}</li>
+      ))}
+    </ul>
+  )
+}
+
+function relativeTime(iso: string): string {
+  const then = new Date(iso).getTime()
+  if (isNaN(then)) return ''
+  const diff = Date.now() - then
+  const m = Math.floor(diff / 60000)
+  if (m < 1)   return 'just now'
+  if (m < 60)  return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24)  return `${h}h ago`
+  const d = Math.floor(h / 24)
+  if (d < 30)  return `${d}d ago`
+  return new Date(iso).toLocaleDateString()
+}
+
+// ---------- main view ----------
+
+export default function TrustReportView({ report }: { report: TrustReport }) {
+  const rawCandidates = Array.isArray((report.raw_report as any)?.ambiguous_candidates)
+    ? ((report.raw_report as any).ambiguous_candidates as AmbiguousCandidate[])
+    : []
+  const isAmbiguous = report.risk_level === 'AMBIGUOUS' && rawCandidates.length > 0
+  const provisional = isAmbiguous
+
+  return (
+    <div className="min-h-screen bg-stone-50">
+      <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header row */}
+        <header className="mb-6 flex flex-wrap items-start gap-3 justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-stone-900">{report.contractor_name}</h1>
+            <div className="mt-1 text-sm text-stone-500 flex items-center gap-2 flex-wrap">
+              <span>
+                {report.city ? `${report.city}, ` : ''}{report.state_code}
+              </span>
+              <span className="text-stone-300">·</span>
+              <TierBadge tier={report.tier} />
+              <span className="text-stone-300">·</span>
+              <span>{relativeTime(report.created_at)}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <RiskPill level={report.risk_level} />
+            <ConfidenceLabel level={report.confidence_level} />
+          </div>
+        </header>
+
+        {isAmbiguous && (
+          <div className="mb-6">
+            <DisambiguationPicker
+              candidates={rawCandidates}
+              contractorName={report.contractor_name}
+              stateCode={report.state_code}
+              city={report.city}
+            />
+          </div>
+        )}
+
+        {provisional && (
+          <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+            Score is provisional until you confirm which business you meant.
+          </div>
+        )}
+
+        <div className={provisional ? 'opacity-60' : ''}>
+          {/* Score card */}
+          <section className="rounded-2xl border border-stone-200 bg-white p-6 mb-6 flex items-center gap-6 flex-wrap">
+            <ScoreRing score={report.trust_score} risk={report.risk_level} />
+            <div className="flex-1 min-w-[220px]">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-lg font-semibold text-stone-900">Trust assessment</h2>
+                <RiskPill level={report.risk_level} />
+              </div>
+              <p className="mt-2 text-sm text-stone-600 leading-relaxed">
+                {report.summary ?? 'No summary available.'}
+              </p>
+            </div>
+          </section>
+
+          {/* Data panels */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <Panel title="Business Registration" icon="🏛">
+              <Row k="Status"    v={report.biz_status} />
+              <Row k="Entity"    v={report.biz_entity_type} />
+              <Row k="Formed"    v={report.biz_formation_date} />
+            </Panel>
+
+            <Panel title="License" icon="📋">
+              <Row k="Status"    v={report.lic_status} />
+              <Row k="License #" v={report.lic_license_number} />
+            </Panel>
+
+            <Panel title="BBB Profile" icon="🛡">
+              <Row k="Rating"      v={report.bbb_rating} />
+              <Row k="Accredited"  v={report.bbb_accredited == null ? null : (report.bbb_accredited ? 'Yes' : 'No')} />
+              <Row k="Complaints"  v={report.bbb_complaint_count} />
+            </Panel>
+
+            <Panel title="Reviews" icon="⭐">
+              <Row k="Avg rating" v={report.review_avg_rating == null ? null : `${report.review_avg_rating}/5.0`} />
+              <Row k="Total"      v={report.review_total} />
+              <Row k="Sentiment"  v={report.review_sentiment} />
+            </Panel>
+
+            <Panel title="Legal Records" icon="⚖">
+              <List
+                items={report.legal_findings}
+                emptyText="No lawsuits, liens, or judgments surfaced in public records. This is not an exhaustive search — county-level civil dockets often require manual lookup."
+              />
+              <p className="mt-3 text-[11px] text-stone-500 leading-relaxed">
+                This report compiles publicly available information and does not constitute a consumer report under FCRA.
+              </p>
+            </Panel>
+
+            <Panel title="OSHA Safety" icon="🔶">
+              <Row k="Status"      v={report.osha_status} />
+              <Row k="Violations"  v={report.osha_violation_count} />
+              <Row k="Serious"     v={report.osha_serious_count} />
+            </Panel>
+
+            <Panel title="Risk Signals" icon="⚠">
+              <List
+                items={report.red_flags}
+                emptyText="No risk signals identified."
+                itemClass="text-red-700"
+              />
+            </Panel>
+
+            <Panel title="Positive Indicators" icon="✓">
+              <List
+                items={report.positive_indicators}
+                emptyText="No positive indicators noted."
+                itemClass="text-emerald-700"
+              />
+            </Panel>
+          </div>
+
+          {/* Summary */}
+          <Panel title="Summary" icon="📝">
+            <p className="text-sm text-stone-800 leading-relaxed">
+              {report.summary ?? 'No summary available.'}
+            </p>
+          </Panel>
+        </div>
+
+        {/* Footer meta */}
+        <footer className="mt-8 pt-4 border-t border-stone-200 text-[11px] text-stone-500 flex flex-wrap gap-x-4 gap-y-1">
+          <span>{report.searches_performed ?? 0} searches</span>
+          <span>·</span>
+          <span>{(report.data_sources_searched ?? []).length} sources</span>
+          <span>·</span>
+          <span>{report.processing_ms ? `${(report.processing_ms / 1000).toFixed(1)}s` : '—'}</span>
+          <span>·</span>
+          <span>{report.synthesis_model ?? 'unknown model'}</span>
+          <span>·</span>
+          <span>{new Date(report.created_at).toLocaleString()}</span>
+        </footer>
+      </div>
+    </div>
+  )
+}

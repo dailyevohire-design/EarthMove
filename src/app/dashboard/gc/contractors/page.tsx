@@ -13,7 +13,7 @@ export default async function ContractorCheckPage() {
   const admin = createAdminClient()
   const { data: history } = await admin
     .from('trust_reports')
-    .select('id, contractor_name, city, state_code, trust_score, risk_level, confidence_level, summary, created_at')
+    .select('id, tier, contractor_name, city, state_code, trust_score, risk_level, confidence_level, summary, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(20)

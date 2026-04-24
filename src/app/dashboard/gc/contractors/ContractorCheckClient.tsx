@@ -1,16 +1,13 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   ShieldCheck, AlertTriangle, Search, Clock, ChevronRight, CheckCircle2,
   XCircle, Lock, Download, Zap, Crown, ArrowRight, Loader2
 } from 'lucide-react'
 
-type PaidTier = 'standard' | 'plus' | 'deep_dive'
-const UPGRADE_TIER_MAP: Record<'pro' | 'enterprise', PaidTier> = {
-  pro:        'standard',
-  enterprise: 'deep_dive',
-}
+type PaidTier = 'standard' | 'deep_dive'
 const JOB_POLL_MS = 2000
 
 type ActiveJob = {
@@ -25,12 +22,19 @@ type ActiveJob = {
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
 
-type Tier = 'free' | 'pro' | 'enterprise'
+type Tier = 'free' | 'standard' | 'deep_dive'
 
+// Per-lookup pricing per commit 83fa9c7's shipped redemption tiers.
+// free     — cached lookup, no charge
+// standard — fresh AI-compiled report, $0.19 per lookup
+// deep_dive — paid-source data + full audit trail, $2.00 per lookup
+// Keyed on the lookup tier ('free') + purchase tiers ('standard', 'deep_dive'). The
+// lookup call uses 'free'; the upgrade buttons route to /api/trust/checkout with
+// 'standard' or 'deep_dive'.
 const TIERS = {
-  free:       { label: 'Free',       price: '$0',   period: 'forever',  icon: <ShieldCheck size={18} />, color: 'emerald', lookups: 'Unlimited', depth: 'Cached results (7-30 days old)', sources: '7 public sources', speed: '~30 seconds', features: ['Basic trust score', 'Red flags & verified indicators', 'Business registration check', 'BBB profile lookup'] },
-  pro:        { label: 'Pro',        price: '$29',  period: '/month',   icon: <Zap size={18} />,         color: 'blue',    lookups: 'Unlimited', depth: 'Fresh real-time search', sources: '12+ sources with deep web', speed: '~20 seconds', features: ['Everything in Free', 'Real-time fresh results every search', 'OSHA violation deep scan', 'Court records & lien search', 'Downloadable PDF reports', 'Priority search queue'] },
-  enterprise: { label: 'Enterprise', price: '$99',  period: '/month',   icon: <Crown size={18} />,       color: 'amber',   lookups: 'Unlimited', depth: 'Full investigation with paid APIs', sources: '20+ sources incl. Secretary of State', speed: '~60 seconds', features: ['Everything in Pro', 'Secretary of State live verification', 'OSHA enforcement database direct', 'Insurance & bonding verification', 'Owner/officer background check', 'Custom branded PDF reports', 'API access for your systems'] },
+  free:      { label: 'Free',       price: '$0',     period: 'per lookup', icon: <ShieldCheck size={18} />, blurb: 'Cached report from our library. $0.', depth: 'Cached results (7-30 days old)', sources: '7 public sources', speed: '~30 seconds', features: ['Basic trust score', 'Red flags & verified indicators', 'Business registration check', 'BBB profile lookup'] },
+  standard:  { label: 'Standard',   price: '$0.19',  period: 'per lookup', icon: <Zap size={18} />,         blurb: 'Fresh AI-compiled report. $0.19 per lookup.', depth: 'Fresh real-time search', sources: '12+ sources with deep web', speed: '~20 seconds', features: ['Everything in Free', 'Real-time fresh results every lookup', 'OSHA violation deep scan', 'Court records & lien search', 'Downloadable PDF report'] },
+  deep_dive: { label: 'Deep Dive',  price: '$2.00',  period: 'per lookup', icon: <Crown size={18} />,       blurb: 'Paid-source data + full audit trail. $2.00 per lookup.', depth: 'Full investigation with paid APIs', sources: '20+ sources incl. Secretary of State', speed: '~60 seconds', features: ['Everything in Standard', 'Secretary of State live verification', 'OSHA enforcement database direct', 'Insurance & bonding verification', 'Owner/officer background check', 'Custom branded PDF report'] },
 }
 
 const RISK: Record<string, { text: string; bg: string; border: string; label: string; ringColor: string; scoreBg: string }> = {
@@ -161,7 +165,7 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
       if (res.status === 402) {
         const data = await res.json().catch(() => ({}))
         if (checkoutEnabled && data?.checkout_url) {
-          await upgradeToCheckout(UPGRADE_TIER_MAP[tier as 'pro' | 'enterprise'] ?? 'standard')
+          await upgradeToCheckout((tier === 'deep_dive' ? 'deep_dive' : 'standard') as PaidTier)
           return
         }
         setToast('Paid tiers launching soon.')
@@ -240,21 +244,21 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
         </div>
 
         {/* Plan banner */}
-        <div className={`mb-6 rounded-xl border p-4 transition-all ${tier==='free'?'bg-emerald-50/50 border-emerald-200':tier==='pro'?'bg-blue-50/50 border-blue-200':'bg-amber-50/50 border-amber-200'}`}>
+        <div className={`mb-6 rounded-xl border p-4 transition-all ${tier==='free'?'bg-emerald-50/50 border-emerald-200':tier==='standard'?'bg-emerald-50 border-emerald-200':'bg-emerald-600/10 border-emerald-300'}`}>
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tier==='free'?'bg-emerald-100 text-emerald-600':tier==='pro'?'bg-blue-100 text-blue-600':'bg-amber-100 text-amber-600'}`}>{ct.icon}</div>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tier==='free'?'bg-emerald-100 text-emerald-600':tier==='standard'?'bg-emerald-100 text-emerald-700':'bg-emerald-600 text-white'}`}>{ct.icon}</div>
               <div>
-                <div className="text-sm font-bold text-gray-900">{ct.label} Plan — {ct.price}{ct.period!=='forever'?ct.period:''} {ct.period==='forever'&&<span className="text-emerald-600">forever</span>}</div>
-                <div className="text-xs text-gray-500">{ct.depth} · {ct.sources} · {ct.speed}</div>
+                <div className="text-sm font-bold text-gray-900">{ct.label} — {ct.price} <span className="text-gray-500 font-normal">{ct.period}</span></div>
+                <div className="text-xs text-gray-500">{ct.blurb}</div>
               </div>
             </div>
             {tier!=='free'
               ? (checkoutEnabled
                   ? <button
-                      onClick={() => upgradeToCheckout(UPGRADE_TIER_MAP[tier as 'pro' | 'enterprise'])}
+                      onClick={() => upgradeToCheckout(tier === 'deep_dive' ? 'deep_dive' : 'standard')}
                       disabled={upgrading}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:shadow-lg disabled:opacity-60 ${tier==='pro'?'bg-blue-600 hover:bg-blue-700':'bg-amber-600 hover:bg-amber-700'}`}
+                      className="px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:shadow-lg disabled:opacity-60 bg-emerald-600 hover:bg-emerald-700"
                     >{upgrading ? 'Opening Stripe…' : `Upgrade to ${ct.label} →`}</button>
                   : <span className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-gray-600 bg-gray-100 border border-gray-200">Paid tiers launching soon — free lookup available</span>)
               :<button onClick={()=>setShowPlans(!showPlans)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">{showPlans?'Hide plans':'Compare plans →'}</button>}
@@ -264,26 +268,26 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
         {/* Plan comparison */}
         {showPlans&&<div className="grid grid-cols-3 gap-4 mb-8">
           {(Object.entries(TIERS) as [Tier, typeof TIERS.free][]).map(([key,t])=>(
-            <div key={key} className={`relative bg-white rounded-2xl border-2 p-5 transition-all ${key==='pro'?'border-blue-300 shadow-lg shadow-blue-100/50 scale-[1.02]':key==='enterprise'?'border-amber-300 shadow-lg shadow-amber-100/50':'border-gray-200'}`}>
-              {key==='pro'&&<div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full">MOST POPULAR</div>}
+            <div key={key} className={`relative bg-white rounded-2xl border-2 p-5 transition-all ${key==='standard'?'border-emerald-300 shadow-lg shadow-emerald-100/50 scale-[1.02]':key==='deep_dive'?'border-emerald-500 shadow-lg shadow-emerald-100/50':'border-gray-200'}`}>
+              {key==='standard'&&<div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-bold px-3 py-1 rounded-full">MOST POPULAR</div>}
               <div className="flex items-center gap-2 mb-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${key==='free'?'bg-emerald-100 text-emerald-600':key==='pro'?'bg-blue-100 text-blue-600':'bg-amber-100 text-amber-600'}`}>{t.icon}</div>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${key==='free'?'bg-gray-100 text-gray-700':key==='standard'?'bg-emerald-100 text-emerald-700':'bg-emerald-600 text-white'}`}>{t.icon}</div>
                 <div className="text-sm font-bold text-gray-900">{t.label}</div>
               </div>
-              <div className="mb-4"><span className="text-3xl font-black text-gray-900">{t.price}</span><span className="text-sm text-gray-400">{t.period}</span></div>
-              <div className="text-xs text-gray-500 mb-3 font-medium">{t.lookups} lookups/month</div>
-              <ul className="space-y-2 mb-5">{t.features.map(f=><li key={f} className="flex items-start gap-2 text-xs text-gray-600"><CheckCircle2 size={12} className={`mt-0.5 flex-shrink-0 ${key==='free'?'text-emerald-500':key==='pro'?'text-blue-500':'text-amber-500'}`}/>{f}</li>)}</ul>
+              <div className="mb-4"><span className="text-3xl font-black text-gray-900">{t.price}</span><span className="text-sm text-gray-400"> {t.period}</span></div>
+              <div className="text-xs text-gray-500 mb-3 font-medium">{t.blurb}</div>
+              <ul className="space-y-2 mb-5">{t.features.map(f=><li key={f} className="flex items-start gap-2 text-xs text-gray-600"><CheckCircle2 size={12} className="mt-0.5 flex-shrink-0 text-emerald-500"/>{f}</li>)}</ul>
               <button
                 onClick={() => {
                   if (key === 'free') { setTier(key); setShowPlans(false); return }
                   if (checkoutEnabled) {
-                    upgradeToCheckout(UPGRADE_TIER_MAP[key as 'pro' | 'enterprise'])
+                    upgradeToCheckout(key as PaidTier)
                   } else {
                     setTier(key); setShowPlans(false)
                   }
                 }}
                 disabled={upgrading}
-                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-60 ${key==='free'?'bg-gray-100 text-gray-700 hover:bg-gray-200':key==='pro'?'bg-blue-600 text-white hover:bg-blue-700 shadow-sm':'bg-amber-600 text-white hover:bg-amber-700 shadow-sm'}`}>
+                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-60 ${key==='free'?'bg-gray-100 text-gray-700 hover:bg-gray-200':'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'}`}>
                 {key==='free'?'Current Plan':key===tier?'Selected':`Get ${t.label}`}
               </button>
             </div>
@@ -310,11 +314,11 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
             <div className="min-w-[80px]"><label className="block text-xs font-semibold text-gray-700 mb-1.5">State</label>
               <select value={state} onChange={e=>setState(e.target.value)} className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">{US_STATES.map(s=><option key={s}>{s}</option>)}</select></div>
           </div>
-          <button onClick={runCheck} disabled={loading||!name.trim()||!city.trim()} className={`mt-4 w-full flex items-center justify-center gap-2 px-6 py-3.5 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow-lg disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none ${tier==='free'?'bg-emerald-600 hover:bg-emerald-700':tier==='pro'?'bg-blue-600 hover:bg-blue-700':'bg-amber-600 hover:bg-amber-700'}`}>
+          <button onClick={runCheck} disabled={loading||!name.trim()||!city.trim()} className="mt-4 w-full flex items-center justify-center gap-2 px-6 py-3.5 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow-lg disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none bg-emerald-600 hover:bg-emerald-700">
             {loading?<><Loader2 size={15} className="animate-spin"/>Investigating...</>:<><Search size={15}/>Run {ct.label} Check{tier==='free'?' — Free':''}</>}
           </button>
           <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-gray-100">
-            {[{i:<Lock size={11}/>,l:'256-bit Encrypted'},{i:<ShieldCheck size={11}/>,l:'FCRA Compliant'},{i:<CheckCircle2 size={11}/>,l:`${tier==='enterprise'?'20+':tier==='pro'?'12+':'7'} Sources`}].map(b=>(
+            {[{i:<Lock size={11}/>,l:'256-bit Encrypted'},{i:<ShieldCheck size={11}/>,l:'FCRA Compliant'},{i:<CheckCircle2 size={11}/>,l:`${tier==='deep_dive'?'20+':tier==='standard'?'12+':'7'} Sources`}].map(b=>(
               <div key={b.l} className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium"><span className="text-gray-300">{b.i}</span>{b.l}</div>
             ))}
           </div>
@@ -388,15 +392,15 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
           </div>
 
           {/* Upsell */}
-          {tier==='free' && checkoutEnabled && <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-5 text-white">
+          {tier==='free' && checkoutEnabled && <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-2xl p-5 text-white">
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <div><div className="text-sm font-bold">Want deeper intelligence?</div><div className="text-xs text-blue-200 mt-1">Pro unlocks real-time fresh searches, court records, OSHA deep scans, and downloadable PDF reports.</div></div>
-              <button onClick={()=>upgradeToCheckout('standard')} disabled={upgrading} className="flex items-center gap-2 px-5 py-2.5 bg-white text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-50 transition-all shadow-sm disabled:opacity-60"><Zap size={13}/>{upgrading ? 'Opening Stripe…' : 'Upgrade to Standard Report'}<ArrowRight size={13}/></button>
+              <div><div className="text-sm font-bold">Want a fresher report?</div><div className="text-xs text-emerald-100 mt-1">Standard ($0.19 per lookup) runs a fresh AI-compiled report against 12+ sources. Deep Dive ($2.00 per lookup) adds paid-source data and a full audit trail.</div></div>
+              <button onClick={()=>upgradeToCheckout('standard')} disabled={upgrading} className="flex items-center gap-2 px-5 py-2.5 bg-white text-emerald-700 rounded-xl text-xs font-bold hover:bg-emerald-50 transition-all shadow-sm disabled:opacity-60"><Zap size={13}/>{upgrading ? 'Opening Stripe…' : 'Upgrade to Standard — $0.19'}<ArrowRight size={13}/></button>
             </div>
           </div>}
           {tier==='free' && !checkoutEnabled && <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 text-gray-700">
             <div className="text-sm font-bold text-gray-900">Paid tiers launching soon</div>
-            <div className="text-xs text-gray-500 mt-1">Free lookup is fully available today. Pro and Enterprise plans go live when the redemption flow ships.</div>
+            <div className="text-xs text-gray-500 mt-1">Free lookup is fully available today. Standard ($0.19) and Deep Dive ($2.00) per-lookup tiers go live when the redemption flow ships.</div>
           </div>}
 
           <p className="text-[11px] text-gray-400 text-center px-4 leading-relaxed">Confidence: {report.confidence_level} · {report.data_sources_searched?.length??0} sources checked · {report.disclaimer}</p>
@@ -406,17 +410,26 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
         {!loading&&!report&&!error&&<div className="text-center py-16">
           <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-4"><ShieldCheck size={28} className="text-emerald-400"/></div>
           <div className="text-base font-semibold text-gray-700 mb-1">Enter a contractor name above</div>
-          <div className="text-sm text-gray-400 mb-4">AI searches {tier==='enterprise'?'20+':tier==='pro'?'12+':'7'} sources and returns a full risk report</div>
+          <div className="text-sm text-gray-400 mb-4">AI searches {tier==='deep_dive'?'20+':tier==='standard'?'12+':'7'} sources and returns a full risk report</div>
         </div>}
 
-        {/* History */}
+        {/* History — full rows are links to the report detail page */}
         {history.length>0&&<div className="mt-10">
           <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3"><Clock size={12}/>Previous Checks</div>
-          <div className="space-y-2">{history.map((h:any,i:number)=>{const hr=RISK[h.risk_level]??RISK.MEDIUM;const age=scoreAge(h.created_at);return(
-            <button key={h.id??i} onClick={()=>setReport(h)} className="w-full bg-white border border-gray-200/80 rounded-xl shadow-sm px-4 py-3 flex items-center justify-between hover:border-emerald-300 hover:shadow-md transition-all text-left group">
-              <div><span className="text-sm font-semibold text-gray-800 group-hover:text-emerald-700 transition-colors">{h.contractor_name}</span><span className="text-xs text-gray-400 ml-2">{h.city}, {h.state_code}</span>{age!=='fresh'&&<span className="ml-2 text-[10px] text-amber-600 font-medium">⏱ {age}</span>}</div>
-              <div className="flex items-center gap-2.5"><div className={`w-8 h-8 rounded-full ${hr.scoreBg} flex items-center justify-center`}><span className="text-xs font-black text-white">{h.trust_score}</span></div><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hr.bg} ${hr.text} border ${hr.border}`}>{hr.label}</span><ChevronRight size={14} className="text-gray-300 group-hover:text-emerald-500 transition-colors"/></div>
-            </button>)})}</div>
+          <div className="space-y-2">{history.map((h:any,i:number)=>{const hr=RISK[h.risk_level]??RISK.MEDIUM;const age=scoreAge(h.created_at);const targetId=h.report_id??h.id;return(
+            <Link key={h.id??i} href={`/dashboard/trust/report/${targetId}`} className="w-full bg-white border border-gray-200/80 rounded-xl shadow-sm px-4 py-3 flex items-center justify-between hover:border-emerald-300 hover:shadow-md hover:bg-stone-50 transition-all text-left group cursor-pointer block">
+              <div>
+                <span className="text-sm font-semibold text-gray-800 group-hover:text-emerald-700 transition-colors">{h.contractor_name}</span>
+                <span className="text-xs text-gray-400 ml-2">{h.city}, {h.state_code}</span>
+                {h.tier && <span className={`ml-2 inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${h.tier==='free'?'bg-gray-100 text-gray-700':h.tier==='deep_dive'||h.tier==='forensic'?'bg-emerald-600 text-white':'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>{h.tier.replace(/_/g,' ')}</span>}
+                {age!=='fresh'&&<span className="ml-2 text-[10px] text-gray-500 font-medium">⏱ {age}</span>}
+              </div>
+              <div className="flex items-center gap-2.5">
+                {h.trust_score != null && <div className={`w-8 h-8 rounded-full ${hr.scoreBg} flex items-center justify-center`}><span className="text-xs font-black text-white">{h.trust_score}</span></div>}
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hr.bg} ${hr.text} border ${hr.border}`}>{hr.label}</span>
+                <ChevronRight size={14} className="text-gray-300 group-hover:text-emerald-500 transition-colors"/>
+              </div>
+            </Link>)})}</div>
         </div>}
       </div>
     </div>

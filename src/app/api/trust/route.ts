@@ -362,6 +362,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     ...report,
+    report_id: savedReportId,
     searches,
     searches_performed: searches.length,
     processing_ms: processingMs,
