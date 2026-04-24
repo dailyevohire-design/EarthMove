@@ -237,6 +237,46 @@ function normalizeReport(p: any): any {
 
 // ---------- Entry point ----------
 
+// ---------- PII scrubber (P1-12) ----------
+//
+// Last-line defense against the model emitting SSN / DOB / driver's-license
+// numbers into a persisted report. Prompts instruct the model to strip PII,
+// but a single prompt-injection bypass would otherwise land PII in
+// trust_reports.raw_report (JSONB) and propagate to shared views.
+//
+// Regexes use .match() / .replace() (no .test() with /g — that carries
+// lastIndex state across the same string and silently mis-detects).
+
+const SSN_RE = /\b\d{3}-\d{2}-\d{4}\b/g
+const DOB_RE = /\b(?:0?[1-9]|1[0-2])[\/\-](?:0?[1-9]|[12]\d|3[01])[\/\-](?:19|20)\d{2}\b/g
+const DL_RE  = /\b[A-Z]\d{7,8}\b/g
+
+type Scrubbable = string | number | boolean | null | undefined | Scrubbable[] | { [k: string]: Scrubbable }
+
+export function scrubPIIFromReport(report: TrustReport): { scrubbed: TrustReport; hits: string[] } {
+  const hits = new Set<string>()
+
+  const walk = (v: Scrubbable): Scrubbable => {
+    if (typeof v === 'string') {
+      let out = v
+      if (out.match(SSN_RE)) { hits.add('ssn');             out = out.replace(SSN_RE, '[REDACTED_SSN]') }
+      if (out.match(DOB_RE)) { hits.add('dob');             out = out.replace(DOB_RE, '[REDACTED_DOB]') }
+      if (out.match(DL_RE))  { hits.add('drivers_license'); out = out.replace(DL_RE,  '[REDACTED_DL]')  }
+      return out
+    }
+    if (Array.isArray(v)) return v.map(walk) as Scrubbable[]
+    if (v && typeof v === 'object') {
+      return Object.fromEntries(
+        Object.entries(v as Record<string, Scrubbable>).map(([k, val]) => [k, walk(val)])
+      ) as Scrubbable
+    }
+    return v
+  }
+
+  const scrubbed = walk(report as unknown as Scrubbable) as unknown as TrustReport
+  return { scrubbed, hits: Array.from(hits) }
+}
+
 export function parseReport(raw: string): { ok: true; data: TrustReport } | { ok: false; error: string } {
   try {
     let json = raw.trim()

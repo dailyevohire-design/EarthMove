@@ -47,7 +47,7 @@ function ScoreRing({ score, riskLevel }: { score: number; riskLevel: string }) {
   )
 }
 
-export default function ContractorCheckClient({ initialHistory }: { initialHistory: any[] }) {
+export default function ContractorCheckClient({ initialHistory, checkoutEnabled }: { initialHistory: any[]; checkoutEnabled: boolean }) {
   const [name, setName] = useState('')
   const [city, setCity] = useState('')
   const [state, setState] = useState('CO')
@@ -151,8 +151,11 @@ export default function ContractorCheckClient({ initialHistory }: { initialHisto
                 <div className="text-xs text-gray-500">{ct.depth} · {ct.sources} · {ct.speed}</div>
               </div>
             </div>
-            {tier!=='free'?<button className={`px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:shadow-lg ${tier==='pro'?'bg-blue-600 hover:bg-blue-700':'bg-amber-600 hover:bg-amber-700'}`}>Upgrade to {ct.label} →</button>
-            :<button onClick={()=>setShowPlans(!showPlans)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">{showPlans?'Hide plans':'Compare plans →'}</button>}
+            {tier!=='free'
+              ? (checkoutEnabled
+                  ? <button className={`px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:shadow-lg ${tier==='pro'?'bg-blue-600 hover:bg-blue-700':'bg-amber-600 hover:bg-amber-700'}`}>Upgrade to {ct.label} →</button>
+                  : <span className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-gray-600 bg-gray-100 border border-gray-200">Paid tiers launching soon — free lookup available</span>)
+              :<button onClick={()=>setShowPlans(!showPlans)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">{showPlans?'Hide plans':'Compare plans →'}</button>}
           </div>
         </div>
 
@@ -263,11 +266,15 @@ export default function ContractorCheckClient({ initialHistory }: { initialHisto
           </div>
 
           {/* Upsell */}
-          {tier==='free'&&<div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-5 text-white">
+          {tier==='free' && checkoutEnabled && <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-5 text-white">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div><div className="text-sm font-bold">Want deeper intelligence?</div><div className="text-xs text-blue-200 mt-1">Pro unlocks real-time fresh searches, court records, OSHA deep scans, and downloadable PDF reports.</div></div>
               <button onClick={()=>{setTier('pro');setShowPlans(true);window.scrollTo({top:0,behavior:'smooth'})}} className="flex items-center gap-2 px-5 py-2.5 bg-white text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-50 transition-all shadow-sm"><Zap size={13}/>Upgrade to Pro — $29/mo<ArrowRight size={13}/></button>
             </div>
+          </div>}
+          {tier==='free' && !checkoutEnabled && <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 text-gray-700">
+            <div className="text-sm font-bold text-gray-900">Paid tiers launching soon</div>
+            <div className="text-xs text-gray-500 mt-1">Free lookup is fully available today. Pro and Enterprise plans go live when the redemption flow ships.</div>
           </div>}
 
           <p className="text-[11px] text-gray-400 text-center px-4 leading-relaxed">Confidence: {report.confidence_level} · {report.data_sources_searched?.length??0} sources checked · {report.disclaimer}</p>

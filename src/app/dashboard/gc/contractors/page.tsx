@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { isGroundcheckCheckoutEnabled } from '@/lib/trust/feature-flags'
 import ContractorCheckClient from './ContractorCheckClient'
 
 export const metadata = { title: 'Contractor Check — earthmove.io' }
@@ -17,5 +18,5 @@ export default async function ContractorCheckPage() {
     .order('created_at', { ascending: false })
     .limit(20)
 
-  return <ContractorCheckClient initialHistory={history ?? []} />
+  return <ContractorCheckClient initialHistory={history ?? []} checkoutEnabled={isGroundcheckCheckoutEnabled()} />
 }

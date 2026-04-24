@@ -5,6 +5,7 @@ import {
   VALID_TRUST_TIERS,
   type TrustTier,
 } from '@/lib/trust/checkout'
+import { isGroundcheckCheckoutEnabled } from '@/lib/trust/feature-flags'
 
 // Stripe SDK is not edge-compatible (uses Node crypto).
 export const runtime = 'nodejs'
@@ -14,6 +15,18 @@ interface RequestBody {
 }
 
 export async function POST(req: Request) {
+  // P0-3 / P0-4 / P0-6 gate. Paid GroundCheck tiers are disabled until:
+  //   - /api/trust/redeem exists and consumes credits from trust_credits_ledger
+  //   - Stripe live-mode products created with env-backed price IDs
+  //   - TRUST_TIER_CONFIG placeholder prices confirmed by Juan
+  // Returns 410 Gone while disabled so any stray clients fail loudly.
+  if (!isGroundcheckCheckoutEnabled()) {
+    return NextResponse.json({
+      error:   'checkout_disabled',
+      message: 'Paid GroundCheck tiers are temporarily unavailable. Free lookups remain active.',
+    }, { status: 410 })
+  }
+
   // ---- Auth (cookie-bound; reuses middleware session) ----
   const supabase = await createClient()
   const { data: { user }, error: authErr } = await supabase.auth.getUser()
