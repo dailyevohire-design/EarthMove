@@ -46,15 +46,15 @@ The filing fee varies by Colorado county. Most counties charge a base fee for th
 ## How to file
 
 Most Colorado counties accept filings in one of three ways:
-1. **In person** at the county recorder's office during business hours (usually Monday–Friday, 8–4 or 8–5; some close earlier on Fridays).
+1. **In person** at the county recorder's office during business hours (usually Monday–Friday, generally 8:00–4:00 or 8:00–5:00, with some counties closing earlier on Fridays — hours vary by county, so call the specific recorder before you go (see Appendix A)).
 2. **By mail**, with a check for the filing fee and a self-addressed stamped envelope for the recorded copy to be returned.
-3. **Electronically** through a state or county e-recording system. Not every county offers this. Appendix A notes which counties in the v0 list support e-recording; call the recorder to confirm.
+3. **Electronically** through a state or county e-recording system. Not every county offers this. Per-county e-recording availability changes frequently; confirm directly with the county recorder or the e-recording service (Simplifile, CSC, eRecording Partners Network) before you rely on it.
 
 ## After filing
 
 - Keep your recorded copy (you'll get a stamped page back with the reception number and recording date).
 - Send a copy of the recorded lien to the property owner by certified mail with return receipt requested. This is not strictly required by statute, but it is nearly universal practice and sometimes prompts the owner to pay to clear the title.
-- Calendar the 6-month foreclosure deadline. If you are not prepared to sue to foreclose, get an attorney engaged now — foreclosure is a district court lawsuit.
+- Calendar the 6-month foreclosure deadline. If you are not prepared to sue to foreclose, get an attorney engaged now — foreclosure is generally a district court lawsuit, though county court may have jurisdiction when the amount at issue is within its statutory cap.
 
 ## Customer verification callouts
 

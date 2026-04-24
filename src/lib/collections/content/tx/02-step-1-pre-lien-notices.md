@@ -7,18 +7,18 @@ Original contractors on commercial non-residential projects generally do not sen
 ## When the notice is due
 
 For **commercial non-residential** projects:
-- By the **15th day of the 3rd month** after the month of unpaid labor or materials.
+- By the **15th day of the 3rd month (as a general rule under Tex. Prop. Code § 53.056 — tier-specific carve-outs apply; full text at https://statutes.capitol.texas.gov/Docs/PR/htm/PR.53.htm#53.056)** after the month of unpaid labor or materials.
 - Example: work performed and unpaid in March → notice due by June 15.
 - Count calendar months, not business days.
 
 For **residential** projects:
-- By the **15th day of the 2nd month** after the month of unpaid labor or materials.
+- By the **15th day of the 2nd month (as a general rule under § 53.056 — tier-specific carve-outs apply)** after the month of unpaid labor or materials.
 - Example: work performed and unpaid in March → notice due by May 15.
 
 ## Who must be served
 
 - The **property owner** at the owner's last known address.
-- The **original contractor** (the party who hired you directly, if you are a subcontractor; the GC even if you were hired by another sub, if you are a sub-sub).
+- The **original contractor** (the party who hired you directly, if you are a subcontractor; the GC and the owner if you are a sub-sub (see Step 1b — Your Contractor Tier for exactly who you serve at each tier)).
 
 Serve both. Failure to serve either can invalidate the notice.
 
@@ -45,7 +45,7 @@ For ongoing non-payment, you must serve a **new notice each month** as the next 
 
 In practice: if you performed work in March, April, May, and June that all went unpaid, and you are a subcontractor on a commercial project, you must send four separate § 53.056 notices — one for each month, each by the 15th of its 3rd-month-after deadline.
 
-Set calendar reminders for each month's deadline. Missing one forfeits the lien rights associated with that month's work (but not necessarily the other months).
+Set calendar reminders for each month's deadline. As a general rule, missing one forfeits the lien rights associated with that month's work (but not necessarily the other months) — specially-fabricated-materials and retainage claims follow different rules (see §§ 53.058, 53.057).
 
 ## Fund trapping (§§ 53.081–.084)
 
