@@ -1,81 +1,54 @@
-# Collections Assist — Launch Checklist
+# Contractor Payment Kit — Launch Checklist
 
 ## §1 Product overview
 
-Collections Assist is a standalone $99 flat-fee service that generates three
-state-specific lien-path documents for contractors and suppliers who have
-unpaid work at a Colorado or Texas (DFW commercial) property:
+Contractor Payment Kit is a standalone $49 flat-fee product generating a
+4-document or 2-document kit for contractors pursuing unpaid work on property
+in Colorado or Texas:
 
-1. A formal demand-for-payment letter.
-2. A pre-lien / intent-to-lien notice (state-specific form).
-3. A mechanic's lien statement or lien affidavit (state-specific form).
+1. **Instruction packet** (always included) — 15–25 pages, state-specific,
+   step-by-step guide covering the process, deadlines, notary procedure,
+   certified mail how-to, legal description lookup, county directory,
+   glossary, and when to call an attorney.
+2. **Demand-for-payment letter** (always included).
+3. **Pre-lien / intent-to-lien notice** (full kit only) — state-specific form.
+4. **Mechanic's lien document** (full kit only) — state-specific, to be
+   notarized and filed.
 
-It is sibling to the GroundCheck product — separate route, separate Stripe
-product, separate DB tables. Stripe product is feature-flagged OFF at launch
-until two-attorney sign-off (§3).
+Full kit: 4 documents. Demand-only kit (TX homestead without pre-work
+spouse-signed contract): 2 documents.
 
-## §2 Legal posture
+## §2 Legal posture — Option C kit model
 
-Collections Assist is a **self-help legal software** product, modeled on the
-doctrine established in *Medlock v. LegalZoom.com, Inc.*, 738 S.E.2d 682 (S.C.
-2013) and *In re Nolo Press / Parsons Technology*, 991 S.W.2d 768 (Tex. 1999).
+See `docs/LEGAL_POSTURE.md` for the full analysis. Summary:
 
-- **No attorney-client relationship** is formed at any point in the flow.
-- **No fact-specific legal advice** is given. Templates are statutory
-  boilerplate.
-- **No LLM is used in document generation** in v0. All six templates (three CO,
-  three TX) are pure rendering from user-entered data.
-- **Branching intake is information gathering**, not legal diagnosis. State,
-  property type, homestead, and contractor role are scope filters — not
-  recommendations.
-- **User makes every substantive decision.** Amount owed, who to name, whether
-  to file, are all user-selected.
-- **Prominent disclaimers on every surface** — layout wrapper, each intake
-  step, PDF header + footer, terms of service.
-- **`[VERIFY WITH {STATE} ATTORNEY: ...]` placeholders** are rendered in the
-  PDFs in bold red to force counsel attention. We never fabricate statutory
-  language.
-
-See `docs/LEGAL_POSTURE.md` for the full doctrinal analysis.
+- Modeled on the *Medlock* / *Nolo Press* self-help legal software doctrine.
+- Incompleteness is visible on the face of the output (amber "NOT READY TO
+  FILE" banner + yellow "CUSTOMER VERIFICATION REQUIRED" callouts) — the
+  customer cannot plausibly claim surprise.
+- Instruction packet is the core product value. Education is First
+  Amendment-protected.
+- No LLM in any document body or instruction-packet content.
+- No counsel review is required before launch (Phase 2 polish is optional).
 
 ## §3 Pre-launch activation checklist
 
-Do not flip `NEXT_PUBLIC_COLLECTIONS_ENABLED=true` until **every** box is
-checked.
-
-### Counsel review
-
-- [ ] Colorado-licensed attorney reviews `src/lib/collections/templates/co/*.ts`
-      and approves OR replaces every `[VERIFY WITH COLORADO ATTORNEY: ...]`
-      placeholder.
-- [ ] Texas-licensed attorney reviews `src/lib/collections/templates/tx/*.ts`
-      and approves OR replaces every `[VERIFY WITH TEXAS ATTORNEY: ...]`
-      placeholder.
-- [ ] Both attorneys review sample generated PDFs (run the seed script with
-      representative test cases per state).
-- [ ] Both attorneys review `UPL_DISCLAIMER` text in
-      `src/lib/collections/disclaimer.ts`.
-- [ ] Counsel confirms state-specific UPL posture (CO: self-help software
-      precedent; TX: *Nolo Press* precedent).
-- [ ] `docs/LEGAL_POSTURE.md` reviewed by counsel.
-- [ ] Terms of service page (`/legal/collections-terms`) reviewed by counsel.
-
 ### Stripe
 
-- [ ] Product "Collections Assist" created in Stripe LIVE mode, $99.00
+- [ ] Stripe product "Contractor Payment Kit" created in LIVE mode, $49.00
       one-time.
-- [ ] `STRIPE_PRICE_COLLECTIONS_ASSIST` env var set in Vercel Production.
+- [ ] `STRIPE_PRICE_COLLECTIONS_KIT` env var set in Vercel Production.
 - [ ] Stripe product set `active=true`.
-- [ ] Webhook endpoint configured in the Stripe dashboard pointing at
-      `/api/webhooks/stripe` (single router — the `product_family='collections'`
-      branch routes to `grant_collections_case_from_stripe_event`).
+- [ ] Stripe webhook endpoint configured at `/api/webhooks/stripe` (single
+      router; the `product_family='collections'` branch routes to
+      `grant_collections_case_from_stripe_event`).
 
 ### Supabase
 
-- [ ] Storage bucket `collections` exists with RLS verified (policies "Users
-      read own collections objects" and "Service role full access collections").
+- [ ] Storage bucket `collections` verified present with RLS policies.
 - [ ] Migration 107 (`collections_assist`) applied.
 - [ ] Migration 108 (`collections_storage_rls`) applied.
+- [ ] Migration 108 (`collections_kit_expansion`) applied.
 
 ### App
 
@@ -84,13 +57,16 @@ checked.
 
 ### Smoke test (staging / preview)
 
-- [ ] CO case: `/collections/new` → fill → Stripe test card `4242 4242 4242 4242`
-      → PDFs generate with CO templates → all 3 downloadable.
-- [ ] TX commercial case: same with TX templates.
-- [ ] TX residential attempt: blocked at Step 1 with `tx_v0_requires_commercial`.
-- [ ] TX homestead attempt: blocked at Step 1 with `homestead_not_supported`.
-- [ ] Past-deadline CO case (last_day 5 months ago): blocked at Step 5 with
-      `past_filing_deadline`.
+- [ ] **CO full kit** — `/collections/new` → commercial CO → fill → Stripe
+      test card → PDFs generate with CO templates → all 4 downloadable.
+- [ ] **TX full kit, commercial** — same with TX commercial.
+- [ ] **TX full kit, residential non-homestead** — previously blocked in
+      f1b7fc8; now accepted, kit is full.
+- [ ] **TX full kit, homestead WITH pre-work contract** — both spouses signed,
+      date provided; kit is full.
+- [ ] **TX demand_only, homestead no-contract** — TX homestead, contract
+      signed by owner only OR no contract; kit is demand-only with Section 0
+      explaining why.
 
 ## §4 Rollback (seconds)
 
@@ -101,8 +77,7 @@ vercel --prod
 ```
 
 Result: `/collections/*` routes return 404, nav link hidden, intake API 404s.
-In-flight cases already paid will still generate PDFs on webhook receipt (the
-webhook does not gate on the flag).
+In-flight cases already paid will still generate PDFs on webhook receipt.
 
 ## §5 Refund procedure
 
@@ -113,20 +88,19 @@ webhook does not gate on the flag).
    INSERT INTO collections_case_events (case_id, event_type, event_payload)
      VALUES ($1, 'refunded', '{"actor":"admin_manual"}'::jsonb);
    ```
-3. Any outstanding signed URLs will continue to work until their 1-hour TTL
-   expires; no live fetches are possible thereafter because
-   `/api/collections/[id]/download` returns 410 for refunded cases.
+3. Outstanding signed URLs keep working until their 1-hour TTL expires; the
+   download endpoint returns 410 for refunded cases thereafter.
 
-## §6 Phase 2 / out-of-scope for v0
+## §6 Phase 2 — optional
 
+- **Optional counsel review** — a Colorado-licensed and a Texas-licensed
+  attorney reviewing the kit for a blessing. Estimated $800–$1500 per state.
+  Not a launch blocker; becomes a marketing credential if obtained.
 - Automated property owner lookup (PropStream / ATTOM / county scrapers).
-- Texas residential non-homestead.
 - Additional states (AZ, NV, GA, FL, NC per blueprint expansion cities).
 - Notary coordination service.
-- E-filing with Denver, Arapahoe, Dallas, Tarrant county clerks.
-- AI tone polish on demand letter (requires a separate counsel opinion —
-  LLM-generated content is novel UPL territory).
-- Homestead workflow (requires pre-work contract intake).
+- Release-of-lien forms and partial-release-of-lien forms.
 - Admin UI for refunds and case auditing.
-- Draft-resume (v0 uses localStorage — migrate to a real `collections_drafts`
-  table when we go past single-device use).
+- Draft-resume (v1 uses localStorage — a real `collections_drafts` table for
+  cross-device resume).
+- E-recording API integrations with county clerks that offer them.

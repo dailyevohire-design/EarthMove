@@ -21,7 +21,7 @@ export async function GET(
   const { data, error } = await supabase
     .from('collections_cases')
     .select(
-      'id, user_id, status, state_code, contractor_role, property_type, is_homestead, claimant_name, respondent_name, property_street_address, property_city, property_state, property_zip, property_county, work_description, first_day_of_work, last_day_of_work, amount_owed_cents, paid_at, documents_generated_at, download_count, first_downloaded_at, created_at, updated_at',
+      'id, user_id, status, state_code, kit_variant, has_pre_work_contract, contractor_role, property_type, is_homestead, claimant_name, respondent_name, property_street_address, property_city, property_state, property_zip, property_county, work_description, first_day_of_work, last_day_of_work, amount_owed_cents, paid_at, documents_generated_at, download_count, first_downloaded_at, created_at, updated_at',
     )
     .eq('id', id)
     .maybeSingle()

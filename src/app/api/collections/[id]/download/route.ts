@@ -23,7 +23,7 @@ export async function GET(
   // RLS-scoped read — caller can only see their own row.
   const { data: caseRow, error } = await supabase
     .from('collections_cases')
-    .select('id, user_id, status, state_code, documents_generated_at, download_count, first_downloaded_at')
+    .select('id, user_id, status, state_code, kit_variant, documents_generated_at, download_count, first_downloaded_at')
     .eq('id', id)
     .maybeSingle()
 
@@ -49,7 +49,7 @@ export async function GET(
   const admin = createAdminClient()
   const { data: fresh } = await admin
     .from('collections_cases')
-    .select('id, user_id, status, state_code, download_count, first_downloaded_at')
+    .select('id, user_id, status, state_code, kit_variant, download_count, first_downloaded_at')
     .eq('id', caseRow.id)
     .maybeSingle()
 
@@ -58,7 +58,7 @@ export async function GET(
     return NextResponse.json({ status: 'generation_in_progress' }, { status: 202 })
   }
 
-  const signed = await getSignedDownloadUrls(fresh.user_id, fresh.id, fresh.state_code)
+  const signed = await getSignedDownloadUrls(fresh.user_id, fresh.id, fresh.state_code, fresh.kit_variant)
 
   const nextCount = (fresh.download_count ?? 0) + 1
   const updates: Record<string, unknown> = {
@@ -76,9 +76,11 @@ export async function GET(
   })
 
   return NextResponse.json({
-    demand_letter: signed.demand_letter,
-    doc2:          signed.doc2,
-    lien:          signed.lien,
-    doc2_type:     signed.doc2_type,
+    instruction_packet: signed.instruction_packet,
+    demand_letter:      signed.demand_letter,
+    doc2:               signed.doc2,
+    lien:               signed.lien,
+    doc2_type:          signed.doc2_type,
+    is_full_kit:        signed.is_full_kit,
   })
 }

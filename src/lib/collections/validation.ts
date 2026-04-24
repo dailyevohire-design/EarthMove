@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { ContractorRole, PropertyType } from './types'
+import type { CollectionsKitVariant, ContractorRole } from './types'
 
 export const IntakeSchema = z.object({
   state_code:      z.enum(['CO','TX']),
@@ -42,18 +42,29 @@ export const IntakeSchema = z.object({
 
 export type IntakeInput = z.infer<typeof IntakeSchema>
 
-export type ValidationError = { error: string; message?: string; warnings?: string[] }
 export type ValidationResult =
-  | { ok: true; warnings: string[] }
+  | { ok: true; warnings: string[]; kit_variant: CollectionsKitVariant }
   | { ok: false; status: 400; error: string; message: string }
 
-// TX § 53.056 commercial: notice due by the 15th of the 3rd month after the unpaid month.
 function tx56CommercialDeadline(lastDayOfWork: Date, now: Date): { deadlinePast: boolean; deadline: Date } {
   const year  = lastDayOfWork.getUTCFullYear()
   const month = lastDayOfWork.getUTCMonth()
-  // 3rd month after = month + 3
   const deadline = new Date(Date.UTC(year, month + 3, 15))
   return { deadlinePast: now > deadline, deadline }
+}
+
+// Kit routing rule: TX + homestead + no pre-work spouse-signed contract → demand-only.
+// Everything else → full_kit. No state+property_type combinations are rejected at v1 —
+// the customer sees a demand-only variant if their facts preclude a lien.
+export function resolveKitVariant(input: IntakeInput): CollectionsKitVariant {
+  if (
+    input.state_code === 'TX' &&
+    input.is_homestead === true &&
+    !(input.original_contract_signed_date && input.original_contract_both_spouses_signed === true)
+  ) {
+    return 'demand_only'
+  }
+  return 'full_kit'
 }
 
 export function validateIntake(
@@ -62,46 +73,11 @@ export function validateIntake(
 ): ValidationResult {
   const warnings: string[] = []
 
-  // --- Property state must equal state_code ---
   if (parsed.property_state !== parsed.state_code) {
     return { ok: false, status: 400, error: 'invalid_property_state',
       message: 'Property state must match the case state.' }
   }
 
-  // --- Homestead always blocked ---
-  if (parsed.is_homestead) {
-    return { ok: false, status: 400, error: 'homestead_not_supported',
-      message: 'Homestead properties require additional legal process. Please consult an attorney.' }
-  }
-
-  // --- TX v0 scope: commercial/industrial only ---
-  if (parsed.state_code === 'TX') {
-    if (!(parsed.property_type === 'commercial' || parsed.property_type === 'industrial')) {
-      // residential_homestead would also fall here, but is_homestead=true would have
-      // short-circuited earlier. Keep the TX-specific message for the residential /
-      // mixed_use / other cases.
-      if (parsed.property_type === 'residential_homestead') {
-        return { ok: false, status: 400, error: 'homestead_not_supported',
-          message: 'Homestead properties are not supported.' }
-      }
-      return { ok: false, status: 400, error: 'tx_v0_requires_commercial',
-        message: "Texas Collections Assist v0 supports commercial properties only. Residential Texas lien filings require additional attorney-reviewed workflows and are coming in a future release." }
-    }
-  }
-
-  // --- CO v0 scope ---
-  if (parsed.state_code === 'CO') {
-    if (parsed.property_type === 'residential_homestead') {
-      return { ok: false, status: 400, error: 'homestead_not_supported',
-        message: 'Homestead properties require additional legal process. Please consult an attorney.' }
-    }
-    if (parsed.property_type === 'other') {
-      return { ok: false, status: 400, error: 'property_type_not_supported',
-        message: 'This property type is not currently supported.' }
-    }
-  }
-
-  // --- Amount + dates sanity ---
   if (parsed.amount_owed_cents <= 0) {
     return { ok: false, status: 400, error: 'invalid_amount',
       message: 'Amount owed must be greater than zero.' }
@@ -117,13 +93,12 @@ export function validateIntake(
       message: 'First day of work must be on or before the last day of work.' }
   }
 
-  // --- 4-month deadline ---
-  // CO: any claim requires last_day_of_work within the last 4 months (C.R.S. § 38-22-109(5))
-  // TX commercial original contractor: similar 4-month outer window per § 53.052(a)
-  // TX subs/suppliers: different regime (§ 53.056) — we emit warnings but do not hard-block here.
+  // 4-month deadline — CO hard block; TX original contractor hard block on commercial non-residential.
   const fourMonthsAgo = new Date(now)
   fourMonthsAgo.setUTCMonth(fourMonthsAgo.getUTCMonth() - 4)
-  const deadlineRole: ContractorRole = parsed.contractor_role
+  const role: ContractorRole = parsed.contractor_role
+
+  const kit_variant = resolveKitVariant(parsed)
 
   if (parsed.state_code === 'CO' && last < fourMonthsAgo) {
     return { ok: false, status: 400, error: 'past_filing_deadline',
@@ -131,16 +106,18 @@ export function validateIntake(
   }
   if (
     parsed.state_code === 'TX' &&
-    deadlineRole === 'original_contractor' &&
-    last < fourMonthsAgo
+    role === 'original_contractor' &&
+    !parsed.is_homestead &&
+    last < fourMonthsAgo &&
+    kit_variant === 'full_kit'
   ) {
     return { ok: false, status: 400, error: 'past_filing_deadline',
-      message: 'Texas original-contractor lien filing deadlines require work within the last 4 months for commercial property. Consult an attorney immediately.' }
+      message: 'Texas original-contractor lien filing deadlines generally require work within the last 4 months for non-homestead commercial property. Consult an attorney.' }
   }
 
-  // --- TX sub § 53.056 timing warning (non-blocking) ---
+  // TX sub § 53.056 timing warning (non-blocking).
   if (parsed.state_code === 'TX' &&
-      (deadlineRole === 'subcontractor' || deadlineRole === 'sub_subcontractor' || deadlineRole === 'material_supplier')) {
+      (role === 'subcontractor' || role === 'sub_subcontractor' || role === 'material_supplier')) {
     const { deadlinePast, deadline } = tx56CommercialDeadline(last, now)
     if (deadlinePast) {
       warnings.push(
@@ -153,12 +130,11 @@ export function validateIntake(
     }
   }
 
-  return { ok: true, warnings }
-}
+  if (kit_variant === 'demand_only') {
+    warnings.unshift(
+      'Your intake indicates a Texas homestead without a pre-work contract signed by both spouses. Texas Constitution art. XVI § 50 and Tex. Prop. Code § 53.254 do not allow a lien on this fact pattern. Your kit is the demand-only variant — instruction packet + demand letter, no lien affidavit.',
+    )
+  }
 
-// Dead-code branch per spec: TX original contractor on homestead requires pre-work contract
-// with both spouses' signatures. The homestead+TX combo is blocked above so this helper is
-// never reached in v0. TODO(v1): reinstate when residential TX + homestead ships.
-export function _unused_txHomesteadOriginalContractorGuard(_role: ContractorRole, _propertyType: PropertyType): void {
-  /* intentionally empty */
+  return { ok: true, warnings, kit_variant }
 }

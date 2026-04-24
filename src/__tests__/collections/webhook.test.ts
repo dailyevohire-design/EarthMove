@@ -77,28 +77,30 @@ beforeEach(() => {
 })
 
 describe('POST /api/webhooks/stripe — collections routing', () => {
-  it('1. checkout.session.completed w/ product_family=collections → RPC called + paid event logged', async () => {
+  it('1. checkout.session.completed w/ product_variant=contractor_payment_kit_v1 → RPC called + paid event logged', async () => {
     stripeEvent = {
       id: 'evt_1',
       type: 'checkout.session.completed',
       data: {
         object: {
           id: 'cs_abc',
-          amount_total: 9900,
+          amount_total: 4900,
           payment_intent: 'pi_abc',
           client_reference_id: 'user-1',
           metadata: {
-            product_family: 'collections',
-            case_id: 'case-1',
-            user_id:  'user-1',
+            product_family:  'collections',
+            product_variant: 'contractor_payment_kit_v1',
+            kit_variant:     'full_kit',
+            case_id:         'case-1',
+            user_id:         'user-1',
           },
         },
       },
     }
     const res = await POST(mkReq('{}', { 'stripe-signature': 'sig' }))
     expect(res.status).toBe(200)
-    expect(rpcCalls.find(c => c.name === 'grant_collections_case_from_stripe_event')).toBeTruthy()
-    // generateAndStoreCase is scheduled in after(); give microtasks a tick
+    const collectionsCall = rpcCalls.find(c => c.name === 'grant_collections_case_from_stripe_event')
+    expect(collectionsCall).toBeTruthy()
     await new Promise(r => setTimeout(r, 10))
     expect(generateCalls).toContain('case-1')
   })
@@ -109,9 +111,12 @@ describe('POST /api/webhooks/stripe — collections routing', () => {
       type: 'checkout.session.completed',
       data: {
         object: {
-          id: 'cs_dup', amount_total: 9900, payment_intent: 'pi_dup',
+          id: 'cs_dup', amount_total: 4900, payment_intent: 'pi_dup',
           client_reference_id: 'user-1',
-          metadata: { product_family: 'collections', case_id: 'case-1', user_id: 'user-1' },
+          metadata: {
+            product_family: 'collections', product_variant: 'contractor_payment_kit_v1',
+            kit_variant: 'full_kit', case_id: 'case-1', user_id: 'user-1',
+          },
         },
       },
     }

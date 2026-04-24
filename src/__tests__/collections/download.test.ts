@@ -16,13 +16,6 @@ let adminCaseRow: any = null
 const adminUpdates: any[] = []
 const adminEventInserts: any[] = []
 
-function makeQb(finalValue: any) {
-  const chain: any = {}
-  for (const m of ['select','eq','is','order','limit','single','maybeSingle']) chain[m] = vi.fn(() => chain)
-  chain.then = (ok: any) => Promise.resolve(finalValue).then(ok)
-  return chain
-}
-
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: { getUser: async () => ({ data: { user: authedUser }, error: null }) },
@@ -39,9 +32,7 @@ vi.mock('@/lib/supabase/server', () => ({
       if (table === 'collections_cases') {
         return {
           select: () => ({
-            eq: () => ({
-              maybeSingle: async () => ({ data: adminCaseRow, error: null }),
-            }),
+            eq: () => ({ maybeSingle: async () => ({ data: adminCaseRow, error: null }) }),
           }),
           update: (values: any) => ({
             eq: (_c: string, _v: any) => { adminUpdates.push(values); return Promise.resolve({ error: null }) },
@@ -51,7 +42,10 @@ vi.mock('@/lib/supabase/server', () => ({
       if (table === 'collections_case_events') {
         return { insert: (row: any) => { adminEventInserts.push(row); return Promise.resolve({ error: null }) } }
       }
-      return makeQb({ data: null, error: null })
+      const chain: any = {}
+      for (const m of ['select','eq','is','single','maybeSingle']) chain[m] = vi.fn(() => chain)
+      chain.then = (ok: any) => Promise.resolve({ data: null, error: null }).then(ok)
+      return chain
     },
   }),
 }))
@@ -62,38 +56,41 @@ vi.mock('@/lib/collections/generator', () => ({
   generateAndStoreCase: async (id: string) => {
     generateCalls.push(id)
     if (!shouldGenerate) throw new Error('generation failed')
-    // flip admin case row to documents_ready to mimic the update inside the real generator
     adminCaseRow = { ...adminCaseRow, status: 'documents_ready' }
   },
 }))
 
 const signedUrlCalls: any[] = []
 vi.mock('@/lib/collections/storage', () => ({
-  casePaths: (uid: string, cid: string, st: 'CO' | 'TX') => ({
-    demand_letter: `${uid}/${cid}/demand_letter.pdf`,
-    doc2: st === 'CO' ? `${uid}/${cid}/notice_of_intent.pdf` : `${uid}/${cid}/pre_lien_notice.pdf`,
-    lien: `${uid}/${cid}/lien.pdf`,
-    doc2_name: st === 'CO' ? 'notice_of_intent' : 'pre_lien_notice',
+  casePaths: (uid: string, cid: string, _st: 'CO' | 'TX', _variant: 'full_kit' | 'demand_only') => ({
+    instruction_packet: `${uid}/${cid}/instruction_packet.pdf`,
+    demand_letter:      `${uid}/${cid}/demand_letter.pdf`,
+    doc2: null, lien: null, doc2_name: null,
   }),
-  getSignedDownloadUrls: async (uid: string, cid: string, st: 'CO' | 'TX') => {
-    signedUrlCalls.push({ uid, cid, st })
+  getSignedDownloadUrls: async (uid: string, cid: string, st: 'CO' | 'TX', variant: 'full_kit' | 'demand_only') => {
+    signedUrlCalls.push({ uid, cid, st, variant })
+    if (variant === 'demand_only') {
+      return {
+        instruction_packet: `https://signed/${cid}/inst`,
+        demand_letter:      `https://signed/${cid}/demand`,
+        doc2: null, lien: null, doc2_type: null, is_full_kit: false,
+      }
+    }
     return {
-      demand_letter: `https://signed/${cid}/demand`,
-      doc2:          `https://signed/${cid}/doc2`,
-      lien:          `https://signed/${cid}/lien`,
-      doc2_type:     st === 'CO' ? 'notice_of_intent' : 'pre_lien_notice',
+      instruction_packet: `https://signed/${cid}/inst`,
+      demand_letter:      `https://signed/${cid}/demand`,
+      doc2:               `https://signed/${cid}/doc2`,
+      lien:               `https://signed/${cid}/lien`,
+      doc2_type:          st === 'CO' ? 'notice_of_intent' : 'pre_lien_notice',
+      is_full_kit:        true,
     }
   },
 }))
 
 import { GET } from '@/app/api/collections/[id]/download/route'
 
-function mkReq() {
-  return {} as any
-}
-function mkParams(id: string) {
-  return { params: Promise.resolve({ id }) }
-}
+function mkReq() { return {} as any }
+function mkParams(id: string) { return { params: Promise.resolve({ id }) } }
 
 beforeEach(() => {
   adminUpdates.length = 0
@@ -106,33 +103,32 @@ beforeEach(() => {
 })
 
 describe('GET /api/collections/[id]/download', () => {
-  it('1. status=paid + not generated → triggers generateAndStoreCase + returns 3 URLs', async () => {
-    rlsCaseRow   = { id: 'case-1', user_id: 'user-1', status: 'paid', state_code: 'CO', documents_generated_at: null, download_count: 0, first_downloaded_at: null }
-    adminCaseRow = { id: 'case-1', user_id: 'user-1', status: 'paid', state_code: 'CO', download_count: 0, first_downloaded_at: null }
+  it('1. paid + not generated → triggers generation and returns kit URLs', async () => {
+    rlsCaseRow   = { id: 'case-1', user_id: 'user-1', status: 'paid', state_code: 'CO', kit_variant: 'full_kit', documents_generated_at: null, download_count: 0, first_downloaded_at: null }
+    adminCaseRow = { id: 'case-1', user_id: 'user-1', status: 'paid', state_code: 'CO', kit_variant: 'full_kit', download_count: 0, first_downloaded_at: null }
     const res = await GET(mkReq(), mkParams('case-1'))
     expect(res.status).toBe(200)
     expect(generateCalls).toEqual(['case-1'])
     const body = await res.json()
+    expect(body.instruction_packet).toMatch(/inst/)
     expect(body.demand_letter).toMatch(/demand/)
-    expect(body.doc2).toMatch(/doc2/)
-    expect(body.lien).toMatch(/lien/)
   })
 
-  it('2. case owned by different user → 404', async () => {
-    rlsCaseRow = null // RLS filters out
+  it('2. case owned by different user → 404 (RLS filter)', async () => {
+    rlsCaseRow = null
     const res = await GET(mkReq(), mkParams('case-other'))
     expect(res.status).toBe(404)
   })
 
   it('3. refunded → 410', async () => {
-    rlsCaseRow = { id: 'case-r', user_id: 'user-1', status: 'refunded', state_code: 'CO', documents_generated_at: null, download_count: 0, first_downloaded_at: null }
+    rlsCaseRow = { id: 'case-r', user_id: 'user-1', status: 'refunded', state_code: 'CO', kit_variant: 'full_kit', documents_generated_at: null, download_count: 0, first_downloaded_at: null }
     const res = await GET(mkReq(), mkParams('case-r'))
     expect(res.status).toBe(410)
   })
 
-  it('4. documents_ready → 3 URLs, increments download_count', async () => {
-    rlsCaseRow   = { id: 'case-dr', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', documents_generated_at: new Date().toISOString(), download_count: 2, first_downloaded_at: '2026-04-01T00:00:00Z' }
-    adminCaseRow = { id: 'case-dr', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', download_count: 2, first_downloaded_at: '2026-04-01T00:00:00Z' }
+  it('4. documents_ready → increments download_count', async () => {
+    rlsCaseRow   = { id: 'case-dr', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', kit_variant: 'full_kit', documents_generated_at: new Date().toISOString(), download_count: 2, first_downloaded_at: '2026-04-01T00:00:00Z' }
+    adminCaseRow = { id: 'case-dr', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', kit_variant: 'full_kit', download_count: 2, first_downloaded_at: '2026-04-01T00:00:00Z' }
     const res = await GET(mkReq(), mkParams('case-dr'))
     expect(res.status).toBe(200)
     const lastUpdate = adminUpdates[adminUpdates.length - 1]
@@ -140,8 +136,8 @@ describe('GET /api/collections/[id]/download', () => {
   })
 
   it('5. first download sets first_downloaded_at and status=downloaded', async () => {
-    rlsCaseRow   = { id: 'case-first', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', documents_generated_at: new Date().toISOString(), download_count: 0, first_downloaded_at: null }
-    adminCaseRow = { id: 'case-first', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', download_count: 0, first_downloaded_at: null }
+    rlsCaseRow   = { id: 'case-first', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', kit_variant: 'full_kit', documents_generated_at: new Date().toISOString(), download_count: 0, first_downloaded_at: null }
+    adminCaseRow = { id: 'case-first', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', kit_variant: 'full_kit', download_count: 0, first_downloaded_at: null }
     const res = await GET(mkReq(), mkParams('case-first'))
     expect(res.status).toBe(200)
     const lastUpdate = adminUpdates[adminUpdates.length - 1]
@@ -149,19 +145,38 @@ describe('GET /api/collections/[id]/download', () => {
     expect(lastUpdate.status).toBe('downloaded')
   })
 
-  it('6. CO download → doc2_type=notice_of_intent', async () => {
-    rlsCaseRow   = { id: 'case-co', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', documents_generated_at: new Date().toISOString(), download_count: 0, first_downloaded_at: null }
-    adminCaseRow = { id: 'case-co', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', download_count: 0, first_downloaded_at: null }
+  it('6. full_kit CO → 4 URLs + doc2_type=notice_of_intent', async () => {
+    rlsCaseRow   = { id: 'case-co', user_id: 'user-1', status: 'documents_ready', state_code: 'CO', kit_variant: 'full_kit', documents_generated_at: new Date().toISOString(), download_count: 0, first_downloaded_at: null }
+    adminCaseRow = { ...rlsCaseRow }
     const res = await GET(mkReq(), mkParams('case-co'))
     const body = await res.json()
     expect(body.doc2_type).toBe('notice_of_intent')
+    expect(body.is_full_kit).toBe(true)
+    expect(body.instruction_packet).toBeTruthy()
+    expect(body.demand_letter).toBeTruthy()
+    expect(body.doc2).toBeTruthy()
+    expect(body.lien).toBeTruthy()
   })
 
-  it('7. TX download → doc2_type=pre_lien_notice', async () => {
-    rlsCaseRow   = { id: 'case-tx', user_id: 'user-1', status: 'documents_ready', state_code: 'TX', documents_generated_at: new Date().toISOString(), download_count: 0, first_downloaded_at: null }
-    adminCaseRow = { id: 'case-tx', user_id: 'user-1', status: 'documents_ready', state_code: 'TX', download_count: 0, first_downloaded_at: null }
+  it('7. full_kit TX → 4 URLs + doc2_type=pre_lien_notice', async () => {
+    rlsCaseRow   = { id: 'case-tx', user_id: 'user-1', status: 'documents_ready', state_code: 'TX', kit_variant: 'full_kit', documents_generated_at: new Date().toISOString(), download_count: 0, first_downloaded_at: null }
+    adminCaseRow = { ...rlsCaseRow }
     const res = await GET(mkReq(), mkParams('case-tx'))
     const body = await res.json()
     expect(body.doc2_type).toBe('pre_lien_notice')
+    expect(body.is_full_kit).toBe(true)
+    expect(body.lien).toBeTruthy()
+  })
+
+  it('8. demand_only TX → 2 URLs, doc2+lien null', async () => {
+    rlsCaseRow   = { id: 'case-tx-do', user_id: 'user-1', status: 'documents_ready', state_code: 'TX', kit_variant: 'demand_only', documents_generated_at: new Date().toISOString(), download_count: 0, first_downloaded_at: null }
+    adminCaseRow = { ...rlsCaseRow }
+    const res = await GET(mkReq(), mkParams('case-tx-do'))
+    const body = await res.json()
+    expect(body.is_full_kit).toBe(false)
+    expect(body.instruction_packet).toBeTruthy()
+    expect(body.demand_letter).toBeTruthy()
+    expect(body.doc2).toBeNull()
+    expect(body.lien).toBeNull()
   })
 })

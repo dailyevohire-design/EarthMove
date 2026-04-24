@@ -7,6 +7,7 @@ type CaseRow = {
   id: string
   status: string
   state_code: 'CO' | 'TX'
+  kit_variant: 'full_kit' | 'demand_only'
   claimant_name: string
   respondent_name: string
   property_street_address: string
@@ -22,10 +23,12 @@ type CaseRow = {
 }
 
 type Urls = {
+  instruction_packet: string
   demand_letter: string
-  doc2: string
-  lien: string
-  doc2_type: 'notice_of_intent' | 'pre_lien_notice'
+  doc2: string | null
+  lien: string | null
+  doc2_type: 'notice_of_intent' | 'pre_lien_notice' | null
+  is_full_kit: boolean
 } | null
 
 export default function CaseStatusClient({ caseRow }: { caseRow: CaseRow }) {
@@ -34,7 +37,6 @@ export default function CaseStatusClient({ caseRow }: { caseRow: CaseRow }) {
   const [loadingDownload, setLoadingDownload] = useState(false)
   const [refreshCount, setRefreshCount] = useState(0)
 
-  // Poll while paid but docs not ready
   useEffect(() => {
     if (status === 'paid' && !caseRow.documents_generated_at) {
       const t = setInterval(() => setRefreshCount(c => c + 1), 4000)
@@ -57,18 +59,13 @@ export default function CaseStatusClient({ caseRow }: { caseRow: CaseRow }) {
     setLoadingDownload(true)
     try {
       const res = await fetch(`/api/collections/${caseRow.id}/download`, { cache: 'no-store' })
-      if (res.status === 202) {
-        setStatus('paid')
-        return
-      }
+      if (res.status === 202) { setStatus('paid'); return }
       if (res.status === 410) { setStatus('refunded'); return }
       if (!res.ok) return
       const data = await res.json()
       setUrls(data)
       setStatus('downloaded')
-    } finally {
-      setLoadingDownload(false)
-    }
+    } finally { setLoadingDownload(false) }
   }
 
   if (status === 'refunded') {
@@ -83,7 +80,7 @@ export default function CaseStatusClient({ caseRow }: { caseRow: CaseRow }) {
     return (
       <div className="space-y-4">
         <div className="rounded-lg border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700">
-          Your case is {status === 'draft' ? 'a draft' : 'awaiting payment'}. Resume capability is not in v0 — please start a new case to pay.
+          Your case is {status === 'draft' ? 'a draft' : 'awaiting payment'}. Resume capability is not in v1 — please start a new case to pay.
         </div>
         <Link href="/collections/new" className="inline-block px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold">Start a new case</Link>
       </div>
@@ -95,21 +92,22 @@ export default function CaseStatusClient({ caseRow }: { caseRow: CaseRow }) {
       <div className="rounded-2xl border border-stone-200 bg-white p-5 text-sm text-stone-700">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Generating your documents… This usually takes a few seconds.</span>
+          <span>Generating your kit… This usually takes a few seconds.</span>
         </div>
       </div>
     )
   }
 
-  // documents_ready or downloaded
   const coState = caseRow.state_code === 'CO'
-  const labels = coState
-    ? { demand: 'Demand Letter', doc2: 'Notice of Intent to Lien', lien: 'Statement of Mechanic’s Lien' }
-    : { demand: 'Demand Letter', doc2: 'Pre-Lien Notice (§ 53.056)', lien: 'Lien Affidavit (§ 53.054)' }
+  const isFullKit = caseRow.kit_variant === 'full_kit'
 
-  const amber = coState
-    ? "DO NOT FILE WITHOUT ATTORNEY REVIEW — Have a Colorado-licensed attorney review before filing with the county recorder. Improperly filed liens create liability under C.R.S. § 38-22-128."
-    : "DO NOT FILE WITHOUT ATTORNEY REVIEW — Have a Texas-licensed attorney review before filing with the county clerk. Improperly filed liens create liability under Tex. Prop. Code § 53.156. For subcontractors, the attorney should confirm § 53.056 notice compliance."
+  const fullKitLabels = coState
+    ? { demand: 'Demand Letter', doc2: 'Notice of Intent to Lien', lien: 'Statement of Mechanic’s Lien (Notarize Before Filing)' }
+    : { demand: 'Demand Letter', doc2: 'Pre-Lien Notice (§ 53.056)', lien: 'Lien Affidavit (§ 53.054) (Notarize Before Filing)' }
+
+  const amberCallout = coState
+    ? "DO NOT FILE WITHOUT COMPLETING THE VERIFICATION STEPS — Read the instruction packet first. Every yellow 'CUSTOMER VERIFICATION REQUIRED' callout in your filing documents points to a Colorado statute section you must confirm at leg.colorado.gov before filing. Improperly filed liens create liability under C.R.S. § 38-22-128."
+    : "DO NOT FILE WITHOUT COMPLETING THE VERIFICATION STEPS — Read the instruction packet first. Every yellow 'CUSTOMER VERIFICATION REQUIRED' callout in your filing documents points to a Texas statute section you must confirm at statutes.capitol.texas.gov before filing. Improperly filed liens create liability under Tex. Prop. Code § 53.156."
 
   return (
     <div className="space-y-5">
@@ -123,16 +121,24 @@ export default function CaseStatusClient({ caseRow }: { caseRow: CaseRow }) {
         </button>
       )}
 
-      {urls && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <DownloadCard label={labels.demand} url={urls.demand_letter} />
-          <DownloadCard label={labels.doc2}   url={urls.doc2} />
-          <DownloadCard label={labels.lien}   url={urls.lien} />
+      {urls && isFullKit && urls.doc2 && urls.lien && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <DownloadCard badge="START HERE" label="Instruction Packet" url={urls.instruction_packet} highlight />
+          <DownloadCard label={fullKitLabels.demand} url={urls.demand_letter} />
+          <DownloadCard label={fullKitLabels.doc2}   url={urls.doc2} />
+          <DownloadCard label={fullKitLabels.lien}   url={urls.lien} />
         </div>
       )}
 
-      <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900 leading-relaxed">
-        {amber}
+      {urls && !isFullKit && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <DownloadCard badge="START HERE" label="Instruction Packet (includes explanation of your situation)" url={urls.instruction_packet} highlight />
+          <DownloadCard label="Demand Letter" url={urls.demand_letter} />
+        </div>
+      )}
+
+      <div className="rounded-2xl border border-amber-400 bg-amber-50 p-5 text-sm font-semibold text-amber-900 leading-relaxed">
+        READ THE INSTRUCTION PACKET FIRST. {amberCallout}
       </div>
 
       <div className="text-xs text-stone-500">
@@ -142,15 +148,16 @@ export default function CaseStatusClient({ caseRow }: { caseRow: CaseRow }) {
   )
 }
 
-function DownloadCard({ label, url }: { label: string; url: string }) {
+function DownloadCard({ label, url, badge, highlight }: { label: string; url: string; badge?: string; highlight?: boolean }) {
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block rounded-2xl border border-stone-200 bg-white p-4 hover:border-emerald-400 hover:shadow-sm transition-all"
+      className={`block rounded-2xl border p-4 transition-all hover:shadow-sm ${highlight ? 'border-emerald-400 bg-emerald-50 hover:border-emerald-500' : 'border-stone-200 bg-white hover:border-emerald-400'}`}
     >
-      <div className="text-xs font-bold text-emerald-700 uppercase tracking-wider">PDF</div>
+      {badge && <div className="text-xs font-bold text-emerald-700 uppercase tracking-wider">{badge}</div>}
+      {!badge && <div className="text-xs font-bold text-stone-500 uppercase tracking-wider">PDF</div>}
       <div className="mt-1 text-sm font-semibold text-stone-900">{label}</div>
       <div className="mt-2 text-xs text-emerald-700 underline">Download</div>
     </a>

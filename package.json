@@ -39,6 +39,7 @@
     "h3-js": "^4.4.0",
     "lucide-react": "^0.460.0",
     "maplibre-gl": "^4.7.1",
+    "marked": "^12",
     "next": "^16.2.1",
     "opossum": "^9.0.0",
     "p-limit": "^7.3.0",

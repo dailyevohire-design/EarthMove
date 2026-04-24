@@ -1,13 +1,9 @@
+// This template emits CUSTOMER VERIFICATION REQUIRED amber callouts via customerVerification() calls below.
 import type { CollectionsCase } from '../../types'
 import {
-  RenderedDocument, addressBlock, formatCurrency, formatDate,
+  RenderedDocument, addressBlock, customerVerification, formatCurrency, formatDate,
   footerBlock, headerBlock,
 } from '../shared'
-
-// Counsel-audit marker: each [VERIFY WITH TEXAS ATTORNEY: ...] call site must be
-// reviewed and either approved or replaced with attorney-authored text before
-// this template ships to live traffic.
-const V = (desc: string): string => `[VERIFY WITH TEXAS ATTORNEY: ${desc}]`
 
 export function renderTXDemandLetter(c: CollectionsCase): RenderedDocument {
   const today = new Date()
@@ -28,7 +24,12 @@ export function renderTXDemandLetter(c: CollectionsCase): RenderedDocument {
     '',
     `Should payment not be received within that time, ${c.claimant_name} intends to pursue all available remedies under Texas law, which may include the filing of monthly pre-lien notices and a lien affidavit against the property pursuant to Tex. Prop. Code ch. 53.`,
     '',
-    V('Preferred closing paragraph — whether to include specific amounts for attorney fees, interest, costs under Tex. Prop. Code § 53.156 or otherwise'),
+    customerVerification({
+      state: 'TX',
+      statuteSection: 'Tex. Prop. Code § 53.156',
+      description: "Texas contractors may seek attorney fees under § 53.156 in certain contexts. This demand letter does not state a specific amount for attorney fees, interest, or costs. Read Step 2 of your instruction packet and your own contract before deciding whether to add them.",
+      packetSection: 'Step 2 — Demand Letter',
+    }),
     '',
     'Sincerely,',
     '',

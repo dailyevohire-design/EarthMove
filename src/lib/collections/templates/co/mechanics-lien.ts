@@ -1,27 +1,38 @@
+// This template emits CUSTOMER VERIFICATION REQUIRED amber callouts via customerVerification() calls below.
 import type { CollectionsCase } from '../../types'
 import {
-  RenderedDocument, addressBlock, formatCurrency, formatDate,
+  RenderedDocument, addressBlock, customerVerification, formatCurrency, formatDate,
   footerBlock, headerBlock,
 } from '../shared'
 
-// Counsel-audit marker — see co/demand-letter.ts. [VERIFY WITH COLORADO ATTORNEY: ...]
-const V = (desc: string): string => `[VERIFY WITH COLORADO ATTORNEY: ${desc}]`
-
-// Colorado mechanic's lien statement — C.R.S. § 38-22-109(1). Exact statutory
-// opening + sworn-verification language are verifyAttorney placeholders.
 export function renderCOMechanicsLien(c: CollectionsCase): RenderedDocument {
   const legalDesc = c.property_legal_description && c.property_legal_description.trim().length > 0
     ? c.property_legal_description.trim()
-    : V('legal description required — obtain from county recorder')
+    : customerVerification({
+        state: 'CO',
+        statuteSection: 'C.R.S. § 38-22-109(1)',
+        description: "The legal description is a required element of a Colorado lien statement. Look it up using Appendix B before filing. A lien without a legal description is vulnerable to attack.",
+        packetSection: 'Appendix B — Legal Description Lookup',
+      })
 
   const ownerBlock = c.property_owner_name
     ? addressBlock(c.property_owner_name, c.property_owner_address ?? '')
-    : V('property owner name and address of record — obtain from county assessor')
+    : customerVerification({
+        state: 'CO',
+        statuteSection: 'C.R.S. § 38-22-109(1)',
+        description: "Property owner name and address of record. The lien is filed against the owner of record as of the date of filing. Confirm the current record owner via your county assessor before filing.",
+        packetSection: 'Appendix A — County Filing Directory',
+      })
 
   const body = [
     'STATEMENT OF MECHANIC’S LIEN',
     '',
-    V('Formal statement of lien opening language per C.R.S. § 38-22-109(1)'),
+    customerVerification({
+      state: 'CO',
+      statuteSection: 'C.R.S. § 38-22-109(1)',
+      description: "The statement of lien has specific required elements under Colorado law. Read Step 3 of your instruction packet and the current text of § 38-22-109(1) on leg.colorado.gov. Confirm every required element below is filled in and the opening language matches the statute before you notarize and file.",
+      packetSection: 'Step 3 — Statement of Mechanic’s Lien',
+    }),
     '',
     'Claimant:',
     addressBlock(c.claimant_name, c.claimant_address),
@@ -43,7 +54,12 @@ export function renderCOMechanicsLien(c: CollectionsCase): RenderedDocument {
     '',
     `Amount due after all just credits and offsets: ${formatCurrency(c.amount_owed_cents)}`,
     '',
-    V('Sworn verification block — notary acknowledgment format per C.R.S. § 38-22-109(1) and Colorado notary law'),
+    customerVerification({
+      state: 'CO',
+      statuteSection: 'C.R.S. § 38-22-109(1)',
+      description: "Colorado lien statements must be verified (sworn to before a notary public). Read Step 3 — 'Notarization' in your packet. The notary block below is a jurat; the notary will guide you through signing and will apply their seal.",
+      packetSection: 'Step 3 — Statement of Mechanic’s Lien / Notary Guide',
+    }),
     '',
     'STATE OF COLORADO',
     `COUNTY OF ${c.property_county.toUpperCase()}`,

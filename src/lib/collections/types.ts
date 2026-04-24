@@ -3,6 +3,8 @@ export type CollectionsStatus =
 
 export type CollectionsState = 'CO' | 'TX'
 
+export type CollectionsKitVariant = 'full_kit' | 'demand_only'
+
 export type ContractorRole =
   | 'original_contractor' | 'subcontractor' | 'sub_subcontractor' | 'material_supplier' | 'other'
 
@@ -56,6 +58,10 @@ export interface CollectionsCase {
   amount_owed_cents: number
 
   pre_lien_notices_sent: string[]
+
+  kit_variant: CollectionsKitVariant
+  has_pre_work_contract: boolean
+  instruction_packet_storage_path: string | null
 
   stripe_checkout_session_id: string | null
   stripe_payment_intent_id: string | null

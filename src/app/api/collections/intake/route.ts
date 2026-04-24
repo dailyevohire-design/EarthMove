@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe'
 import { assertCollectionsEnabled, isCollectionsEnabled } from '@/lib/collections/feature-flag'
-import { IntakeSchema, validateIntake } from '@/lib/collections/validation'
+import { IntakeSchema, resolveKitVariant, validateIntake } from '@/lib/collections/validation'
 import { isSupportedCounty } from '@/lib/collections/county-assessors'
 
 export const runtime = 'nodejs'
@@ -35,22 +35,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: check.error, message: check.message }, { status: check.status })
   }
   const warnings = check.warnings.slice()
+  const kit_variant = check.kit_variant ?? resolveKitVariant(input)
 
   if (!isSupportedCounty(input.state_code, input.property_county)) {
-    warnings.unshift(
-      `${input.property_county} is not in the v0 supported-county list for ${input.state_code}. You may still proceed, but owner-lookup help will be limited.`,
+    warnings.push(
+      `${input.property_county} is not in the v1 supported-county directory for ${input.state_code}. You can still proceed, but some county-specific filing detail in the instruction packet may not apply to your county.`,
     )
   }
 
-  const priceId = process.env.STRIPE_PRICE_COLLECTIONS_ASSIST
+  const priceId = process.env.STRIPE_PRICE_COLLECTIONS_KIT
   if (!priceId) {
-    console.error('[collections/intake] missing STRIPE_PRICE_COLLECTIONS_ASSIST')
+    console.error('[collections/intake] missing STRIPE_PRICE_COLLECTIONS_KIT')
     return NextResponse.json({ error: 'stripe_price_not_configured' }, { status: 500 })
   }
 
   const admin = createAdminClient()
 
-  // Insert case row as draft
+  // Insert case as draft — has_pre_work_contract is a generated column; do not set.
   const { data: inserted, error: insErr } = await admin
     .from('collections_cases')
     .insert({
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
       contractor_role:          input.contractor_role,
       property_type:            input.property_type,
       is_homestead:             input.is_homestead,
+      kit_variant,
       claimant_name:            input.claimant_name,
       claimant_address:         input.claimant_address,
       claimant_phone:           input.claimant_phone ?? null,
@@ -86,7 +88,7 @@ export async function POST(req: NextRequest) {
       amount_owed_cents:  input.amount_owed_cents,
       pre_lien_notices_sent: input.pre_lien_notices_sent ?? [],
     })
-    .select('id, user_id, state_code')
+    .select('id, user_id, state_code, kit_variant')
     .single()
 
   if (insErr || !inserted) {
@@ -97,11 +99,10 @@ export async function POST(req: NextRequest) {
   await admin.from('collections_case_events').insert({
     case_id:        inserted.id,
     event_type:     'intake_submitted',
-    event_payload:  { warnings, state: input.state_code, contractor_role: input.contractor_role },
+    event_payload:  { warnings, state: input.state_code, contractor_role: input.contractor_role, kit_variant },
     actor_user_id:  user.id,
   })
 
-  // Build Stripe Checkout session
   const origin = req.nextUrl.origin
   try {
     const session = await stripe().checkout.sessions.create(
@@ -111,17 +112,21 @@ export async function POST(req: NextRequest) {
         customer_email: user.email ?? undefined,
         client_reference_id: user.id,
         metadata: {
-          product_family: 'collections',
-          case_id:        inserted.id,
-          user_id:        user.id,
-          state_code:     input.state_code,
+          product_family:  'collections',
+          product_variant: 'contractor_payment_kit_v1',
+          case_id:         inserted.id,
+          user_id:         user.id,
+          state_code:      input.state_code,
+          kit_variant,
         },
         payment_intent_data: {
           metadata: {
-            product_family: 'collections',
-            case_id:        inserted.id,
-            user_id:        user.id,
-            state_code:     input.state_code,
+            product_family:  'collections',
+            product_variant: 'contractor_payment_kit_v1',
+            case_id:         inserted.id,
+            user_id:         user.id,
+            state_code:      input.state_code,
+            kit_variant,
           },
         },
         success_url: `${origin}/collections/${inserted.id}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -138,22 +143,20 @@ export async function POST(req: NextRequest) {
 
     await admin
       .from('collections_cases')
-      .update({
-        status: 'pending_payment',
-        stripe_checkout_session_id: session.id,
-      })
+      .update({ status: 'pending_payment', stripe_checkout_session_id: session.id })
       .eq('id', inserted.id)
 
     await admin.from('collections_case_events').insert({
       case_id:        inserted.id,
       event_type:     'checkout_started',
-      event_payload:  { session_id: session.id },
+      event_payload:  { session_id: session.id, kit_variant },
       actor_user_id:  user.id,
     })
 
     return NextResponse.json({
       case_id:      inserted.id,
       checkout_url: session.url,
+      kit_variant,
       warnings,
     })
   } catch (err) {

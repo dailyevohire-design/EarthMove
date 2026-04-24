@@ -14,6 +14,8 @@ interface DraftState {
   state_code: State
   property_type: PropType
   is_homestead: boolean
+  tx_contract_signed: 'yes_both' | 'yes_owner_only' | 'no' | ''
+  original_contract_signed_date: string
   contractor_role: Role
   claimant_name: string
   claimant_address: string
@@ -40,6 +42,7 @@ interface DraftState {
 
 const EMPTY_DRAFT: DraftState = {
   state_code: 'CO', property_type: 'commercial', is_homestead: false,
+  tx_contract_signed: '', original_contract_signed_date: '',
   contractor_role: 'original_contractor',
   claimant_name: '', claimant_address: '', claimant_phone: '', claimant_email: '',
   claimant_entity_type: '',
@@ -52,7 +55,7 @@ const EMPTY_DRAFT: DraftState = {
   terms_accepted: false,
 }
 
-const DRAFT_KEY = 'collections_draft_v1'
+const DRAFT_KEY = 'collections_draft_v2'
 
 export default function NewCollectionsCasePage() {
   const router = useRouter()
@@ -62,7 +65,6 @@ export default function NewCollectionsCasePage() {
   const [serverError, setServerError] = useState<string | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
 
-  // Hydrate draft from localStorage (client-only).
   useEffect(() => {
     try {
       const raw = typeof window !== 'undefined' ? window.localStorage.getItem(DRAFT_KEY) : null
@@ -82,17 +84,13 @@ export default function NewCollectionsCasePage() {
 
   const counties = d.state_code === 'CO' ? COLORADO_COUNTIES : TEXAS_DFW_COUNTIES
 
-  const step1Blocker = useMemo(() => {
-    if (d.is_homestead) return 'Homestead properties are not supported in v0. Please consult an attorney.'
-    if (d.state_code === 'TX' &&
-        !(d.property_type === 'commercial' || d.property_type === 'industrial')) {
-      return 'Texas Collections Assist v0 supports commercial and industrial properties only. Residential Texas lien filings are coming in a future release.'
+  // Live prediction of kit_variant — mirrors resolveKitVariant in validation.ts.
+  const predictedKit = useMemo<'full_kit' | 'demand_only'>(() => {
+    if (d.state_code === 'TX' && d.is_homestead === true && d.tx_contract_signed !== 'yes_both') {
+      return 'demand_only'
     }
-    if (d.state_code === 'CO' && d.property_type === 'residential_homestead') {
-      return 'Homestead properties are not supported in v0.'
-    }
-    return null
-  }, [d.state_code, d.property_type, d.is_homestead])
+    return 'full_kit'
+  }, [d.state_code, d.is_homestead, d.tx_contract_signed])
 
   const deadlineWarning = useMemo(() => {
     if (!d.last_day_of_work) return null
@@ -103,7 +101,7 @@ export default function NewCollectionsCasePage() {
     if (last < fourMonthsAgo) {
       return d.state_code === 'CO'
         ? "Colorado mechanic's liens must be filed within 4 months of the last day of work per C.R.S. § 38-22-109(5). This claim may be past the filing deadline."
-        : "Texas original-contractor liens on commercial property generally require filing within 4 months. This claim may be past the deadline."
+        : 'Texas lien filing deadlines may have passed for your tier. Consult an attorney before relying on the lien documents in this kit.'
     }
     return null
   }, [d.last_day_of_work, d.state_code])
@@ -114,6 +112,8 @@ export default function NewCollectionsCasePage() {
     setServerError(null)
     setWarnings([])
     try {
+      const original_contract_both_spouses_signed = d.tx_contract_signed === 'yes_both' ? true : d.tx_contract_signed === '' ? null : false
+
       const res = await fetch('/api/collections/intake', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,6 +138,8 @@ export default function NewCollectionsCasePage() {
           property_legal_description: d.property_legal_description || null,
           property_owner_name: d.property_owner_name || null,
           property_owner_address: d.property_owner_address || null,
+          original_contract_signed_date: d.original_contract_signed_date || null,
+          original_contract_both_spouses_signed,
           work_description: d.work_description,
           first_day_of_work: d.first_day_of_work,
           last_day_of_work: d.last_day_of_work,
@@ -149,15 +151,10 @@ export default function NewCollectionsCasePage() {
         setServerError(body?.message ?? body?.error ?? `Error ${res.status}`)
         return
       }
-      if (Array.isArray(body.warnings) && body.warnings.length > 0) {
-        setWarnings(body.warnings)
-      }
+      if (Array.isArray(body.warnings) && body.warnings.length > 0) setWarnings(body.warnings)
       try { window.localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
-      if (body.checkout_url) {
-        window.location.assign(body.checkout_url)
-      } else {
-        router.push(`/collections/${body.case_id}`)
-      }
+      if (body.checkout_url) window.location.assign(body.checkout_url)
+      else router.push(`/collections/${body.case_id}`)
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'Submission failed')
     } finally {
@@ -167,23 +164,24 @@ export default function NewCollectionsCasePage() {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
-      <h1 className="text-2xl font-extrabold text-stone-900 mb-2">New Collections Case</h1>
+      <h1 className="text-2xl font-extrabold text-stone-900 mb-2">New Contractor Payment Kit Case</h1>
       <p className="text-xs text-stone-500 mb-5">Step {step} of 6</p>
 
-      {/* Progress bar */}
       <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden mb-6">
         <div className="h-full bg-emerald-600 transition-all" style={{ width: `${(step / 6) * 100}%` }} />
       </div>
 
       {step === 1 && (
         <section className="space-y-4">
-          <h2 className="text-lg font-bold text-stone-900">State & Property Type</h2>
+          <h2 className="text-lg font-bold text-stone-900">State, Property Type, and Pre-Work Contract</h2>
+
           <L label="Property state">
             <select value={d.state_code} onChange={e => update('state_code', e.target.value as State)} className={selectCls}>
               <option value="CO">Colorado (CO)</option>
-              <option value="TX">Texas (TX) — commercial only</option>
+              <option value="TX">Texas (TX)</option>
             </select>
           </L>
+
           <L label="Property type">
             <select value={d.property_type} onChange={e => update('property_type', e.target.value as PropType)} className={selectCls}>
               <option value="commercial">Commercial</option>
@@ -194,20 +192,50 @@ export default function NewCollectionsCasePage() {
               <option value="other">Other</option>
             </select>
           </L>
+
           {d.property_type.startsWith('residential') && (
             <label className="flex items-center gap-2 text-sm text-stone-700">
               <input type="checkbox" checked={d.is_homestead} onChange={e => update('is_homestead', e.target.checked)} />
-              This property is the owner’s homestead.
+              This property is the owner&rsquo;s homestead.
             </label>
           )}
-          {step1Blocker && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-              <div className="font-bold mb-1">Not supported in v0</div>
-              <p>{step1Blocker}</p>
-              <p className="mt-2 text-stone-500">You can ask us to email you when support arrives. (No email capture UI in v0 — your browser remembers your draft locally.)</p>
+
+          {d.state_code === 'TX' && d.is_homestead && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 space-y-2">
+              <div className="font-bold">Texas homestead — pre-work contract question</div>
+              <p>Texas lien law requires a pre-work written contract signed by both spouses for a homestead-improvement lien. Your answer here determines whether your kit includes the lien documents or is demand-only.</p>
+              <L label="Did you sign a written contract with the property owner BEFORE starting work?">
+                <select
+                  value={d.tx_contract_signed}
+                  onChange={e => update('tx_contract_signed', e.target.value as DraftState['tx_contract_signed'])}
+                  className={selectCls}
+                >
+                  <option value="">Choose one…</option>
+                  <option value="yes_both">Yes, signed by BOTH spouses before work began.</option>
+                  <option value="yes_owner_only">Yes, but signed by one spouse only.</option>
+                  <option value="no">No written contract (or signed after work began).</option>
+                </select>
+              </L>
+              {d.tx_contract_signed === 'yes_both' && (
+                <L label="Date the contract was signed">
+                  <input type="date" value={d.original_contract_signed_date} onChange={e => update('original_contract_signed_date', e.target.value)} className={inputCls} />
+                </L>
+              )}
+              {(d.tx_contract_signed === 'yes_owner_only' || d.tx_contract_signed === 'no') && (
+                <p className="text-amber-900"><strong>Your case will use the demand-only variant.</strong> You will receive the instruction packet and a demand letter. No lien documents, because filing a lien on a Texas homestead without a pre-work spouse-signed contract exposes you to liability under Tex. Prop. Code § 53.156.</p>
+              )}
             </div>
           )}
-          <NavButtons onBack={null} onNext={() => !step1Blocker && setStep(2)} nextDisabled={!!step1Blocker} />
+
+          <div className={`rounded-lg border p-3 text-xs ${predictedKit === 'full_kit' ? 'border-emerald-300 bg-emerald-50 text-emerald-900' : 'border-amber-300 bg-amber-50 text-amber-900'}`}>
+            <div className="font-bold mb-1">Based on your answers, your kit will be:</div>
+            {predictedKit === 'full_kit'
+              ? <div>FULL KIT — 4 documents: instruction packet + demand letter + pre-lien/intent notice + lien.</div>
+              : <div>DEMAND-ONLY — 2 documents: instruction packet (with an explanation of your case) + demand letter.</div>}
+          </div>
+
+          <NavButtons onBack={null} onNext={() => setStep(2)}
+            nextDisabled={d.state_code === 'TX' && d.is_homestead && d.tx_contract_signed === ''} />
         </section>
       )}
 
@@ -216,17 +244,17 @@ export default function NewCollectionsCasePage() {
           <h2 className="text-lg font-bold text-stone-900">Your Role</h2>
           <L label="How did you work on this project?">
             <select value={d.contractor_role} onChange={e => update('contractor_role', e.target.value as Role)} className={selectCls}>
-              <option value="original_contractor">Original contractor — I had a direct contract with the property owner.</option>
-              <option value="subcontractor">Subcontractor — I was hired by the original contractor.</option>
-              <option value="sub_subcontractor">Sub-subcontractor — I was hired by a subcontractor.</option>
-              <option value="material_supplier">Material supplier — I supplied materials to the project.</option>
+              <option value="original_contractor">Original contractor — direct contract with the property owner.</option>
+              <option value="subcontractor">Subcontractor — hired by the original contractor.</option>
+              <option value="sub_subcontractor">Sub-subcontractor — hired by a subcontractor.</option>
+              <option value="material_supplier">Material supplier — supplied materials to the project.</option>
               <option value="other">Other</option>
             </select>
           </L>
           {d.state_code === 'TX' && d.contractor_role !== 'original_contractor' && (
             <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
               <div className="font-bold mb-1">Texas pre-lien notice warning</div>
-              Texas subcontractors and suppliers must send monthly pre-lien notices per Tex. Prop. Code § 53.056. Your lien rights depend on whether those notices were sent on time. Consult an attorney if unsure.
+              Texas subcontractors and suppliers must send monthly pre-lien notices per Tex. Prop. Code § 53.056. Your lien rights depend on whether those notices were sent on time. Your instruction packet walks through this in Step 1.
             </div>
           )}
           <NavButtons onBack={() => setStep(1)} onNext={() => setStep(3)} />
@@ -275,7 +303,7 @@ export default function NewCollectionsCasePage() {
           <L label="Respondent address">
             <textarea value={d.respondent_address} onChange={e => update('respondent_address', e.target.value)} className={textareaCls} rows={3} />
           </L>
-          <L label="Respondent’s relationship to the project">
+          <L label="Respondent&rsquo;s relationship to the project">
             <select value={d.respondent_relationship} onChange={e => update('respondent_relationship', e.target.value)} className={selectCls}>
               <option value="">Choose one…</option>
               <option value="general_contractor">General contractor</option>
@@ -292,15 +320,9 @@ export default function NewCollectionsCasePage() {
             <input value={d.property_street_address} onChange={e => update('property_street_address', e.target.value)} className={inputCls} />
           </L>
           <div className="grid grid-cols-3 gap-3">
-            <L label="City">
-              <input value={d.property_city} onChange={e => update('property_city', e.target.value)} className={inputCls} />
-            </L>
-            <L label="State">
-              <input value={d.property_state} readOnly className={inputCls + ' bg-stone-100'} />
-            </L>
-            <L label="ZIP">
-              <input value={d.property_zip} onChange={e => update('property_zip', e.target.value)} className={inputCls} />
-            </L>
+            <L label="City"><input value={d.property_city} onChange={e => update('property_city', e.target.value)} className={inputCls} /></L>
+            <L label="State"><input value={d.property_state} readOnly className={inputCls + ' bg-stone-100'} /></L>
+            <L label="ZIP"><input value={d.property_zip} onChange={e => update('property_zip', e.target.value)} className={inputCls} /></L>
           </div>
           <L label="County">
             <select value={d.property_county} onChange={e => update('property_county', e.target.value)} className={selectCls}>
@@ -309,7 +331,7 @@ export default function NewCollectionsCasePage() {
             </select>
           </L>
           <L label="Legal description"
-             hint="From your deed or title insurance policy. Leave blank only if unavailable — counsel may need to obtain this before filing.">
+             hint="From your deed or title insurance policy. Leave blank only if unavailable — the instruction packet explains how to find it.">
             <textarea value={d.property_legal_description} onChange={e => update('property_legal_description', e.target.value)} className={textareaCls} rows={3} />
           </L>
 
@@ -348,20 +370,14 @@ export default function NewCollectionsCasePage() {
             <div className="text-[10px] text-stone-500 mt-1">{d.work_description.length} / 50+</div>
           </L>
           <div className="grid grid-cols-2 gap-3">
-            <L label="First day of work">
-              <input type="date" value={d.first_day_of_work} onChange={e => update('first_day_of_work', e.target.value)} className={inputCls} />
-            </L>
-            <L label="Last day of work">
-              <input type="date" value={d.last_day_of_work} onChange={e => update('last_day_of_work', e.target.value)} className={inputCls} />
-            </L>
+            <L label="First day of work"><input type="date" value={d.first_day_of_work} onChange={e => update('first_day_of_work', e.target.value)} className={inputCls} /></L>
+            <L label="Last day of work"><input type="date" value={d.last_day_of_work} onChange={e => update('last_day_of_work', e.target.value)} className={inputCls} /></L>
           </div>
           <L label="Amount owed ($)">
             <input type="number" step="0.01" min="0" value={d.amount_owed_dollars} onChange={e => update('amount_owed_dollars', e.target.value)} className={inputCls} />
           </L>
           {deadlineWarning && (
-            <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-800">
-              {deadlineWarning}
-            </div>
+            <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-800">{deadlineWarning}</div>
           )}
           <NavButtons
             onBack={() => setStep(4)}
@@ -378,6 +394,11 @@ export default function NewCollectionsCasePage() {
       {step === 6 && (
         <section className="space-y-4">
           <h2 className="text-lg font-bold text-stone-900">Review & Submit</h2>
+
+          <div className={`rounded-lg border p-3 text-sm font-semibold ${predictedKit === 'full_kit' ? 'border-emerald-300 bg-emerald-50 text-emerald-900' : 'border-amber-300 bg-amber-50 text-amber-900'}`}>
+            Kit you will receive: <span className="font-extrabold">{predictedKit === 'full_kit' ? 'FULL KIT (4 documents)' : 'DEMAND-ONLY (2 documents)'}</span>
+          </div>
+
           <div className="rounded-lg border border-stone-200 bg-stone-50 p-4 text-xs text-stone-700 space-y-1">
             <Row k="State"    v={d.state_code} />
             <Row k="Property" v={`${d.property_type}${d.is_homestead ? ' (homestead)' : ''}`} />
@@ -401,7 +422,7 @@ export default function NewCollectionsCasePage() {
                 className="mt-0.5"
               />
               <span>
-                I have read and understand the above. I acknowledge Earth Pro Connect LLC is not a law firm and is not providing legal advice. I will consult a {d.state_code === 'CO' ? 'Colorado' : 'Texas'} attorney before filing. I accept full responsibility for the accuracy of this information.
+                I understand I am purchasing a document kit with plain-English instructions, not a legal service. I will read the instruction packet, verify statutory language against the public statute at the URLs provided, notarize where required, and file the documents myself. I accept full responsibility for accuracy and timing.
               </span>
             </label>
           </div>
@@ -418,7 +439,7 @@ export default function NewCollectionsCasePage() {
           <NavButtons
             onBack={() => setStep(5)}
             onNext={submit}
-            nextLabel={submitting ? 'Submitting…' : 'Pay $99 and generate documents'}
+            nextLabel={submitting ? 'Submitting…' : 'Pay $49 and generate documents'}
             nextDisabled={!d.terms_accepted || submitting}
           />
         </section>
@@ -426,8 +447,6 @@ export default function NewCollectionsCasePage() {
     </div>
   )
 }
-
-// --- UI primitives ---
 
 const inputCls    = 'w-full bg-white border border-stone-300 rounded-lg px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/30'
 const textareaCls = inputCls
@@ -452,12 +471,7 @@ function Row({ k, v }: { k: string; v: string }) {
   )
 }
 
-function NavButtons(props: {
-  onBack: (() => void) | null
-  onNext: () => void
-  nextLabel?: string
-  nextDisabled?: boolean
-}) {
+function NavButtons(props: { onBack: (() => void) | null; onNext: () => void; nextLabel?: string; nextDisabled?: boolean }) {
   return (
     <div className="flex items-center justify-between pt-4 border-t border-stone-100">
       {props.onBack

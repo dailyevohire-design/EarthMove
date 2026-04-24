@@ -24,7 +24,7 @@ export default async function CollectionsCasePage({
   const { data: caseRow } = await supabase
     .from('collections_cases')
     .select(
-      'id, status, state_code, claimant_name, respondent_name, property_street_address, property_city, property_state, property_zip, amount_owed_cents, paid_at, documents_generated_at, first_downloaded_at, download_count, created_at',
+      'id, status, state_code, kit_variant, claimant_name, respondent_name, property_street_address, property_city, property_state, property_zip, amount_owed_cents, paid_at, documents_generated_at, first_downloaded_at, download_count, created_at',
     )
     .eq('id', id)
     .maybeSingle()

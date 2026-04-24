@@ -1,13 +1,9 @@
+// This template emits CUSTOMER VERIFICATION REQUIRED amber callouts via customerVerification() calls below.
 import type { CollectionsCase } from '../../types'
 import {
-  RenderedDocument, addressBlock, formatCurrency, formatDate,
+  RenderedDocument, addressBlock, customerVerification, formatCurrency, formatDate,
   footerBlock, headerBlock,
 } from '../shared'
-
-// Counsel-audit marker: each [VERIFY WITH COLORADO ATTORNEY: ...] call site
-// must be reviewed and either approved or replaced with attorney-authored text
-// before this template ships to live traffic.
-const V = (desc: string): string => `[VERIFY WITH COLORADO ATTORNEY: ${desc}]`
 
 export function renderCODemandLetter(c: CollectionsCase): RenderedDocument {
   const today = new Date()
@@ -28,7 +24,12 @@ export function renderCODemandLetter(c: CollectionsCase): RenderedDocument {
     '',
     `Should payment not be received within that time, ${c.claimant_name} intends to pursue all available remedies under Colorado law, which may include the filing of a notice of intent to lien and the filing of a mechanic's lien against the property pursuant to C.R.S. § 38-22-101 et seq.`,
     '',
-    V('Preferred closing paragraph — whether to include specific amounts for attorney fees, interest, costs'),
+    customerVerification({
+      state: 'CO',
+      statuteSection: 'C.R.S. § 38-22-101 et seq.',
+      description: "This demand letter does not cite specific amounts for attorney fees, interest, or costs. Colorado contractors sometimes include these in the demand. Read Step 1 of your instruction packet, then decide based on your contract and C.R.S. § 38-22-101 whether to add them before sending.",
+      packetSection: 'Step 1 — Demand Letter',
+    }),
     '',
     'Sincerely,',
     '',

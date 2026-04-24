@@ -43,6 +43,9 @@ function makeCase(overrides: Partial<CollectionsCase> = {}): CollectionsCase {
     last_day_of_work:  '2026-03-20',
     amount_owed_cents: 4750000,
     pre_lien_notices_sent: [],
+    kit_variant: 'full_kit',
+    has_pre_work_contract: false,
+    instruction_packet_storage_path: null,
     stripe_checkout_session_id: null,
     stripe_payment_intent_id: null,
     paid_at: null,
@@ -79,7 +82,7 @@ describe('templates — statutory references', () => {
   it('TX pre-lien notice (original contractor) renders the exemption variant', () => {
     const c = makeCase({ state_code: 'TX', property_type: 'commercial', contractor_role: 'original_contractor' })
     const doc = renderTXPreLienNotice(c)
-    expect(doc.body).toMatch(/original contractor exempt from § 53\.056/i)
+    expect(doc.body).toMatch(/original contractors on non-homestead, commercial property/i)
   })
 
   it('TX lien affidavit references § 53.054', () => {
@@ -90,8 +93,8 @@ describe('templates — statutory references', () => {
   })
 })
 
-describe('templates — chrome + disclaimers', () => {
-  it('every template carries the UPL disclaimer in the footer', () => {
+describe('templates — chrome + customer-verification markers', () => {
+  it('every template footer carries the UPL disclaimer', () => {
     const cases = [
       ...CO_TEMPLATES.map(fn => fn(makeCase())),
       ...TX_TEMPLATES_OC.map(fn => fn(makeCase({ state_code: 'TX', property_type: 'commercial' }))),
@@ -113,19 +116,19 @@ describe('templates — chrome + disclaimers', () => {
     }
   })
 
-  it('CO + TX templates contain at least one [VERIFY WITH {STATE} ATTORNEY: ...] placeholder', () => {
+  it('CO + TX templates contain ≥1 customerVerification marker', () => {
+    const CV_RE = /<<CV \|(CO|TX)\|/
     for (const fn of CO_TEMPLATES) {
       const doc = fn(makeCase())
-      expect(doc.body).toMatch(/\[VERIFY WITH COLORADO ATTORNEY:/)
+      expect(doc.body).toMatch(CV_RE)
     }
     for (const fn of TX_TEMPLATES_OC) {
       const doc = fn(makeCase({ state_code: 'TX', property_type: 'commercial' }))
-      expect(doc.body).toMatch(/\[VERIFY WITH TEXAS ATTORNEY:/)
+      expect(doc.body).toMatch(CV_RE)
     }
   })
 
-  it('no template body contains case citations (e.g. "Medlock v. LegalZoom")', () => {
-    // Match "<Capitalized> v. <Capitalized> (YYYY)" or typical reporter citations.
+  it('no template body contains case citations', () => {
     const CASE_CITE_RE = /[A-Z][A-Za-z']+ v\. [A-Z][A-Za-z]+[^)]*\(\d{4}\)/
     const cases = [
       ...CO_TEMPLATES.map(fn => fn(makeCase())),
@@ -137,7 +140,7 @@ describe('templates — chrome + disclaimers', () => {
   })
 })
 
-describe('templates — no LLM imports anywhere in src/lib/collections/', () => {
+describe('templates + content — no LLM imports in src/lib/collections/', () => {
   function walkFiles(dir: string, out: string[] = []): string[] {
     for (const entry of readdirSync(dir)) {
       const p = path.join(dir, entry)
@@ -158,5 +161,61 @@ describe('templates — no LLM imports anywhere in src/lib/collections/', () => 
       expect(src, `${f} must not call api.anthropic.com`).not.toMatch(/api\.anthropic\.com/)
       expect(src, `${f} must not import openai`).not.toMatch(/from ['"]openai['"]/)
     }
+  })
+})
+
+describe('content — style guide + portal coverage', () => {
+  function walkMd(dir: string, out: string[] = []): string[] {
+    for (const entry of readdirSync(dir)) {
+      const p = path.join(dir, entry)
+      const s = statSync(p)
+      if (s.isDirectory()) walkMd(p, out)
+      else if (entry.endsWith('.md')) out.push(p)
+    }
+    return out
+  }
+
+  it('no content file contains "we recommend" or "you should" (advice voice)', () => {
+    const base = path.resolve(process.cwd(), 'src/lib/collections/content')
+    const files = walkMd(base)
+    expect(files.length).toBeGreaterThan(0)
+    for (const f of files) {
+      const src = readFileSync(f, 'utf8')
+      expect(src, `${f} advice-voice check`).not.toMatch(/\b(we recommend|you should)\b/i)
+    }
+  })
+
+  it('no content or template file contains case citations', () => {
+    const CASE_CITE_RE = /\b[A-Z][a-zA-Z]+ v\. [A-Z][a-zA-Z]+/
+    const base1 = path.resolve(process.cwd(), 'src/lib/collections/content')
+    const base2 = path.resolve(process.cwd(), 'src/lib/collections/templates')
+    const files = [...walkMd(base1), ...readdirSync(base2, { recursive: true }).map(r => path.join(base2, r as string)).filter(f => /\.(ts)$/.test(f))]
+    for (const f of files) {
+      if (!statSync(f).isFile()) continue
+      const src = readFileSync(f, 'utf8')
+      expect(src, `${f} case-citation check`).not.toMatch(CASE_CITE_RE)
+    }
+  })
+
+  it('CO content links to leg.colorado.gov at least 10 times', () => {
+    const dir = path.resolve(process.cwd(), 'src/lib/collections/content/co')
+    const files = readdirSync(dir).filter(f => f.endsWith('.md'))
+    let hits = 0
+    for (const f of files) {
+      const src = readFileSync(path.join(dir, f), 'utf8')
+      hits += (src.match(/leg\.colorado\.gov/g) ?? []).length
+    }
+    expect(hits).toBeGreaterThanOrEqual(10)
+  })
+
+  it('TX content links to statutes.capitol.texas.gov at least 10 times', () => {
+    const dir = path.resolve(process.cwd(), 'src/lib/collections/content/tx')
+    const files = readdirSync(dir).filter(f => f.endsWith('.md'))
+    let hits = 0
+    for (const f of files) {
+      const src = readFileSync(path.join(dir, f), 'utf8')
+      hits += (src.match(/statutes\.capitol\.texas\.gov/g) ?? []).length
+    }
+    expect(hits).toBeGreaterThanOrEqual(10)
   })
 })
