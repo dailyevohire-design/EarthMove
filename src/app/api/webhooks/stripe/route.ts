@@ -3,6 +3,7 @@ import { constructWebhookEvent } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/server'
 import { enqueueOrder } from '@/lib/dispatch'
 import { sendOrderConfirmation, sendGuestClaimAccount } from '@/lib/email'
+import { generateAndStoreCase } from '@/lib/collections/generator'
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
@@ -23,6 +24,53 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as any
+
+        // Route 1: Collections Assist (product_family='collections')
+        if (session.metadata?.product_family === 'collections') {
+          const caseId = session.metadata?.case_id
+          const userId = session.metadata?.user_id
+          if (!caseId || !userId) {
+            return NextResponse.json({ error: 'missing case_id or user_id metadata' }, { status: 400 })
+          }
+          if (session.client_reference_id && session.client_reference_id !== userId) {
+            return NextResponse.json({ error: 'user_mismatch' }, { status: 400 })
+          }
+
+          const { error: rpcErr } = await supabase.rpc('grant_collections_case_from_stripe_event', {
+            p_stripe_event_id:          event.id,
+            p_event_type:               event.type,
+            p_case_id:                  caseId,
+            p_user_id:                  userId,
+            p_amount_cents:             session.amount_total ?? 0,
+            p_stripe_session_id:        session.id,
+            p_stripe_payment_intent_id: session.payment_intent ?? null,
+            p_payload:                  { session_id: session.id },
+          })
+          if (rpcErr) {
+            console.error('[stripe-webhook] collections grant RPC failed:', rpcErr)
+            await supabase.from('collections_case_events').insert({
+              case_id: caseId,
+              event_type: 'error',
+              event_payload: { stage: 'grant_rpc', error: rpcErr.message },
+              stripe_event_id: event.id,
+            })
+            return NextResponse.json({ error: 'grant_failed' }, { status: 500 })
+          }
+
+          // Generate PDFs after a 2xx to Stripe is safe because the case row is already
+          // flipped to 'paid' — a failure here leaves a retryable async task, not a money gap.
+          after(async () => {
+            try {
+              await generateAndStoreCase(caseId)
+            } catch (genErr) {
+              console.error('[stripe-webhook] PDF generation failed (status stays paid):', genErr)
+            }
+          })
+
+          break
+        }
+
+        // Route 2: Aggregate-materials orders (product_family=undefined, order_id metadata)
         const orderId = session.metadata?.order_id
         if (!orderId) break
 

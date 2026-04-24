@@ -4,7 +4,8 @@ import { UserMenu } from './user-menu'
 import { MobileNav } from './mobile-nav'
 import { Logo } from './logo'
 import { LocationIndicator } from '@/components/marketplace/location-modal'
-import { Zap, HelpCircle } from 'lucide-react'
+import { Zap, HelpCircle, Scale } from 'lucide-react'
+import { isCollectionsEnabled } from '@/lib/collections/feature-flag'
 
 export async function SiteHeader() {
   const supabase = await createClient()
@@ -44,6 +45,11 @@ export async function SiteHeader() {
               <Link href="/material-match" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium flex items-center gap-1.5">
                 <HelpCircle size={13} /> Material Match
               </Link>
+              {isCollectionsEnabled() && profile && ['gc','supplier','driver','admin'].includes(profile.role) && (
+                <Link href="/collections" className="px-4 py-2 rounded-xl text-sm text-emerald-700 hover:bg-emerald-50 transition-all font-semibold flex items-center gap-1.5">
+                  <Scale size={13} /> Collections
+                </Link>
+              )}
             </nav>
           </div>
 
