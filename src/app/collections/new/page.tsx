@@ -79,6 +79,7 @@ export default function NewCollectionsCasePage() {
   const [d, setD] = useState<DraftState>(EMPTY_DRAFT)
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [serverIssues, setServerIssues] = useState<Array<{ path: string; message: string }>>([])
   const [warnings, setWarnings] = useState<string[]>([])
 
   useEffect(() => {
@@ -127,6 +128,7 @@ export default function NewCollectionsCasePage() {
     if (submitting) return
     setSubmitting(true)
     setServerError(null)
+    setServerIssues([])
     setWarnings([])
     try {
       const original_contract_both_spouses_signed = d.tx_contract_signed === 'yes_both' ? true : d.tx_contract_signed === '' ? null : false
@@ -165,7 +167,17 @@ export default function NewCollectionsCasePage() {
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setServerError(body?.message ?? body?.error ?? `Error ${res.status}`)
+        if (body?.error === 'invalid_input' && Array.isArray(body.issues)) {
+          setServerIssues(
+            body.issues.map((i: { path?: Array<string | number>; message: string }) => ({
+              path: Array.isArray(i.path) && i.path.length > 0 ? i.path.join('.') : '(root)',
+              message: i.message,
+            }))
+          )
+          setServerError('Some required fields are missing or invalid. Please review the items below and update your form.')
+        } else {
+          setServerError(body?.message ?? body?.error ?? `Error ${res.status}`)
+        }
         return
       }
       if (Array.isArray(body.warnings) && body.warnings.length > 0) setWarnings(body.warnings)
@@ -486,7 +498,18 @@ export default function NewCollectionsCasePage() {
             </div>
           )}
           {serverError && (
-            <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-800">{serverError}</div>
+            <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-800">
+              <div className="font-bold mb-1">{serverError}</div>
+              {serverIssues.length > 0 && (
+                <ul className="list-disc pl-5 space-y-0.5 mt-1">
+                  {serverIssues.map((iss, idx) => (
+                    <li key={idx}>
+                      <span className="font-mono">{iss.path}</span>: {iss.message}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
 
           <NavButtons
