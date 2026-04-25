@@ -3,7 +3,10 @@ import type { CollectionsKitVariant, ContractorRole } from './types'
 
 export const IntakeSchema = z.object({
   state_code:      z.enum(['CO','TX']),
-  contractor_role: z.enum(['original_contractor','subcontractor','sub_subcontractor','material_supplier','other']),
+  contractor_role: z.enum([
+    'original_contractor','subcontractor','sub_subcontractor','material_supplier','other',
+    'hired_by_broker','hired_by_staffing','not_construction_work',
+  ]),
   property_type:   z.enum(['commercial','residential_non_homestead','residential_homestead','mixed_use','industrial','other']),
   is_homestead:    z.boolean(),
 
@@ -54,9 +57,14 @@ function tx56CommercialDeadline(lastDayOfWork: Date, now: Date): { deadlinePast:
 }
 
 // Kit routing rule: TX + homestead + no pre-work spouse-signed contract → demand-only.
+// not_construction_work → demand-only (demand letter has no real-property nexus
+// requirement, so it ships for any unpaid invoice).
 // Everything else → full_kit. No state+property_type combinations are rejected at v1 —
 // the customer sees a demand-only variant if their facts preclude a lien.
 export function resolveKitVariant(input: IntakeInput): CollectionsKitVariant {
+  if (input.contractor_role === 'not_construction_work') {
+    return 'demand_only'
+  }
   if (
     input.state_code === 'TX' &&
     input.is_homestead === true &&
@@ -100,7 +108,7 @@ export function validateIntake(
 
   const kit_variant = resolveKitVariant(parsed)
 
-  if (parsed.state_code === 'CO' && last < fourMonthsAgo) {
+  if (parsed.state_code === 'CO' && last < fourMonthsAgo && kit_variant === 'full_kit') {
     return { ok: false, status: 400, error: 'past_filing_deadline',
       message: "Colorado mechanic's liens must be filed within 4 months of the last day of work per C.R.S. § 38-22-109(5)." }
   }

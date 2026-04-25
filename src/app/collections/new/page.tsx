@@ -4,10 +4,26 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { COLORADO_COUNTIES, TEXAS_DFW_COUNTIES } from '@/lib/collections/county-assessors'
 import { UPL_DISCLAIMER } from '@/lib/collections/disclaimer'
+import { BrokerScreenOut } from '@/components/collections/BrokerScreenOut'
+import { StaffingScreenOut } from '@/components/collections/StaffingScreenOut'
+import { UncertainRoleWarning } from '@/components/collections/UncertainRoleWarning'
 
 type State = 'CO' | 'TX'
 type PropType = 'commercial' | 'residential_non_homestead' | 'residential_homestead' | 'mixed_use' | 'industrial' | 'other'
-type Role = 'original_contractor' | 'subcontractor' | 'sub_subcontractor' | 'material_supplier' | 'other'
+type Role =
+  | 'original_contractor' | 'subcontractor' | 'sub_subcontractor' | 'material_supplier' | 'other'
+  | 'hired_by_broker' | 'hired_by_staffing' | 'not_construction_work'
+
+const SCREENING_OPTIONS: { value: Role; label: string }[] = [
+  { value: 'original_contractor',  label: 'The property owner directly' },
+  { value: 'subcontractor',        label: 'A general contractor' },
+  { value: 'sub_subcontractor',    label: 'Another subcontractor' },
+  { value: 'material_supplier',    label: 'I supplied materials or hauled material delivered to the project' },
+  { value: 'hired_by_broker',      label: 'A broker, dispatch, or middleman company' },
+  { value: 'hired_by_staffing',    label: 'A staffing agency or payroll company' },
+  { value: 'not_construction_work',label: "The work wasn't on real property (off-site repair, mobile work)" },
+  { value: 'other',                label: 'Other / not sure' },
+]
 type EntityType = 'individual' | 'llc' | 'corporation' | 'partnership' | 'sole_proprietor' | 'other'
 
 interface DraftState {
@@ -86,11 +102,12 @@ export default function NewCollectionsCasePage() {
 
   // Live prediction of kit_variant — mirrors resolveKitVariant in validation.ts.
   const predictedKit = useMemo<'full_kit' | 'demand_only'>(() => {
+    if (d.contractor_role === 'not_construction_work') return 'demand_only'
     if (d.state_code === 'TX' && d.is_homestead === true && d.tx_contract_signed !== 'yes_both') {
       return 'demand_only'
     }
     return 'full_kit'
-  }, [d.state_code, d.is_homestead, d.tx_contract_signed])
+  }, [d.state_code, d.is_homestead, d.tx_contract_signed, d.contractor_role])
 
   const deadlineWarning = useMemo(() => {
     if (!d.last_day_of_work) return null
@@ -171,7 +188,55 @@ export default function NewCollectionsCasePage() {
         <div className="h-full bg-emerald-600 transition-all" style={{ width: `${(step / 6) * 100}%` }} />
       </div>
 
+      {d.contractor_role === 'other' && step > 1 && <UncertainRoleWarning />}
+
       {step === 1 && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-bold text-stone-900">Who hired you for this job?</h2>
+          <p className="text-xs text-stone-500">
+            Mechanic&rsquo;s liens require a contractual or material-supply relationship to a real property project. This question screens whether the Contractor Payment Kit is the right tool — we can&rsquo;t help with broker payments, wage claims, or non-construction work.
+          </p>
+
+          <div className="space-y-2">
+            {SCREENING_OPTIONS.map(o => (
+              <label
+                key={o.value}
+                className={`block rounded-lg border p-3 cursor-pointer transition-colors ${
+                  d.contractor_role === o.value
+                    ? 'border-emerald-500 bg-emerald-50'
+                    : 'border-stone-200 hover:border-stone-300 bg-white'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="contractor_role"
+                  value={o.value}
+                  checked={d.contractor_role === o.value}
+                  onChange={() => update('contractor_role', o.value)}
+                  className="mr-2"
+                />
+                <span className="text-sm text-stone-900">{o.label}</span>
+              </label>
+            ))}
+          </div>
+
+          {d.contractor_role === 'hired_by_broker' && <BrokerScreenOut />}
+          {d.contractor_role === 'hired_by_staffing' && <StaffingScreenOut />}
+
+          {d.contractor_role === 'not_construction_work' && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+              <div className="font-bold mb-1">Demand-only kit</div>
+              <p>Your case will use the demand-only variant — instruction packet + demand letter, no lien forms (the lien path requires a real property nexus, which off-site or mobile work doesn&rsquo;t establish).</p>
+            </div>
+          )}
+
+          {d.contractor_role !== 'hired_by_broker' && d.contractor_role !== 'hired_by_staffing' && (
+            <NavButtons onBack={null} onNext={() => setStep(2)} nextDisabled={!d.contractor_role} />
+          )}
+        </section>
+      )}
+
+      {step === 2 && (
         <section className="space-y-4">
           <h2 className="text-lg font-bold text-stone-900">State, Property Type, and Pre-Work Contract</h2>
 
@@ -227,6 +292,16 @@ export default function NewCollectionsCasePage() {
             </div>
           )}
 
+          {d.state_code === 'TX' &&
+            (d.contractor_role === 'subcontractor' ||
+             d.contractor_role === 'sub_subcontractor' ||
+             d.contractor_role === 'material_supplier') && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+              <div className="font-bold mb-1">Texas pre-lien notice warning</div>
+              Texas subcontractors and suppliers must send monthly pre-lien notices per Tex. Prop. Code § 53.056. Your lien rights depend on whether those notices were sent on time. Your instruction packet walks through this in Step 1.
+            </div>
+          )}
+
           <div className={`rounded-lg border p-3 text-xs ${predictedKit === 'full_kit' ? 'border-emerald-300 bg-emerald-50 text-emerald-900' : 'border-amber-300 bg-amber-50 text-amber-900'}`}>
             <div className="font-bold mb-1">Based on your answers, your kit will be:</div>
             {predictedKit === 'full_kit'
@@ -234,30 +309,8 @@ export default function NewCollectionsCasePage() {
               : <div>DEMAND-ONLY — 2 documents: instruction packet (with an explanation of your case) + demand letter.</div>}
           </div>
 
-          <NavButtons onBack={null} onNext={() => setStep(2)}
+          <NavButtons onBack={() => setStep(1)} onNext={() => setStep(3)}
             nextDisabled={d.state_code === 'TX' && d.is_homestead && d.tx_contract_signed === ''} />
-        </section>
-      )}
-
-      {step === 2 && (
-        <section className="space-y-4">
-          <h2 className="text-lg font-bold text-stone-900">Your Role</h2>
-          <L label="How did you work on this project?">
-            <select value={d.contractor_role} onChange={e => update('contractor_role', e.target.value as Role)} className={selectCls}>
-              <option value="original_contractor">Original contractor — direct contract with the property owner.</option>
-              <option value="subcontractor">Subcontractor — hired by the original contractor.</option>
-              <option value="sub_subcontractor">Sub-subcontractor — hired by a subcontractor.</option>
-              <option value="material_supplier">Material supplier — supplied materials to the project.</option>
-              <option value="other">Other</option>
-            </select>
-          </L>
-          {d.state_code === 'TX' && d.contractor_role !== 'original_contractor' && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-              <div className="font-bold mb-1">Texas pre-lien notice warning</div>
-              Texas subcontractors and suppliers must send monthly pre-lien notices per Tex. Prop. Code § 53.056. Your lien rights depend on whether those notices were sent on time. Your instruction packet walks through this in Step 1.
-            </div>
-          )}
-          <NavButtons onBack={() => setStep(1)} onNext={() => setStep(3)} />
         </section>
       )}
 

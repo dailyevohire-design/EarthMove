@@ -7,6 +7,7 @@ export type CollectionsKitVariant = 'full_kit' | 'demand_only'
 
 export type ContractorRole =
   | 'original_contractor' | 'subcontractor' | 'sub_subcontractor' | 'material_supplier' | 'other'
+  | 'hired_by_broker' | 'hired_by_staffing' | 'not_construction_work'
 
 export type PropertyType =
   | 'commercial' | 'residential_non_homestead' | 'residential_homestead' | 'mixed_use' | 'industrial' | 'other'

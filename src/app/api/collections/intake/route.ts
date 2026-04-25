@@ -30,6 +30,17 @@ export async function POST(req: NextRequest) {
   }
   const input = parseResult.data
 
+  // Server-side screen-out enforcement. UI-only screening can be bypassed by
+  // a hand-crafted POST, so the server rejects ineligible roles before any
+  // case-creation work runs. Mirror of the wizard's screening question in
+  // src/app/collections/new/page.tsx.
+  if (input.contractor_role === 'hired_by_broker' || input.contractor_role === 'hired_by_staffing') {
+    return NextResponse.json(
+      { error: 'ineligible_role', message: 'This role is not eligible for the Contractor Payment Kit. See the screening guidance.' },
+      { status: 422 },
+    )
+  }
+
   const check = validateIntake(input)
   if (!check.ok) {
     return NextResponse.json({ error: check.error, message: check.message }, { status: check.status })
