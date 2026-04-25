@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import {
   ShieldCheck, Truck, Package, LayoutDashboard,
-  ShoppingCart, LogOut, ChevronRight
+  ShoppingCart, LogOut, ChevronRight, ScrollText
 } from 'lucide-react'
 import { LogoMark } from '@/components/layout/logo'
 
@@ -11,6 +11,9 @@ import { LogoMark } from '@/components/layout/logo'
 const GC_NAV = [
   { href: '/dashboard/gc',              icon: <LayoutDashboard size={14} />, label: 'Overview'          },
   { href: '/dashboard/gc/contractors',  icon: <ShieldCheck size={14} />,     label: 'Contractor Check'  },
+  ...(process.env.NEXT_PUBLIC_COLLECTIONS_ENABLED === 'true'
+    ? [{ href: '/collections/new',       icon: <ScrollText size={14} />,     label: 'Collections Assist' }]
+    : []),
   { href: '/dashboard/gc/orders',       icon: <ShoppingCart size={14} />,    label: 'My Orders'         },
 ]
 

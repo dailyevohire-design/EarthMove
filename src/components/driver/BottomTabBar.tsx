@@ -7,13 +7,16 @@ const TABS = [
   { href: '/dashboard/driver',           key: 'today',    label: 'Today' },
   { href: '/dashboard/driver/find-work', key: 'findwork', label: 'Find work' },
   { href: '/dashboard/driver/money',     key: 'money',    label: 'Money' },
+  ...(process.env.NEXT_PUBLIC_COLLECTIONS_ENABLED === 'true'
+    ? [{ href: '/collections/new',       key: 'getpaid',  label: 'Get Paid' }]
+    : []),
   { href: '/dashboard/driver/trust',     key: 'trust',    label: 'Trust' },
 ]
 
 export function BottomTabBar() {
   const pathname = usePathname()
   return (
-    <nav className="em-tab-bar">
+    <nav className="em-tab-bar" style={{ gridTemplateColumns: `repeat(${TABS.length}, 1fr)` }}>
       {TABS.map(t => {
         const active = t.href === '/dashboard/driver'
           ? pathname === t.href
@@ -48,6 +51,13 @@ function TabIcon({ tab }: { tab: string }) {
       return (
         <svg viewBox="0 0 24 24">
           <path d="M12 2v20M6 6h9a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h9" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+    case 'getpaid':
+      return (
+        <svg viewBox="0 0 24 24">
+          <line x1="12" y1="1" x2="12" y2="23" strokeLinecap="round" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )
     case 'trust':
