@@ -69,6 +69,58 @@ function ScoreRing({ score, riskLevel }: { score: number; riskLevel: string }) {
   )
 }
 
+function TierComparisonPanel({ tier, setTier }: { tier: Tier; setTier: (t: Tier) => void }) {
+  if (tier === 'standard') {
+    return (
+      <div className="rounded-lg border border-stone-200 bg-white p-4 mb-4">
+        <h3 className="text-base font-semibold text-stone-900">You&apos;re on Standard — $0.19 per lookup</h3>
+        <p className="text-sm text-stone-600 mt-1">Fresh AI report with 7+ public sources, 30s turnaround.</p>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <button onClick={() => setTier('free')} className="border border-stone-300 bg-white text-stone-700 rounded-md px-3 py-1.5 text-sm font-medium hover:bg-stone-50">Switch to Free (cached)</button>
+          <button onClick={() => setTier('deep_dive')} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-md px-3 py-1.5 text-sm font-medium">Upgrade to Deep Dive ($2) →</button>
+        </div>
+      </div>
+    )
+  }
+  if (tier === 'deep_dive') {
+    return (
+      <div className="rounded-lg border border-stone-200 bg-white p-4 mb-4">
+        <h3 className="text-base font-semibold text-stone-900">You&apos;re on Deep Dive — $2.00 per lookup</h3>
+        <p className="text-sm text-stone-600 mt-1">Paid-source data + full audit trail. Business entities only (LLC, Corp). Individual driver background checks require Checkr.</p>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <button onClick={() => setTier('standard')} className="border border-stone-300 bg-white text-stone-700 rounded-md px-3 py-1.5 text-sm font-medium hover:bg-stone-50">Switch to Standard ($0.19)</button>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="rounded-lg border border-stone-200 bg-white p-4 mb-4">
+      <h3 className="text-base font-semibold text-stone-900">What you get on Free</h3>
+      <ul className="mt-3 space-y-1.5">
+        <li className="flex items-start gap-2 text-sm text-stone-600"><CheckCircle2 size={14} className="text-emerald-600 mt-0.5 flex-shrink-0" /><span>Cached report from prior lookups (may be 7-30 days old)</span></li>
+        <li className="flex items-start gap-2 text-sm text-stone-600"><CheckCircle2 size={14} className="text-emerald-600 mt-0.5 flex-shrink-0" /><span>Trust score, risk level, basic business registration</span></li>
+        <li className="flex items-start gap-2 text-sm text-stone-600"><CheckCircle2 size={14} className="text-emerald-600 mt-0.5 flex-shrink-0" /><span>BBB rating, review aggregates</span></li>
+        <li className="flex items-start gap-2 text-sm text-stone-600"><XCircle size={14} className="text-stone-400 mt-0.5 flex-shrink-0" /><span>Fresh AI-compiled research</span></li>
+        <li className="flex items-start gap-2 text-sm text-stone-600"><XCircle size={14} className="text-stone-400 mt-0.5 flex-shrink-0" /><span>Live court records, legal findings, OSHA violations</span></li>
+        <li className="flex items-start gap-2 text-sm text-stone-600"><XCircle size={14} className="text-stone-400 mt-0.5 flex-shrink-0" /><span>Full evidence trail with cited sources</span></li>
+      </ul>
+      <p className="text-sm text-stone-600 mt-4 font-medium">Need more? Upgrade this lookup:</p>
+      <div className="grid md:grid-cols-2 gap-3 mt-2">
+        <div className="rounded-md border border-stone-200 p-3">
+          <div className="text-sm font-semibold text-stone-900">Standard — $0.19</div>
+          <p className="text-sm text-stone-600 mt-1">Fresh AI report, 7+ public sources, 30s turnaround.</p>
+          <button onClick={() => setTier('standard')} className="mt-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md px-3 py-1.5 text-sm font-medium">Use Standard →</button>
+        </div>
+        <div className="rounded-md border border-stone-200 p-3">
+          <div className="text-sm font-semibold text-stone-900">Deep Dive — $2.00</div>
+          <p className="text-sm text-stone-600 mt-1">Paid sources, full audit trail, business entities only.</p>
+          <button onClick={() => setTier('deep_dive')} className="mt-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md px-3 py-1.5 text-sm font-medium">Use Deep Dive →</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ContractorCheckClient({ initialHistory, checkoutEnabled }: { initialHistory: any[]; checkoutEnabled: boolean }) {
   const [name, setName] = useState('')
   const [city, setCity] = useState('')
@@ -264,6 +316,8 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
               :<button onClick={()=>setShowPlans(!showPlans)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">{showPlans?'Hide plans':'Compare plans →'}</button>}
           </div>
         </div>
+
+        <TierComparisonPanel tier={tier} setTier={setTier} />
 
         {/* Plan comparison */}
         {showPlans&&<div className="grid grid-cols-3 gap-4 mb-8">
