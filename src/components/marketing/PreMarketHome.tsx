@@ -11,12 +11,14 @@
  * NEVER reintroduce Portland (or any expansion-pipeline city) as a launch-market claim
  * in this surface. Do not invent product metrics. Do not list synthetic pricing.
  */
+import Image from 'next/image'
 import { AudienceProvider } from './audience-context'
 import { NavScroll } from './NavScroll'
 import { HeroLeftColumn } from './HeroLeftColumn'
 import { MaterialsSubcopy } from './MaterialsSubcopy'
 import { MaterialsCard6 } from './MaterialsCard6'
 import { CoverageCalculator } from './CoverageCalculator'
+import { getMaterialImage } from '@/lib/material-images'
 
 const ChevronDown = ({ size = 18 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -198,27 +200,13 @@ export function PreMarketHome() {
               {/* 1: Driveway base */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-base)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice">
-                    <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#A39A8A" /><stop offset="1" stopColor="#5C5446" /></linearGradient></defs>
-                    <rect width="200" height="160" fill="url(#g1)" />
-                    <g stroke="#2E281E" strokeWidth="0.5">
-                      <polygon points="10,20 30,15 40,30 25,40 8,35" fill="#867D6E" />
-                      <polygon points="50,10 70,5 80,22 65,30 48,25" fill="#A39A8A" />
-                      <polygon points="90,15 115,10 125,28 110,38 88,32" fill="#7A7264" />
-                      <polygon points="135,8 160,12 168,30 150,38 130,28" fill="#928979" />
-                      <polygon points="175,18 195,22 192,42 175,45 168,30" fill="#6E665A" />
-                      <polygon points="5,55 28,50 38,68 22,80 0,72" fill="#A39A8A" />
-                      <polygon points="45,60 70,55 80,75 60,85 42,78" fill="#867D6E" />
-                      <polygon points="90,65 115,62 122,80 105,90 88,82" fill="#7A7264" />
-                      <polygon points="130,55 158,60 165,82 145,90 128,80" fill="#928979" />
-                      <polygon points="172,62 195,68 198,90 180,95 168,82" fill="#A39A8A" />
-                      <polygon points="8,100 32,95 42,118 25,128 4,118" fill="#7A7264" />
-                      <polygon points="50,108 75,102 85,120 65,135 45,128" fill="#928979" />
-                      <polygon points="92,110 120,108 128,130 108,140 88,132" fill="#867D6E" />
-                      <polygon points="135,105 162,108 170,128 152,138 132,128" fill="#A39A8A" />
-                      <polygon points="175,112 198,118 195,140 175,142 165,128" fill="#7A7264" />
-                    </g>
-                  </svg>
+                  <Image
+                    src={getMaterialImage('flex-base')}
+                    alt="Compacted crushed stone driveway base"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{ objectFit: 'cover' }}
+                  />
                   <span className="mat-tag">ABC · ¾″ minus</span>
                 </div>
                 <div className="mat-body">
@@ -235,36 +223,13 @@ export function PreMarketHome() {
               {/* 2: Drainage */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-drain)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice">
-                    <rect width="200" height="160" fill="#3F3D37" />
-                    <g stroke="#1F1D17" strokeWidth="0.6">
-                      <ellipse cx="22" cy="22" rx="14" ry="11" fill="#C7C2B5" />
-                      <ellipse cx="55" cy="28" rx="16" ry="12" fill="#A9A498" />
-                      <ellipse cx="90" cy="20" rx="13" ry="10" fill="#BCB7AB" />
-                      <ellipse cx="120" cy="32" rx="17" ry="13" fill="#9E9A8E" />
-                      <ellipse cx="158" cy="22" rx="14" ry="11" fill="#C7C2B5" />
-                      <ellipse cx="188" cy="32" rx="14" ry="11" fill="#A9A498" />
-                      <ellipse cx="14" cy="60" rx="15" ry="12" fill="#B0AB9F" />
-                      <ellipse cx="48" cy="62" rx="13" ry="10" fill="#C7C2B5" />
-                      <ellipse cx="80" cy="58" rx="17" ry="13" fill="#9E9A8E" />
-                      <ellipse cx="112" cy="62" rx="14" ry="11" fill="#BCB7AB" />
-                      <ellipse cx="148" cy="60" rx="16" ry="12" fill="#A9A498" />
-                      <ellipse cx="180" cy="62" rx="14" ry="11" fill="#C7C2B5" />
-                      <ellipse cx="22" cy="95" rx="14" ry="11" fill="#9E9A8E" />
-                      <ellipse cx="58" cy="98" rx="16" ry="12" fill="#BCB7AB" />
-                      <ellipse cx="92" cy="92" rx="14" ry="11" fill="#A9A498" />
-                      <ellipse cx="128" cy="98" rx="15" ry="12" fill="#C7C2B5" />
-                      <ellipse cx="162" cy="95" rx="14" ry="11" fill="#9E9A8E" />
-                      <ellipse cx="190" cy="98" rx="13" ry="10" fill="#B0AB9F" />
-                      <ellipse cx="16" cy="130" rx="14" ry="11" fill="#BCB7AB" />
-                      <ellipse cx="50" cy="128" rx="15" ry="12" fill="#A9A498" />
-                      <ellipse cx="84" cy="132" rx="14" ry="11" fill="#C7C2B5" />
-                      <ellipse cx="118" cy="128" rx="16" ry="12" fill="#9E9A8E" />
-                      <ellipse cx="154" cy="130" rx="14" ry="11" fill="#BCB7AB" />
-                      <ellipse cx="186" cy="132" rx="15" ry="12" fill="#A9A498" />
-                    </g>
-                    <g fill="#fff" opacity="0.3"><ellipse cx="20" cy="18" rx="4" ry="2" /><ellipse cx="86" cy="56" rx="5" ry="2.5" /><ellipse cx="148" cy="92" rx="4" ry="2" /></g>
-                  </svg>
+                  <Image
+                    src={getMaterialImage('base-gravel-57')}
+                    alt="¾-inch washed drainage stone close-up"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{ objectFit: 'cover' }}
+                  />
                   <span className="mat-tag">¾″ washed stone</span>
                 </div>
                 <div className="mat-body">
@@ -281,23 +246,13 @@ export function PreMarketHome() {
               {/* 3: Backfill / leveling */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-fill)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice">
-                    <defs><radialGradient id="g3" cx="0.5" cy="0.4" r="0.85"><stop offset="0" stopColor="#7A5A3D" /><stop offset="1" stopColor="#2A1D10" /></radialGradient></defs>
-                    <rect width="200" height="160" fill="url(#g3)" />
-                    <g>
-                      <ellipse cx="30" cy="40" rx="22" ry="14" fill="#4D3823" opacity="0.7" />
-                      <ellipse cx="80" cy="30" rx="28" ry="16" fill="#5C4630" opacity="0.55" />
-                      <ellipse cx="140" cy="42" rx="26" ry="14" fill="#6B5238" opacity="0.6" />
-                      <ellipse cx="180" cy="32" rx="20" ry="12" fill="#4D3823" opacity="0.7" />
-                      <ellipse cx="22" cy="90" rx="26" ry="16" fill="#5C4630" opacity="0.6" />
-                      <ellipse cx="76" cy="98" rx="30" ry="18" fill="#6B5238" opacity="0.55" />
-                      <ellipse cx="138" cy="92" rx="28" ry="16" fill="#4D3823" opacity="0.65" />
-                      <ellipse cx="186" cy="100" rx="22" ry="14" fill="#5C4630" opacity="0.6" />
-                      <circle cx="40" cy="62" r="2.4" fill="#A89479" /><circle cx="100" cy="70" r="3" fill="#876B4C" />
-                      <circle cx="155" cy="68" r="2" fill="#A89479" /><circle cx="60" cy="115" r="2.6" fill="#876B4C" />
-                      <circle cx="120" cy="120" r="2" fill="#A89479" /><circle cx="170" cy="125" r="2.8" fill="#876B4C" />
-                    </g>
-                  </svg>
+                  <Image
+                    src={getMaterialImage('fill-dirt')}
+                    alt="Clean fill dirt — cracked tan earth surface"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{ objectFit: 'cover' }}
+                  />
                   <span className="mat-tag">Clean fill dirt</span>
                 </div>
                 <div className="mat-body">
@@ -314,22 +269,13 @@ export function PreMarketHome() {
               {/* 4: Garden / landscaping */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-soil)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice">
-                    <defs><radialGradient id="g4" cx="0.4" cy="0.4" r="0.85"><stop offset="0" stopColor="#3A2A19" /><stop offset="1" stopColor="#0F0904" /></radialGradient></defs>
-                    <rect width="200" height="160" fill="url(#g4)" />
-                    <g>
-                      <ellipse cx="35" cy="38" rx="25" ry="16" fill="#2C1F11" opacity="0.7" />
-                      <ellipse cx="100" cy="30" rx="34" ry="18" fill="#231910" opacity="0.7" />
-                      <ellipse cx="160" cy="42" rx="28" ry="16" fill="#2C1F11" opacity="0.6" />
-                      <ellipse cx="40" cy="100" rx="32" ry="18" fill="#231910" opacity="0.65" />
-                      <ellipse cx="120" cy="105" rx="36" ry="20" fill="#2C1F11" opacity="0.6" />
-                      <path d="M50 60 q 6 -3 12 0 q -2 4 -12 0z" fill="#5B4220" opacity="0.7" />
-                      <path d="M120 70 q 6 -2 12 1 q -3 4 -12 -1z" fill="#5B4220" opacity="0.7" />
-                      <path d="M70 130 q 7 -2 14 1 q -4 4 -14 -1z" fill="#5B4220" opacity="0.6" />
-                      <path d="M150 130 q 1 -8 4 -9 q 4 1 4 9" stroke="#2F6F4D" strokeWidth="1.4" fill="none" />
-                      <path d="M158 130 q 1 -6 3 -7" stroke="#2F6F4D" strokeWidth="1.2" fill="none" />
-                    </g>
-                  </svg>
+                  <Image
+                    src={getMaterialImage('topsoil')}
+                    alt="Screened topsoil — rich dark loam"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{ objectFit: 'cover' }}
+                  />
                   <span className="mat-tag">Screened topsoil</span>
                 </div>
                 <div className="mat-body">
@@ -346,18 +292,13 @@ export function PreMarketHome() {
               {/* 5: Concrete / structural */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-struct)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice">
-                    <rect width="200" height="160" fill="#D7D2C2" />
-                    <g fill="#9C9486" stroke="#3F3A2E" strokeWidth="0.3" opacity="0.95">
-                      <circle cx="12" cy="12" r="5" /><circle cx="26" cy="20" r="6" /><circle cx="42" cy="14" r="5" /><circle cx="58" cy="22" r="6" /><circle cx="74" cy="14" r="5" /><circle cx="90" cy="22" r="5" /><circle cx="106" cy="14" r="6" /><circle cx="122" cy="22" r="5" /><circle cx="138" cy="14" r="5" /><circle cx="154" cy="22" r="6" /><circle cx="170" cy="14" r="5" /><circle cx="186" cy="22" r="5" />
-                      <circle cx="20" cy="36" r="6" /><circle cx="36" cy="42" r="5" /><circle cx="52" cy="36" r="5" /><circle cx="68" cy="42" r="6" /><circle cx="84" cy="36" r="5" /><circle cx="100" cy="42" r="6" /><circle cx="116" cy="36" r="5" /><circle cx="132" cy="42" r="6" /><circle cx="148" cy="36" r="5" /><circle cx="164" cy="42" r="5" /><circle cx="180" cy="36" r="6" />
-                      <circle cx="14" cy="58" r="5" /><circle cx="30" cy="64" r="6" /><circle cx="46" cy="58" r="5" /><circle cx="62" cy="64" r="6" /><circle cx="78" cy="58" r="5" /><circle cx="94" cy="64" r="5" /><circle cx="110" cy="58" r="6" /><circle cx="126" cy="64" r="5" /><circle cx="142" cy="58" r="6" /><circle cx="158" cy="64" r="5" /><circle cx="174" cy="58" r="5" /><circle cx="190" cy="64" r="6" />
-                      <circle cx="22" cy="80" r="5" /><circle cx="38" cy="86" r="6" /><circle cx="54" cy="80" r="5" /><circle cx="70" cy="86" r="6" /><circle cx="86" cy="80" r="5" /><circle cx="102" cy="86" r="5" /><circle cx="118" cy="80" r="6" /><circle cx="134" cy="86" r="5" /><circle cx="150" cy="80" r="6" /><circle cx="166" cy="86" r="5" />
-                      <circle cx="16" cy="104" r="6" /><circle cx="32" cy="110" r="5" /><circle cx="48" cy="104" r="6" /><circle cx="64" cy="110" r="5" /><circle cx="80" cy="104" r="5" /><circle cx="96" cy="110" r="6" /><circle cx="112" cy="104" r="5" /><circle cx="128" cy="110" r="6" /><circle cx="144" cy="104" r="5" /><circle cx="160" cy="110" r="5" /><circle cx="176" cy="104" r="6" />
-                      <circle cx="24" cy="128" r="5" /><circle cx="40" cy="134" r="6" /><circle cx="56" cy="128" r="5" /><circle cx="72" cy="134" r="6" /><circle cx="88" cy="128" r="5" /><circle cx="104" cy="134" r="5" /><circle cx="120" cy="128" r="6" /><circle cx="136" cy="134" r="5" /><circle cx="152" cy="128" r="6" />
-                    </g>
-                    <g fill="#7A7264" stroke="#3F3A2E" strokeWidth="0.3"><circle cx="46" cy="20" r="4" /><circle cx="118" cy="40" r="5" /><circle cx="80" cy="62" r="4" /><circle cx="160" cy="84" r="4" /><circle cx="40" cy="108" r="5" /><circle cx="124" cy="132" r="4" /></g>
-                  </svg>
+                  <Image
+                    src={getMaterialImage('concrete-sand')}
+                    alt="Concrete sand — coarse sandy texture with small stones"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{ objectFit: 'cover' }}
+                  />
                   <span className="mat-tag">Concrete sand · pea gravel</span>
                 </div>
                 <div className="mat-body">
