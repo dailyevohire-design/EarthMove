@@ -7,8 +7,8 @@ out/
 
 # env files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 # debug
 npm-debug.log*
