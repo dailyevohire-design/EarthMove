@@ -1,0 +1,1259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EarthMove — Bulk aggregate, delivered to the hour.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:#F7F5F0;color:#101814;}
+  body{font-family:'Geist',ui-sans-serif,sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;}
+  ul{list-style:none;}
+
+  :root{
+    --bg:#F7F5F0; --bg-2:#EFEBE2; --bg-3:#E6E1D5;
+    --ink:#101814; --ink-2:#4F564E; --ink-3:#8C8F87;
+    --line:#E2DED2; --line-strong:#CFC9B8;
+    --brand:#1F3D2E; --brand-2:#2F5A45; --brand-3:#0F2419; --brand-soft:#E2EAE3;
+    --action:#D97A1F; --action-hover:#B8651A; --action-soft:#FBE8D2;
+    --trust:#FCFAF3; --trust-line:#EFE7CE; --trust-mark:#5C7A2F; --trust-mark-soft:#E8EBD8;
+    --ops-bg:#0E1620; --ops-bg-2:#152130; --ops-line:#22324A; --ops-line-2:#2C405D;
+    --ops-ink:#E6ECF5; --ops-ink-2:#9AAAC2; --ops-ink-3:#5E708B;
+    --ops-accent:#5EA9FF; --ops-active:#28C76F; --ops-warn:#F6B23F;
+    --m-base:#9C6A2E; --m-drain:#3F5266; --m-fill:#6B4A2A; --m-soil:#2E4A2A; --m-struct:#7A7A6E;
+  }
+
+  .display{font-family:'Bricolage Grotesque',serif;letter-spacing:-0.025em;font-weight:600;}
+  .display-tight{font-family:'Bricolage Grotesque',serif;letter-spacing:-0.035em;font-weight:700;}
+  .num{font-family:'Bricolage Grotesque',serif;font-variant-numeric:tabular-nums;letter-spacing:-0.04em;font-weight:600;}
+  .ink{color:var(--ink);} .ink-2{color:var(--ink-2);} .ink-3{color:var(--ink-3);}
+  .accent{color:var(--action);} .brand{color:var(--brand);}
+
+  .max{max-width:1240px;margin:0 auto;padding:0 24px;}
+  @media (min-width:768px){.max{padding:0 32px;}}
+
+  .btn{display:inline-flex;align-items:center;gap:.55rem;border-radius:8px;font-weight:500;transition:all .15s ease;}
+  .btn-primary{background:var(--action);color:#fff;box-shadow:inset 0 -1.5px 0 rgba(0,0,0,.20);}
+  .btn-primary:hover{background:var(--action-hover);}
+  .btn-outline{border:1px solid var(--line-strong);background:#fff;color:var(--ink);}
+  .btn-outline:hover{border-color:var(--ink);}
+  .btn-ghost{color:var(--ink);}
+  .btn-ghost:hover{background:var(--bg-2);}
+
+  .input{background:#fff;border:1px solid var(--line-strong);border-radius:10px;color:var(--ink);transition:border-color .15s ease, box-shadow .15s ease;font-family:inherit;}
+  .input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 4px rgba(15,20,17,.07);}
+  .input::placeholder{color:var(--ink-3);}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;}
+
+  /* NAV */
+  .nav{position:sticky;top:0;z-index:50;background:rgba(250,250,247,.78);backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid transparent;transition:border-color .2s ease;}
+  .nav.scrolled{border-color:var(--line);}
+  .nav-inner{height:68px;display:flex;align-items:center;justify-content:space-between;}
+  .nav-logo{font-family:'Bricolage Grotesque',serif;letter-spacing:-0.035em;font-weight:700;font-size:22px;color:var(--ink);}
+  .nav-logo .dot{color:var(--action);}
+  .nav-links{display:none;align-items:center;gap:32px;font-size:14px;color:var(--ink-2);}
+  .nav-links a:hover{color:var(--ink);}
+  @media (min-width:768px){.nav-links{display:flex;}}
+
+  /* SECTIONS */
+  .section{padding:96px 0;}
+  @media (min-width:768px){.section{padding:120px 0;}}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:var(--brand);display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .eyebrow::before{content:"";width:18px;height:1.5px;background:var(--brand);display:inline-block;}
+  .sec-title{font-family:'Bricolage Grotesque',serif;font-weight:600;letter-spacing:-0.03em;line-height:1.02;font-size:40px;}
+  @media (min-width:768px){.sec-title{font-size:60px;}}
+
+  /* LIVE DOT */
+  .live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ops-active);box-shadow:0 0 0 0 rgba(40,199,111,.5);animation:lp 1.8s ease-in-out infinite;}
+  @keyframes lp{0%,100%{box-shadow:0 0 0 0 rgba(40,199,111,.5);}50%{box-shadow:0 0 0 6px rgba(40,199,111,0);}}
+
+  /* HERO */
+  .hv-bg{position:relative;overflow:hidden;background:#F4F1E8;}
+  .hv-bg::before{content:"";position:absolute;inset:0;pointer-events:none;background:
+     radial-gradient(900px 540px at 92% -10%, rgba(31,61,46,.09), transparent 60%),
+     radial-gradient(700px 420px at -8% 105%, rgba(217,122,31,.06), transparent 65%);}
+  .hv-bg::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.45;
+     background-image:
+       linear-gradient(to right, rgba(31,61,46,.045) 1px, transparent 1px),
+       linear-gradient(to bottom, rgba(31,61,46,.045) 1px, transparent 1px);
+     background-size:64px 64px;
+     mask-image:linear-gradient(180deg,black 0%, black 70%, transparent 100%);
+     -webkit-mask-image:linear-gradient(180deg,black 0%, black 70%, transparent 100%);}
+
+  .hv-wrap{padding:64px 0 72px;position:relative;}
+  @media (min-width:768px){.hv-wrap{padding:80px 0 96px;}}
+  .hv-grid{display:grid;grid-template-columns:1fr;gap:48px;align-items:stretch;}
+  @media (min-width:1100px){.hv-grid{grid-template-columns:1.02fr 1.18fr;gap:64px;}}
+
+  .hv-status{display:inline-flex;align-items:center;gap:12px;margin-bottom:36px;font-size:12px;color:var(--ink-3);font-weight:500;}
+  .hv-status .pip{width:6px;height:6px;border-radius:50%;background:var(--trust-mark);box-shadow:0 0 0 0 rgba(92,122,47,.45);animation:lp 1.8s ease-in-out infinite;}
+  .hv-status .lbl{color:var(--ink-2);font-weight:500;}
+  .hv-status .rule{width:1px;height:10px;background:var(--line-strong);opacity:.85;}
+  .hv-status .y{color:var(--ink);font-weight:600;}
+
+  .hv-h1{font-family:'Bricolage Grotesque',serif;font-weight:700;letter-spacing:-0.04em;line-height:.94;font-size:clamp(50px,5.6vw,86px);color:var(--ink);}
+  .hv-h1 .em{font-style:italic;font-weight:600;color:var(--brand);position:relative;white-space:nowrap;}
+  .hv-h1 .em::after{content:"";position:absolute;left:-1%;right:-1%;bottom:.07em;height:.14em;background:var(--action);opacity:.85;border-radius:2px;z-index:-1;}
+
+  .hv-sub{margin-top:24px;font-size:18.5px;line-height:1.55;color:var(--ink-2);max-width:540px;}
+  .hv-sub b{color:var(--ink);font-weight:600;}
+
+  .hv-rq{margin-top:36px;background:#fff;border:1px solid var(--line-strong);border-radius:16px;padding:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 0 0 1px rgba(15,20,17,.012),
+    0 30px 60px -32px rgba(15,20,17,.22), 0 6px 16px -8px rgba(15,20,17,.06);
+    max-width:600px;}
+  .hv-rq-top{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 14px 4px;border-bottom:1px solid var(--line);gap:12px;flex-wrap:wrap;}
+  .toggle{display:inline-flex;padding:4px;background:#fff;border:1px solid var(--line);border-radius:999px;}
+  .toggle button{padding:.45rem .9rem;border-radius:999px;font-size:13px;font-weight:500;color:var(--ink-2);transition:all .15s ease;}
+  .toggle button.active{background:var(--brand);color:#fff;}
+  .hv-rq-hint{display:inline-flex;align-items:center;gap:8px;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.16em;font-weight:600;}
+  .hv-rq-step{font-family:'Bricolage Grotesque',serif;color:var(--ink-2);font-weight:700;letter-spacing:.04em;}
+  .hv-rq-step-sep{width:14px;height:1px;background:var(--line-strong);}
+
+  .hv-rq-form{display:flex;gap:8px;margin-top:14px;align-items:stretch;}
+  .hv-zip{flex:1;display:flex;align-items:center;height:60px;background:var(--bg);border:1px solid var(--line-strong);border-radius:11px;transition:all .18s ease;overflow:hidden;}
+  .hv-zip:focus-within{border-color:var(--ink);background:#fff;box-shadow:0 0 0 4px rgba(15,20,17,.05);}
+  .hv-zip-prefix{display:inline-flex;align-items:center;justify-content:center;height:100%;padding:0 14px 0 16px;font-size:10.5px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.18em;border-right:1px solid var(--line);}
+  .hv-zip input{flex:1;min-width:0;background:transparent;border:0;outline:0;height:100%;padding:0 16px;font-size:19px;color:var(--ink);font-family:'Bricolage Grotesque',serif;letter-spacing:.04em;font-weight:500;}
+  .hv-zip input::placeholder{color:var(--ink-3);font-weight:400;}
+
+  .hv-cta{position:relative;display:inline-flex;align-items:center;gap:14px;height:60px;padding:0 14px 0 22px;background:var(--action);color:#fff;border-radius:11px;font-weight:600;font-size:14.5px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1.5px 0 rgba(0,0,0,.18),
+      0 8px 18px -8px rgba(217,122,31,.55),0 2px 4px -2px rgba(217,122,31,.30);
+    transition:all .15s ease;}
+  .hv-cta:hover{background:var(--action-hover);}
+  .hv-cta:active{transform:translateY(1px);}
+  .hv-cta-arrow{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.16);transition:transform .2s ease;}
+  .hv-cta:hover .hv-cta-arrow{transform:translateX(2px);background:rgba(255,255,255,.22);}
+
+  .hv-marks{display:flex;align-items:center;gap:0;margin-top:22px;flex-wrap:wrap;row-gap:8px;}
+  .hv-marks .mk{display:inline-flex;align-items:center;gap:8px;padding:0 16px;font-size:12.5px;color:var(--ink-2);font-weight:500;}
+  .hv-marks .mk:first-child{padding-left:0;}
+  .hv-marks .mk + .mk{border-left:1px solid var(--line-strong);}
+  .hv-marks .mk svg{color:var(--trust-mark);width:13px;height:13px;}
+  .hv-marks .mk b{color:var(--ink);font-weight:600;}
+
+  /* Hero signature: capability descriptions, not metrics */
+  .hv-sig{display:flex;align-items:flex-start;gap:0;margin-top:40px;padding-top:24px;border-top:1px solid var(--line);flex-wrap:wrap;}
+  .hv-sig .sig-item{display:flex;flex-direction:column;gap:6px;padding:0 28px;}
+  .hv-sig .sig-item:first-child{padding-left:0;}
+  .hv-sig .sig-item + .sig-item{border-left:1px solid var(--line-strong);}
+  .hv-sig .sig-eb{font-size:10px;color:var(--brand);font-weight:600;text-transform:uppercase;letter-spacing:.14em;}
+  .hv-sig .sig-ttl{font-family:'Bricolage Grotesque',serif;font-weight:600;font-size:19px;letter-spacing:-0.02em;color:var(--brand-3);line-height:1.15;}
+  .hv-sig .sig-lbl{font-size:11.5px;color:var(--ink-3);line-height:1.45;}
+
+  /* OPS PANEL — feature-illustrative, NOT a metrics dashboard */
+  .op{position:relative;background:linear-gradient(178deg,#0F1A28 0%, #142133 100%);
+    border:1px solid rgba(255,255,255,.07);border-radius:20px;overflow:hidden;color:#E9EEF6;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04),
+      0 36px 90px -36px rgba(8,14,22,.65),0 12px 28px -14px rgba(8,14,22,.45);}
+
+  .op-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 16px;border-bottom:1px solid rgba(255,255,255,.06);gap:12px;flex-wrap:wrap;}
+  .op-eyebrow{display:flex;align-items:center;gap:12px;font-size:11px;color:#8FA0BC;font-weight:500;}
+  .op-eyebrow-lbl{color:#E9EEF6;text-transform:uppercase;letter-spacing:.18em;font-weight:600;font-size:10.5px;}
+  .op-mark{width:7px;height:7px;border-radius:50%;background:#28C76F;box-shadow:0 0 0 3px rgba(40,199,111,.18);animation:lp 1.8s ease-in-out infinite;}
+  .op-region{color:#A6B4CC;font-size:12px;font-weight:500;padding-left:12px;border-left:1px solid rgba(255,255,255,.10);}
+  .op-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(246,178,63,.10);border:1px solid rgba(246,178,63,.32);border-radius:6px;font-size:10.5px;color:#F6B23F;font-weight:600;letter-spacing:.10em;text-transform:uppercase;}
+
+  /* Three feature pillars instead of metrics */
+  .op-pillars{display:grid;grid-template-columns:repeat(3,1fr);}
+  .op-pillar{padding:22px 22px 24px;border-right:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.06);}
+  .op-pillar:last-child{border-right:0;}
+  .op-pillar-icon{width:32px;height:32px;border-radius:8px;background:rgba(94,169,255,.12);border:1px solid rgba(94,169,255,.28);display:grid;place-items:center;color:#5EA9FF;}
+  .op-pillar-icon svg{width:15px;height:15px;}
+  .op-pillar-ttl{margin-top:14px;font-family:'Bricolage Grotesque',serif;font-weight:600;font-size:16px;color:#fff;letter-spacing:-0.015em;line-height:1.2;}
+  .op-pillar-sub{margin-top:6px;font-size:12px;color:#9AAAC2;line-height:1.5;}
+
+  /* Map — feature illustration */
+  .op-map{position:relative;height:230px;background:#0B1422;border-bottom:1px solid rgba(255,255,255,.06);overflow:hidden;}
+  .op-map svg.grid{position:absolute;inset:0;width:100%;height:100%;}
+  .op-truck{position:absolute;top:50%;left:51%;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 6px rgba(246,178,63,.45));animation:opTruck 9s ease-in-out infinite;}
+  @keyframes opTruck{0%{left:24%;top:38%;}50%{left:65%;top:60%;}100%{left:78%;top:65%;}}
+  .op-map-tag{position:absolute;display:inline-flex;align-items:center;gap:6px;padding:5px 9px;background:rgba(11,20,34,.85);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);border-radius:6px;font-size:11px;color:#C7D3E5;font-weight:500;white-space:nowrap;}
+  .op-map-tag .dot{width:6px;height:6px;}
+  .op-map-tag .dot.stone{background:#7FB893;}
+  .op-map-tag .dot.pin{background:#fff;border-radius:50%;}
+
+  /* Demo delivery row — labeled as demo */
+  .op-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.018);flex-wrap:wrap;}
+  .op-row-l{min-width:0;flex:1;}
+  .op-row-status{display:inline-flex;align-items:center;gap:8px;font-size:10px;color:#F6B23F;text-transform:uppercase;letter-spacing:.18em;font-weight:600;}
+  .op-row-pip{width:6px;height:6px;border-radius:50%;background:#F6B23F;animation:lp 1.6s ease-in-out infinite;}
+  .op-row-id{margin-left:4px;color:#5E708B;font-family:'Bricolage Grotesque',serif;letter-spacing:.10em;font-weight:600;}
+  .op-row-ttl{margin-top:7px;font-family:'Bricolage Grotesque',serif;font-weight:600;font-size:17px;color:#fff;letter-spacing:-0.018em;}
+  .op-row-meta{margin-top:5px;font-size:12px;color:#8FA0BC;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .op-row-meta .arr{color:#5E708B;}
+  .op-row-meta .dot{width:3px;height:3px;border-radius:50%;background:#3D4F6B;}
+  .op-row-r{text-align:right;}
+  .op-eta-lbl{font-size:10px;color:#8FA0BC;text-transform:uppercase;letter-spacing:.20em;font-weight:600;}
+  .op-eta-val{margin-top:5px;font-family:'Bricolage Grotesque',serif;font-weight:700;font-size:24px;color:#fff;letter-spacing:-0.025em;line-height:1;}
+  .op-eta-val .u{font-size:13px;color:#8FA0BC;font-weight:500;}
+  .op-eta-sub{margin-top:5px;font-size:11.5px;color:#28C76F;font-weight:500;}
+
+  /* Proof row */
+  .op-proof{display:flex;align-items:center;gap:14px;padding:18px 22px;}
+  .op-proof-icon{width:38px;height:38px;border-radius:9px;background:rgba(40,199,111,.10);border:1px solid rgba(40,199,111,.26);display:grid;place-items:center;color:#28C76F;flex-shrink:0;}
+  .op-proof-icon svg{width:17px;height:17px;}
+  .op-proof-body{flex:1;min-width:0;}
+  .op-proof-ttl{font-family:'Bricolage Grotesque',serif;font-weight:600;font-size:14.5px;color:#E9EEF6;letter-spacing:-0.012em;}
+  .op-proof-sub{margin-top:3px;font-size:12px;color:#8FA0BC;line-height:1.5;}
+  .op-proof-tick{width:24px;height:24px;border-radius:50%;background:rgba(40,199,111,.14);color:#28C76F;display:grid;place-items:center;flex-shrink:0;}
+  .op-proof-tick svg{width:12px;height:12px;}
+
+  .op-caption{margin-top:14px;display:flex;align-items:center;justify-content:space-between;padding:0 4px;font-size:11.5px;color:var(--ink-3);gap:12px;flex-wrap:wrap;}
+  .op-caption .l{display:inline-flex;align-items:center;gap:9px;}
+  .op-caption .l .op-mark{width:6px;height:6px;}
+  .op-caption .link{color:var(--brand);font-weight:600;display:inline-flex;align-items:center;gap:5px;font-size:12px;}
+
+  @media (max-width:640px){
+    .op-pillars{grid-template-columns:1fr;}
+    .op-pillar{border-right:0;}
+    .op-row{flex-direction:column;align-items:flex-start;gap:12px;}
+    .op-row-r{text-align:left;}
+  }
+
+  /* MATERIALS */
+  .mat-grid{display:grid;grid-template-columns:1fr;gap:24px;}
+  @media (min-width:768px){.mat-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (min-width:1024px){.mat-grid{grid-template-columns:repeat(3,1fr);}}
+
+  .mat{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:all .25s ease;position:relative;display:flex;flex-direction:column;}
+  .mat::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--mc, var(--brand));}
+  .mat:hover{transform:translateY(-3px);box-shadow:0 1px 2px rgba(15,20,17,.04), 0 26px 44px -22px rgba(15,20,17,.20);border-color:var(--line-strong);}
+  .mat-img{aspect-ratio:5/4;position:relative;overflow:hidden;background:var(--bg-2);}
+  .mat-img svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .mat-tag{position:absolute;left:14px;top:14px;background:#fff;color:var(--mc, var(--brand));font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid var(--line);text-transform:uppercase;letter-spacing:.06em;}
+  .mat-body{padding:20px 22px 22px;display:flex;flex-direction:column;flex:1;}
+  .mat-title{font-family:'Bricolage Grotesque',serif;font-weight:600;letter-spacing:-0.02em;font-size:22px;}
+  .mat-spec{font-size:13.5px;color:var(--ink-2);margin-top:6px;line-height:1.5;}
+  .mat-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;}
+  .mat-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;background:var(--bg-2);border:1px solid var(--line);border-radius:6px;font-size:11.5px;color:var(--ink-2);font-weight:500;}
+  .mat-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:18px;}
+  .mat-trucks{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-3);}
+  .mat-trucks b{color:var(--ink-2);font-weight:600;}
+  .mat-cta{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--action);}
+  .mat-cta:hover{color:var(--action-hover);}
+
+  /* HOW IT WORKS */
+  .trust-band{background:var(--trust);border-top:1px solid var(--trust-line);border-bottom:1px solid var(--trust-line);}
+  .step-num{font-family:'Bricolage Grotesque',serif;font-weight:600;font-size:54px;letter-spacing:-0.04em;color:var(--brand);line-height:1;}
+  .step{padding:28px 24px;border:1px solid var(--line);border-radius:18px;background:#fff;height:100%;}
+  .steps-grid{display:grid;grid-template-columns:1fr;gap:20px;}
+  @media (min-width:768px){.steps-grid{grid-template-columns:repeat(3,1fr);}}
+
+  /* QUANTITY HELPER */
+  .truck-grid{display:grid;grid-template-columns:1fr;gap:20px;margin-bottom:48px;}
+  @media (min-width:768px){.truck-grid{grid-template-columns:repeat(3,1fr);}}
+  .truck-card{border:1px solid var(--line);border-radius:14px;padding:20px;background:#fff;transition:all .2s ease;}
+  .truck-card.on{border-color:var(--action);background:var(--action-soft);box-shadow:0 1px 0 var(--action) inset;}
+  .canvas{background:linear-gradient(180deg,#F7F5EE,#EFEDE5);border:1px solid var(--line);border-radius:14px;position:relative;overflow:hidden;}
+  .calc-grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:stretch;}
+  @media (min-width:1024px){.calc-grid{grid-template-columns:5fr 7fr;}}
+
+  /* TRUST / CAPABILITIES SECTION */
+  .cap-grid{display:grid;grid-template-columns:1fr;gap:24px;}
+  @media (min-width:768px){.cap-grid{grid-template-columns:repeat(2,1fr);}}
+  .cap{background:#fff;border:1px solid var(--trust-line);border-radius:16px;padding:28px;}
+  .cap-eb{font-size:11px;color:var(--trust-mark);text-transform:uppercase;letter-spacing:.10em;font-weight:600;}
+  .cap-ttl{margin-top:10px;font-family:'Bricolage Grotesque',serif;font-weight:600;letter-spacing:-0.02em;font-size:24px;color:var(--brand-3);line-height:1.2;}
+  .cap-body{margin-top:10px;font-size:14.5px;color:var(--ink-2);line-height:1.55;}
+  .cap-list{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
+  .cap-list li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--ink-2);}
+  .cap-list li svg{flex-shrink:0;color:var(--trust-mark);margin-top:3px;}
+
+  /* FAQ */
+  .faq-grid{display:grid;grid-template-columns:1fr;gap:32px;}
+  @media (min-width:768px){.faq-grid{grid-template-columns:4fr 8fr;gap:40px;}}
+  details{padding:20px 0;border-top:1px solid var(--line);}
+  details:first-of-type{border-top:0;}
+  details > summary{list-style:none;cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;}
+  details > summary::-webkit-details-marker{display:none;}
+  details summary span:first-child{font-family:'Bricolage Grotesque',serif;font-weight:600;letter-spacing:-0.02em;font-size:19px;}
+  @media (min-width:768px){details summary span:first-child{font-size:20px;}}
+  details .chev{transition:transform .2s ease;color:var(--ink-3);flex-shrink:0;margin-top:2px;}
+  details[open] .chev{transform:rotate(180deg);}
+  details > div{font-size:15px;color:var(--ink-2);margin-top:12px;max-width:640px;}
+
+  /* FINAL CTA */
+  .fcta{border-radius:24px;padding:40px;background:var(--brand);color:#fff;display:grid;grid-template-columns:1fr;gap:24px;align-items:center;}
+  @media (min-width:768px){.fcta{padding:56px;grid-template-columns:8fr 4fr;gap:32px;}}
+  .fcta h2{font-family:'Bricolage Grotesque',serif;font-weight:700;letter-spacing:-0.035em;line-height:1.05;font-size:34px;color:#fff;}
+  @media (min-width:768px){.fcta h2{font-size:48px;}}
+  .fcta p{margin-top:12px;font-size:16px;color:rgba(255,255,255,.78);max-width:560px;}
+  .fcta-actions{display:flex;flex-direction:column;gap:10px;}
+  @media (min-width:768px){.fcta-actions{align-items:flex-end;}}
+  .fcta-actions .btn{justify-content:center;}
+
+  /* FOOTER */
+  footer{padding:48px 0 40px;}
+  .foot-grid{display:grid;grid-template-columns:1fr;gap:32px;}
+  @media (min-width:768px){.foot-grid{grid-template-columns:5fr 3fr 4fr;gap:32px;}}
+  .foot-logo{font-family:'Bricolage Grotesque',serif;letter-spacing:-0.035em;font-weight:700;font-size:26px;}
+  .foot-logo .dot{color:var(--brand);}
+  .foot-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;}
+  .foot-pill{font-size:12.5px;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:#fff;}
+  .foot-pill.dashed{color:var(--ink-3);border-style:dashed;background:transparent;}
+  .foot-h{font-size:13px;color:var(--ink-3);font-weight:500;}
+  .foot-list{margin-top:16px;display:flex;flex-direction:column;gap:10px;font-size:14.5px;}
+  .foot-list a{color:var(--ink-2);}
+  .foot-list a:hover{color:var(--ink);}
+  .foot-bottom{margin-top:48px;padding-top:24px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px;font-size:12.5px;color:var(--ink-3);}
+  @media (min-width:768px){.foot-bottom{flex-direction:row;align-items:center;justify-content:space-between;}}
+  .foot-bottom .right{display:flex;align-items:center;gap:20px;}
+  .foot-bottom a:hover{color:var(--ink);}
+
+  .link{font-weight:500;color:var(--brand);display:inline-flex;align-items:center;gap:6px;}
+  .link .arr{transition:transform .15s ease;}
+  .link:hover .arr{transform:translateX(3px);}
+  .ext{display:inline-flex;align-items:center;gap:5px;}
+  .ext svg{width:11px;height:11px;}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header id="nav" class="nav">
+  <div class="max nav-inner">
+    <a href="#" class="nav-logo">EarthMove<span class="dot">.</span></a>
+    <nav class="nav-links">
+      <a href="#materials">Materials</a>
+      <a href="#how">How it works</a>
+      <a href="#trust">For contractors</a>
+      <a href="https://filldirtnearme.net" class="ext">Homeowner site
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+      </a>
+      <a href="#signin">Sign in</a>
+    </nav>
+    <a href="#zipForm" class="btn btn-primary" style="padding:0 16px;height:36px;font-size:13.5px;">Get a quote</a>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hv-bg">
+  <div class="max hv-wrap">
+    <div class="hv-grid">
+
+      <!-- LEFT — Commerce -->
+      <div>
+        <div class="hv-status">
+          <span class="pip"></span>
+          <span class="lbl">Network online</span>
+          <span class="rule"></span>
+          <span><span class="y">Denver + Portland</span> · Launching 2026</span>
+        </div>
+
+        <h1 class="hv-h1" id="headline">
+          Bulk aggregate,<br>
+          delivered <span class="em">to the hour.</span>
+        </h1>
+
+        <p class="hv-sub" id="subhead">
+          Spec-grade base, fill, and stone — quoted from the closest yard, dispatched on your schedule, photo-confirmed at the drop. <b>For contractors</b> who need it on time, and homeowners who need it once.
+        </p>
+
+        <!-- Request bar -->
+        <form id="zipForm" class="hv-rq" novalidate>
+          <div class="hv-rq-top">
+            <div class="toggle" role="tablist">
+              <button id="tab-c" class="active" type="button">Contractor</button>
+              <button id="tab-h" type="button">Homeowner</button>
+            </div>
+            <span class="hv-rq-hint"><span class="hv-rq-step">01</span><span class="hv-rq-step-sep"></span>Delivery ZIP</span>
+          </div>
+          <div class="hv-rq-form">
+            <label class="hv-zip">
+              <span class="hv-zip-prefix">ZIP</span>
+              <input id="zip" name="zip" inputmode="numeric" maxlength="5" pattern="\d{5}" autocomplete="postal-code" placeholder="00000">
+            </label>
+            <button type="submit" class="hv-cta" id="ctaBtn">
+              <span id="ctaLbl">Quote my ZIP</span>
+              <span class="hv-cta-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 5 7 7-7 7"/></svg>
+              </span>
+            </button>
+          </div>
+          <div id="zipResult" style="margin-top:14px;display:none;"></div>
+        </form>
+
+        <!-- Trust marks — only real, shipping capabilities -->
+        <div class="hv-marks">
+          <span class="mk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Photo-confirmed at drop
+          </span>
+          <span class="mk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Net-30 for qualified contractors
+          </span>
+          <span class="mk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <b>Yard-verified</b> network
+          </span>
+        </div>
+
+        <!-- Capability strip — qualitative, no metrics -->
+        <div class="hv-sig">
+          <div class="sig-item">
+            <div class="sig-eb">Launching</div>
+            <div class="sig-ttl">Denver<br>+ Portland</div>
+            <div class="sig-lbl">More markets in pipeline</div>
+          </div>
+          <div class="sig-item">
+            <div class="sig-eb">Materials</div>
+            <div class="sig-ttl">Base, fill,<br>stone, soil</div>
+            <div class="sig-lbl">Five outcome families</div>
+          </div>
+          <div class="sig-item">
+            <div class="sig-eb">Every order</div>
+            <div class="sig-ttl">Photo<br>+ ticket</div>
+            <div class="sig-lbl">Attached to invoice on tip</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT — Operations panel (feature-illustrative, demo-labeled) -->
+      <div style="display:flex;flex-direction:column;">
+        <div class="op" style="flex:1;display:flex;flex-direction:column;">
+
+          <div class="op-head">
+            <div class="op-eyebrow">
+              <span class="op-mark"></span>
+              <span class="op-eyebrow-lbl">How dispatch works</span>
+              <span class="op-region">Denver · Sample view</span>
+            </div>
+            <span class="op-tag">Demo</span>
+          </div>
+
+          <!-- Three feature pillars instead of synthetic metrics -->
+          <div class="op-pillars">
+            <div class="op-pillar">
+              <div class="op-pillar-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-7.5-7-13a7 7 0 1 1 14 0c0 5.5-7 13-7 13z"/><circle cx="12" cy="8" r="2.5"/></svg>
+              </div>
+              <div class="op-pillar-ttl">Closest yard wins</div>
+              <div class="op-pillar-sub">Routed from the nearest verified yard to the drop ZIP — not a queue.</div>
+            </div>
+            <div class="op-pillar">
+              <div class="op-pillar-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+              <div class="op-pillar-ttl">Live ETA, not "later"</div>
+              <div class="op-pillar-sub">Driver assigned, route locked, arrival to the minute.</div>
+            </div>
+            <div class="op-pillar">
+              <div class="op-pillar-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M8 6V4h8v2"/></svg>
+              </div>
+              <div class="op-pillar-ttl">Drop confirmed on file</div>
+              <div class="op-pillar-sub">Geotagged photo + signed ticket attached to invoice on tip.</div>
+            </div>
+          </div>
+
+          <!-- Map illustration -->
+          <div class="op-map">
+            <svg class="grid" viewBox="0 0 600 260" preserveAspectRatio="none">
+              <defs>
+                <pattern id="opGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+                  <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+                </pattern>
+                <radialGradient id="opMapGlow" cx="50%" cy="50%" r="60%">
+                  <stop offset="0" stop-color="rgba(94,169,255,.10)"/>
+                  <stop offset="1" stop-color="rgba(94,169,255,0)"/>
+                </radialGradient>
+              </defs>
+              <rect width="600" height="260" fill="url(#opGrid)"/>
+              <rect width="600" height="260" fill="url(#opMapGlow)"/>
+              <path d="M 0 80 Q 200 60 380 100 T 600 130" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="14" stroke-linecap="round"/>
+              <path d="M 0 80 Q 200 60 380 100 T 600 130" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+              <path d="M 80 0 Q 100 130 60 260" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="10" stroke-linecap="round"/>
+              <path d="M 80 0 Q 100 130 60 260" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+              <path d="M 420 0 Q 460 130 500 260" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="10" stroke-linecap="round"/>
+              <path d="M 420 0 Q 460 130 500 260" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+              <path d="M 130 95 C 220 110, 310 140, 470 170" fill="none" stroke="rgba(40,199,111,.55)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M 130 95 C 220 110, 310 140, 470 170" fill="none" stroke="rgba(40,199,111,.18)" stroke-width="6" stroke-linecap="round"/>
+              <g>
+                <rect x="123" y="88" width="14" height="14" rx="2" fill="#1F3D2E" stroke="#4F8B6A" stroke-width="1.5"/>
+                <rect x="127" y="92" width="6" height="6" fill="#7FB893"/>
+              </g>
+              <g transform="translate(470,170)">
+                <path d="M 0 -14 a 7 7 0 1 1 0.001 0 z M 0 -14 L -4 -2 L 4 -2 Z" fill="#fff" opacity=".95"/>
+                <circle cx="0" cy="-14" r="3" fill="#0F1A28"/>
+              </g>
+            </svg>
+            <div class="op-truck">
+              <svg viewBox="0 0 28 18" width="28" height="18">
+                <rect x="0" y="4" width="16" height="9" rx="1.2" fill="#F6B23F"/>
+                <rect x="16" y="2" width="9" height="11" rx="1.2" fill="#FFD78A"/>
+                <circle cx="5" cy="14.5" r="2.2" fill="#0F1A28" stroke="#F6B23F" stroke-width="1"/>
+                <circle cx="20" cy="14.5" r="2.2" fill="#0F1A28" stroke="#F6B23F" stroke-width="1"/>
+              </svg>
+            </div>
+            <div class="op-map-tag" style="left:9%;top:24%;">
+              <span class="dot stone"></span>Yard · Commerce City
+            </div>
+            <div class="op-map-tag" style="right:11%;top:51%;">
+              <span class="dot pin"></span>Drop · 80205
+            </div>
+          </div>
+
+          <!-- Sample delivery row, clearly labeled -->
+          <div class="op-row">
+            <div class="op-row-l">
+              <div class="op-row-status">
+                <span class="op-row-pip"></span>
+                <span>Sample · in transit</span>
+                <span class="op-row-id">EM-DEMO</span>
+              </div>
+              <div class="op-row-ttl">14 tons · ABC road base</div>
+              <div class="op-row-meta">
+                <span>Yard · Commerce City</span>
+                <span class="arr">→</span>
+                <span>Denver 80205</span>
+                <span class="dot"></span>
+                <span>11.2 mi</span>
+              </div>
+            </div>
+            <div class="op-row-r">
+              <div class="op-eta-lbl">ETA</div>
+              <div class="op-eta-val">2:46<span class="u"> PM</span></div>
+              <div class="op-eta-sub">in 32 min · on schedule</div>
+            </div>
+          </div>
+
+          <!-- Proof signal -->
+          <div class="op-proof">
+            <div class="op-proof-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M8 6V4h8v2"/></svg>
+            </div>
+            <div class="op-proof-body">
+              <div class="op-proof-ttl">Every drop, photo-confirmed.</div>
+              <div class="op-proof-sub">Geotagged photo and signed ticket attached to the invoice the moment the truck tips.</div>
+            </div>
+            <div class="op-proof-tick">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="op-caption">
+          <span class="l"><span class="op-mark"></span>Sample view · illustrates delivery flow</span>
+          <a href="#how" class="link">How delivery works <span class="arr">→</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MATERIALS ============ -->
+<section class="section" id="materials" style="background:var(--bg-2);border-top:1px solid var(--line-strong);">
+  <div class="max">
+    <div style="display:flex;flex-direction:column;gap:24px;justify-content:space-between;margin-bottom:48px;">
+      <div style="max-width:700px;">
+        <div class="eyebrow">Materials</div>
+        <h2 class="sec-title">Pick by outcome. We handle the spec.</h2>
+        <p class="ink-2" id="matSub" style="margin-top:16px;font-size:18px;max-width:580px;">Five families that match what crews actually build with. Truck-class fit shown on each card. Pricing confirmed against the closest yard once you drop your ZIP.</p>
+      </div>
+    </div>
+
+    <div class="mat-grid">
+      <!-- 1: Driveway base -->
+      <article class="mat" style="--mc:var(--m-base);">
+        <div class="mat-img">
+          <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice">
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A39A8A"/><stop offset="1" stop-color="#5C5446"/></linearGradient></defs>
+            <rect width="200" height="160" fill="url(#g1)"/>
+            <g stroke="#2E281E" stroke-width="0.5">
+              <polygon points="10,20 30,15 40,30 25,40 8,35" fill="#867D6E"/>
+              <polygon points="50,10 70,5 80,22 65,30 48,25" fill="#A39A8A"/>
+              <polygon points="90,15 115,10 125,28 110,38 88,32" fill="#7A7264"/>
+              <polygon points="135,8 160,12 168,30 150,38 130,28" fill="#928979"/>
+              <polygon points="175,18 195,22 192,42 175,45 168,30" fill="#6E665A"/>
+              <polygon points="5,55 28,50 38,68 22,80 0,72" fill="#A39A8A"/>
+              <polygon points="45,60 70,55 80,75 60,85 42,78" fill="#867D6E"/>
+              <polygon points="90,65 115,62 122,80 105,90 88,82" fill="#7A7264"/>
+              <polygon points="130,55 158,60 165,82 145,90 128,80" fill="#928979"/>
+              <polygon points="172,62 195,68 198,90 180,95 168,82" fill="#A39A8A"/>
+              <polygon points="8,100 32,95 42,118 25,128 4,118" fill="#7A7264"/>
+              <polygon points="50,108 75,102 85,120 65,135 45,128" fill="#928979"/>
+              <polygon points="92,110 120,108 128,130 108,140 88,132" fill="#867D6E"/>
+              <polygon points="135,105 162,108 170,128 152,138 132,128" fill="#A39A8A"/>
+              <polygon points="175,112 198,118 195,140 175,142 165,128" fill="#7A7264"/>
+            </g>
+          </svg>
+          <span class="mat-tag">ABC · ¾″ minus</span>
+        </div>
+        <div class="mat-body">
+          <div class="mat-title">Driveway base</div>
+          <div class="mat-spec">Best for new driveways, parking pads, and base under concrete or pavers. Compacts hard, holds under load.</div>
+          <div class="mat-meta">
+            <span class="mat-chip">Class 5</span>
+            <span class="mat-chip">¾″ minus</span>
+            <span class="mat-chip">Crushed</span>
+          </div>
+          <div class="mat-foot">
+            <div class="mat-trucks">Fits <b>standard / tri-axle</b></div>
+            <a class="mat-cta" href="#zipForm">Get a quote
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- 2: Drainage -->
+      <article class="mat" style="--mc:var(--m-drain);">
+        <div class="mat-img">
+          <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice">
+            <rect width="200" height="160" fill="#3F3D37"/>
+            <g stroke="#1F1D17" stroke-width="0.6">
+              <ellipse cx="22" cy="22" rx="14" ry="11" fill="#C7C2B5"/>
+              <ellipse cx="55" cy="28" rx="16" ry="12" fill="#A9A498"/>
+              <ellipse cx="90" cy="20" rx="13" ry="10" fill="#BCB7AB"/>
+              <ellipse cx="120" cy="32" rx="17" ry="13" fill="#9E9A8E"/>
+              <ellipse cx="158" cy="22" rx="14" ry="11" fill="#C7C2B5"/>
+              <ellipse cx="188" cy="32" rx="14" ry="11" fill="#A9A498"/>
+              <ellipse cx="14" cy="60" rx="15" ry="12" fill="#B0AB9F"/>
+              <ellipse cx="48" cy="62" rx="13" ry="10" fill="#C7C2B5"/>
+              <ellipse cx="80" cy="58" rx="17" ry="13" fill="#9E9A8E"/>
+              <ellipse cx="112" cy="62" rx="14" ry="11" fill="#BCB7AB"/>
+              <ellipse cx="148" cy="60" rx="16" ry="12" fill="#A9A498"/>
+              <ellipse cx="180" cy="62" rx="14" ry="11" fill="#C7C2B5"/>
+              <ellipse cx="22" cy="95" rx="14" ry="11" fill="#9E9A8E"/>
+              <ellipse cx="58" cy="98" rx="16" ry="12" fill="#BCB7AB"/>
+              <ellipse cx="92" cy="92" rx="14" ry="11" fill="#A9A498"/>
+              <ellipse cx="128" cy="98" rx="15" ry="12" fill="#C7C2B5"/>
+              <ellipse cx="162" cy="95" rx="14" ry="11" fill="#9E9A8E"/>
+              <ellipse cx="190" cy="98" rx="13" ry="10" fill="#B0AB9F"/>
+              <ellipse cx="16" cy="130" rx="14" ry="11" fill="#BCB7AB"/>
+              <ellipse cx="50" cy="128" rx="15" ry="12" fill="#A9A498"/>
+              <ellipse cx="84" cy="132" rx="14" ry="11" fill="#C7C2B5"/>
+              <ellipse cx="118" cy="128" rx="16" ry="12" fill="#9E9A8E"/>
+              <ellipse cx="154" cy="130" rx="14" ry="11" fill="#BCB7AB"/>
+              <ellipse cx="186" cy="132" rx="15" ry="12" fill="#A9A498"/>
+            </g>
+            <g fill="#fff" opacity="0.3"><ellipse cx="20" cy="18" rx="4" ry="2"/><ellipse cx="86" cy="56" rx="5" ry="2.5"/><ellipse cx="148" cy="92" rx="4" ry="2"/></g>
+          </svg>
+          <span class="mat-tag">¾″ washed stone</span>
+        </div>
+        <div class="mat-body">
+          <div class="mat-title">Drainage</div>
+          <div class="mat-spec">Used for French drains, foundation perimeter, and gravel beds. Clean, washed, free-draining — water moves through, soil doesn't.</div>
+          <div class="mat-meta">
+            <span class="mat-chip">¾″ washed</span>
+            <span class="mat-chip">Drain rock</span>
+            <span class="mat-chip">Round</span>
+          </div>
+          <div class="mat-foot">
+            <div class="mat-trucks">Fits <b>small / standard</b></div>
+            <a class="mat-cta" href="#zipForm">Get a quote
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- 3: Backfill / leveling -->
+      <article class="mat" style="--mc:var(--m-fill);">
+        <div class="mat-img">
+          <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice">
+            <defs><radialGradient id="g3" cx="0.5" cy="0.4" r="0.85"><stop offset="0" stop-color="#7A5A3D"/><stop offset="1" stop-color="#2A1D10"/></radialGradient></defs>
+            <rect width="200" height="160" fill="url(#g3)"/>
+            <g>
+              <ellipse cx="30" cy="40" rx="22" ry="14" fill="#4D3823" opacity="0.7"/>
+              <ellipse cx="80" cy="30" rx="28" ry="16" fill="#5C4630" opacity="0.55"/>
+              <ellipse cx="140" cy="42" rx="26" ry="14" fill="#6B5238" opacity="0.6"/>
+              <ellipse cx="180" cy="32" rx="20" ry="12" fill="#4D3823" opacity="0.7"/>
+              <ellipse cx="22" cy="90" rx="26" ry="16" fill="#5C4630" opacity="0.6"/>
+              <ellipse cx="76" cy="98" rx="30" ry="18" fill="#6B5238" opacity="0.55"/>
+              <ellipse cx="138" cy="92" rx="28" ry="16" fill="#4D3823" opacity="0.65"/>
+              <ellipse cx="186" cy="100" rx="22" ry="14" fill="#5C4630" opacity="0.6"/>
+              <circle cx="40" cy="62" r="2.4" fill="#A89479"/><circle cx="100" cy="70" r="3" fill="#876B4C"/>
+              <circle cx="155" cy="68" r="2" fill="#A89479"/><circle cx="60" cy="115" r="2.6" fill="#876B4C"/>
+              <circle cx="120" cy="120" r="2" fill="#A89479"/><circle cx="170" cy="125" r="2.8" fill="#876B4C"/>
+            </g>
+          </svg>
+          <span class="mat-tag">Clean fill dirt</span>
+        </div>
+        <div class="mat-body">
+          <div class="mat-title">Backfill &amp; leveling</div>
+          <div class="mat-spec">Used to raise grade, backfill foundations, and close out holes. Screened, no debris, no clay clods.</div>
+          <div class="mat-meta">
+            <span class="mat-chip">Screened</span>
+            <span class="mat-chip">Clean fill</span>
+            <span class="mat-chip">No debris</span>
+          </div>
+          <div class="mat-foot">
+            <div class="mat-trucks">Fits <b>standard / tri-axle</b></div>
+            <a class="mat-cta" href="#zipForm">Get a quote
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- 4: Garden / landscaping -->
+      <article class="mat" style="--mc:var(--m-soil);">
+        <div class="mat-img">
+          <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice">
+            <defs><radialGradient id="g4" cx="0.4" cy="0.4" r="0.85"><stop offset="0" stop-color="#3A2A19"/><stop offset="1" stop-color="#0F0904"/></radialGradient></defs>
+            <rect width="200" height="160" fill="url(#g4)"/>
+            <g>
+              <ellipse cx="35" cy="38" rx="25" ry="16" fill="#2C1F11" opacity="0.7"/>
+              <ellipse cx="100" cy="30" rx="34" ry="18" fill="#231910" opacity="0.7"/>
+              <ellipse cx="160" cy="42" rx="28" ry="16" fill="#2C1F11" opacity="0.6"/>
+              <ellipse cx="40" cy="100" rx="32" ry="18" fill="#231910" opacity="0.65"/>
+              <ellipse cx="120" cy="105" rx="36" ry="20" fill="#2C1F11" opacity="0.6"/>
+              <path d="M50 60 q 6 -3 12 0 q -2 4 -12 0z" fill="#5B4220" opacity="0.7"/>
+              <path d="M120 70 q 6 -2 12 1 q -3 4 -12 -1z" fill="#5B4220" opacity="0.7"/>
+              <path d="M70 130 q 7 -2 14 1 q -4 4 -14 -1z" fill="#5B4220" opacity="0.6"/>
+              <path d="M150 130 q 1 -8 4 -9 q 4 1 4 9" stroke="#2F6F4D" stroke-width="1.4" fill="none"/>
+              <path d="M158 130 q 1 -6 3 -7" stroke="#2F6F4D" stroke-width="1.2" fill="none"/>
+            </g>
+          </svg>
+          <span class="mat-tag">Screened topsoil</span>
+        </div>
+        <div class="mat-body">
+          <div class="mat-title">Garden &amp; landscaping</div>
+          <div class="mat-spec">Used for lawns, garden beds, and planting beds. Dark loam, screened to ½″ — what plants want.</div>
+          <div class="mat-meta">
+            <span class="mat-chip">Screened</span>
+            <span class="mat-chip">High organic</span>
+            <span class="mat-chip">Planting mix</span>
+          </div>
+          <div class="mat-foot">
+            <div class="mat-trucks">Fits <b>small / standard</b></div>
+            <a class="mat-cta" href="#zipForm">Get a quote
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- 5: Concrete / structural -->
+      <article class="mat" style="--mc:var(--m-struct);">
+        <div class="mat-img">
+          <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice">
+            <rect width="200" height="160" fill="#D7D2C2"/>
+            <g fill="#9C9486" stroke="#3F3A2E" stroke-width="0.3" opacity="0.95">
+              <circle cx="12" cy="12" r="5"/><circle cx="26" cy="20" r="6"/><circle cx="42" cy="14" r="5"/><circle cx="58" cy="22" r="6"/><circle cx="74" cy="14" r="5"/><circle cx="90" cy="22" r="5"/><circle cx="106" cy="14" r="6"/><circle cx="122" cy="22" r="5"/><circle cx="138" cy="14" r="5"/><circle cx="154" cy="22" r="6"/><circle cx="170" cy="14" r="5"/><circle cx="186" cy="22" r="5"/>
+              <circle cx="20" cy="36" r="6"/><circle cx="36" cy="42" r="5"/><circle cx="52" cy="36" r="5"/><circle cx="68" cy="42" r="6"/><circle cx="84" cy="36" r="5"/><circle cx="100" cy="42" r="6"/><circle cx="116" cy="36" r="5"/><circle cx="132" cy="42" r="6"/><circle cx="148" cy="36" r="5"/><circle cx="164" cy="42" r="5"/><circle cx="180" cy="36" r="6"/>
+              <circle cx="14" cy="58" r="5"/><circle cx="30" cy="64" r="6"/><circle cx="46" cy="58" r="5"/><circle cx="62" cy="64" r="6"/><circle cx="78" cy="58" r="5"/><circle cx="94" cy="64" r="5"/><circle cx="110" cy="58" r="6"/><circle cx="126" cy="64" r="5"/><circle cx="142" cy="58" r="6"/><circle cx="158" cy="64" r="5"/><circle cx="174" cy="58" r="5"/><circle cx="190" cy="64" r="6"/>
+              <circle cx="22" cy="80" r="5"/><circle cx="38" cy="86" r="6"/><circle cx="54" cy="80" r="5"/><circle cx="70" cy="86" r="6"/><circle cx="86" cy="80" r="5"/><circle cx="102" cy="86" r="5"/><circle cx="118" cy="80" r="6"/><circle cx="134" cy="86" r="5"/><circle cx="150" cy="80" r="6"/><circle cx="166" cy="86" r="5"/>
+              <circle cx="16" cy="104" r="6"/><circle cx="32" cy="110" r="5"/><circle cx="48" cy="104" r="6"/><circle cx="64" cy="110" r="5"/><circle cx="80" cy="104" r="5"/><circle cx="96" cy="110" r="6"/><circle cx="112" cy="104" r="5"/><circle cx="128" cy="110" r="6"/><circle cx="144" cy="104" r="5"/><circle cx="160" cy="110" r="5"/><circle cx="176" cy="104" r="6"/>
+              <circle cx="24" cy="128" r="5"/><circle cx="40" cy="134" r="6"/><circle cx="56" cy="128" r="5"/><circle cx="72" cy="134" r="6"/><circle cx="88" cy="128" r="5"/><circle cx="104" cy="134" r="5"/><circle cx="120" cy="128" r="6"/><circle cx="136" cy="134" r="5"/><circle cx="152" cy="128" r="6"/>
+            </g>
+            <g fill="#7A7264" stroke="#3F3A2E" stroke-width="0.3"><circle cx="46" cy="20" r="4"/><circle cx="118" cy="40" r="5"/><circle cx="80" cy="62" r="4"/><circle cx="160" cy="84" r="4"/><circle cx="40" cy="108" r="5"/><circle cx="124" cy="132" r="4"/></g>
+          </svg>
+          <span class="mat-tag">Concrete sand · pea gravel</span>
+        </div>
+        <div class="mat-body">
+          <div class="mat-title">Concrete &amp; structural</div>
+          <div class="mat-spec">Used for concrete mix, paver base, and structural fill. Rounded, washed, ⅜″ aggregate that meets concrete spec.</div>
+          <div class="mat-meta">
+            <span class="mat-chip">⅜″ rounded</span>
+            <span class="mat-chip">Concrete sand</span>
+            <span class="mat-chip">Pea gravel</span>
+          </div>
+          <div class="mat-foot">
+            <div class="mat-trucks">Fits <b>standard / tri-axle</b></div>
+            <a class="mat-cta" href="#zipForm">Get a quote
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- 6: Brand CTA card -->
+      <a href="#zipForm" id="card6" style="background:var(--brand);color:#fff;border-radius:18px;padding:28px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);">Need help?</div>
+          <div id="card6Title" class="display-tight" style="color:#fff;font-size:28px;line-height:1.05;margin-top:12px;">Custom spec? Send the takeoff.</div>
+          <p id="card6Sub" style="color:rgba(255,255,255,.9);font-size:14.5px;margin-top:12px;max-width:300px;">We match the yard, the gradation, and the truck class. One reply, not a sales tour.</p>
+        </div>
+        <div style="margin-top:28px;display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:500;">
+          <span id="card6Cta">Send a project</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 5 7 7-7 7"/></svg>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ QUANTITY HELPER ============ -->
+<section class="section" id="sizing">
+  <div class="max">
+    <div style="margin-bottom:48px;">
+      <div class="eyebrow">Sizing</div>
+      <h2 class="sec-title" style="max-width:760px;">How much you'll actually need.</h2>
+      <p class="ink-2" style="margin-top:16px;font-size:18px;max-width:640px;">Bulk material sells by the ton, not the bag. Enter your area, we'll size the load and pick the truck.</p>
+    </div>
+
+    <div class="truck-grid">
+      <div class="card" style="padding:20px;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:13px;color:var(--ink-2);">Small dump</div>
+          <div class="num" style="font-size:16px;">5 ton</div>
+        </div>
+        <div style="height:110px;display:flex;align-items:flex-end;">
+          <svg viewBox="0 0 240 90" style="width:80%;"><path d="M70 40 L160 40 L170 65 L60 65 Z" fill="#0F1411"/><path d="M75 40 Q 115 22 155 40 Z" fill="#B8472A"/><path d="M160 40 L195 40 L195 65 L170 65 Z" fill="#0F1411"/><rect x="170" y="44" width="20" height="12" fill="#FAFAF7"/><circle cx="85" cy="68" r="9" fill="#0F1411"/><circle cx="85" cy="68" r="3" fill="#FAFAF7"/><circle cx="155" cy="68" r="9" fill="#0F1411"/><circle cx="155" cy="68" r="3" fill="#FAFAF7"/><circle cx="183" cy="68" r="9" fill="#0F1411"/><circle cx="183" cy="68" r="3" fill="#FAFAF7"/></svg>
+        </div>
+        <div class="display" style="font-size:20px;margin-top:12px;">Single-driveway scale</div>
+        <p class="ink-2" style="font-size:14px;margin-top:4px;">Covers ~50 sq ft at 4″ deep. Fits tight access — narrow gates, low branches, one-car drives.</p>
+      </div>
+      <div class="card" style="padding:20px;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:13px;color:var(--ink-2);">Standard dump</div>
+          <div class="num" style="font-size:16px;">14 ton</div>
+        </div>
+        <div style="height:110px;display:flex;align-items:flex-end;">
+          <svg viewBox="0 0 320 90" style="width:90%;"><path d="M50 35 L220 35 L235 65 L40 65 Z" fill="#0F1411"/><path d="M58 35 Q 138 12 215 35 Z" fill="#B8472A"/><path d="M220 35 L275 35 L275 65 L235 65 Z" fill="#0F1411"/><rect x="232" y="40" width="32" height="14" fill="#FAFAF7"/><circle cx="70" cy="68" r="11" fill="#0F1411"/><circle cx="70" cy="68" r="4" fill="#FAFAF7"/><circle cx="160" cy="68" r="11" fill="#0F1411"/><circle cx="160" cy="68" r="4" fill="#FAFAF7"/><circle cx="190" cy="68" r="11" fill="#0F1411"/><circle cx="190" cy="68" r="4" fill="#FAFAF7"/><circle cx="255" cy="68" r="11" fill="#0F1411"/><circle cx="255" cy="68" r="4" fill="#FAFAF7"/></svg>
+        </div>
+        <div class="display" style="font-size:20px;margin-top:12px;">Most common load</div>
+        <p class="ink-2" style="font-size:14px;margin-top:4px;">Covers ~140 sq ft at 4″ deep. The right load for most residential and small commercial jobs.</p>
+      </div>
+      <div class="card" style="padding:20px;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:13px;color:var(--ink-2);">Tri-axle</div>
+          <div class="num" style="font-size:16px;">25 ton</div>
+        </div>
+        <div style="height:110px;display:flex;align-items:flex-end;">
+          <svg viewBox="0 0 400 90" style="width:100%;"><path d="M40 28 L260 28 L280 65 L30 65 Z" fill="#0F1411"/><path d="M48 28 Q 150 4 255 28 Z" fill="#B8472A"/><path d="M260 28 L340 28 L340 65 L280 65 Z" fill="#0F1411"/><rect x="285" y="34" width="48" height="16" fill="#FAFAF7"/><circle cx="68" cy="68" r="13" fill="#0F1411"/><circle cx="68" cy="68" r="4" fill="#FAFAF7"/><circle cx="160" cy="68" r="13" fill="#0F1411"/><circle cx="160" cy="68" r="4" fill="#FAFAF7"/><circle cx="195" cy="68" r="13" fill="#0F1411"/><circle cx="195" cy="68" r="4" fill="#FAFAF7"/><circle cx="230" cy="68" r="13" fill="#0F1411"/><circle cx="230" cy="68" r="4" fill="#FAFAF7"/><circle cx="318" cy="68" r="13" fill="#0F1411"/><circle cx="318" cy="68" r="4" fill="#FAFAF7"/></svg>
+        </div>
+        <div class="display" style="font-size:20px;margin-top:12px;">Contractor scale</div>
+        <p class="ink-2" style="font-size:14px;margin-top:4px;">Covers ~250 sq ft at 4″ deep. Sized for large fills, pad prep, and split deliveries.</p>
+      </div>
+    </div>
+
+    <!-- Calculator -->
+    <div class="calc-grid">
+      <div class="card" style="padding:24px;">
+        <div class="display" style="font-size:22px;">Coverage calculator</div>
+        <p class="ink-3" style="font-size:13.5px;margin-top:4px;">Enter your area. We size the load and pick the truck.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:20px;">
+          <label style="display:block;"><span style="font-size:13px;color:var(--ink-2);display:block;margin-bottom:6px;">Length (ft)</span><input id="lenIn" type="number" min="1" step="1" value="20" class="input" style="width:100%;height:44px;padding:0 12px;"></label>
+          <label style="display:block;"><span style="font-size:13px;color:var(--ink-2);display:block;margin-bottom:6px;">Width (ft)</span><input id="widIn" type="number" min="1" step="1" value="10" class="input" style="width:100%;height:44px;padding:0 12px;"></label>
+          <label style="display:block;"><span style="font-size:13px;color:var(--ink-2);display:block;margin-bottom:6px;">Depth</span><select id="depIn" class="input" style="width:100%;height:44px;padding:0 12px;"><option value="2">2″</option><option value="4" selected>4″</option><option value="6">6″</option><option value="8">8″</option><option value="12">12″</option></select></label>
+        </div>
+        <div class="canvas" style="margin-top:24px;aspect-ratio:16/8;">
+          <svg viewBox="0 0 400 200" style="position:absolute;inset:0;width:100%;height:100%;" preserveAspectRatio="xMidYMid meet">
+            <rect id="areaRect" x="80" y="60" width="240" height="80" fill="#B8472A" fill-opacity="0.20" stroke="#B8472A" stroke-width="1.5"/>
+            <line id="lLine" x1="80" y1="155" x2="320" y2="155" stroke="#0F1411" stroke-width="1"/>
+            <line x1="80" y1="151" x2="80" y2="159" stroke="#0F1411" stroke-width="1"/><line x1="320" y1="151" x2="320" y2="159" stroke="#0F1411" stroke-width="1"/>
+            <text id="lLabel" x="200" y="172" text-anchor="middle" font-family="Geist, sans-serif" font-size="12" fill="#4A524C">L = 20 ft</text>
+            <line id="wLine" x1="345" y1="60" x2="345" y2="140" stroke="#0F1411" stroke-width="1"/>
+            <line x1="341" y1="60" x2="349" y2="60" stroke="#0F1411" stroke-width="1"/><line x1="341" y1="140" x2="349" y2="140" stroke="#0F1411" stroke-width="1"/>
+            <text id="wLabel" x="356" y="104" font-family="Geist, sans-serif" font-size="12" fill="#4A524C">W = 10 ft</text>
+            <text id="depthLabel" x="200" y="105" text-anchor="middle" font-family="Bricolage Grotesque, serif" font-size="14" fill="#0F1411" font-weight="600">4″ deep</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="card" style="padding:24px;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:13px;color:var(--ink-3);">Estimate</div>
+            <div style="margin-top:4px;display:flex;align-items:baseline;gap:12px;">
+              <span id="calcTons" class="num" style="font-size:88px;line-height:.9;">4</span>
+              <span class="ink-2" style="font-size:22px;">tons</span>
+            </div>
+            <p id="calcMsg" class="ink-2" style="font-size:14.5px;margin-top:8px;max-width:420px;">That's a <span class="ink" style="font-weight:500;">small dump</span>. One load, same-day if ordered before 10 AM.</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;color:var(--ink-3);">Loads</div>
+            <div class="num" style="font-size:36px;line-height:1;margin-top:4px;"><span id="calcLoads">1</span></div>
+          </div>
+        </div>
+
+        <div id="truckRec" style="margin-top:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div data-truck="small" class="truck-card"><div style="font-size:12px;color:var(--ink-3);">Small · 5t</div>
+            <svg viewBox="0 0 200 60" style="margin-top:8px;width:100%;"><path d="M58 28 L130 28 L138 48 L48 48 Z" fill="#0F1411"/><path d="M62 28 Q 95 14 128 28" fill="#B8472A"/><path d="M130 28 L160 28 L160 48 L138 48 Z" fill="#0F1411"/><circle cx="70" cy="50" r="6" fill="#0F1411"/><circle cx="125" cy="50" r="6" fill="#0F1411"/><circle cx="150" cy="50" r="6" fill="#0F1411"/></svg>
+          </div>
+          <div data-truck="standard" class="truck-card"><div style="font-size:12px;color:var(--ink-3);">Standard · 14t</div>
+            <svg viewBox="0 0 240 60" style="margin-top:8px;width:100%;"><path d="M40 22 L160 22 L172 48 L30 48 Z" fill="#0F1411"/><path d="M48 22 Q 100 8 158 22" fill="#B8472A"/><path d="M160 22 L200 22 L200 48 L172 48 Z" fill="#0F1411"/><circle cx="55" cy="50" r="7" fill="#0F1411"/><circle cx="115" cy="50" r="7" fill="#0F1411"/><circle cx="140" cy="50" r="7" fill="#0F1411"/><circle cx="190" cy="50" r="7" fill="#0F1411"/></svg>
+          </div>
+          <div data-truck="triaxle" class="truck-card"><div style="font-size:12px;color:var(--ink-3);">Tri-axle · 25t</div>
+            <svg viewBox="0 0 280 60" style="margin-top:8px;width:100%;"><path d="M28 18 L185 18 L200 48 L20 48 Z" fill="#0F1411"/><path d="M36 18 Q 110 4 182 18" fill="#B8472A"/><path d="M185 18 L240 18 L240 48 L200 48 Z" fill="#0F1411"/><circle cx="48" cy="50" r="8" fill="#0F1411"/><circle cx="115" cy="50" r="8" fill="#0F1411"/><circle cx="140" cy="50" r="8" fill="#0F1411"/><circle cx="165" cy="50" r="8" fill="#0F1411"/><circle cx="225" cy="50" r="8" fill="#0F1411"/></svg>
+          </div>
+        </div>
+
+        <div style="margin-top:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding-top:20px;border-top:1px solid var(--line);">
+          <div><div style="font-size:12px;color:var(--ink-3);">Volume</div><div class="num" style="font-size:20px;margin-top:2px;"><span id="calcVol">66.7</span> ft³</div></div>
+          <div><div style="font-size:12px;color:var(--ink-3);">Cubic yards</div><div class="num" style="font-size:20px;margin-top:2px;"><span id="calcCu">2.5</span> yd³</div></div>
+          <div><div style="font-size:12px;color:var(--ink-3);">Density</div><div class="num" style="font-size:20px;margin-top:2px;">×1.4</div></div>
+        </div>
+
+        <div style="margin-top:auto;padding-top:24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <a href="#zipForm" class="btn btn-primary" style="height:44px;padding:0 20px;font-size:14.5px;">Quote this load
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 5 7 7-7 7"/></svg>
+          </a>
+          <button id="resetCalc" class="btn btn-outline" style="height:44px;padding:0 16px;font-size:14.5px;">Reset</button>
+          <span style="font-size:12.5px;color:var(--ink-3);margin-left:auto;">Final tonnage confirmed at quote.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="section trust-band" id="how">
+  <div class="max">
+    <div style="margin-bottom:48px;">
+      <div class="eyebrow">How it works</div>
+      <h2 class="sec-title" style="max-width:820px;">From ZIP to drop-zone in three steps.</h2>
+      <p class="ink-2" style="margin-top:16px;font-size:17px;max-width:640px;">No phone tag. No "we'll call you back." The full path, in your hands.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3 class="display" style="font-size:22px;margin-top:20px;">Quote your ZIP.</h3>
+        <p class="ink-2" style="margin-top:8px;font-size:15px;">Drop your ZIP to confirm we deliver. Pick the outcome — driveway base, drainage, fill, soil, or structural — and we match the spec from the closest yard.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3 class="display" style="font-size:22px;margin-top:20px;">Schedule the load.</h3>
+        <p class="ink-2" style="margin-top:8px;font-size:15px;">Pick the date and window. Drop a pin for placement. Add the gate code, the slope, the low branch — your driver reads it before the truck rolls.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3 class="display" style="font-size:22px;margin-top:20px;">Dispatch and drop.</h3>
+        <p class="ink-2" style="margin-top:8px;font-size:15px;">Driver assigned from the nearest yard. Live ETA. Photo and signed ticket attached the moment the truck tips. One-tap reorder for the next load.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRUST / CAPABILITIES ============ -->
+<section class="section trust-band" id="trust" style="border-top:0;">
+  <div class="max">
+    <div style="margin-bottom:48px;">
+      <div class="eyebrow">What you get</div>
+      <h2 class="sec-title" style="max-width:820px;">Built for the way crews actually work.</h2>
+      <p class="ink-2" style="margin-top:16px;font-size:17px;max-width:640px;">What ships, what's earned. Each line below maps to a real product capability — not a marketing claim.</p>
+    </div>
+
+    <div class="cap-grid">
+      <div class="cap">
+        <div class="cap-eb">Photo-confirmed delivery</div>
+        <div class="cap-ttl">Every drop, on file.</div>
+        <div class="cap-body">Geotagged photo and signed ticket attached to every load, the moment the truck tips. No reconstructed timelines, no he-said-she-said.</div>
+      </div>
+
+      <div class="cap">
+        <div class="cap-eb">Net-30 for contractors</div>
+        <div class="cap-ttl">Pay on terms.</div>
+        <div class="cap-body">Net-30 available to qualified contractors after a short underwriting review. Statements and open POs live in the contractor dashboard — same place as job sites and reorder history.</div>
+      </div>
+
+      <div class="cap">
+        <div class="cap-eb">Yard-network verification</div>
+        <div class="cap-ttl">Yards verified at the source.</div>
+        <div class="cap-body">Every yard in the network passes entity-level checks — registration, insurance, business standing — through Groundcheck. Driver background checks route through Checkr.</div>
+      </div>
+
+      <div class="cap">
+        <div class="cap-eb">Saved sites + history</div>
+        <div class="cap-ttl">Job-site memory.</div>
+        <div class="cap-body">Materials, tonnage, photos, and tickets stored per address — not per phone call. Reorder the same spec to the same site in one tap.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:48px;padding-top:32px;border-top:1px solid var(--trust-line);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <span style="font-size:13px;color:var(--ink-3);">Launching in <b style="color:var(--ink-2);">Denver and Portland</b>, 2026. Expansion: DFW, Houston, Austin, Phoenix, Las Vegas, Atlanta, Orlando, Tampa, Charlotte.</span>
+      <a href="#zipForm" class="link" style="font-size:14px;">See if we're in your ZIP <span class="arr">→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section" id="faq" style="background:var(--bg-2);border-top:1px solid var(--line-strong);border-bottom:1px solid var(--line-strong);">
+  <div class="max" style="max-width:1100px;">
+    <div class="faq-grid">
+      <div>
+        <div class="eyebrow">FAQ</div>
+        <h2 class="sec-title" style="font-size:36px;">Straight answers.</h2>
+        <p class="ink-2" style="margin-top:12px;font-size:15px;">The questions people ask before the first order. No fine print.</p>
+      </div>
+      <div>
+        <details open>
+          <summary><span>How is the price calculated?</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div>Three lines: material by the ton, delivery from the closest yard, and truck class. We quote against real yard pricing once you drop your ZIP. What you see is what you pay.</div>
+        </details>
+        <details>
+          <summary><span>How fast can you deliver?</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div>Order before 10 AM in Denver or Portland and most loads ship same day. Order before 2 PM, get it next day. Contractor orders can be scheduled to a specific window.</div>
+        </details>
+        <details>
+          <summary><span>When are you in my city?</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div>Denver and Portland in 2026. Expansion (in order): DFW, Houston, Austin, Phoenix, Las Vegas, Atlanta, Orlando, Tampa, Charlotte. Drop your ZIP in the quote form to get added to the notify list for your market.</div>
+        </details>
+        <details>
+          <summary><span>What if access to my site is tight?</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div>Tell us when you order — driveway width, low branches, gate code, slope. We size the truck to fit and assign a driver who has worked sites like it.</div>
+        </details>
+        <details>
+          <summary><span>Where will the driver place the material?</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div>Drop a pin where you want it. Optional: a photo of the spot. Your driver sees both before arrival, and photos the placement on the way out.</div>
+        </details>
+        <details>
+          <summary><span>How do I know how much to order?</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div>Use the calculator above, or describe the project and we'll size it. If our estimate falls short, the follow-up delivery jumps the queue.</div>
+        </details>
+        <details>
+          <summary><span>Tons vs cubic yards — which should I use?</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div>Most aggregate sells by the ton. Rough rule: a cubic yard of fill or base weighs about 1.4 tons. The calculator above handles the conversion.</div>
+        </details>
+        <details>
+          <summary><span>I'm a homeowner — can I order from here?</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div>Homeowner ordering lives on our sister site, <a href="https://filldirtnearme.net" class="link" style="font-size:inherit;">FillDirtNearMe.net <span class="arr">→</span></a>. Same yards, same trucks, simpler flow for one-off jobs.</div>
+        </details>
+        <details>
+          <summary><span>Do you serve contractors with net-30 terms?</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div>Yes. Net-30 available to qualified contractors after a short underwriting review. Apply from your dashboard once the account is set up — most are approved within a business day.</div>
+        </details>
+        <details>
+          <summary><span>What happens if the wrong material shows up?</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div>We replace it at our cost and re-deliver same or next day. The photo-confirmed drop on the original load is what settles it — no reconstruction, no argument.</div>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="section">
+  <div class="max">
+    <div class="fcta">
+      <div>
+        <h2>First order, in under five minutes.</h2>
+        <p>ZIP, material, drop-zone — that's your part. We handle yard match, dispatch, and the photo-confirmed drop.</p>
+      </div>
+      <div class="fcta-actions">
+        <a href="#zipForm" class="btn btn-primary" style="height:48px;padding:0 20px;font-size:15px;">Quote my ZIP
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 5 7 7-7 7"/></svg>
+        </a>
+        <a href="https://filldirtnearme.net" class="btn" style="height:48px;padding:0 20px;font-size:15px;background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.18);">
+          I'm a homeowner
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="max">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-logo">EarthMove<span class="dot">.</span></div>
+        <p class="ink-2" style="font-size:15px;margin-top:12px;max-width:360px;">Bulk aggregate, delivered to the hour.</p>
+        <div class="foot-pills">
+          <span class="foot-pill">Denver</span>
+          <span class="foot-pill">Portland</span>
+          <span class="foot-pill dashed">More cities soon</span>
+        </div>
+      </div>
+      <div>
+        <div class="foot-h">Product</div>
+        <ul class="foot-list">
+          <li><a href="#trust">For contractors</a></li>
+          <li><a href="https://filldirtnearme.net" class="ext">For homeowners <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a></li>
+          <li><a href="#suppliers">Suppliers · sell on EarthMove</a></li>
+          <li><a href="https://dumpsite.io" class="ext">Drivers · dispatch <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="foot-h">Company</div>
+        <ul class="foot-list">
+          <li><a href="#about">About</a></li>
+          <li><a href="#careers">Careers</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="#press">Press</a></li>
+          <li><a href="#blog">Blog</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <div>© 2026 EarthMove, Inc.</div>
+      <div class="right">
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+        <a href="#" style="display:inline-flex;align-items:center;gap:6px;"><span class="live"></span> Network online</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // Nav scrolled state
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 4);
+  document.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+
+  // Audience toggle
+  const tabC = document.getElementById('tab-c');
+  const tabH = document.getElementById('tab-h');
+  const headline = document.getElementById('headline');
+  const subhead = document.getElementById('subhead');
+  const matSub = document.getElementById('matSub');
+  const card6Title = document.getElementById('card6Title');
+  const card6Sub = document.getElementById('card6Sub');
+  const card6Cta = document.getElementById('card6Cta');
+  const ctaLbl = document.getElementById('ctaLbl');
+  const ctaBtn = document.getElementById('ctaBtn');
+
+  const COPY = {
+    contractor: {
+      headline: 'Bulk aggregate,<br>delivered <span class="em">to the hour.</span>',
+      subhead: 'Spec-grade base, fill, and stone — quoted from the closest yard, dispatched on your schedule, photo-confirmed at the drop. <b>For contractors</b> who need it on time, and homeowners who need it once.',
+      matSub: 'Five families that match what crews actually build with. Truck-class fit shown on each card. Pricing confirmed against the closest yard once you drop your ZIP.',
+      t: 'Custom spec? Send the takeoff.',
+      s: 'We match the yard, the gradation, and the truck class. One reply, not a sales tour.',
+      c: 'Send a project',
+      cta: 'Quote my ZIP'
+    },
+    homeowner: {
+      headline: 'Homeowners — order on <span class="em">FillDirtNearMe.</span>',
+      subhead: 'Homeowner ordering lives on our sister site. Same yards, same trucks, a simpler flow for one-off jobs.',
+      matSub: 'Same outcome families on FillDirtNearMe.net, with delivery options sized for one-time projects.',
+      t: 'Not sure what you need?',
+      s: 'Take the 30-second material quiz on FillDirtNearMe.net. We\'ll recommend a material and the right amount.',
+      c: 'Continue on FillDirtNearMe',
+      cta: 'Continue on FillDirtNearMe'
+    }
+  };
+
+  function setAud(a){
+    const c = COPY[a];
+    headline.innerHTML = c.headline;
+    subhead.innerHTML = c.subhead;
+    matSub.textContent = c.matSub;
+    card6Title.textContent = c.t;
+    card6Sub.textContent = c.s;
+    card6Cta.textContent = c.c;
+    ctaLbl.textContent = c.cta;
+    if (a === 'homeowner') {
+      ctaBtn.setAttribute('type','button');
+      ctaBtn.onclick = () => window.open('https://filldirtnearme.net', '_blank');
+    } else {
+      ctaBtn.setAttribute('type','submit');
+      ctaBtn.onclick = null;
+    }
+    tabC.classList.toggle('active', a==='contractor');
+    tabH.classList.toggle('active', a==='homeowner');
+  }
+  tabC.addEventListener('click', () => setAud('contractor'));
+  tabH.addEventListener('click', () => setAud('homeowner'));
+
+  // ZIP — Denver (80xxx) and Portland (97xxx) service ranges only
+  const SERVICE = [/^80\d{3}$/, /^97\d{3}$/];
+  const inService = z => SERVICE.some(rx => rx.test(z));
+  const zip = document.getElementById('zip');
+  const zipForm = document.getElementById('zipForm');
+  const zipResult = document.getElementById('zipResult');
+  zip.addEventListener('input', () => { zip.value = zip.value.replace(/\D/g,'').slice(0,5); });
+  zipForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const z = zip.value.trim();
+    zipResult.style.display = 'block';
+    if (!/^\d{5}$/.test(z)) {
+      zipResult.innerHTML = `<div class="card" style="padding:14px;font-size:14px;color:var(--ink-2);">Please enter a valid 5-digit ZIP code.</div>`;
+      return;
+    }
+    if (inService(z)) {
+      zipResult.innerHTML = `<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <span style="margin-top:2px;display:inline-flex;width:28px;height:28px;align-items:center;justify-content:center;border-radius:50%;background:var(--trust-mark-soft);color:var(--trust-mark);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </span>
+          <div><div class="display" style="font-size:16px;color:var(--ink);">We deliver to ${z}.</div>
+          <div style="font-size:14px;color:var(--ink-2);">Same-day if ordered before 10 AM, next day otherwise.</div></div>
+        </div>
+        <a href="/order?zip=${z}" class="btn btn-primary" style="height:40px;padding:0 16px;font-size:14px;align-self:flex-start;">Get instant quote
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 5 7 7-7 7"/></svg>
+        </a>
+      </div>`;
+    } else {
+      zipResult.innerHTML = `<div class="card" style="padding:18px;">
+        <div class="display" style="font-size:16px;color:var(--ink);">We're not in ${z} yet.</div>
+        <div style="font-size:14px;color:var(--ink-2);margin-top:4px;">Launching in Denver and Portland in 2026 — drop your email and we'll reach out when we're in your market.</div>
+        <form id="oosForm" style="margin-top:12px;display:flex;gap:8px;max-width:480px;flex-wrap:wrap;">
+          <input required type="email" placeholder="you@email.com" class="input" style="flex:1;min-width:200px;height:44px;padding:0 12px;font-size:14px;">
+          <button type="submit" class="btn btn-primary" style="height:44px;padding:0 16px;font-size:14px;">Notify me</button>
+        </form>
+      </div>`;
+      const oos = document.getElementById('oosForm');
+      oos.addEventListener('submit', ev => {
+        ev.preventDefault();
+        oos.outerHTML = `<div style="font-size:14px;color:var(--ink-2);margin-top:12px;">Thanks — we'll be in touch when we're live in ${z}.</div>`;
+      });
+    }
+  });
+
+  // Calculator
+  const lenIn = document.getElementById('lenIn');
+  const widIn = document.getElementById('widIn');
+  const depIn = document.getElementById('depIn');
+  const calcTons = document.getElementById('calcTons');
+  const calcMsg = document.getElementById('calcMsg');
+  const calcLoads = document.getElementById('calcLoads');
+  const calcVol = document.getElementById('calcVol');
+  const calcCu = document.getElementById('calcCu');
+  const truckRec = document.getElementById('truckRec');
+  const areaRect = document.getElementById('areaRect');
+  const lLine = document.getElementById('lLine');
+  const wLine = document.getElementById('wLine');
+  const lLabel = document.getElementById('lLabel');
+  const wLabel = document.getElementById('wLabel');
+  const depthLabel = document.getElementById('depthLabel');
+
+  function recompute(){
+    const L = Math.max(0, parseFloat(lenIn.value)||0);
+    const W = Math.max(0, parseFloat(widIn.value)||0);
+    const Din = parseFloat(depIn.value);
+    const D = Din/12;
+    const vol = L*W*D;
+    const cu = vol/27;
+    const tons = Math.max(0, Math.ceil(cu*1.4));
+    calcTons.textContent = tons;
+    calcVol.textContent = vol.toFixed(1);
+    calcCu.textContent = cu.toFixed(1);
+
+    let truckKey="small", truckLabel="small dump", loads=1, note="One load, same-day if ordered before 10 AM.";
+    if (tons === 0) { truckKey=""; truckLabel="—"; loads=0; note="Enter your area to see an estimate."; }
+    else if (tons <= 5)  { truckKey="small"; truckLabel="small dump"; loads=1; }
+    else if (tons <= 14) { truckKey="standard"; truckLabel="standard dump"; loads=1; note="One load, scheduled to your window."; }
+    else if (tons <= 25) { truckKey="triaxle"; truckLabel="tri-axle"; loads=1; note="One load, scheduled to your window."; }
+    else { truckKey="triaxle"; truckLabel="tri-axle"; loads=Math.ceil(tons/25); note=`Split across ${loads} tri-axle loads.`; }
+    calcLoads.textContent = loads;
+    calcMsg.innerHTML = tons === 0 ? `Enter your area to see an estimate.` : `That's a <span class="ink" style="font-weight:500;">${truckLabel}</span>. ${note}`;
+    truckRec.querySelectorAll('[data-truck]').forEach(el => el.classList.toggle('on', el.dataset.truck === truckKey && tons > 0));
+
+    if (L > 0 && W > 0) {
+      const padX=80, padY=60, maxW=240, maxH=80;
+      const ratio = L/W;
+      let rw = maxW, rh = rw / ratio;
+      if (rh > maxH) { rh = maxH; rw = rh * ratio; }
+      const x = padX + (maxW - rw)/2, y = padY + (maxH - rh)/2;
+      areaRect.setAttribute('x',x); areaRect.setAttribute('y',y); areaRect.setAttribute('width',rw); areaRect.setAttribute('height',rh);
+      lLine.setAttribute('x1',x); lLine.setAttribute('x2',x+rw); lLine.setAttribute('y1',y+rh+15); lLine.setAttribute('y2',y+rh+15);
+      lLabel.setAttribute('x',x+rw/2); lLabel.setAttribute('y',y+rh+32); lLabel.textContent=`L = ${L} ft`;
+      wLine.setAttribute('x1',x+rw+25); wLine.setAttribute('x2',x+rw+25); wLine.setAttribute('y1',y); wLine.setAttribute('y2',y+rh);
+      wLabel.setAttribute('x',x+rw+36); wLabel.setAttribute('y',y+rh/2+4); wLabel.textContent=`W = ${W} ft`;
+      depthLabel.setAttribute('x',x+rw/2); depthLabel.setAttribute('y',y+rh/2+5); depthLabel.textContent=`${Din}″ deep`;
+    }
+  }
+  [lenIn,widIn,depIn].forEach(el => el.addEventListener('input', recompute));
+  document.getElementById('resetCalc').addEventListener('click', () => { lenIn.value=20; widIn.value=10; depIn.value=4; recompute(); });
+  recompute();
+})();
+</script>
+</body>
+</html>

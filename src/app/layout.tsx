@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { DM_Sans, DM_Mono } from 'next/font/google'
+import { DM_Sans, DM_Mono, Bricolage_Grotesque, Geist } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { SupportWidget } from '@/components/layout/chat-widget'
@@ -20,6 +20,21 @@ const dmMono = DM_Mono({
   display: 'swap',
 })
 
+// Marketing page (v6) fonts — exposed as CSS vars; only applied inside .marketing-v6.
+const bricolage = Bricolage_Grotesque({
+  subsets: ['latin'],
+  variable: '--font-bricolage',
+  weight: ['500', '600', '700'],
+  display: 'swap',
+})
+
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-geist',
+  weight: ['400', '500', '600'],
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://earthmove.io'),
   title: {
@@ -27,7 +42,7 @@ export const metadata: Metadata = {
     template: '%s | EarthMove',
   },
   description:
-    'Order fill dirt, gravel, sand, road base, topsoil and more. Same-day delivery to your job site. Serving Dallas-Fort Worth, Denver, and 8 more markets.',
+    'Order fill dirt, gravel, sand, road base, topsoil and more. Same-day delivery to your job site. Launching in Denver and Portland, 2026.',
   keywords: [
     'fill dirt delivery', 'gravel delivery', 'bulk aggregate materials',
     'topsoil delivery', 'road base delivery', 'construction materials delivery',
@@ -57,7 +72,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmMono.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${dmMono.variable} ${bricolage.variable} ${geist.variable}`}>
       <head>
         {/* Preconnect hints — saves ~100-300ms on TTFB for cross-origin fetches */}
         <link rel="preconnect" href="https://gaawvpzzmotimblyesfp.supabase.co" crossOrigin="" />
