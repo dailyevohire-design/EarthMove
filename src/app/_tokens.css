@@ -54,3 +54,154 @@
   --edge:        0.5px solid rgba(10, 15, 12, 0.10);
   --edge-strong: 0.5px solid rgba(10, 15, 12, 0.18);
 }
+
+/* ============================================================
+   EARTHMOVE v6 MARKETING TOKENS — canonical --commerce-* exports
+   Promoted from .marketing-v6 namespace (src/app/marketing.css)
+   on 2026-04-27. Coexists with --earth-* dashboard tokens above;
+   migration to a single canonical system is a future commit.
+
+   The 'em' prefix is reserved for the driver mobile app's BEM class
+   language (.em-app, .em-load-card, etc.) — not for tokens.
+   ============================================================ */
+
+:root {
+  /* SURFACE — light commerce */
+  --commerce-cream: #F7F5F0;
+  --commerce-cream-2: #EFEBE2;
+  --commerce-cream-3: #E6E1D5;
+  --commerce-cream-warm: #F4F1E8;
+  --commerce-cream-trust: #FCFAF3;
+
+  /* INK — type ramp */
+  --commerce-ink: #101814;
+  --commerce-ink-2: #4F564E;
+  --commerce-ink-3: #8C8F87;
+
+  /* LINE — borders + dividers */
+  --commerce-line: #E2DED2;
+  --commerce-line-strong: #CFC9B8;
+  --commerce-line-trust: #EFE7CE;
+
+  /* BRAND — deep green */
+  --commerce-brand: #1F3D2E;
+  --commerce-brand-2: #2F5A45;
+  --commerce-brand-3: #0F2419;
+  --commerce-brand-soft: #E2EAE3;
+
+  /* ACTION — burnt orange (high-intent CTAs only) */
+  --commerce-action: #D97A1F;
+  --commerce-action-hover: #B8651A;
+  --commerce-action-soft: #FBE8D2;
+
+  /* TRUST — credibility cues */
+  --commerce-trust: #5C7A2F;
+  --commerce-trust-soft: #E8EBD8;
+
+  /* OPS — dark surfaces */
+  --commerce-panel-bg: #0E1620;
+  --commerce-panel-bg-2: #152130;
+  --commerce-panel-line: #22324A;
+  --commerce-panel-line-2: #2C405D;
+  --commerce-panel-ink: #E6ECF5;
+  --commerce-panel-ink-2: #9AAAC2;
+  --commerce-panel-ink-3: #5E708B;
+  --commerce-panel-accent: #5EA9FF;
+  --commerce-panel-active: #28C76F;
+  --commerce-panel-warn: #F6B23F;
+
+  /* MATERIALS — per-card accent */
+  --commerce-mat-base: #9C6A2E;
+  --commerce-mat-drain: #3F5266;
+  --commerce-mat-fill: #6B4A2A;
+  --commerce-mat-soil: #2E4A2A;
+  --commerce-mat-struct: #7A7A6E;
+
+  /* RADII */
+  --commerce-r-sm: 6px;
+  --commerce-r-md: 8px;
+  --commerce-r-lg: 11px;
+  --commerce-r-xl: 14px;
+  --commerce-r-2xl: 16px;
+  --commerce-r-3xl: 18px;
+  --commerce-r-4xl: 20px;
+  --commerce-r-5xl: 24px;
+
+  /* SHADOWS — 5 named recipes */
+  --commerce-shadow-flat:
+    0 1px 0 rgba(255, 255, 255, .9) inset,
+    0 0 0 1px rgba(15, 20, 17, .012);
+  --commerce-shadow-elevated:
+    0 1px 2px rgba(15, 20, 17, .04),
+    0 26px 44px -22px rgba(15, 20, 17, .20);
+  --commerce-shadow-floating:
+    0 1px 0 rgba(255, 255, 255, .9) inset,
+    0 0 0 1px rgba(15, 20, 17, .012),
+    0 30px 60px -32px rgba(15, 20, 17, .22),
+    0 6px 16px -8px rgba(15, 20, 17, .06);
+  --commerce-shadow-cta:
+    inset 0 1px 0 rgba(255, 255, 255, .18),
+    inset 0 -1.5px 0 rgba(0, 0, 0, .18),
+    0 8px 18px -8px rgba(217, 122, 31, .55),
+    0 2px 4px -2px rgba(217, 122, 31, .30);
+  --commerce-shadow-ops:
+    inset 0 1px 0 rgba(255, 255, 255, .04),
+    0 36px 90px -36px rgba(8, 14, 22, .65),
+    0 12px 28px -14px rgba(8, 14, 22, .45);
+
+  /* MOTION — 3 easings, 3 durations */
+  --commerce-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --commerce-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --commerce-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --commerce-dur-fast: 150ms;
+  --commerce-dur-base: 220ms;
+  --commerce-dur-slow: 380ms;
+
+  /* Z-INDEX — 5 named layers */
+  --commerce-z-base: 0;
+  --commerce-z-elevated: 10;
+  --commerce-z-sticky: 50;
+  --commerce-z-overlay: 100;
+  --commerce-z-modal: 200;
+
+  /* PHOTO GRADING — applied to .mat-img img */
+  --commerce-photo-grade: saturate(0.92) contrast(1.04) brightness(0.98);
+}
+
+/* ============================================================
+   shadcn-compatible HSL channel exports for commit 2 primitives.
+   These let primitives use bg-background, text-foreground etc.
+   without redefining tokens. Keep in sync with --commerce-* above.
+   ============================================================ */
+
+:root {
+  --background: 36 33% 95%;          /* matches --commerce-cream */
+  --foreground: 145 18% 8%;          /* matches --commerce-ink */
+  --card: 0 0% 100%;
+  --card-foreground: 145 18% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 145 18% 8%;
+  --primary: 148 33% 18%;            /* matches --commerce-brand */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 36 28% 91%;           /* matches --commerce-cream-2 */
+  --secondary-foreground: 145 18% 8%;
+  --muted: 36 28% 91%;
+  --muted-foreground: 105 5% 32%;    /* matches --commerce-ink-2 */
+  --accent: 28 75% 49%;              /* matches --commerce-action */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 42 25% 85%;              /* matches --commerce-line */
+  --input: 42 25% 85%;
+  --ring: 28 75% 49%;
+  --radius: 0.625rem;
+}
+
+/* Photo grading filter, applied where we use stock photography. */
+.marketing-v6 .mat-img img {
+  filter: var(--commerce-photo-grade);
+  transition: filter var(--commerce-dur-slow) var(--commerce-ease-out);
+}
+.marketing-v6 .mat:hover .mat-img img {
+  filter: saturate(1.0) contrast(1.06) brightness(1.0);
+}

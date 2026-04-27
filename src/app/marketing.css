@@ -9,19 +9,23 @@
 .marketing-v6 *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 .marketing-v6 {
-  --bg: #F7F5F0; --bg-2: #EFEBE2; --bg-3: #E6E1D5;
-  --ink: #101814; --ink-2: #4F564E; --ink-3: #8C8F87;
-  --line: #E2DED2; --line-strong: #CFC9B8;
-  --brand: #1F3D2E; --brand-2: #2F5A45; --brand-3: #0F2419; --brand-soft: #E2EAE3;
-  --action: #D97A1F; --action-hover: #B8651A; --action-soft: #FBE8D2;
-  --trust: #FCFAF3; --trust-line: #EFE7CE; --trust-mark: #5C7A2F; --trust-mark-soft: #E8EBD8;
-  --ops-bg: #0E1620; --ops-bg-2: #152130; --ops-line: #22324A; --ops-line-2: #2C405D;
-  --ops-ink: #E6ECF5; --ops-ink-2: #9AAAC2; --ops-ink-3: #5E708B;
-  --ops-accent: #5EA9FF; --ops-active: #28C76F; --ops-warn: #F6B23F;
-  --m-base: #9C6A2E; --m-drain: #3F5266; --m-fill: #6B4A2A; --m-soil: #2E4A2A; --m-struct: #7A7A6E;
+  /* Local namespace aliases now reference canonical --commerce-* tokens
+     defined in src/app/_tokens.css. Downstream selectors below continue
+     to use var(--bg), var(--brand), etc. unchanged — this commit only
+     swaps the literal hex values for canonical references. */
+  --bg: var(--commerce-cream); --bg-2: var(--commerce-cream-2); --bg-3: var(--commerce-cream-3);
+  --ink: var(--commerce-ink); --ink-2: var(--commerce-ink-2); --ink-3: var(--commerce-ink-3);
+  --line: var(--commerce-line); --line-strong: var(--commerce-line-strong);
+  --brand: var(--commerce-brand); --brand-2: var(--commerce-brand-2); --brand-3: var(--commerce-brand-3); --brand-soft: var(--commerce-brand-soft);
+  --action: var(--commerce-action); --action-hover: var(--commerce-action-hover); --action-soft: var(--commerce-action-soft);
+  --trust: var(--commerce-cream-trust); --trust-line: var(--commerce-line-trust); --trust-mark: var(--commerce-trust); --trust-mark-soft: var(--commerce-trust-soft);
+  --ops-bg: var(--commerce-panel-bg); --ops-bg-2: var(--commerce-panel-bg-2); --ops-line: var(--commerce-panel-line); --ops-line-2: var(--commerce-panel-line-2);
+  --ops-ink: var(--commerce-panel-ink); --ops-ink-2: var(--commerce-panel-ink-2); --ops-ink-3: var(--commerce-panel-ink-3);
+  --ops-accent: var(--commerce-panel-accent); --ops-active: var(--commerce-panel-active); --ops-warn: var(--commerce-panel-warn);
+  --m-base: var(--commerce-mat-base); --m-drain: var(--commerce-mat-drain); --m-fill: var(--commerce-mat-fill); --m-soil: var(--commerce-mat-soil); --m-struct: var(--commerce-mat-struct);
 
-  background: #F7F5F0;
-  color: #101814;
+  background: var(--commerce-cream);
+  color: var(--commerce-ink);
   font-family: var(--font-geist), 'Geist', ui-sans-serif, sans-serif;
   font-size: 16px;
   line-height: 1.55;
