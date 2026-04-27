@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { unstable_cache } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 const DENVER = /^80\d{3}$/
 const DFW = /^(75|76)\d{3}$/
 
 const getMarketIdBySlug = unstable_cache(
   async (slug: string) => {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { data } = await supabase
       .from('markets')
       .select('id')
