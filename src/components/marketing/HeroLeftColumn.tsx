@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import { useAudience } from './audience-context'
 
-const SERVICE_REGEXES: ReadonlyArray<RegExp> = [/^80\d{3}$/, /^97\d{3}$/]
+const SERVICE_REGEXES: ReadonlyArray<RegExp> = [/^80\d{3}$/, /^75\d{3}$/, /^76\d{3}$/]
 const inService = (z: string) => SERVICE_REGEXES.some(rx => rx.test(z))
 
 const CheckIcon = ({ size = 13 }: { size?: number }) => (
@@ -50,12 +50,12 @@ export function HeroLeftColumn() {
 
   return (
     <div>
-      {/* Status strip — Denver + Portland · Launching 2026 */}
+      {/* Status strip — Denver + Dallas–Fort Worth · Launching 2026 */}
       <div className="hv-status">
         <span className="pip" />
         <span className="lbl">Network online</span>
         <span className="rule" />
-        <span><span className="y">Denver + Portland</span> · Launching 2026</span>
+        <span><span className="y">Denver + Dallas–Fort Worth</span> · Launching 2026</span>
       </div>
 
       <h1 className="hv-h1" id="headline">
@@ -142,7 +142,7 @@ export function HeroLeftColumn() {
           {result?.kind === 'out-of-service' && !result.notified && (
             <div className="card" style={{ padding: 18 }}>
               <div className="display" style={{ fontSize: 16, color: 'var(--ink)' }}>We're not in {result.zip} yet.</div>
-              <div style={{ fontSize: 14, color: 'var(--ink-2)', marginTop: 4 }}>Launching in Denver and Portland in 2026 — drop your email and we'll reach out when we're in your market.</div>
+              <div style={{ fontSize: 14, color: 'var(--ink-2)', marginTop: 4 }}>Launching in Denver and Dallas–Fort Worth in 2026 — drop your email and we'll reach out when we're in your market.</div>
               <form id="oosForm" onSubmit={notifyMe} style={{ marginTop: 12, display: 'flex', gap: 8, maxWidth: 480, flexWrap: 'wrap' }}>
                 <input required type="email" placeholder="you@email.com" className="input" style={{ flex: 1, minWidth: 200, height: 44, padding: '0 12px', fontSize: 14 }} />
                 <button type="submit" className="btn btn-primary" style={{ height: 44, padding: '0 16px', fontSize: 14 }}>Notify me</button>
@@ -166,7 +166,7 @@ export function HeroLeftColumn() {
       <div className="hv-sig">
         <div className="sig-item">
           <div className="sig-eb">Launching</div>
-          <div className="sig-ttl">Denver<br />+ Portland</div>
+          <div className="sig-ttl">Denver +<br />Dallas–Fort Worth</div>
           <div className="sig-lbl">More markets in pipeline</div>
         </div>
         <div className="sig-item">

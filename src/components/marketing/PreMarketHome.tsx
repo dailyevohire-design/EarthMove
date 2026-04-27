@@ -5,8 +5,11 @@
  * interactive bits (ZIP form, calculator, nav scroll) are client islands.
  *
  * Source of truth for visual + copy: public/marketing/homepage_v6.html
- * NEVER reintroduce DFW/synthetic pricing/fabricated metrics here — see commit
- *   marketing: ship homepage v6 — Denver+Portland, no synthetic pricing, sister-site routing
+ *
+ * LAUNCH MARKETS: Denver + Dallas–Fort Worth (2026). Co-equal launch.
+ * Portland moved to expansion pipeline 2026-04-27 — list it in expansion contexts only.
+ * NEVER reintroduce Portland (or any expansion-pipeline city) as a launch-market claim
+ * in this surface. Do not invent product metrics. Do not list synthetic pricing.
  */
 import { AudienceProvider } from './audience-context'
 import { NavScroll } from './NavScroll'
@@ -511,7 +514,7 @@ export function PreMarketHome() {
             </div>
 
             <div style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid var(--trust-line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Launching in <b style={{ color: 'var(--ink-2)' }}>Denver and Portland</b>, 2026. Expansion: DFW, Houston, Austin, Phoenix, Las Vegas, Atlanta, Orlando, Tampa, Charlotte.</span>
+              <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Launching in <b style={{ color: 'var(--ink-2)' }}>Denver and Dallas–Fort Worth</b>, 2026. Expansion: Portland, Houston, Austin, Phoenix, Las Vegas, Atlanta, Orlando, Tampa, Charlotte.</span>
               <a href="#zipForm" className="link" style={{ fontSize: 14 }}>See if we're in your ZIP <span className="arr">→</span></a>
             </div>
           </div>
@@ -533,11 +536,11 @@ export function PreMarketHome() {
                 </details>
                 <details>
                   <summary><span>How fast can you deliver?</span><span className="chev"><ChevronDown /></span></summary>
-                  <div>Order before 10 AM in Denver or Portland and most loads ship same day. Order before 2 PM, get it next day. Contractor orders can be scheduled to a specific window.</div>
+                  <div>Order before 10 AM in Denver or Dallas–Fort Worth and most loads ship same day. Order before 2 PM, get it next day. Contractor orders can be scheduled to a specific window.</div>
                 </details>
                 <details>
                   <summary><span>When are you in my city?</span><span className="chev"><ChevronDown /></span></summary>
-                  <div>Denver and Portland in 2026. Expansion (in order): DFW, Houston, Austin, Phoenix, Las Vegas, Atlanta, Orlando, Tampa, Charlotte. Drop your ZIP in the quote form to get added to the notify list for your market.</div>
+                  <div>Denver and Dallas–Fort Worth in 2026. Expansion (in order): Portland, Houston, Austin, Phoenix, Las Vegas, Atlanta, Orlando, Tampa, Charlotte. Drop your ZIP in the quote form to get added to the notify list for your market.</div>
                 </details>
                 <details>
                   <summary><span>What if access to my site is tight?</span><span className="chev"><ChevronDown /></span></summary>
@@ -601,7 +604,7 @@ export function PreMarketHome() {
                 <p className="ink-2" style={{ fontSize: 15, marginTop: 12, maxWidth: 360 }}>Bulk aggregate, delivered to the hour.</p>
                 <div className="foot-pills">
                   <span className="foot-pill">Denver</span>
-                  <span className="foot-pill">Portland</span>
+                  <span className="foot-pill">Dallas–Fort Worth</span>
                   <span className="foot-pill dashed">More cities soon</span>
                 </div>
               </div>

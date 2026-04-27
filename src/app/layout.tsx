@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     template: '%s | EarthMove',
   },
   description:
-    'Order fill dirt, gravel, sand, road base, topsoil and more. Same-day delivery to your job site. Launching in Denver and Portland, 2026.',
+    'Order fill dirt, gravel, sand, road base, topsoil and more. Same-day delivery to your job site. Launching in Denver and Dallas–Fort Worth, 2026.',
   keywords: [
     'fill dirt delivery', 'gravel delivery', 'bulk aggregate materials',
     'topsoil delivery', 'road base delivery', 'construction materials delivery',
