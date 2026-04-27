@@ -2,7 +2,7 @@
  * MarketplaceHome — the with-market branch of `/`.
  *
  * Extracted verbatim from the previous src/app/page.tsx render. Behavior unchanged.
- * The pre-market branch is now <PreMarketHome> (v6 marketing landing).
+ * The without-market branch is <Homepage> (v6 marketing landing).
  */
 import Link from 'next/link'
 import { ArrowRight, Star, Tag } from 'lucide-react'

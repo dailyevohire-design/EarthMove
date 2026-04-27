@@ -5,8 +5,10 @@
 @tailwind utilities;
 
 /* ============================================================
-   DESIGN SYSTEM — AggregateMarket / EarthMove
-   Clean white / emerald accent. Premium marketplace.
+   DESIGN SYSTEM — EarthMove commerce surface
+   Marketing v6, marketplace, public ordering — all consume
+   --commerce-* tokens from _tokens.css. Dashboards (.ec-* / .em-*)
+   continue to use --earth-* / --bone-* / --ink-* tokens.
    ============================================================ */
 
 @layer base {
@@ -15,21 +17,26 @@
     --font-mono: 'DM Mono', monospace;
   }
 
-  * { border-color: hsl(220 13% 91%); }
+  * { border-color: var(--commerce-line); }
 
   html { scroll-behavior: smooth; }
 
   body {
-    background-color: hsl(0 0% 100%);
-    color: hsl(220 20% 20%);
-    font-family: var(--font-sans);
+    background-color: var(--commerce-cream);
+    color: var(--commerce-ink);
+    font-family: var(--font-geist), 'Geist', ui-sans-serif, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
+  h1, h2, h3, h4 {
+    font-family: var(--font-bricolage), 'Bricolage Grotesque', serif;
+    letter-spacing: -0.025em;
+  }
+
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: hsl(0 0% 98%); }
-  ::-webkit-scrollbar-thumb { background: hsl(220 13% 82%); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(160 84% 39%); }
+  ::-webkit-scrollbar-track { background: var(--commerce-cream); }
+  ::-webkit-scrollbar-thumb { background: var(--commerce-line-strong); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--commerce-brand); }
 }
 
 @layer components {
@@ -37,54 +44,171 @@
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold
            transition-all duration-200 select-none
-           focus-visible:outline-none focus-visible:ring-2
-           focus-visible:ring-emerald-500 focus-visible:ring-offset-2
-           focus-visible:ring-offset-white
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none;
   }
-  .btn-primary   { @apply btn bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98] shadow-lg shadow-emerald-600/20; }
-  .btn-secondary { @apply btn bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md; }
-  .btn-ghost     { @apply btn text-gray-500 hover:bg-gray-100 hover:text-gray-900; }
-  .btn-danger    { @apply btn bg-red-600 text-white hover:bg-red-500; }
+  .btn-primary {
+    @apply btn text-white;
+    background-color: var(--commerce-action);
+    box-shadow: var(--commerce-shadow-cta);
+  }
+  .btn-primary:hover { background-color: var(--commerce-action-hover); }
+  .btn-primary:focus-visible { outline-color: var(--commerce-action); }
+
+  .btn-secondary {
+    @apply btn;
+    background-color: #fff;
+    color: var(--commerce-ink);
+    border: 1px solid var(--commerce-line-strong);
+  }
+  .btn-secondary:hover { border-color: var(--commerce-ink); background-color: var(--commerce-cream-2); }
+
+  .btn-ghost { @apply btn; color: var(--commerce-ink); }
+  .btn-ghost:hover { background-color: var(--commerce-cream-2); }
+
+  .btn-danger { @apply btn text-white; background-color: #dc2626; }
+  .btn-danger:hover { background-color: #b91c1c; }
+
   .btn-sm  { @apply text-xs  px-3.5 py-2; }
   .btn-md  { @apply text-sm  px-5   py-2.5; }
   .btn-lg  { @apply text-sm  px-6   py-3; }
   .btn-xl  { @apply text-base px-8  py-4 font-bold; }
 
   /* ── Cards ── */
-  .card       { @apply bg-white border border-gray-200/80 rounded-2xl shadow-sm; }
-  .card-hover { @apply card transition-all duration-300 hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-0.5 cursor-pointer; }
+  .card {
+    background-color: #fff;
+    border: 1px solid var(--commerce-line);
+    border-radius: var(--commerce-r-2xl);
+    box-shadow: var(--commerce-shadow-flat);
+  }
+  .card-hover {
+    transition: all var(--commerce-dur-base) var(--commerce-ease-out);
+    cursor: pointer;
+  }
+  .card-hover:hover {
+    box-shadow: var(--commerce-shadow-elevated);
+    transform: translateY(-2px);
+    border-color: var(--commerce-line-strong);
+  }
 
   /* ── Inputs ── */
   .input {
-    @apply w-full bg-white border border-gray-300 rounded-xl px-4 py-3
-           text-gray-900 placeholder-gray-400 text-sm
-           focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
-           transition-all duration-150;
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid var(--commerce-line-strong);
+    border-radius: var(--commerce-r-lg);
+    padding: 12px 16px;
+    color: var(--commerce-ink);
+    font-size: 14px;
+    transition: border-color var(--commerce-dur-fast) var(--commerce-ease-out),
+                box-shadow var(--commerce-dur-fast) var(--commerce-ease-out);
   }
-  .input-label { @apply block text-sm font-medium text-gray-700 mb-1.5; }
+  .input::placeholder { color: var(--commerce-ink-3); }
+  .input:focus {
+    outline: none;
+    border-color: var(--commerce-ink);
+    box-shadow: 0 0 0 4px rgba(15, 20, 17, 0.07);
+  }
+  .input-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--commerce-ink-2);
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
 
   /* ── Badges ── */
-  .badge        { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold; }
-  .badge-amber  { @apply badge bg-emerald-50 text-emerald-700 border border-emerald-200; }
-  .badge-green  { @apply badge bg-emerald-50 text-emerald-700 border border-emerald-200; }
-  .badge-blue   { @apply badge bg-sky-50 text-sky-700 border border-sky-200; }
-  .badge-red    { @apply badge bg-red-50 text-red-700 border border-red-200; }
-  .badge-stone  { @apply badge bg-gray-100 text-gray-600 border border-gray-200; }
-  .badge-deal   { @apply badge bg-orange-500 text-white shadow-lg shadow-orange-500/25 border-0; }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold;
+  }
+  .badge-stone {
+    @apply badge;
+    background-color: var(--commerce-cream-2);
+    color: var(--commerce-ink-2);
+    border: 1px solid var(--commerce-line);
+  }
+  .badge-success {
+    @apply badge;
+    background-color: var(--commerce-trust-mark-soft);
+    color: var(--commerce-trust-mark);
+    border: 1px solid var(--commerce-trust-mark-soft);
+  }
+  .badge-action {
+    @apply badge text-white;
+    background-color: var(--commerce-action);
+    box-shadow: var(--commerce-shadow-cta);
+    border: 0;
+  }
+  /* Legacy aliases preserved so existing callsites (browse/[slug] uses badge-stone, etc.)
+     don't break. Map to commerce-token equivalents above. */
+  .badge-amber {
+    @apply badge;
+    background-color: var(--commerce-trust-mark-soft);
+    color: var(--commerce-trust-mark);
+    border: 1px solid var(--commerce-trust-mark-soft);
+  }
+  .badge-green {
+    @apply badge;
+    background-color: var(--commerce-trust-mark-soft);
+    color: var(--commerce-trust-mark);
+    border: 1px solid var(--commerce-trust-mark-soft);
+  }
+  .badge-blue {
+    @apply badge;
+    background-color: var(--commerce-cream-2);
+    color: var(--commerce-ink-2);
+    border: 1px solid var(--commerce-line);
+  }
+  .badge-red {
+    @apply badge;
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+  }
+  .badge-deal {
+    @apply badge text-white;
+    background-color: var(--commerce-action);
+    box-shadow: var(--commerce-shadow-cta);
+    border: 0;
+  }
 
   /* ── Layout ── */
   .container-main { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
   .section        { @apply py-16 md:py-24; }
 
   /* ── Typography ── */
-  .price-display { @apply font-bold text-gray-900 tabular-nums; }
+  .price-display {
+    font-family: var(--font-bricolage), 'Bricolage Grotesque', serif;
+    font-weight: 600;
+    color: var(--commerce-ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+  }
 
   /* ── Admin stat card ── */
   .stat-card  { @apply card p-5 flex flex-col gap-1; }
-  .stat-label { @apply text-xs font-semibold text-gray-500 uppercase tracking-wider; }
-  .stat-value { @apply text-2xl font-bold text-gray-900 tabular-nums; }
-  .stat-sub   { @apply text-xs text-gray-500 mt-0.5; }
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--commerce-ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .stat-value {
+    font-family: var(--font-bricolage), 'Bricolage Grotesque', serif;
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--commerce-ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+    line-height: 1;
+  }
+  .stat-sub {
+    font-size: 12px;
+    color: var(--commerce-ink-3);
+    margin-top: 2px;
+  }
 }
 
 /* ── Animations ── */
@@ -109,9 +233,9 @@
 .skeleton {
   background: linear-gradient(
     90deg,
-    hsl(220 14% 95%) 25%,
-    hsl(220 14% 90%) 50%,
-    hsl(220 14% 95%) 75%
+    var(--commerce-cream-2) 25%,
+    var(--commerce-cream-3) 50%,
+    var(--commerce-cream-2) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;

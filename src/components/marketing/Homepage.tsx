@@ -1,5 +1,5 @@
 /**
- * PreMarketHome — v6 marketing landing.
+ * Homepage — v6 marketing landing (the without-market branch of `/`).
  *
  * Server component. Audience-dependent copy is wrapped in <AudienceProvider>;
  * interactive bits (ZIP form, calculator, nav scroll) are client islands.
@@ -12,6 +12,7 @@
  * in this surface. Do not invent product metrics. Do not list synthetic pricing.
  */
 import Image from 'next/image'
+import Link from 'next/link'
 import { AudienceProvider } from './audience-context'
 import { NavScroll } from './NavScroll'
 import { HeroLeftColumn } from './HeroLeftColumn'
@@ -38,19 +39,19 @@ const ArrowRight = ({ size = 16, weight = 2 }: { size?: number; weight?: number 
   </svg>
 )
 
-export function PreMarketHome() {
+export function Homepage() {
   return (
     <div className="marketing-v6">
       <AudienceProvider>
         <NavScroll>
           <div className="max nav-inner">
-            <a href="#" className="nav-logo">EarthMove<span className="dot">.</span></a>
+            <Link href="/" className="nav-logo">EarthMove<span className="dot">.</span></Link>
             <nav className="nav-links">
-              <a href="#materials">Materials</a>
-              <a href="#how">How it works</a>
-              <a href="#trust">For contractors</a>
-              <a href="https://filldirtnearme.net" target="_blank" rel="noopener" className="ext">Homeowner site<ExternalArrow /></a>
-              <a href="#signin">Sign in</a>
+              <Link href="/browse">Materials</Link>
+              <Link href="/deals">Deals</Link>
+              <Link href="/learn">Learn</Link>
+              <Link href="/material-match">Material Match</Link>
+              <Link href="/login">Sign in</Link>
             </nav>
             <a href="#zipForm" className="btn btn-primary" style={{ padding: '0 16px', height: 36, fontSize: 13.5 }}>Get a quote</a>
           </div>
@@ -501,7 +502,7 @@ export function PreMarketHome() {
                 </details>
                 <details>
                   <summary><span>I'm a homeowner — can I order from here?</span><span className="chev"><ChevronDown /></span></summary>
-                  <div>Homeowner ordering lives on our sister site, <a href="https://filldirtnearme.net" target="_blank" rel="noopener" className="link" style={{ fontSize: 'inherit' }}>FillDirtNearMe.net <span className="arr">→</span></a>. Same yards, same trucks, simpler flow for one-off jobs.</div>
+                  <div>Yes — try <Link href="/material-match" className="link" style={{ fontSize: 'inherit' }}>Material Match <span className="arr">→</span></Link> for a quick recommender. Homeowner-focused ordering also lives on our sister site, <a href="https://filldirtnearme.net" target="_blank" rel="noopener" className="link" style={{ fontSize: 'inherit' }}>FillDirtNearMe.net <span className="arr">→</span></a>.</div>
                 </details>
                 <details>
                   <summary><span>Do you serve contractors with net-30 terms?</span><span className="chev"><ChevronDown /></span></summary>
@@ -528,9 +529,9 @@ export function PreMarketHome() {
                 <a href="#zipForm" className="btn btn-primary" style={{ height: 48, padding: '0 20px', fontSize: 15 }}>
                   Quote my ZIP <ArrowRight size={16} weight={2} />
                 </a>
-                <a href="https://filldirtnearme.net" target="_blank" rel="noopener" className="btn" style={{ height: 48, padding: '0 20px', fontSize: 15, background: 'rgba(255,255,255,.10)', color: '#fff', border: '1px solid rgba(255,255,255,.18)' }}>
-                  I'm a homeowner <ExternalArrow size={14} />
-                </a>
+                <Link href="/material-match" className="btn" style={{ height: 48, padding: '0 20px', fontSize: 15, background: 'rgba(255,255,255,.10)', color: '#fff', border: '1px solid rgba(255,255,255,.18)' }}>
+                  I'm a homeowner <ArrowRight size={14} />
+                </Link>
               </div>
             </div>
           </div>
@@ -541,41 +542,37 @@ export function PreMarketHome() {
           <div className="max">
             <div className="foot-grid">
               <div>
-                <div className="foot-logo">EarthMove<span className="dot">.</span></div>
+                <div className="foot-logo">earthmove<span className="dot">.</span>io</div>
                 <p className="ink-2" style={{ fontSize: 15, marginTop: 12, maxWidth: 360 }}>Bulk aggregate, delivered to the hour.</p>
                 <div className="foot-pills">
-                  <span className="foot-pill">Denver</span>
-                  <span className="foot-pill">Dallas–Fort Worth</span>
-                  <span className="foot-pill dashed">More cities soon</span>
+                  <span className="foot-pill">Denver, CO</span>
+                  <span className="foot-pill">Dallas–Fort Worth, TX</span>
+                  <span className="foot-pill dashed">Houston · Austin · Phoenix · more soon</span>
                 </div>
               </div>
               <div>
                 <div className="foot-h">Product</div>
                 <ul className="foot-list">
-                  <li><a href="#trust">For contractors</a></li>
-                  <li><a href="https://filldirtnearme.net" target="_blank" rel="noopener" className="ext">For homeowners <ExternalArrow /></a></li>
-                  <li><a href="#suppliers">Suppliers · sell on EarthMove</a></li>
-                  <li><a href="https://dumpsite.io" target="_blank" rel="noopener" className="ext">Drivers · dispatch <ExternalArrow /></a></li>
-                  <li><a href="#faq">FAQ</a></li>
+                  <li><Link href="/browse">Materials</Link></li>
+                  <li><Link href="/material-match">Material Match</Link></li>
+                  <li><Link href="/deals">Deals</Link></li>
+                  <li><Link href="/learn">Learn</Link></li>
                 </ul>
               </div>
               <div>
                 <div className="foot-h">Company</div>
                 <ul className="foot-list">
-                  <li><a href="#about">About</a></li>
-                  <li><a href="#careers">Careers</a></li>
-                  <li><a href="#contact">Contact</a></li>
-                  <li><a href="#press">Press</a></li>
-                  <li><a href="#blog">Blog</a></li>
+                  <li><Link href="/join">Suppliers</Link></li>
+                  <li><a href="https://filldirtnearme.net" target="_blank" rel="noopener" className="ext">Homeowner site<ExternalArrow /></a></li>
+                  <li><Link href="/login">Sign in</Link></li>
                 </ul>
               </div>
             </div>
             <div className="foot-bottom">
-              <div>© 2026 EarthMove, Inc.</div>
+              <div>© 2026 earthmove.io</div>
               <div className="right">
-                <a href="#">Terms</a>
-                <a href="#">Privacy</a>
-                <a href="#" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span className="live" /> Network online</a>
+                <Link href="/privacy">Privacy</Link>
+                <Link href="/terms">Terms</Link>
               </div>
             </div>
           </div>

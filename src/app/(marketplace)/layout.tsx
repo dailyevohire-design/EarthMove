@@ -5,7 +5,7 @@ export default function MarketplaceLayout({ children }: { children: React.ReactN
   return (
     <>
       <SiteHeader />
-      <main className="flex-1 min-h-0">{children}</main>
+      <main data-surface="commerce" className="flex-1 min-h-0">{children}</main>
       <SiteFooter />
     </>
   )

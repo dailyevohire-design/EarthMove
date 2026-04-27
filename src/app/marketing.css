@@ -338,3 +338,19 @@
 .marketing-v6 .link:hover .arr { transform: translateX(3px); }
 .marketing-v6 .ext { display: inline-flex; align-items: center; gap: 5px; }
 .marketing-v6 .ext svg { width: 11px; height: 11px; }
+
+/* Hero secondary escape-valve links below the ZIP CTA */
+.marketing-v6 .hv-secondary-links {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--commerce-ink-3);
+}
+.marketing-v6 .hv-secondary-links a {
+  color: var(--commerce-ink-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--commerce-dur-fast) var(--commerce-ease-out);
+}
+.marketing-v6 .hv-secondary-links a:hover {
+  color: var(--commerce-ink);
+}

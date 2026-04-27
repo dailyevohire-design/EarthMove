@@ -27,18 +27,26 @@ export async function GET(req: NextRequest) {
   else if (DFW.test(zip)) slug = 'dallas-fort-worth'
 
   const url = req.nextUrl.clone()
-  url.pathname = '/'
+  url.pathname = '/browse'
   url.search = ''
 
   if (!slug) {
-    url.searchParams.set('zip_error', '1')
-    return NextResponse.redirect(url)
+    // ZIP outside service area: bounce back to homepage with error flag,
+    // not /browse (no market context to filter against).
+    const errUrl = req.nextUrl.clone()
+    errUrl.pathname = '/'
+    errUrl.search = ''
+    errUrl.searchParams.set('zip_error', '1')
+    return NextResponse.redirect(errUrl)
   }
 
   const marketId = await getMarketIdBySlug(slug)
   if (!marketId) {
-    url.searchParams.set('zip_error', '1')
-    return NextResponse.redirect(url)
+    const errUrl = req.nextUrl.clone()
+    errUrl.pathname = '/'
+    errUrl.search = ''
+    errUrl.searchParams.set('zip_error', '1')
+    return NextResponse.redirect(errUrl)
   }
 
   const res = NextResponse.redirect(url)

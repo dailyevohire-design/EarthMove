@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAudience } from './audience-context'
 
 const SERVICE_REGEXES: ReadonlyArray<RegExp> = [/^80\d{3}$/, /^75\d{3}$/, /^76\d{3}$/]
@@ -26,13 +28,14 @@ type ZipResult =
 
 export function HeroLeftColumn() {
   const { audience, setAudience } = useAudience()
+  const router = useRouter()
   const [zip, setZip] = useState('')
   const [result, setResult] = useState<ZipResult | null>(null)
 
   function handleZipSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (audience === 'homeowner') {
-      window.open('https://filldirtnearme.net', '_blank', 'noopener')
+      router.push('/material-match')
       return
     }
     const z = zip.trim()
@@ -62,7 +65,7 @@ export function HeroLeftColumn() {
         {audience === 'contractor' ? (
           <>Bulk aggregate,<br />delivered <span className="em">to the hour.</span></>
         ) : (
-          <>Homeowners — order on <span className="em">FillDirtNearMe.</span></>
+          <>Homeowners — find <span className="em">your material.</span></>
         )}
       </h1>
 
@@ -70,7 +73,7 @@ export function HeroLeftColumn() {
         {audience === 'contractor' ? (
           <>Spec-grade base, fill, and stone — quoted from the closest yard, dispatched on your schedule, photo-confirmed at the drop. <b>For contractors</b> who need it on time, and homeowners who need it once.</>
         ) : (
-          <>Homeowner ordering lives on our sister site. Same yards, same trucks, a simpler flow for one-off jobs.</>
+          <>Tell us about your project and we'll match you to the right bulk material. <b>Same yards, same trucks</b> — a simpler flow for one-off jobs.</>
         )}
       </p>
 
@@ -112,7 +115,7 @@ export function HeroLeftColumn() {
             />
           </label>
           <button type="submit" className="hv-cta" id="ctaBtn">
-            <span id="ctaLbl">{audience === 'contractor' ? 'Quote my ZIP' : 'Continue on FillDirtNearMe'}</span>
+            <span id="ctaLbl">{audience === 'contractor' ? 'Quote my ZIP' : 'Find my material'}</span>
             <span className="hv-cta-arrow"><ArrowRightIcon /></span>
           </button>
         </div>
@@ -156,6 +159,15 @@ export function HeroLeftColumn() {
           )}
         </div>
       </form>
+
+      <div className="hv-secondary-links">
+        Or{' '}
+        <Link href="/browse">browse all materials</Link>
+        {' · '}
+        <Link href="/material-match">find my material</Link>
+        {' · '}
+        <Link href="/learn">read project guides</Link>
+      </div>
 
       <div className="hv-marks">
         <span className="mk"><CheckIcon /> Photo-confirmed at drop</span>

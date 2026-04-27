@@ -205,3 +205,12 @@
 .marketing-v6 .mat:hover .mat-img img {
   filter: saturate(1.0) contrast(1.06) brightness(1.0);
 }
+
+/* Photo grading on dark commerce-panel surfaces — slightly more contrast,
+   slightly less brightness, so stock images don't look washed-out on dark bg. */
+:root {
+  --commerce-photo-grade-on-dark: saturate(0.88) contrast(1.10) brightness(0.92);
+}
+[data-surface="commerce-panel"] img {
+  filter: var(--commerce-photo-grade-on-dark);
+}
