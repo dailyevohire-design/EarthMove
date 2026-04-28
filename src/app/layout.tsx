@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
-import { DM_Sans, DM_Mono, Bricolage_Grotesque, Geist } from 'next/font/google'
+import { DM_Sans, DM_Mono, Bricolage_Grotesque, Geist, Fraunces, Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { SupportWidget } from '@/components/layout/chat-widget'
 import { PromoBanner } from '@/components/layout/promo-banner'
 import { organizationSchema, websiteSchema, jsonLd } from '@/lib/structured-data'
+import { EmDsInit } from './_em-ds-init'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -31,6 +32,29 @@ const bricolage = Bricolage_Grotesque({
 const geist = Geist({
   subsets: ['latin'],
   variable: '--font-geist',
+  weight: ['400', '500', '600'],
+  display: 'swap',
+})
+
+// EarthMove design-system primitives fonts.
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-fraunces',
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+})
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains-mono',
   weight: ['400', '500', '600'],
   display: 'swap',
 })
@@ -72,7 +96,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmMono.variable} ${bricolage.variable} ${geist.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${dmMono.variable} ${bricolage.variable} ${geist.variable} ${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
       <head>
         {/* Preconnect hints — saves ~100-300ms on TTFB for cross-origin fetches */}
         <link rel="preconnect" href="https://gaawvpzzmotimblyesfp.supabase.co" crossOrigin="" />
@@ -91,6 +115,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-white text-gray-900 antialiased min-h-screen flex flex-col">
+        <EmDsInit />
         <PromoBanner />
         {children}
         <Toaster />
