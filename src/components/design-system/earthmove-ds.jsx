@@ -1,3 +1,5 @@
+'use client';
+
 // earthmove-ds.jsx
 // EarthMove design system — primitives extracted from nine approved Design Claude surfaces:
 // /, /browse, /browse/[slug], /deals, /collections/contractor-payment-kit,
