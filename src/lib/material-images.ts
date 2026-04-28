@@ -13,6 +13,8 @@ export const MATERIAL_IMAGES: Record<string, string> = {
   'select-fill': 'https://images.unsplash.com/photo-1766595680977-fd4818afa337?w=800&q=80',
   // Topsoil → rich dark brown soil with leaves
   'topsoil': 'https://images.unsplash.com/photo-1726413280663-1b048191e88e?w=800&q=80',
+  // Screened Topsoil → reuses topsoil photo (sieved variant of same material)
+  'screened-topsoil': 'https://images.unsplash.com/photo-1726413280663-1b048191e88e?w=800&q=80',
   // Concrete Sand → coarse sandy texture with small stones
   'concrete-sand': 'https://images.unsplash.com/photo-1725996525814-6f9dc9c57f41?w=800&q=80',
   // Masonry Sand → fine white sand ripple texture
@@ -23,6 +25,8 @@ export const MATERIAL_IMAGES: Record<string, string> = {
   'pea-gravel': 'https://images.unsplash.com/photo-1760774713181-7e74c20e6d75?w=800&q=80',
   // Base Gravel #57 → crushed gray angular gravel close-up
   'base-gravel-57': 'https://images.unsplash.com/photo-1698220726355-62f370544733?w=800&q=80',
+  // #57 Stone → reuses base-gravel-57 photo (same #57 grading)
+  '57-stone': 'https://images.unsplash.com/photo-1698220726355-62f370544733?w=800&q=80',
   // Flex Base → white/gray crushed stone compacted surface
   'flex-base': 'https://images.unsplash.com/photo-1699796553666-171dea76625b?w=800&q=80',
   // Road Base → reddish cracked compacted earth
@@ -35,6 +39,8 @@ export const MATERIAL_IMAGES: Record<string, string> = {
   'rip-rap': 'https://images.unsplash.com/photo-1699032582554-7c1e6cfce1d1?w=800&q=80',
   // Crushed Concrete → concrete rubble pile
   'crushed-concrete': 'https://images.unsplash.com/photo-1639804096664-f25e8fe4a794?w=800&q=80',
+  // Recycled Base (RCA) → reuses crushed-concrete photo (RCA is recycled concrete aggregate)
+  'recycled-base': 'https://images.unsplash.com/photo-1639804096664-f25e8fe4a794?w=800&q=80',
   // Decomposed Granite → reddish-brown fine gravel texture
   'decomposed-granite': 'https://images.unsplash.com/photo-1770785555680-453fedb06f6f?w=800&q=80',
 }
