@@ -4,6 +4,7 @@ export type DealReason = 'stockpile_clear' | 'quarry_overrun' | 'weekend_window'
 
 export interface Deal {
   id: string;
+  slug: string;
   material: string;
   spec: string;
   yardName: string;
@@ -22,6 +23,7 @@ export interface Deal {
 export const DEALS: Deal[] = [
   {
     id: 'abc-flex-base-247',
+    slug: 'flex-base',
     material: 'Flex Base - 3/4 inch minus',
     spec: 'TxDOT Item 247 - Type A Gr 1-2',
     yardName: 'ABC Stone',
@@ -38,6 +40,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: 'vulcan-57-stone',
+    slug: '57-stone',
     material: 'Crushed Stone - #57',
     spec: 'ASTM C33 - washed',
     yardName: 'Vulcan Materials',
@@ -54,6 +57,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: 'mm-beckley-rip-rap',
+    slug: 'rip-rap',
     material: 'Rip-rap - 12 inch minus',
     spec: 'TxDOT Type R - erosion control',
     yardName: 'Martin Marietta',
@@ -70,6 +74,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: 'holcim-concrete-sand',
+    slug: 'concrete-sand',
     material: 'Concrete sand',
     spec: 'ASTM C33 fine aggregate',
     yardName: 'Holcim',
@@ -86,6 +91,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: 'ti-recycled-base',
+    slug: 'recycled-base',
     material: 'Recycled aggregate',
     spec: 'RCA - 2 inch minus - road base',
     yardName: 'Texas Industries',
@@ -102,6 +108,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: 'living-earth-topsoil',
+    slug: 'screened-topsoil',
     material: 'Screened topsoil',
     spec: 'No. 30 screen - landscape grade',
     yardName: 'Living Earth',

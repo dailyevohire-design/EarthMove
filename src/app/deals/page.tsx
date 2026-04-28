@@ -29,7 +29,7 @@ export default function DealsPage() {
         <div className="flex items-center gap-7 text-sm" style={{ color: 'var(--em-ink-2)' }}>
           <Link href="/browse" className="hover:underline underline-offset-4">Materials</Link>
           <Link href="/deals" className="font-semibold" style={{ color: 'var(--em-ink)' }}>Deals</Link>
-          <Link href="/orders/new" className="hover:underline underline-offset-4">Place order</Link>
+          <Link href="/browse" className="hover:underline underline-offset-4">Place order</Link>
           <Link href="/dashboard/contractor" className="hover:underline underline-offset-4">Dashboard</Link>
         </div>
       </nav>
@@ -142,7 +142,7 @@ export default function DealsPage() {
                 </div>
 
                 <a
-                  href={`/orders/new?material=${deal.id}`}
+                  href={`/browse/${deal.slug}`}
                   className="block w-full text-center py-3 rounded-[10px] font-semibold text-[14px] transition-colors"
                   style={{ background: 'var(--em-orange)', color: 'white' }}
                 >
