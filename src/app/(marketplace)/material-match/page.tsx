@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { MaterialQuiz } from '@/components/marketplace/material-quiz'
 import { breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 
@@ -33,7 +34,12 @@ export default function MaterialMatchPage() {
     <main className="bg-gray-50/30 min-h-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(crumbs) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(howTo) }} />
-      <MaterialQuiz />
+      {/* Suspense boundary: MaterialQuiz uses useSearchParams() (URL-driven
+          state machine), which forces this page into client-side bailout
+          unless a Suspense boundary lets the prerender skip the client subtree. */}
+      <Suspense fallback={<div className="bg-[#faf7f2] min-h-screen" />}>
+        <MaterialQuiz />
+      </Suspense>
     </main>
   )
 }
