@@ -6,10 +6,9 @@ import { getEarnings } from '@/lib/services/earthmove-dispatch.service'
 
 export const metadata = { title: 'Driver — earthmove.io' }
 
-// Auth gate hoisted from page.tsx so all 14 driver routes share it. The
-// previous mobile DriverShell is replaced by the desktop V2 DashShell —
-// followup #36 covers reconciling the truck-cab mobile UX (likely behind
-// /dashboard/driver/today or media-query-gated inside DashShell).
+// Auth gate hoisted from page.tsx so all 14 driver routes share it.
+// Followup #36: reconcile mobile truck-cab UX with V2 DashShell — likely
+// route truck-cab to /dashboard/driver/today or media-query-gate inside DashShell.
 export default async function DriverLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

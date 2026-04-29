@@ -15,10 +15,9 @@ export interface DashShellProps {
   children: ReactNode
 }
 
-// Wraps every authed driver route. Sits at z-[60] over the legacy mobile
-// DriverShell (z-50, position:fixed) so the V2 desktop chrome takes over.
-// Followup #36: reconcile mobile shell vs. V2 desktop shell — likely route
-// the truck-cab UX to /dashboard/driver/today and keep V2 at /dashboard/driver.
+// Wraps every authed driver route in fullscreen chrome (z-[60], inset-0).
+// Followup #36: reconcile mobile truck-cab UX vs. V2 desktop shell — likely
+// route truck-cab to /dashboard/driver/today and keep V2 at /dashboard/driver.
 export function DashShell({
   driverName,
   truckClassLabel,

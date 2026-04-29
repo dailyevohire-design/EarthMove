@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import {
-  ShieldCheck, Truck, Package, LayoutDashboard,
+  ShieldCheck, LayoutDashboard,
   ShoppingCart, LogOut, ChevronRight, ScrollText
 } from 'lucide-react'
 import { LogoMark } from '@/components/layout/logo'
@@ -15,12 +15,6 @@ const GC_NAV = [
     ? [{ href: '/collections/new',       icon: <ScrollText size={14} />,     label: 'Collections Assist' }]
     : []),
   { href: '/dashboard/gc/orders',       icon: <ShoppingCart size={14} />,    label: 'My Orders'         },
-]
-
-const DRIVER_NAV = [
-  { href: '/dashboard/driver',          icon: <LayoutDashboard size={14} />, label: 'Overview'          },
-  { href: '/dashboard/driver/loads',    icon: <Package size={14} />,         label: 'Available Loads'   },
-  { href: '/dashboard/driver/history',  icon: <Truck size={14} />,           label: 'My Deliveries'     },
 ]
 
 const CUSTOMER_NAV = [
@@ -50,8 +44,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Admins go to admin panel
   if (role === 'admin') redirect('/admin')
 
-  const nav = role === 'driver' ? DRIVER_NAV : role === 'gc' ? GC_NAV : CUSTOMER_NAV
-  const portalLabel = role === 'driver' ? 'Driver Portal' : role === 'gc' ? 'GC Portal' : 'My Account'
+  // Drivers render their own V2 chrome from src/app/dashboard/driver/layout.tsx
+  if (role === 'driver') return <>{children}</>
+
+  const nav = role === 'gc' ? GC_NAV : CUSTOMER_NAV
+  const portalLabel = role === 'gc' ? 'GC Portal' : 'My Account'
 
   return (
     <div className="min-h-screen flex bg-gray-50">
