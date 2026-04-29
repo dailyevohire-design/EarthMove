@@ -1,11 +1,53 @@
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
 import { QuantityCalculator } from '@/components/marketplace/quantity-calculator'
 import { getArticleImage } from '@/lib/material-images'
 import { ArrowRight, CheckCircle2, AlertTriangle, Clock, ChevronRight } from 'lucide-react'
 import { articleSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
+import {
+  type Article,
+  getArticleBySlug,
+  getSuccessorForLegacySlug,
+} from '@/lib/learn/articles'
 
 interface Props { params: Promise<{ slug: string }> }
+
+function StubArticleBody({ article }: { article: Article }) {
+  return (
+    <div className="prose prose-stone max-w-none py-12">
+      <p className="text-lg text-stone-700">
+        We&apos;re working on this guide. In the meantime, here&apos;s what you came for:
+      </p>
+      <h2 className="font-fraunces text-3xl mt-8">{article.title}</h2>
+      <p className="text-stone-600 text-lg leading-relaxed">
+        {article.description}
+      </p>
+      <div className="mt-12 p-6 bg-emerald-50 rounded-xl border border-emerald-100">
+        <h3 className="font-fraunces text-xl mb-2">
+          Need this answered now?
+        </h3>
+        <p className="text-stone-700 mb-4">
+          Browse the materials this article covers, or reach out to our specialists.
+        </p>
+        <div className="flex gap-3">
+          <Link
+            href="/browse"
+            className="inline-flex items-center px-5 py-3 bg-emerald-700 text-white rounded-lg font-medium hover:bg-emerald-800 transition"
+          >
+            Browse materials
+            <ArrowRight className="ml-2 w-4 h-4" />
+          </Link>
+          <Link
+            href="/material-match"
+            className="inline-flex items-center px-5 py-3 border border-stone-300 text-stone-800 rounded-lg font-medium hover:bg-stone-50 transition"
+          >
+            Find my material
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 /* ──────────────────────────────────────────────────────────────────────────────
    ARTICLE CONTENT FUNCTIONS
@@ -606,266 +648,6 @@ function FrenchDrainGuide() {
   )
 }
 
-function HowMuchGravelGuide() {
-  return (
-    <>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        Ordering gravel is not like ordering pizza — you cannot just call and say &quot;a large, please.&quot; Order
-        too little and your project grinds to a halt while you wait for a second delivery. Order too much
-        and you are paying for material that sits in a pile in your yard. Getting the quantity right is one
-        of the most important parts of any aggregate project, and it is simpler than you think once you
-        understand the formula.
-      </p>
-
-      <h2 className="text-2xl font-extrabold text-gray-900 mt-10 mb-4">The Formula, Explained Simply</h2>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        Every gravel calculation comes down to three numbers: length, width, and depth. Here is the formula
-        in plain English:
-      </p>
-
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 my-6">
-        <h4 className="font-bold text-emerald-800 mb-3">The Gravel Formula</h4>
-        <p className="text-emerald-800 font-mono text-lg mb-3">
-          Length (ft) x Width (ft) x Depth (in) / 12 = Cubic Feet
-        </p>
-        <p className="text-emerald-800 font-mono text-lg mb-3">
-          Cubic Feet / 27 = Cubic Yards
-        </p>
-        <p className="text-emerald-800 font-mono text-lg mb-3">
-          Cubic Yards x 1.4 = Tons (for most gravel)
-        </p>
-        <p className="text-emerald-700 text-sm mt-3">
-          The 1.4 multiplier is the average density of gravel in tons per cubic yard. This varies by material — see the coverage chart below for specific densities.
-        </p>
-      </div>
-
-      <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">Let&apos;s Walk Through an Example</h3>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        Say you need to cover a 20-foot by 30-foot patio area with 3 inches of pea gravel:
-      </p>
-      <ul className="space-y-2 mb-6">
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Step 1:</strong> 20 x 30 x (3/12) = 150 cubic feet</span></li>
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Step 2:</strong> 150 / 27 = 5.56 cubic yards</span></li>
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Step 3:</strong> 5.56 x 1.4 = 7.78 tons</span></li>
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Step 4:</strong> Add 10% overage: 7.78 x 1.1 = 8.56 tons. Round up to <strong>8.6 tons</strong>.</span></li>
-      </ul>
-
-      <h2 className="text-2xl font-extrabold text-gray-900 mt-10 mb-4">Quick Reference Chart for Common Projects</h2>
-      <div className="overflow-x-auto mb-6">
-        <table className="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="text-left p-3 font-bold text-gray-900">Project</th>
-              <th className="text-left p-3 font-bold text-gray-900">Typical Dimensions</th>
-              <th className="text-left p-3 font-bold text-gray-900">Depth</th>
-              <th className="text-left p-3 font-bold text-gray-900">Cubic Yards</th>
-              <th className="text-left p-3 font-bold text-gray-900">Tons</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-t border-gray-100"><td className="p-3 text-gray-700">Single-car driveway</td><td className="p-3 text-gray-700">10 x 40 ft</td><td className="p-3 text-gray-700">4&quot;</td><td className="p-3 text-gray-700">4.9</td><td className="p-3 text-gray-700">6.9</td></tr>
-            <tr className="border-t border-gray-100 bg-gray-50"><td className="p-3 text-gray-700">Two-car driveway</td><td className="p-3 text-gray-700">20 x 40 ft</td><td className="p-3 text-gray-700">4&quot;</td><td className="p-3 text-gray-700">9.9</td><td className="p-3 text-gray-700">13.8</td></tr>
-            <tr className="border-t border-gray-100"><td className="p-3 text-gray-700">Patio</td><td className="p-3 text-gray-700">12 x 12 ft</td><td className="p-3 text-gray-700">3&quot;</td><td className="p-3 text-gray-700">1.3</td><td className="p-3 text-gray-700">1.9</td></tr>
-            <tr className="border-t border-gray-100 bg-gray-50"><td className="p-3 text-gray-700">Walkway</td><td className="p-3 text-gray-700">3 x 30 ft</td><td className="p-3 text-gray-700">3&quot;</td><td className="p-3 text-gray-700">0.8</td><td className="p-3 text-gray-700">1.2</td></tr>
-            <tr className="border-t border-gray-100"><td className="p-3 text-gray-700">French drain (50 ft)</td><td className="p-3 text-gray-700">1 x 50 ft</td><td className="p-3 text-gray-700">18&quot;</td><td className="p-3 text-gray-700">2.8</td><td className="p-3 text-gray-700">3.9</td></tr>
-            <tr className="border-t border-gray-100 bg-gray-50"><td className="p-3 text-gray-700">Small parking area</td><td className="p-3 text-gray-700">20 x 20 ft</td><td className="p-3 text-gray-700">6&quot;</td><td className="p-3 text-gray-700">7.4</td><td className="p-3 text-gray-700">10.4</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h2 className="text-2xl font-extrabold text-gray-900 mt-10 mb-4">Why You Should Always Order 10% Extra</h2>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        We recommend ordering 10 percent more material than your calculated amount. Here is why:
-      </p>
-      <ul className="space-y-2 mb-6">
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Compaction loss:</strong> Gravel compacts 5 to 10 percent when you run a plate compactor or roller over it. What looked like 4 inches of material becomes 3.5 inches.</span></li>
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Uneven subgrade:</strong> Even if you grade your subgrade carefully, there are always low spots and dips that eat up extra material.</span></li>
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Spreading loss:</strong> Some material migrates beyond your project boundaries during installation, especially on edges without containment.</span></li>
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Second delivery costs:</strong> If you run short, a second delivery typically costs as much as the first in delivery fees — often $75 to $150 for a small top-up load.</span></li>
-      </ul>
-
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 my-6">
-        <div className="flex items-start gap-2">
-          <AlertTriangle size={18} className="text-amber-600 mt-0.5 flex-shrink-0" />
-          <p className="text-amber-800"><strong>Pro tip:</strong> Running short is always more expensive than having a small pile left over. A leftover half-ton of gravel is useful for future fill-ins and maintenance. A half-ton shortfall means a $150 delivery for $30 worth of material.</p>
-        </div>
-      </div>
-
-      <h2 className="text-2xl font-extrabold text-gray-900 mt-10 mb-4">Coverage by Material Type</h2>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        Different materials have different densities, which means 1 cubic yard of each material weighs a
-        different amount in tons. Here is a reference chart for common materials:
-      </p>
-      <div className="overflow-x-auto mb-6">
-        <table className="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="text-left p-3 font-bold text-gray-900">Material</th>
-              <th className="text-left p-3 font-bold text-gray-900">Tons per Cubic Yard</th>
-              <th className="text-left p-3 font-bold text-gray-900">Sq Ft per Ton at 2&quot;</th>
-              <th className="text-left p-3 font-bold text-gray-900">Sq Ft per Ton at 4&quot;</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-t border-gray-100"><td className="p-3 text-gray-700">Crushed Limestone</td><td className="p-3 text-gray-700">1.5</td><td className="p-3 text-gray-700">108</td><td className="p-3 text-gray-700">54</td></tr>
-            <tr className="border-t border-gray-100 bg-gray-50"><td className="p-3 text-gray-700">Pea Gravel</td><td className="p-3 text-gray-700">1.4</td><td className="p-3 text-gray-700">116</td><td className="p-3 text-gray-700">58</td></tr>
-            <tr className="border-t border-gray-100"><td className="p-3 text-gray-700">Flex Base</td><td className="p-3 text-gray-700">1.5</td><td className="p-3 text-gray-700">108</td><td className="p-3 text-gray-700">54</td></tr>
-            <tr className="border-t border-gray-100 bg-gray-50"><td className="p-3 text-gray-700">River Rock</td><td className="p-3 text-gray-700">1.35</td><td className="p-3 text-gray-700">120</td><td className="p-3 text-gray-700">60</td></tr>
-            <tr className="border-t border-gray-100"><td className="p-3 text-gray-700">Decomposed Granite</td><td className="p-3 text-gray-700">1.4</td><td className="p-3 text-gray-700">116</td><td className="p-3 text-gray-700">58</td></tr>
-            <tr className="border-t border-gray-100 bg-gray-50"><td className="p-3 text-gray-700">Fill Dirt</td><td className="p-3 text-gray-700">1.1</td><td className="p-3 text-gray-700">147</td><td className="p-3 text-gray-700">74</td></tr>
-            <tr className="border-t border-gray-100"><td className="p-3 text-gray-700">Sand</td><td className="p-3 text-gray-700">1.35</td><td className="p-3 text-gray-700">120</td><td className="p-3 text-gray-700">60</td></tr>
-            <tr className="border-t border-gray-100 bg-gray-50"><td className="p-3 text-gray-700">Crushed Concrete</td><td className="p-3 text-gray-700">1.3</td><td className="p-3 text-gray-700">125</td><td className="p-3 text-gray-700">62</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h2 className="text-2xl font-extrabold text-gray-900 mt-10 mb-4">Calculate Your Project Now</h2>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        Enter your project dimensions below and our calculator will do the math for you — including the 10
-        percent overage buffer and estimated cost.
-      </p>
-      <div className="my-6">
-        <QuantityCalculator materialName="Gravel" unit="ton" pricePerUnit={22} densityTonsPerCY={1.4} orderUrl="/browse" />
-      </div>
-
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 my-6">
-        <h4 className="font-bold text-emerald-800 mb-3">Calculating for Irregular Shapes</h4>
-        <p className="text-emerald-800 mb-2">If your project area is not a simple rectangle, break it into rectangles and calculate each section separately. For example, an L-shaped driveway can be split into two rectangles. Add the cubic yards together for your total order.</p>
-        <p className="text-emerald-800">For circular areas (like a fire pit surround), use: radius x radius x 3.14 x depth (in feet) / 27 = cubic yards.</p>
-      </div>
-    </>
-  )
-}
-
-function SpringProjectGuide() {
-  return (
-    <>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        Spring is the most popular time of year for outdoor projects, and for good reason — the ground has
-        thawed, the weather is cooperative, and you have the full summer ahead to enjoy your improvements.
-        But spring is also when material prices start climbing, lead times increase, and contractors get
-        booked out for weeks. The homeowners who plan ahead in February and March save significantly
-        compared to those who wait until May.
-      </p>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        This guide covers the top spring projects by region, when to order for the best pricing, and how to
-        avoid the supply crunch that hits every year like clockwork.
-      </p>
-
-      <h2 className="text-2xl font-extrabold text-gray-900 mt-10 mb-4">Why Spring Is the Best Time for Outdoor Projects</h2>
-      <ul className="space-y-2 mb-6">
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Ground conditions are ideal.</strong> The soil is moist but not saturated, making excavation and grading easier than mid-summer when the ground bakes hard.</span></li>
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Moderate temperatures.</strong> Working in 65 to 80 degrees is dramatically easier than in 95-degree heat. Materials compact better, concrete cures more evenly, and plants establish faster.</span></li>
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Full growing season ahead.</strong> Grass seed planted in spring has 6 months of growing weather to establish before winter dormancy.</span></li>
-        <li className="flex items-start gap-2 text-gray-600"><CheckCircle2 size={16} className="text-emerald-500 mt-1 flex-shrink-0" /><span><strong>Enjoy it all summer.</strong> A patio built in April gives you 5 months of use this year. One built in September gives you 5 weeks.</span></li>
-      </ul>
-
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 my-6">
-        <div className="flex items-start gap-2 mb-3">
-          <AlertTriangle size={18} className="text-amber-600 mt-0.5" />
-          <h4 className="font-bold text-amber-800">2025 Price Trend Warning</h4>
-        </div>
-        <p className="text-amber-800 mb-2">
-          Aggregate material prices typically increase 12 to 18 percent between March and June as demand
-          surges. Diesel fuel costs (which directly impact delivery fees) historically peak in late spring.
-          In 2024, we saw an average 15 percent price increase on crushed stone products between February
-          and May across our markets.
-        </p>
-        <p className="text-amber-800 font-bold">
-          Ordering in March or April versus waiting until June can save you $200 to $500 on a typical
-          residential project — material cost plus delivery fees.
-        </p>
-      </div>
-
-      <h2 className="text-2xl font-extrabold text-gray-900 mt-10 mb-4">Top 8 Spring Projects by Region</h2>
-
-      <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">1. Driveway Repair and Resurfacing (All Regions)</h3>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        Winter takes a toll on gravel driveways. Freeze-thaw cycles heave material, snowplows scrape away
-        the surface layer, and spring rains wash fines into low spots. Most gravel driveways need 1 to 2
-        inches of fresh surface material every 2 to 3 years. Spring is the time to fill ruts, re-grade the
-        crown, and add a fresh top layer. Order 1 to 3 tons for a typical resurfacing job.
-      </p>
-
-      <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">2. New Patio Installation (South and West)</h3>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        A gravel or paver patio is one of the highest-value improvements you can make to your outdoor living
-        space. In southern states, start as early as March to avoid the summer heat. You will need a compacted
-        base layer (flex base or crushed limestone, 4 to 6 inches) plus your surface material. Most patios
-        require 3 to 8 tons of material total.
-      </p>
-
-      <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">3. French Drain Installation (Gulf Coast and Southeast)</h3>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        If your yard flooded during winter rains, now is the time to install a French drain before spring
-        storms make the problem worse. Order clean #57 stone — typically 3 to 5 tons for a 50-foot
-        residential drain. Complete this project before the heavy spring rains arrive.
-      </p>
-
-      <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">4. Raised Garden Beds (All Regions)</h3>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        The gardening season kicks off in spring, and raised beds need quality topsoil or garden blend.
-        A standard 4 x 8 foot raised bed, 12 inches deep, needs about 1 cubic yard of topsoil. If you
-        are building multiple beds, order in bulk — you will save 30 to 50 percent per yard compared to
-        bagged soil from a home center.
-      </p>
-
-      <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">5. Walkway and Path Construction (All Regions)</h3>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        Pea gravel or decomposed granite walkways are affordable and attractive. A 3-foot-wide, 50-foot-long
-        path at 3 inches deep requires about 1.4 cubic yards (roughly 2 tons). Add steel edging to keep the
-        material contained and the path looking crisp for years.
-      </p>
-
-      <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">6. Yard Grading and Drainage Correction (All Regions)</h3>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        If water pools near your foundation, spring is the season to re-grade your yard before the problem
-        causes structural damage. Most grading projects need fill dirt as the base material, then topsoil
-        for the growing surface. Plan on 5 to 20 cubic yards depending on the severity.
-      </p>
-
-      <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">7. New Lawn Installation (North and Midwest)</h3>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        In northern states, late April through May is the prime window for seeding cool-season grasses.
-        You need quality screened topsoil — 4 to 6 inches deep — for grass to establish strong roots.
-        For a typical 2,000-square-foot lawn area, that is 12 to 18 cubic yards of topsoil.
-      </p>
-
-      <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">8. Erosion Control (Mountain and Hill Country)</h3>
-      <p className="text-gray-600 leading-relaxed mb-4">
-        Spring rains on bare slopes cause significant erosion. Rip rap (large angular stone, 4 to 12 inches)
-        stabilizes slopes and channels. For smaller areas, crushed limestone or flex base at the base of
-        slopes redirects water. Address erosion early — it only gets worse with each rain event.
-      </p>
-
-      <h2 className="text-2xl font-extrabold text-gray-900 mt-10 mb-4">Your Spring Project Timeline</h2>
-      <div className="space-y-3 mb-6">
-        <div className="flex gap-4 items-start">
-          <div className="flex-shrink-0 w-20 text-xs font-bold text-emerald-600 bg-emerald-50 rounded-lg px-2 py-1.5 text-center">FEB–MAR</div>
-          <p className="text-gray-600 text-sm"><strong>Plan and quote.</strong> Measure your project, calculate materials, and get pricing. This is when availability is best and prices are lowest.</p>
-        </div>
-        <div className="flex gap-4 items-start">
-          <div className="flex-shrink-0 w-20 text-xs font-bold text-emerald-600 bg-emerald-50 rounded-lg px-2 py-1.5 text-center">MAR–APR</div>
-          <p className="text-gray-600 text-sm"><strong>Order and schedule delivery.</strong> Lock in pricing and get on the delivery schedule before the spring rush. Book any rental equipment (plate compactor, mini excavator) now.</p>
-        </div>
-        <div className="flex gap-4 items-start">
-          <div className="flex-shrink-0 w-20 text-xs font-bold text-emerald-600 bg-emerald-50 rounded-lg px-2 py-1.5 text-center">APR–MAY</div>
-          <p className="text-gray-600 text-sm"><strong>Build.</strong> Execute your project during the prime weather window. Ground conditions are perfect and you have long daylight hours to work.</p>
-        </div>
-        <div className="flex gap-4 items-start">
-          <div className="flex-shrink-0 w-20 text-xs font-bold text-emerald-600 bg-emerald-50 rounded-lg px-2 py-1.5 text-center">JUN+</div>
-          <p className="text-gray-600 text-sm"><strong>Enjoy.</strong> Your project is done before the peak heat, and you have the whole summer to use it.</p>
-        </div>
-      </div>
-
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 my-6">
-        <h4 className="font-bold text-emerald-800 mb-3">Order Smart, Save Big</h4>
-        <p className="text-emerald-800">On EarthMove, you can browse materials, see real-time pricing for your area, and schedule delivery on your timeline. Order early in the season to lock in the best rates and guarantee availability. Our suppliers prioritize orders placed in advance over last-minute requests.</p>
-      </div>
-    </>
-  )
-}
-
 function GravelCalculatorPage() {
   return (
     <>
@@ -1291,78 +1073,16 @@ function WrongMaterialStory() {
    ARTICLES REGISTRY
    ────────────────────────────────────────────────────────────────────────────── */
 
-const ARTICLES: Record<string, {
-  title: string
-  description: string
-  image: string
-  readTime: string
-  category: string
-  content: () => React.ReactNode
-}> = {
-  'driveway-gravel-guide': {
-    title: 'The Complete Guide to Driveway Gravel in 2025',
-    description: 'Everything you need to know about choosing, calculating, and installing the right driveway material.',
-    image: 'https://images.unsplash.com/photo-1558618047-3c37c2d3b4b0?w=1200&q=80&fit=crop',
-    readTime: '12 min read',
-    category: 'Homeowner',
-    content: DrivewayGravelGuide,
-  },
-  'fill-dirt-vs-topsoil': {
-    title: 'Fill Dirt vs Topsoil: Which One Do You Actually Need?',
-    description: 'The difference could save you thousands. Here\'s how to choose the right material for your project.',
-    image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200&q=80',
-    readTime: '8 min read',
-    category: 'Homeowner',
-    content: FillDirtVsTopsoil,
-  },
-  'french-drain-materials': {
-    title: 'Best Materials for French Drains and Drainage Projects',
-    description: 'Stop water damage before it starts. The complete guide to drainage materials.',
-    image: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=1200&q=80&fit=crop',
-    readTime: '10 min read',
-    category: 'Homeowner',
-    content: FrenchDrainGuide,
-  },
-  'how-much-gravel-do-i-need': {
-    title: 'How Much Gravel Do I Need? The Ultimate Calculator Guide',
-    description: 'Never over-order or under-order again. Calculate exactly what your project needs.',
-    image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=1200&q=80&fit=crop',
-    readTime: '6 min read',
-    category: 'Calculator',
-    content: HowMuchGravelGuide,
-  },
-  'spring-project-guide-2025': {
-    title: '2025 Spring Project Guide: What to Order and When',
-    description: 'Beat the price increases. Your seasonal planning guide for spring projects.',
-    image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200&q=80&fit=crop',
-    readTime: '9 min read',
-    category: 'Seasonal',
-    content: SpringProjectGuide,
-  },
-  'gravel-calculator': {
-    title: 'Free Gravel and Aggregate Calculator',
-    description: 'Calculate cubic yards, tons, and truckloads for any project. Free tool.',
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=80&fit=crop',
-    readTime: '2 min',
-    category: 'Calculator',
-    content: GravelCalculatorPage,
-  },
-  'material-grades-explained': {
-    title: 'Understanding Aggregate Grades: A Contractor\'s Guide',
-    description: '#57 stone, #67 stone, Grade 1 flex base — what do these numbers actually mean?',
-    image: 'https://images.unsplash.com/photo-1568283096533-078a24bde253?w=1200&q=80&fit=crop',
-    readTime: '7 min read',
-    category: 'Contractor',
-    content: MaterialGradesGuide,
-  },
-  'ordering-wrong-material': {
-    title: 'The $3,000 Mistake: What Happens When You Order the Wrong Material',
-    description: 'Real stories of costly material mistakes — and how to avoid them.',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80&fit=crop',
-    readTime: '8 min read',
-    category: 'Homeowner',
-    content: WrongMaterialStory,
-  },
+// Body components keyed by canonical slug. All other registry fields
+// (title, description, image, readTime, category) come from
+// @/lib/learn/articles. Stub articles render StubArticleBody instead.
+const BODY_REGISTRY: Record<string, () => React.ReactNode> = {
+  'driveway-gravel-complete-guide-2026': DrivewayGravelGuide,
+  'fill-dirt-vs-topsoil': FillDirtVsTopsoil,
+  'best-materials-french-drains': FrenchDrainGuide,
+  'cubic-yards-calculator': GravelCalculatorPage,
+  'aggregate-grades-explained-57-67-flex-base': MaterialGradesGuide,
+  'three-thousand-dollar-mistake': WrongMaterialStory,
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────
@@ -1371,40 +1091,85 @@ const ARTICLES: Record<string, {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params
-  const article = ARTICLES[slug]
-  if (!article) return { title: 'Not Found' }
+  const article = getArticleBySlug(slug)
+
+  if (!article) {
+    // Legacy slug — return canonical metadata so social sharing of legacy
+    // URLs uses the right title/image.
+    const successor = getSuccessorForLegacySlug(slug)
+    if (successor) {
+      return {
+        title: `${successor.title} | EarthMove`,
+        description: successor.description,
+        alternates: { canonical: `/learn/${successor.slug}` },
+        openGraph: {
+          title: successor.title,
+          description: successor.description,
+          type: 'article',
+          images: [{ url: getArticleImage(successor.slug) }],
+        },
+      }
+    }
+    return { title: 'Article not found | EarthMove' }
+  }
+
   return {
-    title: article.title,
+    title: `${article.title} | EarthMove`,
     description: article.description,
-    alternates: { canonical: `/learn/${slug}` },
+    alternates: { canonical: `/learn/${article.slug}` },
     openGraph: {
       title: article.title,
       description: article.description,
       type: 'article',
-      images: [article.image],
+      images: [{ url: getArticleImage(article.slug) }],
     },
   }
 }
 
 export default async function LearnArticlePage({ params }: Props) {
   const { slug } = await params
-  const article = ARTICLES[slug]
+
+  // Legacy slug → 308 permanent redirect to canonical.
+  // Must run BEFORE getArticleBySlug since legacy slugs aren't in
+  // the canonical-keyed registry.
+  const successor = getSuccessorForLegacySlug(slug)
+  if (successor) {
+    permanentRedirect(`/learn/${successor.slug}`)
+  }
+
+  const article = getArticleBySlug(slug)
   if (!article) notFound()
 
-  const Content = article.content
+  const heroImage = getArticleImage(article.slug)
   const schema = articleSchema({
     title: article.title,
     description: article.description,
-    slug,
-    image: article.image,
+    slug: article.slug,
+    image: heroImage,
     category: article.category,
-    readTime: article.readTime,
+    readTime: `${article.readTime} min read`,
   })
   const crumbs = breadcrumbSchema([
     { name: 'Home', url: '/' },
     { name: 'Learn', url: '/learn' },
-    { name: article.title, url: `/learn/${slug}` },
+    { name: article.title, url: `/learn/${article.slug}` },
   ])
+
+  // Body resolution: stub → StubArticleBody, canonical → BODY_REGISTRY.
+  // Defensive fallback: if registry says non-stub but BODY_REGISTRY has no
+  // body (code bug, not user input), render stub rather than crash.
+  let bodyNode: React.ReactNode
+  if (article.isStub) {
+    bodyNode = <StubArticleBody article={article} />
+  } else {
+    const Body = BODY_REGISTRY[article.slug]
+    if (Body) {
+      bodyNode = <Body />
+    } else {
+      console.error(`[learn] Missing body in BODY_REGISTRY for canonical slug: ${article.slug}`)
+      bodyNode = <StubArticleBody article={article} />
+    }
+  }
 
   return (
     <article className="bg-white">
@@ -1412,12 +1177,12 @@ export default async function LearnArticlePage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(crumbs) }} />
       {/* Hero */}
       <div className="relative h-[300px] md:h-[400px] overflow-hidden">
-        <img src={getArticleImage(slug)} alt={article.title} className="absolute inset-0 w-full h-full object-cover" />
+        <img src={heroImage} alt={article.title} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div className="absolute bottom-0 inset-x-0 p-6 md:p-10 max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-3">
-            <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold">{article.category}</span>
-            <span className="text-white/70 text-xs flex items-center gap-1"><Clock size={11} /> {article.readTime}</span>
+            <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold capitalize">{article.category}</span>
+            <span className="text-white/70 text-xs flex items-center gap-1"><Clock size={11} /> {article.readTime} min read</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white leading-tight">{article.title}</h1>
         </div>
@@ -1425,7 +1190,7 @@ export default async function LearnArticlePage({ params }: Props) {
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 md:py-14">
-        <Content />
+        {bodyNode}
 
         {/* CTA */}
         <div className="mt-12 bg-emerald-600 rounded-2xl p-8 text-center">
