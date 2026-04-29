@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Materials · Dallas-Fort Worth · EarthMove.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400..700;1,400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1ECE2; --paper-2:#E9E3D5; --card:#FFFFFF; --card-muted:#F6F2E8;
+    --panel:#14322A; --panel-2:#0F2920; --panel-grid:rgba(255,255,255,0.045);
+    --ink:#15201B; --ink-2:#2A332E; --ink-3:#5C645F; --ink-on-panel:#F1ECE2; --ink-on-panel-2:#A9B4AC;
+    --orange:#E5701B; --orange-press:#C95F12; --emerald:#2DB37A; --emerald-soft:#1F8A5C; --amber:#E0A52A;
+    --hair:#D8D2C4; --hair-strong:#C8C0AC;
+    --display:'Fraunces',serif; --sans:'Inter',-apple-system,system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;}
+
+  /* ---------- Nav ---------- */
+  nav.top{background:var(--paper);border-bottom:1px solid var(--hair);position:relative;z-index:5;}
+  nav.top .wrap{max-width:1440px;margin:0 auto;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;}
+  .wordmark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-0.01em;color:var(--ink);display:inline-flex;align-items:baseline;}
+  .wordmark .leaf{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--emerald-soft);margin-right:8px;transform:translateY(-1px);}
+  .wordmark .dot{color:var(--emerald-soft);}
+  nav.top ul{display:flex;gap:32px;list-style:none;margin:0;padding:0;font-size:14px;color:var(--ink-2);}
+  nav.top ul a{display:inline-flex;align-items:center;gap:6px;}
+  nav.top ul a.active{color:var(--ink);font-weight:600;position:relative;}
+  nav.top ul a.active::after{content:"";position:absolute;left:0;right:0;bottom:-22px;height:2px;background:var(--ink);}
+  nav.top .right{display:flex;align-items:center;gap:14px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;font-weight:600;font-size:14px;padding:10px 16px;border:1px solid transparent;cursor:pointer;white-space:nowrap;font-family:var(--sans);}
+  .btn-primary{background:var(--orange);color:#fff;}
+  .btn-primary:hover{background:var(--orange-press);}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--ink);}
+  .btn-link{background:transparent;color:var(--ink-2);padding:0;font-weight:500;}
+
+  /* ---------- Page wrap ---------- */
+  .page{max-width:1440px;margin:0 auto;padding:0 40px;}
+  .section-label{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-2);display:inline-flex;align-items:center;gap:10px;white-space:nowrap;}
+  .section-label::before{content:"";width:18px;height:1.5px;background:var(--ink-2);display:inline-block;}
+  .section-label.muted{color:var(--ink-3);} .section-label.muted::before{background:var(--ink-3);}
+
+  /* ---------- HERO BAND ---------- */
+  .hero-band{padding:40px 0 28px;display:grid;grid-template-columns:1.4fr 1fr;gap:48px;align-items:end;}
+  .hero-band h1{font-family:var(--display);font-weight:600;font-size:62px;line-height:0.96;letter-spacing:-0.02em;margin:14px 0 18px;color:var(--ink);max-width:18ch;}
+  .hero-band h1 em{font-style:italic;font-weight:500;}
+  .hero-band .lede{font-size:16px;color:var(--ink-2);line-height:1.55;margin:0 0 18px;max-width:52ch;text-wrap:pretty;}
+  .hero-band .lede b{color:var(--ink);font-weight:600;}
+  .hero-band .lozenge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .lozenge{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;background:var(--card);color:var(--ink);border:1px solid var(--hair);border-radius:5px;padding:5px 9px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+  .lozenge.dark{background:var(--panel);color:var(--ink-on-panel);border-color:transparent;}
+  .lozenge.solid-emerald{background:var(--emerald-soft);color:#fff;border-color:transparent;}
+  .lozenge.solid-orange{background:var(--orange);color:#fff;border-color:transparent;}
+  .lozenge.solid-emerald .d, .lozenge.dark .d{width:5px;height:5px;border-radius:999px;background:var(--emerald);}
+
+  .hero-band .ops-card{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;}
+  .hero-band .ops-card .l{font-family:var(--mono);font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .hero-band .ops-card .v{font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:-0.015em;color:var(--ink);line-height:1.15;margin-top:2px;}
+  .hero-band .ops-card .v small{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--ink-3);margin-left:4px;}
+  .hero-band .ops-card .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-top:1px;letter-spacing:0.04em;}
+
+  /* ---------- DEALS CARROUSEL ---------- */
+  .deals-section{margin-top:36px;background:var(--panel);color:var(--ink-on-panel);border-radius:24px;padding:28px 32px;
+    background-image:linear-gradient(var(--panel-grid) 1px,transparent 1px),linear-gradient(90deg,var(--panel-grid) 1px,transparent 1px);
+    background-size:28px 28px;}
+  .deals-section .head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:20px;}
+  .deals-section .section-label{color:var(--emerald);}
+  .deals-section .section-label::before{background:var(--emerald);}
+  .deals-section h2{font-family:var(--display);font-size:32px;font-weight:600;letter-spacing:-0.02em;margin:8px 0 0;line-height:1.1;color:#fff;max-width:24ch;}
+  .deals-section h2 em{font-style:italic;font-weight:500;color:var(--orange);}
+  .deals-section .head a{font-family:var(--mono);font-size:11.5px;letter-spacing:0.06em;color:var(--orange);font-weight:600;text-transform:uppercase;}
+  .deals-section .head a:hover{color:#fff;}
+  .deals-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+
+  .deal-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:background .15s, border-color .15s;}
+  .deal-card:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.20);}
+  .deal-card .reason{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--orange);background:rgba(229,112,27,0.10);border:1px solid rgba(229,112,27,0.30);border-radius:4px;padding:3px 7px;align-self:flex-start;}
+  .deal-card .name{font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:-0.015em;line-height:1.1;color:#fff;margin-top:6px;}
+  .deal-card .price-row{display:flex;align-items:baseline;gap:8px;margin-top:6px;}
+  .deal-card .price{font-family:var(--display);font-size:30px;font-weight:600;color:#fff;letter-spacing:-0.02em;line-height:1;}
+  .deal-card .unit{font-family:var(--mono);font-size:11px;color:var(--ink-on-panel-2);letter-spacing:0.04em;}
+  .deal-card .strike{font-family:var(--display);font-size:14px;color:var(--ink-on-panel-2);text-decoration:line-through;text-decoration-color:rgba(255,255,255,0.30);margin-left:auto;}
+  .deal-card .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-on-panel-2);letter-spacing:0.04em;margin-top:6px;border-top:1px solid rgba(255,255,255,0.10);padding-top:10px;line-height:1.5;}
+  .deal-card .meta b{color:#fff;font-weight:600;}
+  .deal-card .arr{margin-top:4px;font-family:var(--mono);font-size:11px;color:var(--orange);letter-spacing:0.04em;font-weight:600;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;}
+
+  /* ---------- STICKY CATEGORY FILTER ---------- */
+  .filter-bar{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--hair);z-index:4;margin:32px 0 0;padding:14px 0;}
+  .filter-row{display:flex;align-items:center;gap:8px;overflow-x:auto;padding-bottom:2px;}
+  .filter-pill{background:transparent;border:1px solid var(--hair);border-radius:999px;padding:8px 14px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink-2);white-space:nowrap;display:inline-flex;align-items:center;gap:8px;}
+  .filter-pill .count{font-family:var(--mono);font-size:11px;color:var(--ink-3);font-weight:600;}
+  .filter-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .filter-pill.active .count{color:rgba(241,236,226,0.65);}
+  .filter-pill:hover:not(.active){border-color:var(--ink-3);}
+
+  /* ---------- CATEGORY GROUP ---------- */
+  .cat-group{margin-top:36px;}
+  .cat-group .group-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:14px;}
+  .cat-group .group-head .left{display:flex;flex-direction:column;gap:8px;}
+  .cat-group h3{font-family:var(--display);font-size:32px;font-weight:600;letter-spacing:-0.02em;margin:0;line-height:1.1;color:var(--ink);}
+  .cat-group h3 em{font-style:italic;font-weight:500;}
+  .cat-group .group-head .meta{font-family:var(--mono);font-size:11px;letter-spacing:0.04em;color:var(--ink-3);}
+  .cat-group .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+
+  /* ---------- TILE ---------- */
+  .tile{background:var(--card);border:1px solid var(--hair);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .15s ease, box-shadow .15s ease, border-color .15s;}
+  .tile:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(20,32,27,0.10);border-color:var(--hair-strong);}
+  .tile:hover .tile-img-wrap .img{transform:scale(1.04);}
+  .tile:hover .view-link{color:var(--orange);}
+  .tile-img-wrap{position:relative;aspect-ratio:16 / 11;overflow:hidden;}
+  .tile-img-wrap .img{position:absolute;inset:0;transition:transform .35s ease;}
+  /* category-specific image gradients (placeholders for real photography) */
+  .img.flex-base{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.10), transparent 55%), linear-gradient(135deg,#a18d6a 0%,#7d6a4a 35%,#52432d 70%,#322617 100%);}
+  .img.recycled-base{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.10), transparent 55%), linear-gradient(135deg,#867d6e 0%,#605648 40%,#3a3328 100%);}
+  .img.crushed-lime-base{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.12), transparent 55%), linear-gradient(135deg,#b9ad8e 0%,#8e7f60 35%,#56492e 70%,#322617 100%);}
+  .img.fill-dirt{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.08), transparent 55%), linear-gradient(135deg,#7a5e3f 0%,#4a3825 50%,#251c11 100%);}
+  .img.topsoil{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.10), transparent 55%), linear-gradient(135deg,#5c4527 0%,#382913 50%,#1c1408 100%);}
+  .img.stab-sand{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.16), transparent 55%), linear-gradient(135deg,#caa572 0%,#9a7c4d 40%,#5e4a2a 100%);}
+  .img.clean-fill{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.10), transparent 55%), linear-gradient(135deg,#8b7c66 0%,#5d503e 45%,#33291b 100%);}
+  .img.concrete-sand{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.20), transparent 55%), linear-gradient(135deg,#deca9d 0%,#ad9568 40%,#705a35 100%);}
+  .img.mason-sand{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.20), transparent 55%), linear-gradient(135deg,#e6cd9a 0%,#b59766 40%,#7c623a 100%);}
+  .img.bedding-sand{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.18), transparent 55%), linear-gradient(135deg,#d4ba85 0%,#a3884f 40%,#675226 100%);}
+  .img.s57{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.12), transparent 55%), linear-gradient(135deg,#a3a39a 0%,#7e7e75 35%,#56564d 70%,#33332e 100%);}
+  .img.s67{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.14), transparent 55%), linear-gradient(135deg,#aeada4 0%,#85847b 35%,#5a5a51 70%,#363632 100%);}
+  .img.pea-gravel{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.18), transparent 55%), linear-gradient(135deg,#c0a982 0%,#937c54 40%,#5b4a2e 100%);}
+  .img.crushed-lime{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.14), transparent 55%), linear-gradient(135deg,#b3ad9c 0%,#878170 40%,#544f3e 100%);}
+  .img.rip-rap{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.14), transparent 55%), linear-gradient(135deg,#7d756a 0%,#54504a 40%,#2a2826 100%);}
+  .img.boulders{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.12), transparent 55%), linear-gradient(135deg,#85807a 0%,#5b5854 40%,#312f2c 100%);}
+  .img.decorative{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.18), transparent 55%), linear-gradient(135deg,#c8a586 0%,#92694c 40%,#4f3522 100%);}
+  .img.recycled-agg{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.10), transparent 55%), linear-gradient(135deg,#8e8579 0%,#5c544a 40%,#332e25 100%);}
+
+  /* coarse stipple overlay for aggregate texture */
+  .img::after{content:"";position:absolute;inset:0;
+    background-image:radial-gradient(rgba(255,255,255,0.12) 0.7px,transparent 1.2px),radial-gradient(rgba(0,0,0,0.16) 0.6px,transparent 1px);
+    background-size:11px 11px,17px 17px;background-position:0 0,3px 5px;mix-blend-mode:overlay;}
+
+  .tile-img-wrap .lozenge-row{position:absolute;top:14px;left:14px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;}
+  .tile-img-wrap .lozenge{font-size:10px;}
+  .tile-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1;}
+  .tile-body h4{font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:-0.015em;margin:0;color:var(--ink);line-height:1.15;}
+  .tile-body p{font-size:13.5px;color:var(--ink-2);line-height:1.55;margin:0;text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .tile-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;align-items:center;gap:14px;}
+  .tile-foot .min{font-family:var(--mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .tile-foot .min b{color:var(--ink-2);}
+  .view-link{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:color .15s;}
+
+  /* ---------- FOOTER BAND ---------- */
+  .footer-band{margin-top:64px;padding:48px 0 64px;border-top:1px solid var(--hair);}
+  .footer-band .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .footer-card{background:var(--card-muted);border:1px solid var(--hair);border-radius:24px;padding:32px;display:flex;flex-direction:column;gap:14px;}
+  .footer-card .section-label{margin-bottom:6px;}
+  .footer-card h3{font-family:var(--display);font-size:32px;font-weight:600;letter-spacing:-0.02em;margin:0;line-height:1.05;color:var(--ink);max-width:20ch;}
+  .footer-card h3 em{font-style:italic;font-weight:500;}
+  .footer-card p{font-size:14px;color:var(--ink-2);line-height:1.55;margin:0;max-width:54ch;text-wrap:pretty;}
+  .footer-card .row{margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .footer-card .btn-primary{padding:12px 18px;}
+  .footer-card .btn-ghost{padding:11px 17px;}
+
+  /* foot legal strip */
+  .legal-strip{margin-top:32px;padding:18px 0 32px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;letter-spacing:0.04em;color:var(--ink-3);}
+  .legal-strip ul{display:flex;list-style:none;gap:18px;margin:0;padding:0;}
+  .legal-strip ul a:hover{color:var(--ink);}
+
+  @media (max-width:1180px){
+    .hero-band{grid-template-columns:1fr;}
+    .deals-row{grid-template-columns:repeat(2,1fr);}
+    .cat-group .grid{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:760px){
+    .deals-row, .cat-group .grid, .footer-band .grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================  NAV  ====================== -->
+<nav class="top">
+  <div class="wrap">
+    <a class="wordmark" href="/"><span class="leaf"></span>EarthMove<span class="dot">.</span></a>
+    <ul>
+      <li><a href="/browse" class="active">Materials</a></li>
+      <li><a href="/deals">Deals</a></li>
+      <li><a href="/learn">Learn</a></li>
+      <li><a href="/material-match">Material Match</a></li>
+    </ul>
+    <div class="right">
+      <a class="btn btn-link" href="/sign-in">Sign in</a>
+      <a class="btn btn-ghost" href="/sign-up">Sign up</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+
+  <!-- ============= HERO BAND ============= -->
+  <section class="hero-band">
+    <div>
+      <span class="section-label">Materials &middot; Dallas-Fort Worth</span>
+      <h1>Every aggregate, <em>priced and delivered</em> in Dallas-Fort Worth.</h1>
+      <p class="lede">
+        <b>18 stocked materials</b> across 7 categories. Same-day or next-day delivery from yards in your market — Singleton, Trinity, Mountain Creek, and three more inside the LBJ loop.
+      </p>
+      <div class="lozenge-row">
+        <span class="lozenge">18 MATERIALS</span>
+        <span class="lozenge">7 CATEGORIES</span>
+        <span class="lozenge solid-emerald"><span class="d"></span>SAME-DAY DELIVERY</span>
+      </div>
+    </div>
+
+    <div class="ops-card">
+      <div><span class="l">Coverage</span><div class="v">10 mi <small>radius from yard</small></div><div class="meta">Out-of-radius? Quote in 24h</div></div>
+      <div><span class="l">Live yards</span><div class="v">6 <small>active today</small></div><div class="meta">Updated every 5 min</div></div>
+      <div><span class="l">Drivers on shift</span><div class="v">23 <small>tri-axle / dump</small></div><div class="meta">7am – 6pm Mon–Sat</div></div>
+      <div><span class="l">Avg dispatch</span><div class="v">42 <small>min from order</small></div><div class="meta">Same-day, in-radius</div></div>
+    </div>
+  </section>
+
+  <!-- ============= DEALS CARROUSEL ============= -->
+  <section class="deals-section">
+    <div class="head">
+      <div>
+        <span class="section-label">Today's deals &middot; Dallas-Fort Worth</span>
+        <h2>Four loads <em>moving today</em>, priced under spread.</h2>
+      </div>
+      <a href="/deals">View all deals →</a>
+    </div>
+
+    <div class="deals-row">
+
+      <article class="deal-card">
+        <span class="reason">STOCKPILE CLEAR</span>
+        <span class="name">Flex Base</span>
+        <div class="price-row">
+          <span class="price">$22<span style="font-size:0.55em;letter-spacing:-0.01em;">.00</span></span>
+          <span class="unit">/ ton</span>
+          <span class="strike">$24</span>
+        </div>
+        <div class="meta">
+          <b>ABC Stone &middot; Singleton Yard</b><br/>
+          14 t tri-axle &middot; 6.4 mi to drop &middot; expires 6 PM today
+        </div>
+        <span class="arr">Order this load →</span>
+      </article>
+
+      <article class="deal-card">
+        <span class="reason">QUARRY OVERRUN</span>
+        <span class="name">#57 Stone</span>
+        <div class="price-row">
+          <span class="price">$27<span style="font-size:0.55em;letter-spacing:-0.01em;">.00</span></span>
+          <span class="unit">/ ton</span>
+        </div>
+        <div class="meta">
+          <b>Trinity Materials &middot; Mountain Creek</b><br/>
+          22 t tandem &middot; 9.1 mi to drop &middot; 4 loads available
+        </div>
+        <span class="arr">Order this load →</span>
+      </article>
+
+      <article class="deal-card">
+        <span class="reason">WEEKEND WINDOW</span>
+        <span class="name">Concrete Sand</span>
+        <div class="price-row">
+          <span class="price">$19<span style="font-size:0.55em;letter-spacing:-0.01em;">.00</span></span>
+          <span class="unit">/ ton</span>
+        </div>
+        <div class="meta">
+          <b>Trinity Materials &middot; Eagle Ford Yard</b><br/>
+          14 t tri-axle &middot; Sat 7am–4pm only &middot; 8 loads
+        </div>
+        <span class="arr">Order this load →</span>
+      </article>
+
+      <article class="deal-card">
+        <span class="reason">RAIL CAR ARRIVAL</span>
+        <span class="name">Rip Rap</span>
+        <div class="price-row">
+          <span class="price">$34<span style="font-size:0.55em;letter-spacing:-0.01em;">.00</span></span>
+          <span class="unit">/ ton</span>
+        </div>
+        <div class="meta">
+          <b>Hanson Aggregates &middot; Forney Yard</b><br/>
+          22 t tandem &middot; 18.4 mi to drop &middot; D50 6"–12"
+        </div>
+        <span class="arr">Order this load →</span>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============= STICKY FILTER ============= -->
+  <nav class="filter-bar" aria-label="Category filter">
+    <div class="filter-row">
+      <button class="filter-pill active" type="button">All <span class="count">18</span></button>
+      <button class="filter-pill" type="button">Base <span class="count">3</span></button>
+      <button class="filter-pill" type="button">Fill <span class="count">4</span></button>
+      <button class="filter-pill" type="button">Sand <span class="count">3</span></button>
+      <button class="filter-pill" type="button">Gravel <span class="count">4</span></button>
+      <button class="filter-pill" type="button">Rock <span class="count">2</span></button>
+      <button class="filter-pill" type="button">Decorative <span class="count">1</span></button>
+      <button class="filter-pill" type="button">Recycled <span class="count">1</span></button>
+    </div>
+  </nav>
+
+  <!-- ============= BASE ============= -->
+  <section class="cat-group" id="cat-base">
+    <div class="group-head">
+      <div class="left">
+        <span class="section-label">Base &middot; 3 materials</span>
+        <h3>Compaction-grade <em>load-bearing layers</em>.</h3>
+      </div>
+      <span class="meta">$13 – $26 / ton</span>
+    </div>
+    <div class="grid">
+
+      <a class="tile" href="/browse/flex-base-tx-247">
+        <div class="tile-img-wrap">
+          <div class="img flex-base"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">BASE</span>
+            <span class="lozenge solid-emerald">$24 / TON</span>
+            <span class="lozenge solid-orange">STOCKPILE CLEAR &middot; $22</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Flex Base</h4>
+          <p>Crushed limestone base graded to TxDOT 247 spec. Compacts hard for driveways, parking pads, and equipment laydown.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>12 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/recycled-base">
+        <div class="tile-img-wrap">
+          <div class="img recycled-base"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">BASE</span>
+            <span class="lozenge solid-emerald">$13 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Recycled Base</h4>
+          <p>Crushed concrete and asphalt re-graded to base spec. Compaction performance close to virgin Flex Base at roughly half the delivered cost.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>14 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/crushed-limestone-base">
+        <div class="tile-img-wrap">
+          <div class="img crushed-lime-base"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">BASE</span>
+            <span class="lozenge solid-emerald">$26 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Crushed Limestone Base</h4>
+          <p>Higher-fines blend than Flex Base — used where engineers spec a tighter gradation for heavy commercial pavement and DOT shoulder work.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>14 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============= FILL ============= -->
+  <section class="cat-group" id="cat-fill">
+    <div class="group-head">
+      <div class="left">
+        <span class="section-label">Fill &middot; 4 materials</span>
+        <h3>Bulk fill, topsoil, and <em>cover material</em>.</h3>
+      </div>
+      <span class="meta">$11 – $30 / unit</span>
+    </div>
+    <div class="grid">
+
+      <a class="tile" href="/browse/fill-dirt">
+        <div class="tile-img-wrap">
+          <div class="img fill-dirt"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">FILL</span>
+            <span class="lozenge solid-emerald">$11 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Fill Dirt</h4>
+          <p>Native clay-loam fill, no organics, no debris. For raising grade, backfilling foundations, and rough-grading lots before the topsoil cap.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>20 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/screened-topsoil">
+        <div class="tile-img-wrap">
+          <div class="img topsoil"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">FILL</span>
+            <span class="lozenge solid-emerald">$30 / YD³</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Screened Topsoil</h4>
+          <p>Screened to ½" minus, organics retained. Lawn establishment, sod prep, raised beds, and finish-grade landscaping behind a curb.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>5 yd³</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/stabilized-sand">
+        <div class="tile-img-wrap">
+          <div class="img stab-sand"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">FILL</span>
+            <span class="lozenge solid-emerald">$19 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Stabilized Sand</h4>
+          <p>Cement-stabilized sand for utility trench bedding, pipe encasement, and compacted fill where flowable spec fits the job.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>14 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/clean-fill">
+        <div class="tile-img-wrap">
+          <div class="img clean-fill"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">FILL</span>
+            <span class="lozenge solid-emerald">$14 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Clean Fill</h4>
+          <p>Inspected fill — no construction debris, no rebar, no organics. Goes where engineers need fill that won't fail an inspection.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>20 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============= SAND ============= -->
+  <section class="cat-group" id="cat-sand">
+    <div class="group-head">
+      <div class="left">
+        <span class="section-label">Sand &middot; 3 materials</span>
+        <h3>Concrete, mason, and <em>bedding sand</em>.</h3>
+      </div>
+      <span class="meta">$19 – $24 / ton</span>
+    </div>
+    <div class="grid">
+
+      <a class="tile" href="/browse/concrete-sand">
+        <div class="tile-img-wrap">
+          <div class="img concrete-sand"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">SAND</span>
+            <span class="lozenge solid-emerald">$19 / TON</span>
+            <span class="lozenge solid-orange">WEEKEND WINDOW</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Concrete Sand</h4>
+          <p>ASTM C33 fine aggregate, washed and graded for ready-mix concrete. The fine half of every standard concrete blend you'll pour.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>12 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/mason-sand">
+        <div class="tile-img-wrap">
+          <div class="img mason-sand"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">SAND</span>
+            <span class="lozenge solid-emerald">$24 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Mason Sand</h4>
+          <p>Finer than concrete sand, cleaner gradation. Mortar mix for brick and block work, plaster scratch coats, and pool plaster prep.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>10 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/bedding-sand">
+        <div class="tile-img-wrap">
+          <div class="img bedding-sand"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">SAND</span>
+            <span class="lozenge solid-emerald">$22 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Bedding Sand</h4>
+          <p>Coarse, washed sand for paver setting beds, pipe bedding, and filter layers under stone. The 1" leveling layer beneath every patio.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>10 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============= GRAVEL ============= -->
+  <section class="cat-group" id="cat-gravel">
+    <div class="group-head">
+      <div class="left">
+        <span class="section-label">Gravel &middot; 4 materials</span>
+        <h3>Drainage rock and <em>concrete aggregate</em>.</h3>
+      </div>
+      <span class="meta">$25 – $32 / ton</span>
+    </div>
+    <div class="grid">
+
+      <a class="tile" href="/browse/57-stone">
+        <div class="tile-img-wrap">
+          <div class="img s57"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">GRAVEL</span>
+            <span class="lozenge solid-emerald">$27 / TON</span>
+            <span class="lozenge solid-orange">QUARRY OVERRUN</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>#57 Stone</h4>
+          <p>Washed coarse aggregate, ¾"–1" gradation. Drainage stone for french drains, foundation perimeters, and concrete mix.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>10 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/67-stone">
+        <div class="tile-img-wrap">
+          <div class="img s67"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">GRAVEL</span>
+            <span class="lozenge solid-emerald">$26 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>#67 Stone</h4>
+          <p>Slightly finer than #57. Standard coarse aggregate for ready-mix concrete. Cleaner gradation passes most state DOT mix specs.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>10 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/pea-gravel">
+        <div class="tile-img-wrap">
+          <div class="img pea-gravel"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">GRAVEL</span>
+            <span class="lozenge solid-emerald">$32 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Pea Gravel</h4>
+          <p>Rounded ⅜" stone, washed clean. Pathways, dog runs, decorative ground cover, and pipe bedding where smooth-finish gravel is specified.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>8 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/crushed-limestone">
+        <div class="tile-img-wrap">
+          <div class="img crushed-lime"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">GRAVEL</span>
+            <span class="lozenge solid-emerald">$25 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Crushed Limestone</h4>
+          <p>Angular ¾" gravel with fines. Drives and ranch roads where compaction is wanted but full base spec is overkill. Holds shape on grade.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>12 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============= ROCK ============= -->
+  <section class="cat-group" id="cat-rock">
+    <div class="group-head">
+      <div class="left">
+        <span class="section-label">Rock &middot; 2 materials</span>
+        <h3>Armor stone for <em>slope and shoreline</em>.</h3>
+      </div>
+      <span class="meta">$34 – $48 / ton</span>
+    </div>
+    <div class="grid">
+
+      <a class="tile" href="/browse/rip-rap">
+        <div class="tile-img-wrap">
+          <div class="img rip-rap"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">ROCK</span>
+            <span class="lozenge solid-emerald">$34 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Rip Rap</h4>
+          <p>Heavy stone armor for slope protection, channel banks, and shorelines. D50 sized to engineer spec — 6"–12" standard.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>14 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="tile" href="/browse/boulders">
+        <div class="tile-img-wrap">
+          <div class="img boulders"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">ROCK</span>
+            <span class="lozenge solid-emerald">$48 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Boulders</h4>
+          <p>Landscape boulders, 18"–36". Sold by weight, picked individually for shape. Slope retention, accent placement, and rough seating.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>5 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============= DECORATIVE ============= -->
+  <section class="cat-group" id="cat-decorative">
+    <div class="group-head">
+      <div class="left">
+        <span class="section-label">Decorative &middot; 1 material</span>
+        <h3>Finish-grade stone for <em>visible surfaces</em>.</h3>
+      </div>
+      <span class="meta">$42 / ton</span>
+    </div>
+    <div class="grid">
+
+      <a class="tile" href="/browse/decorative-stone">
+        <div class="tile-img-wrap">
+          <div class="img decorative"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">DECORATIVE</span>
+            <span class="lozenge solid-emerald">$42 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Decorative Stone</h4>
+          <p>Color-sorted ¾"–1½" landscape stone — buff, rust, charcoal, river-rounded. Bed liners, dry creek beds, and finish ground cover.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>4 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============= RECYCLED ============= -->
+  <section class="cat-group" id="cat-recycled">
+    <div class="group-head">
+      <div class="left">
+        <span class="section-label">Recycled &middot; 1 material</span>
+        <h3>Crushed concrete, <em>graded for spec</em>.</h3>
+      </div>
+      <span class="meta">$14 / ton</span>
+    </div>
+    <div class="grid">
+
+      <a class="tile" href="/browse/recycled-aggregate">
+        <div class="tile-img-wrap">
+          <div class="img recycled-agg"></div>
+          <div class="lozenge-row">
+            <span class="lozenge">RECYCLED</span>
+            <span class="lozenge solid-emerald">$14 / TON</span>
+          </div>
+        </div>
+        <div class="tile-body">
+          <h4>Recycled Aggregate</h4>
+          <p>Crushed concrete sized for backfill, sub-base, and unbound layers where virgin spec isn't required. Lower delivered cost, lower carbon.</p>
+          <div class="tile-foot">
+            <span class="min">Min order &middot; <b>14 tons</b></span>
+            <span class="view-link">View details →</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============= FOOTER BAND ============= -->
+  <section class="footer-band">
+    <div class="grid">
+
+      <div class="footer-card">
+        <span class="section-label">For drivers</span>
+        <h3>Hauling for EarthMove pays <em>weekly</em>, not on net-30.</h3>
+        <p>If you run a tri-axle, tandem, or end-dump in the DFW metro, we have steady runs from 6 yards inside the loop. Settled at end of week. Real dispatch, no chasing checks.</p>
+        <div class="row">
+          <a class="btn btn-primary" href="/drivers">Apply to drive</a>
+          <a class="btn btn-link" href="/drivers#requirements">Requirements →</a>
+        </div>
+      </div>
+
+      <div class="footer-card">
+        <span class="section-label">For contractors</span>
+        <h3>Open a contractor account, <em>build a reorder list</em>.</h3>
+        <p>Saved drop sites, billing on PO, FCRA-compliant trust reports for new subs, and one ticketing trail across every load you order. Free to open.</p>
+        <div class="row">
+          <a class="btn btn-primary" href="/sign-up?role=contractor">Open an account</a>
+          <a class="btn btn-link" href="/contractors">What's included →</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="legal-strip">
+      <span>EarthMove, Inc. &middot; 3220 Singleton Blvd, Dallas TX 75212</span>
+      <ul>
+        <li><a href="/about">About</a></li>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="/legal/terms">Terms</a></li>
+        <li><a href="/legal/privacy">Privacy</a></li>
+        <li><a href="/legal/fcra">FCRA disclosure</a></li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

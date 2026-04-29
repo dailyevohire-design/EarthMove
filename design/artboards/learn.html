@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Learn · EarthMove field guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400..700;1,400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1ECE2; --paper-2:#E9E3D5; --card:#FFFFFF; --card-muted:#F6F2E8;
+    --panel:#14322A; --panel-2:#0F2920; --panel-grid:rgba(255,255,255,0.045);
+    --ink:#15201B; --ink-2:#2A332E; --ink-3:#5C645F; --ink-on-panel:#F1ECE2; --ink-on-panel-2:#A9B4AC;
+    --orange:#E5701B; --orange-press:#C95F12; --emerald:#2DB37A; --emerald-soft:#1F8A5C; --amber:#E0A52A;
+    --hair:#D8D2C4; --hair-strong:#C8C0AC;
+    --display:'Fraunces',serif; --sans:'Inter',-apple-system,system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;}
+
+  /* ---------- Nav ---------- */
+  nav.top{background:var(--paper);border-bottom:1px solid var(--hair);position:relative;z-index:5;}
+  nav.top .wrap{max-width:1280px;margin:0 auto;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;}
+  .wordmark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-0.01em;color:var(--ink);display:inline-flex;align-items:baseline;}
+  .wordmark .leaf{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--emerald-soft);margin-right:8px;transform:translateY(-1px);}
+  .wordmark .dot{color:var(--emerald-soft);}
+  nav.top ul{display:flex;gap:32px;list-style:none;margin:0;padding:0;font-size:14px;color:var(--ink-2);}
+  nav.top ul a.active{color:var(--ink);font-weight:600;position:relative;}
+  nav.top ul a.active::after{content:"";position:absolute;left:0;right:0;bottom:-22px;height:2px;background:var(--ink);}
+  nav.top .right{display:flex;align-items:center;gap:14px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;font-weight:600;font-size:14px;padding:10px 16px;border:1px solid transparent;cursor:pointer;white-space:nowrap;font-family:var(--sans);}
+  .btn-primary{background:var(--orange);color:#fff;}
+  .btn-primary:hover{background:var(--orange-press);}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--ink);}
+  .btn-link{background:transparent;color:var(--ink-2);padding:0;font-weight:500;}
+
+  .page{max-width:1280px;margin:0 auto;padding:0 40px;}
+  .section-label{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-2);display:inline-flex;align-items:center;gap:10px;white-space:nowrap;}
+  .section-label::before{content:"";width:18px;height:1.5px;background:var(--ink-2);display:inline-block;}
+
+  .lozenge{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;background:var(--card);color:var(--ink);border:1px solid var(--hair);border-radius:5px;padding:5px 9px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+  .lozenge.dark{background:var(--panel);color:var(--ink-on-panel);border-color:transparent;}
+  .lozenge.solid-emerald{background:var(--emerald-soft);color:#fff;border-color:transparent;}
+  .lozenge.solid-orange{background:var(--orange);color:#fff;border-color:transparent;}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:48px 0 32px;display:grid;grid-template-columns:1.5fr 1fr;gap:56px;align-items:end;}
+  .hero h1{font-family:var(--display);font-weight:600;font-size:60px;line-height:0.96;letter-spacing:-0.02em;margin:14px 0 18px;color:var(--ink);max-width:18ch;}
+  .hero h1 em{font-style:italic;font-weight:500;}
+  .hero .lede{font-size:16px;color:var(--ink-2);line-height:1.6;margin:0 0 14px;max-width:54ch;text-wrap:pretty;}
+  .hero .lede b{color:var(--ink);font-weight:600;}
+  .hero .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+
+  .hero .stats{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;}
+  .hero .stats .l{font-family:var(--mono);font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .hero .stats .v{font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:-0.015em;color:var(--ink);line-height:1.15;margin-top:2px;}
+  .hero .stats .v small{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--ink-3);margin-left:4px;}
+  .hero .stats .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-top:1px;letter-spacing:0.04em;}
+
+  /* ---------- FEATURED ARTICLE ---------- */
+  .feature{margin-top:36px;background:var(--card);border:1px solid var(--hair);border-radius:24px;overflow:hidden;display:grid;grid-template-columns:6fr 4fr;}
+  .feature .img-wrap{position:relative;aspect-ratio:auto;min-height:420px;overflow:hidden;}
+  .feature .img-wrap .img{position:absolute;inset:0;}
+  .feature .img-wrap .lozenge{position:absolute;top:18px;left:18px;}
+  .feature .body{padding:36px;display:flex;flex-direction:column;gap:14px;justify-content:center;}
+  .feature .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .feature h2{font-family:var(--display);font-size:38px;font-weight:600;letter-spacing:-0.02em;margin:0;line-height:1.05;color:var(--ink);max-width:18ch;}
+  .feature h2 em{font-style:italic;font-weight:500;}
+  .feature p{font-size:15px;color:var(--ink-2);line-height:1.6;margin:0;text-wrap:pretty;max-width:48ch;}
+  .feature .meta-row{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding-top:18px;border-top:1px solid var(--hair);}
+  .feature .meta-row .left{font-family:var(--mono);font-size:11.5px;letter-spacing:0.04em;color:var(--ink-3);}
+  .feature .meta-row .left b{color:var(--ink-2);}
+  .feature .read{font-family:var(--mono);font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:var(--orange);font-weight:600;}
+
+  /* ---------- ARTICLE GRID ---------- */
+  .articles-section{margin-top:64px;}
+  .articles-section .group-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:18px;}
+  .articles-section .group-head .left{display:flex;flex-direction:column;gap:8px;}
+  .articles-section h3{font-family:var(--display);font-size:32px;font-weight:600;letter-spacing:-0.02em;margin:0;line-height:1.05;color:var(--ink);max-width:24ch;}
+  .articles-section h3 em{font-style:italic;font-weight:500;}
+  .articles-section .group-head .meta{font-family:var(--mono);font-size:11px;letter-spacing:0.04em;color:var(--ink-3);}
+
+  .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
+  .filter-pill{background:transparent;border:1px solid var(--hair);border-radius:999px;padding:7px 13px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink-2);white-space:nowrap;display:inline-flex;align-items:center;gap:8px;}
+  .filter-pill .count{font-family:var(--mono);font-size:11px;color:var(--ink-3);font-weight:600;}
+  .filter-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .filter-pill.active .count{color:rgba(241,236,226,0.65);}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+
+  .article{background:var(--card);border:1px solid var(--hair);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .15s ease, box-shadow .15s ease, border-color .15s;}
+  .article:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(20,32,27,0.10);border-color:var(--hair-strong);}
+  .article:hover .read{color:var(--orange);}
+  .article:hover .img-wrap .img{transform:scale(1.04);}
+  .article .img-wrap{position:relative;aspect-ratio:16 / 9;overflow:hidden;}
+  .article .img-wrap .img{position:absolute;inset:0;transition:transform .35s ease;}
+  .article .img-wrap .lozenge{position:absolute;top:14px;left:14px;font-size:10px;}
+  .article .body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1;}
+  .article h4{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-0.015em;margin:0;color:var(--ink);line-height:1.2;text-wrap:balance;}
+  .article p{font-size:13.5px;color:var(--ink-2);line-height:1.55;margin:0;text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .article .foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;align-items:center;gap:14px;}
+  .article .foot .meta{font-family:var(--mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .article .read{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:color .15s;}
+
+  /* ---------- IMAGE GRADIENTS — by content category ---------- */
+  .img::after{content:"";position:absolute;inset:0;
+    background-image:radial-gradient(rgba(255,255,255,0.12) 0.7px,transparent 1.2px),radial-gradient(rgba(0,0,0,0.16) 0.6px,transparent 1px);
+    background-size:11px 11px,17px 17px;background-position:0 0,3px 5px;mix-blend-mode:overlay;}
+  .img.gradation{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.12), transparent 55%), linear-gradient(135deg,#a3a39a 0%,#7e7e75 35%,#56564d 70%,#33332e 100%);}
+  .img.spec{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.12), transparent 55%), linear-gradient(135deg,#b9ad8e 0%,#8e7f60 40%,#56492e 100%);}
+  .img.delivery{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.10), transparent 55%), linear-gradient(135deg,#3e5147 0%,#1f2d27 50%,#0f1813 100%);}
+  .img.ops{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.10), transparent 55%), linear-gradient(135deg,#7a5e3f 0%,#4a3825 50%,#251c11 100%);}
+  .img.subbase{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.10), transparent 55%), linear-gradient(135deg,#867d6e 0%,#605648 40%,#3a3328 100%);}
+  .img.geotex{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.14), transparent 55%), linear-gradient(135deg,#7d756a 0%,#54504a 40%,#2a2826 100%);}
+  .img.tonnage{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.18), transparent 55%), linear-gradient(135deg,#caa572 0%,#9a7c4d 40%,#5e4a2a 100%);}
+  .img.washed{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.20), transparent 55%), linear-gradient(135deg,#deca9d 0%,#ad9568 40%,#705a35 100%);}
+  .img.fcra{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.08), transparent 55%), linear-gradient(135deg,#2e4239 0%,#162721 50%,#0a1612 100%);}
+  .img.recycled{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.10), transparent 55%), linear-gradient(135deg,#8e8579 0%,#5c544a 40%,#332e25 100%);}
+  .img.feature-hero{background:radial-gradient(110% 70% at 28% 26%, rgba(255,255,255,0.12), transparent 55%), linear-gradient(135deg,#b9ad8e 0%,#8e7f60 35%,#56492e 70%,#241b10 100%);}
+
+  /* ---------- SUBSCRIBE CARD ---------- */
+  .subscribe{margin-top:64px;background:var(--card-muted);border:1px solid var(--hair);border-radius:24px;padding:36px;display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;}
+  .subscribe h3{font-family:var(--display);font-size:32px;font-weight:600;letter-spacing:-0.02em;margin:0;line-height:1.05;color:var(--ink);max-width:18ch;}
+  .subscribe h3 em{font-style:italic;font-weight:500;}
+  .subscribe p{font-size:14px;color:var(--ink-2);line-height:1.6;margin:10px 0 0;text-wrap:pretty;max-width:48ch;}
+  .subscribe form{display:flex;gap:8px;}
+  .subscribe input[type=email]{flex:1;background:var(--card);border:1px solid var(--hair);border-radius:10px;padding:13px 14px;font-family:var(--sans);font-size:14px;color:var(--ink);outline:none;}
+  .subscribe input[type=email]:focus{border-color:var(--ink);}
+  .subscribe .small{margin-top:10px;font-family:var(--mono);font-size:11px;letter-spacing:0.04em;color:var(--ink-3);}
+
+  /* ---------- FOOTER BAND ---------- */
+  .footer-band{margin-top:64px;padding:48px 0 64px;border-top:1px solid var(--hair);}
+  .footer-band .grid-foot{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .footer-card{background:var(--card-muted);border:1px solid var(--hair);border-radius:24px;padding:32px;display:flex;flex-direction:column;gap:14px;}
+  .footer-card .section-label{margin-bottom:6px;}
+  .footer-card h3{font-family:var(--display);font-size:32px;font-weight:600;letter-spacing:-0.02em;margin:0;line-height:1.05;color:var(--ink);max-width:20ch;}
+  .footer-card h3 em{font-style:italic;font-weight:500;}
+  .footer-card p{font-size:14px;color:var(--ink-2);line-height:1.55;margin:0;max-width:54ch;text-wrap:pretty;}
+  .footer-card .row{margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .footer-card .btn-primary{padding:12px 18px;}
+  .footer-card .btn-ghost{padding:11px 17px;}
+  .legal-strip{margin-top:32px;padding:18px 0 32px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;letter-spacing:0.04em;color:var(--ink-3);}
+  .legal-strip ul{display:flex;list-style:none;gap:18px;margin:0;padding:0;}
+  .legal-strip ul a:hover{color:var(--ink);}
+
+  @media (max-width:1100px){
+    .hero{grid-template-columns:1fr;}
+    .feature{grid-template-columns:1fr;}
+    .feature .img-wrap{min-height:280px;}
+    .grid{grid-template-columns:repeat(2,1fr);}
+    .subscribe{grid-template-columns:1fr;}
+  }
+  @media (max-width:720px){
+    .grid{grid-template-columns:1fr;}
+    .footer-band .grid-foot{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================  NAV  ====================== -->
+<nav class="top">
+  <div class="wrap">
+    <a class="wordmark" href="/"><span class="leaf"></span>EarthMove<span class="dot">.</span></a>
+    <ul>
+      <li><a href="/browse">Materials</a></li>
+      <li><a href="/deals">Deals</a></li>
+      <li><a href="/learn" class="active">Learn</a></li>
+      <li><a href="/material-match">Material Match</a></li>
+    </ul>
+    <div class="right">
+      <a class="btn btn-link" href="/sign-in">Sign in</a>
+      <a class="btn btn-ghost" href="/sign-up">Sign up</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+
+  <!-- ============= HERO ============= -->
+  <section class="hero">
+    <div>
+      <span class="section-label">EarthMove field guide</span>
+      <h1>Spec sheets, <em>gradation guides</em>, and contractor cheat-sheets.</h1>
+      <p class="lede">
+        We sell aggregate. We also publish the technical reading you'd otherwise stitch together from a TxDOT PDF, two ASTM excerpts, and a phone call to a quarry foreman. <b>Written by ops, reviewed by engineers</b>, no marketing.
+      </p>
+      <div class="row">
+        <span class="lozenge">42 ARTICLES</span>
+        <span class="lozenge">8 CATEGORIES</span>
+        <span class="lozenge solid-emerald">UPDATED WEEKLY</span>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div><span class="l">Reading length</span><div class="v">5–9 <small>min avg</small></div><div class="meta">Long enough, no longer</div></div>
+      <div><span class="l">Sources cited</span><div class="v">Every <small>article</small></div><div class="meta">TxDOT, ASTM, AASHTO</div></div>
+      <div><span class="l">Last updated</span><div class="v">Apr 26 <small>this week</small></div><div class="meta">Weekly review cadence</div></div>
+      <div><span class="l">Reviewed by</span><div class="v">PE <small>on staff</small></div><div class="meta">Geotech &middot; pavement</div></div>
+    </div>
+  </section>
+
+  <!-- ============= FEATURED ARTICLE ============= -->
+  <article class="feature">
+    <div class="img-wrap">
+      <div class="img feature-hero"></div>
+      <span class="lozenge solid-orange">FEATURED</span>
+    </div>
+    <div class="body">
+      <span class="eyebrow">Spec &middot; Apr 24, 2026</span>
+      <h2>Reading a TxDOT 247 spec sheet, <em>line by line</em>.</h2>
+      <p>
+        TxDOT Item 247 is the most-specced flex base aggregate in Texas. The data sheet is one page of dense numbers. We walk through every row — gradation bands, plasticity index, wet-ball mill loss, what each number lets you reject at the gate, and what each number lets a yard substitute on a busy week.
+      </p>
+      <div class="meta-row">
+        <span class="left">By <b>D. Esparza, P.E.</b> &middot; 9 min read</span>
+        <span class="read">Read article →</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============= ARTICLE GRID ============= -->
+  <section class="articles-section">
+    <div class="group-head">
+      <div class="left">
+        <span class="section-label">All field guide articles</span>
+        <h3>Twelve more pieces, <em>filed by category</em>.</h3>
+      </div>
+      <span class="meta">Sorted newest first</span>
+    </div>
+
+    <div class="filter-row" aria-label="Article category filter">
+      <button class="filter-pill active" type="button">All <span class="count">12</span></button>
+      <button class="filter-pill" type="button">Gradation <span class="count">3</span></button>
+      <button class="filter-pill" type="button">Spec <span class="count">3</span></button>
+      <button class="filter-pill" type="button">Delivery <span class="count">3</span></button>
+      <button class="filter-pill" type="button">Ops <span class="count">3</span></button>
+    </div>
+
+    <div class="grid">
+
+      <a class="article" href="/learn/driveway-base-thickness">
+        <div class="img-wrap"><div class="img subbase"></div><span class="lozenge dark">SPEC</span></div>
+        <div class="body">
+          <h4>How thick should your driveway base be?</h4>
+          <p>Four inches is folklore. The right answer depends on subgrade CBR, vehicle class, and freeze depth. Here's the math, with three Texas examples.</p>
+          <div class="foot"><span class="meta">6 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/crusher-run-vs-flex-base">
+        <div class="img-wrap"><div class="img gradation"></div><span class="lozenge dark">GRADATION</span></div>
+        <div class="body">
+          <h4>Crusher Run vs Flex Base: which compacts better?</h4>
+          <p>Both are minus material with fines. Their gradation curves are not the same. Side-by-side Proctor results and where each one wins on a job.</p>
+          <div class="foot"><span class="meta">7 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/geotextile-under-rip-rap">
+        <div class="img-wrap"><div class="img geotex"></div><span class="lozenge dark">SPEC</span></div>
+        <div class="body">
+          <h4>What goes wrong when you skip the geotextile under rip rap.</h4>
+          <p>Three failure modes we've seen on the same channel-bank job. Photographs, root cause, and the AASHTO M288 class that would have prevented each one.</p>
+          <div class="foot"><span class="meta">8 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/whats-in-the-delivery-price">
+        <div class="img-wrap"><div class="img delivery"></div><span class="lozenge dark">DELIVERY</span></div>
+        <div class="body">
+          <h4>Same-day delivery: what the price actually covers.</h4>
+          <p>Trucking, fuel, scale-house, dispatch. The line-item breakdown of a $24/ton flex base load delivered six miles, before and after we set up tri-axle pooling.</p>
+          <div class="foot"><span class="meta">5 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/57-vs-67-stone">
+        <div class="img-wrap"><div class="img gradation"></div><span class="lozenge dark">GRADATION</span></div>
+        <div class="body">
+          <h4>How #57 Stone is graded vs #67.</h4>
+          <p>One sieve apart, two different uses. Drainage rock vs. ready-mix coarse aggregate, with the AASHTO M43 sieve table and a flow chart for choosing.</p>
+          <div class="foot"><span class="meta">5 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/tonnage-cheat-sheet">
+        <div class="img-wrap"><div class="img tonnage"></div><span class="lozenge dark">OPS</span></div>
+        <div class="body">
+          <h4>Calculating tonnage from cubic yards: the cheat sheet.</h4>
+          <p>Density tables for the eighteen materials we stock. Wet vs dry, in-place vs loose, with the round-up margin we use in the on-site coverage calculator.</p>
+          <div class="foot"><span class="meta">4 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/delivered-weight-not-order-weight">
+        <div class="img-wrap"><div class="img delivery"></div><span class="lozenge dark">DELIVERY</span></div>
+        <div class="body">
+          <h4>Why we charge at delivered weight, not order weight.</h4>
+          <p>Every load gets a scale ticket on the way out and a scale ticket at the drop. We invoice on the second one. Why this matters for change-orders and what it costs us.</p>
+          <div class="foot"><span class="meta">6 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/recycled-base-spec-equivalent">
+        <div class="img-wrap"><div class="img recycled"></div><span class="lozenge dark">SPEC</span></div>
+        <div class="body">
+          <h4>Recycled Base: when it's spec-equivalent and when it isn't.</h4>
+          <p>The cases where engineers approve recycled concrete aggregate as base, the cases where they don't, and the three test results that swing the answer.</p>
+          <div class="foot"><span class="meta">7 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/wet-concrete-sand">
+        <div class="img-wrap"><div class="img washed"></div><span class="lozenge dark">OPS</span></div>
+        <div class="body">
+          <h4>Why your concrete sand might be too wet.</h4>
+          <p>Stockpile moisture, AM-vs-PM loads, and how a slump test goes wrong before the truck leaves the yard. Two practical fixes that don't cost the order.</p>
+          <div class="foot"><span class="meta">5 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/what-washed-means">
+        <div class="img-wrap"><div class="img washed"></div><span class="lozenge dark">GRADATION</span></div>
+        <div class="body">
+          <h4>What "washed" actually means in aggregate spec.</h4>
+          <p>Washed, screened, manufactured, natural — four words yards use that mean different things. Walk through each, with the ASTM C117 fines test as the referee.</p>
+          <div class="foot"><span class="meta">5 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/fcra-and-vetting">
+        <div class="img-wrap"><div class="img fcra"></div><span class="lozenge dark">OPS</span></div>
+        <div class="body">
+          <h4>FCRA, FCRA-equivalent, and what we run on contractors before fulfillment.</h4>
+          <p>The legal posture behind contractor trust reports — what we're allowed to surface, what we cite vs. omit, and how a rejected report works on our end.</p>
+          <div class="foot"><span class="meta">8 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+      <a class="article" href="/learn/dispatch-window-mechanics">
+        <div class="img-wrap"><div class="img delivery"></div><span class="lozenge dark">DELIVERY</span></div>
+        <div class="body">
+          <h4>How the dispatch window works on a same-day order.</h4>
+          <p>Order locks at 11:47 AM. Loaded at 12:14. On road at 12:31. Dropped at 1:02. Walk through the five waypoints and how the contractor sees each one in real time.</p>
+          <div class="foot"><span class="meta">6 min read</span><span class="read">Read →</span></div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============= SUBSCRIBE ============= -->
+  <section class="subscribe">
+    <div>
+      <span class="section-label">Field guide subscribe</span>
+      <h3>One email a week, <em>only when there's something to read</em>.</h3>
+      <p>Two articles a week, occasionally one. No promotional sends. Unsubscribe link in every footer. We don't sell or share the list — written into our privacy policy, not just into a marketing page.</p>
+    </div>
+    <div>
+      <form onsubmit="event.preventDefault();">
+        <input type="email" placeholder="you@yourcompany.com" aria-label="Email address" />
+        <button class="btn btn-primary" type="submit">Subscribe</button>
+      </form>
+      <div class="small">No spam. One email per week, max. Cancel any time.</div>
+    </div>
+  </section>
+
+  <!-- ============= FOOTER BAND ============= -->
+  <section class="footer-band">
+    <div class="grid-foot">
+
+      <div class="footer-card">
+        <span class="section-label">For drivers</span>
+        <h3>Hauling for EarthMove pays <em>weekly</em>, not on net-30.</h3>
+        <p>If you run a tri-axle, tandem, or end-dump in the DFW metro, we have steady runs from 6 yards inside the loop. Settled at end of week. Real dispatch, no chasing checks.</p>
+        <div class="row">
+          <a class="btn btn-primary" href="/drivers">Apply to drive</a>
+          <a class="btn btn-link" href="/drivers#requirements">Requirements →</a>
+        </div>
+      </div>
+
+      <div class="footer-card">
+        <span class="section-label">For contractors</span>
+        <h3>Open a contractor account, <em>build a reorder list</em>.</h3>
+        <p>Saved drop sites, billing on PO, FCRA-compliant trust reports for new subs, and one ticketing trail across every load you order. Free to open.</p>
+        <div class="row">
+          <a class="btn btn-primary" href="/sign-up?role=contractor">Open an account</a>
+          <a class="btn btn-link" href="/contractors">What's included →</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="legal-strip">
+      <span>EarthMove, Inc. &middot; 3220 Singleton Blvd, Dallas TX 75212</span>
+      <ul>
+        <li><a href="/about">About</a></li>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="/legal/terms">Terms</a></li>
+        <li><a href="/legal/privacy">Privacy</a></li>
+        <li><a href="/legal/fcra">FCRA disclosure</a></li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

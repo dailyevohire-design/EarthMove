@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Driver dashboard · Marco Delgado · EarthMove.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400..700;1,400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1ECE2; --paper-2:#E9E3D5; --card:#FFFFFF; --card-muted:#F6F2E8;
+    --panel:#14322A; --panel-2:#0F2920; --panel-grid:rgba(255,255,255,0.045);
+    --ink:#15201B; --ink-2:#2A332E; --ink-3:#5C645F; --ink-on-panel:#F1ECE2; --ink-on-panel-2:#A9B4AC;
+    --orange:#E5701B; --orange-press:#C95F12; --emerald:#2DB37A; --emerald-soft:#1F8A5C; --amber:#E0A52A;
+    --hair:#D8D2C4; --hair-strong:#C8C0AC;
+    --display:'Fraunces',serif; --sans:'Inter',-apple-system,system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;}
+
+  /* ---------- TOP BAR ---------- */
+  nav.top{background:var(--paper);border-bottom:1px solid var(--hair);position:sticky;top:0;z-index:10;}
+  nav.top .wrap{max-width:1440px;margin:0 auto;padding:16px 40px;display:flex;align-items:center;gap:24px;}
+  .wordmark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-0.01em;color:var(--ink);display:inline-flex;align-items:baseline;}
+  .wordmark .leaf{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--emerald-soft);margin-right:8px;transform:translateY(-1px);}
+  .wordmark .dot{color:var(--emerald-soft);}
+  .driver-id{display:inline-flex;align-items:center;gap:10px;flex:1;}
+  .driver-id .name{font-family:var(--sans);font-weight:600;font-size:15px;color:var(--ink);}
+  .top-right{display:inline-flex;align-items:center;gap:14px;}
+  .duty-toggle{display:inline-flex;background:var(--card);border:1px solid var(--hair);border-radius:999px;padding:3px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;}
+  .duty-toggle .seg{padding:7px 14px;border-radius:999px;color:var(--ink-3);}
+  .duty-toggle .seg.on{background:var(--emerald-soft);color:#fff;}
+  .signout{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .signout:hover{color:var(--ink);}
+
+  /* ---------- LAYOUT ---------- */
+  .shell{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:280px 1fr;}
+  aside.side{background:var(--paper-2);border-right:1px solid var(--hair);min-height:calc(100vh - 65px);position:sticky;top:65px;align-self:start;height:calc(100vh - 65px);display:flex;flex-direction:column;padding:24px 0 0;}
+  aside.side .nav-stack{flex:1;overflow-y:auto;padding:0 18px 24px;}
+  aside.side .sec{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-3);padding:14px 10px 8px;}
+  aside.side .item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;font-size:14px;color:var(--ink-2);font-weight:500;line-height:1.2;}
+  aside.side .item:hover{background:rgba(0,0,0,0.04);color:var(--ink);}
+  aside.side .item.active{background:var(--ink);color:var(--paper);font-weight:600;}
+  aside.side .item .badge{font-family:var(--mono);font-size:10px;letter-spacing:0.06em;color:var(--ink-3);font-weight:600;}
+  aside.side .item.active .badge{color:rgba(241,236,226,0.7);}
+  aside.side .stat-block{border-top:1px solid var(--hair);padding:18px 24px 22px;background:var(--paper-2);}
+  aside.side .stat-block .l{font-family:var(--mono);font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  aside.side .stat-block .v{font-family:var(--display);font-weight:600;font-size:28px;letter-spacing:-0.02em;color:var(--ink);line-height:1.05;margin-top:4px;}
+  aside.side .stat-block .delta{font-family:var(--mono);font-size:10.5px;letter-spacing:0.04em;color:var(--emerald-soft);margin-top:4px;font-weight:600;}
+  aside.side .stat-block .settle{font-family:var(--display);font-style:italic;font-size:14px;color:var(--ink-3);margin-top:6px;}
+
+  /* ---------- MAIN COLUMN ---------- */
+  main.col{padding:32px 40px 64px;min-width:0;}
+  .section-label{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-2);display:inline-flex;align-items:center;gap:10px;white-space:nowrap;}
+  .section-label::before{content:"";width:18px;height:1.5px;background:var(--ink-2);display:inline-block;}
+  .section-label.muted{color:var(--ink-3);} .section-label.muted::before{background:var(--ink-3);}
+  .section-label.emerald{color:var(--emerald-soft);} .section-label.emerald::before{background:var(--emerald-soft);}
+  .section-label.amber{color:var(--amber);} .section-label.amber::before{background:var(--amber);}
+  .section-label.orange{color:var(--orange);} .section-label.orange::before{background:var(--orange);}
+
+  /* ---------- LOZENGES (replicated) ---------- */
+  .lozenge{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;background:var(--card);color:var(--ink);border:1px solid var(--hair);border-radius:5px;padding:5px 9px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+  .lozenge.dark{background:var(--panel);color:var(--ink-on-panel);border-color:transparent;}
+  .lozenge.solid-emerald{background:var(--emerald-soft);color:#fff;border-color:transparent;}
+  .lozenge.solid-orange{background:var(--orange);color:#fff;border-color:transparent;}
+  .lozenge.solid-amber{background:var(--amber);color:var(--ink);border-color:transparent;}
+  .lozenge .d{width:5px;height:5px;border-radius:999px;background:var(--emerald);}
+  .lozenge.solid-emerald .d{background:#fff;opacity:0.85;}
+
+  /* ---------- BUTTONS ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;font-weight:600;font-size:14px;padding:10px 16px;border:1px solid transparent;cursor:pointer;white-space:nowrap;font-family:var(--sans);}
+  .btn-primary{background:var(--orange);color:#fff;}
+  .btn-primary:hover{background:var(--orange-press);}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--ink);}
+  .btn-ghost.dark{color:var(--ink-on-panel);border-color:var(--ink-on-panel-2);}
+  .btn-link{background:transparent;color:var(--ink-2);padding:0;font-weight:500;}
+  .btn-sm{padding:7px 12px;font-size:13px;}
+  .mono-link{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .mono-link:hover{color:var(--orange);}
+  .mono-link.orange{color:var(--orange);}
+
+  /* ---------- OPS-CARD primitive ---------- */
+  .ops-card{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:20px;}
+  .ops-card .l{font-family:var(--mono);font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .ops-card .v{font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:-0.015em;color:var(--ink);line-height:1.15;margin-top:2px;}
+  .ops-card .v.orange{color:var(--orange);}
+  .ops-card .v small{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--ink-3);margin-left:4px;}
+  .ops-card .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-top:1px;letter-spacing:0.04em;}
+
+  /* ---------- 1. PAGE HEADER ---------- */
+  .page-head{margin-bottom:28px;}
+  .page-head h1{font-family:var(--display);font-weight:600;font-size:52px;line-height:1.0;letter-spacing:-0.02em;margin:14px 0 14px;color:var(--ink);}
+  .page-head h1 em{font-style:italic;font-weight:500;}
+  .page-head .lede{font-size:16px;color:var(--ink-2);line-height:1.55;margin:0;max-width:64ch;}
+
+  /* ---------- 2. STATUS STRIP ---------- */
+  .status-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 22px;margin-bottom:28px;}
+
+  /* ---------- 3. ACTIVE RUN PANEL ---------- */
+  .active-run{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:24px;display:grid;grid-template-columns:1.4fr 1fr;gap:24px;margin-bottom:36px;}
+  .active-run h3{font-family:var(--display);font-weight:600;font-size:30px;letter-spacing:-0.02em;margin:8px 0 4px;color:var(--ink);line-height:1.05;}
+  .active-run .route-line{font-size:14px;color:var(--ink-2);margin:0 0 18px;}
+  .active-run .mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 18px;padding:14px 0 16px;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);}
+  .active-run .mini-grid .l{font-family:var(--mono);font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .active-run .mini-grid .v{font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-0.015em;color:var(--ink);line-height:1.15;margin-top:2px;}
+  .active-run .mini-grid .v.orange{color:var(--orange);}
+  .active-run .actions{margin-top:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .active-run .issue{display:block;margin-top:14px;}
+  .active-run .map{position:relative;border-radius:14px;overflow:hidden;background:var(--panel);min-height:220px;
+    background-image:linear-gradient(var(--panel-grid) 1px,transparent 1px),linear-gradient(90deg,var(--panel-grid) 1px,transparent 1px);
+    background-size:28px 28px;background-color:var(--panel);}
+  .active-run .map svg{position:absolute;inset:0;width:100%;height:100%;}
+  .active-run .map .map-loz{position:absolute;left:14px;bottom:14px;}
+
+  /* ---------- 4. AVAILABLE LOADS ---------- */
+  .avail{margin-bottom:40px;}
+  .avail h2{font-family:var(--display);font-weight:600;font-size:34px;letter-spacing:-0.02em;margin:8px 0 18px;color:var(--ink);line-height:1.1;}
+  .avail h2 em{font-style:italic;font-weight:500;color:var(--orange);}
+  .avail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .load-card{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px;position:relative;transition:transform .15s, box-shadow .15s, border-color .15s;}
+  .load-card:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(20,32,27,0.10);border-color:var(--hair-strong);}
+  .load-card .price-loz{position:absolute;top:18px;right:18px;}
+  .load-card h4{font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:-0.015em;margin:0;color:var(--ink);line-height:1.15;padding-right:60px;}
+  .load-card .route{font-size:13.5px;color:var(--ink-2);line-height:1.5;margin:0;}
+  .load-card .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:0.04em;line-height:1.7;}
+  .load-card .meta b{color:var(--ink-2);}
+  .load-card .trust{background:var(--paper-2);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:9px;font-size:12px;color:var(--ink-2);line-height:1.35;}
+  .load-card .trust .dot{width:7px;height:7px;border-radius:999px;flex-shrink:0;}
+  .load-card .trust .dot.emerald{background:var(--emerald-soft);}
+  .load-card .trust .dot.amber{background:var(--amber);}
+  .load-card .actions{margin-top:auto;padding-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .load-card .actions .btn{flex:0 0 auto;}
+  .load-card .actions .btn-primary, .load-card .actions .btn-ghost{padding:8px 14px;font-size:13px;}
+  .load-card .gc-link{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .load-card .gc-link:hover{color:var(--orange);}
+
+  /* ---------- 5. THIS WEEK'S RUNS ---------- */
+  .week-runs{margin-bottom:40px;}
+  .week-runs h2{font-family:var(--display);font-weight:600;font-size:34px;letter-spacing:-0.02em;margin:8px 0 18px;color:var(--ink);line-height:1.1;}
+  .week-runs h2 em{font-style:italic;font-weight:500;}
+  .week-table{background:var(--card);border:1px solid var(--hair);border-radius:18px;overflow:hidden;}
+  .week-table .row{display:grid;grid-template-columns:120px 1.4fr 2fr 90px 100px 1.2fr;gap:14px;align-items:center;padding:14px 22px;border-bottom:1px solid var(--hair);font-size:13.5px;color:var(--ink-2);}
+  .week-table .row:last-child{border-bottom:none;}
+  .week-table .row.head{background:var(--paper-2);font-family:var(--mono);font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;padding:12px 22px;}
+  .week-table .row .date{font-family:var(--mono);font-size:11.5px;letter-spacing:0.04em;color:var(--ink-2);font-weight:600;}
+  .week-table .row .mat{font-weight:600;color:var(--ink);}
+  .week-table .row .tons{font-family:var(--mono);font-weight:600;color:var(--ink);}
+  .week-table .row .pay{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-0.015em;color:var(--ink);}
+  .week-table .row .stat{justify-self:end;}
+  .week-table .foot{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;background:var(--paper-2);padding:18px 22px;border-top:1px solid var(--hair);}
+  .week-table .foot .l{font-family:var(--sans);font-weight:600;font-size:14px;color:var(--ink-2);}
+  .week-table .foot .totals{justify-self:center;font-family:var(--mono);font-size:12.5px;letter-spacing:0.06em;color:var(--ink);font-weight:600;}
+  .week-table .foot .totals b{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-0.015em;color:var(--ink);}
+  .week-table .foot .right{justify-self:end;text-align:right;}
+  .week-table .foot .right .settle{font-family:var(--mono);font-size:11.5px;letter-spacing:0.06em;color:var(--ink-2);font-weight:600;text-transform:uppercase;}
+  .week-table .foot .right a{display:block;margin-top:4px;}
+
+  /* ---------- 6. PROTECTION PANEL ---------- */
+  .protect{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:40px;}
+  .protect .card{border-radius:18px;padding:28px;display:flex;flex-direction:column;gap:14px;min-height:560px;}
+  .protect .card.light{background:var(--card);border:1px solid var(--hair);}
+  .protect .card.dark{background:var(--panel-2);color:var(--ink-on-panel);
+    background-image:linear-gradient(var(--panel-grid) 1px,transparent 1px),linear-gradient(90deg,var(--panel-grid) 1px,transparent 1px);
+    background-size:28px 28px;background-color:var(--panel-2);}
+  .protect .card h3{font-family:var(--display);font-weight:600;font-size:30px;letter-spacing:-0.02em;line-height:1.1;margin:4px 0 6px;color:var(--ink);}
+  .protect .card.dark h3{color:#fff;font-weight:500;}
+  .protect .card h3 em{font-style:italic;font-weight:500;}
+  .protect .card.dark h3 em{color:var(--amber);}
+  .protect .card p{font-size:14px;color:var(--ink-2);line-height:1.6;margin:0;max-width:48ch;}
+  .protect .card.dark p{color:var(--ink-on-panel-2);}
+  .gc-input{width:100%;background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:14px 16px;font-family:var(--mono);font-size:13px;color:var(--ink-2);letter-spacing:0.02em;}
+  .gc-input::placeholder{color:var(--ink-3);}
+  .recent-label{font-family:var(--mono);font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-top:6px;}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{background:var(--paper-2);border:1px solid var(--hair);border-radius:6px;padding:6px 10px;font-family:var(--mono);font-size:11px;letter-spacing:0.04em;color:var(--ink-2);font-weight:500;cursor:pointer;}
+  .chip:hover{border-color:var(--ink-3);color:var(--ink);}
+  .protect .light .footstrip{margin-top:auto;padding-top:14px;border-top:1px solid var(--hair);font-family:var(--mono);font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .protect .dark .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px 18px;margin-top:6px;}
+  .protect .dark .mini-grid .l{font-family:var(--mono);font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-on-panel-2);font-weight:600;}
+  .protect .dark .mini-grid .v{font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-0.015em;color:#fff;margin-top:4px;line-height:1;}
+  .protect .dark .qual{font-family:var(--mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-on-panel-2);font-weight:600;}
+  .protect .dark .divider{height:1px;background:rgba(255,255,255,0.10);margin:6px 0 4px;}
+  .protect .dark .disclaimer{font-family:var(--mono);font-size:10px;letter-spacing:0.04em;color:var(--ink-on-panel-2);font-style:italic;line-height:1.6;}
+  .protect .dark .actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px;}
+
+  /* ---------- 7. DOCUMENT VAULT ---------- */
+  .doc-vault{margin-bottom:40px;}
+  .doc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:18px;}
+  .doc-head .left h2{font-family:var(--display);font-weight:600;font-size:34px;letter-spacing:-0.02em;margin:8px 0 0;color:var(--ink);line-height:1.1;}
+  .doc-head .left h2 em{font-style:italic;font-weight:500;}
+  .doc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .doc-card{background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;min-height:180px;}
+  .doc-card h4{font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-0.015em;margin:6px 0 0;color:var(--ink);line-height:1.15;}
+  .doc-card .desc{font-size:13px;color:var(--ink-3);line-height:1.5;margin:0;}
+  .doc-card .uploaded{font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:0.06em;}
+  .doc-card .actions{margin-top:auto;font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;display:flex;gap:8px;flex-wrap:wrap;}
+  .doc-card .actions a:hover{color:var(--orange);}
+  .doc-card .actions .sep{color:var(--hair-strong);}
+  .doc-card.empty{background:transparent;border:1.5px dashed var(--hair-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;}
+  .doc-card.empty .add{font-size:14px;color:var(--ink-3);font-weight:500;}
+  .doc-card.empty .sub{font-family:var(--mono);font-size:10.5px;letter-spacing:0.06em;color:var(--ink-3);}
+
+  /* ---------- 8. TRUCK & COMPANY ---------- */
+  .truck-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:40px;}
+  .truck-row .card{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:24px;}
+  .truck-row .card h4{font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-0.02em;margin:8px 0 14px;color:var(--ink);line-height:1.1;}
+  .truck-row .row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:8px 0;border-bottom:1px solid var(--hair);font-size:13.5px;color:var(--ink-2);}
+  .truck-row .row:last-of-type{border-bottom:none;}
+  .truck-row .row .v{font-family:var(--mono);font-size:12.5px;color:var(--ink);font-weight:500;letter-spacing:0.02em;}
+  .truck-row .foot{margin-top:14px;display:flex;justify-content:flex-end;}
+
+  /* ---------- 9. PAYMENT METHOD ---------- */
+  .pay-card{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;margin-bottom:40px;}
+  .pay-card h4{font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-0.02em;margin:8px 0 4px;color:var(--ink);}
+  .pay-card .meta{font-size:13.5px;color:var(--ink-2);}
+  .pay-card .right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+
+  /* ---------- 10. SCHEDULE & DISPATCH ---------- */
+  .sched-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:48px;}
+  .sched-row .card{border-radius:18px;padding:24px;}
+  .sched-row .card.white{background:var(--card);border:1px solid var(--hair);}
+  .sched-row .card.paper{background:var(--paper-2);border:1px solid var(--hair);}
+  .sched-row h4{font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-0.02em;margin:8px 0 14px;color:var(--ink);}
+  .sched-row .pref{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:9px 0;border-bottom:1px solid var(--hair);font-size:13.5px;color:var(--ink-2);}
+  .sched-row .pref:last-of-type{border-bottom:none;}
+  .sched-row .pref .chips{display:flex;gap:6px;}
+  .sched-row .pref .v{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:var(--ink);background:var(--paper-2);border:1px solid var(--hair);border-radius:5px;padding:4px 8px;font-weight:600;}
+  .sched-row .card.white .pref .v{background:var(--paper);}
+  .sched-row .foot-link{margin-top:14px;display:block;}
+  .sched-row .blackouts{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px;}
+  .sched-row .blackouts .v{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:var(--ink);background:var(--card);border:1px solid var(--hair);border-radius:5px;padding:6px 10px;font-weight:600;}
+  .sched-row .add-bo{font-size:13px;padding:8px 14px;}
+  .sched-row .bo-note{margin-top:12px;font-family:var(--mono);font-size:10.5px;letter-spacing:0.04em;color:var(--ink-3);}
+
+  /* ---------- 11. FOOTER BAND ---------- */
+  .footer-band{margin-top:32px;padding:48px 0 64px;border-top:1px solid var(--hair);}
+  .footer-band .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .footer-card{background:var(--card-muted);border:1px solid var(--hair);border-radius:24px;padding:32px;display:flex;flex-direction:column;gap:14px;}
+  .footer-card .section-label{margin-bottom:6px;}
+  .footer-card h3{font-family:var(--display);font-size:32px;font-weight:600;letter-spacing:-0.02em;margin:0;line-height:1.05;color:var(--ink);max-width:20ch;}
+  .footer-card h3 em{font-style:italic;font-weight:500;}
+  .footer-card p{font-size:14px;color:var(--ink-2);line-height:1.55;margin:0;max-width:54ch;}
+  .footer-card .row{margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .legal-strip{margin-top:32px;padding:18px 0 32px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;letter-spacing:0.04em;color:var(--ink-3);}
+  .legal-strip ul{display:flex;list-style:none;gap:18px;margin:0;padding:0;}
+  .legal-strip ul a:hover{color:var(--ink);}
+
+  /* ---------- MOBILE PREVIEW FRAME ---------- */
+  .mobile-preview{margin:48px 0 64px;display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .mobile-preview .label{font-family:var(--mono);font-size:11px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+  .mobile-frame{width:380px;background:var(--paper);border:1px solid var(--hair-strong);border-radius:32px;padding:18px 14px;box-shadow:0 24px 48px rgba(20,32,27,0.10);}
+  .mobile-frame .top{display:flex;justify-content:space-between;align-items:center;padding:6px 8px 12px;border-bottom:1px solid var(--hair);}
+  .mobile-frame .body{padding:14px 8px;display:flex;flex-direction:column;gap:14px;}
+  .mobile-frame .body .stat-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .mobile-frame .body .ops-card{padding:14px;border-radius:14px;}
+  .mobile-frame .body .ops-card .v{font-size:18px;}
+  .mobile-frame .body .mh{font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-0.02em;margin:0;line-height:1.1;}
+  .mobile-frame .body .mh em{font-style:italic;font-weight:500;}
+  .mobile-frame .body .mload{background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:1180px){
+    .shell{grid-template-columns:1fr;}
+    aside.side{display:none;}
+    .active-run{grid-template-columns:1fr;}
+    .protect, .truck-row, .sched-row, .footer-band .grid{grid-template-columns:1fr;}
+    .avail-grid, .doc-grid{grid-template-columns:repeat(2,1fr);}
+    .week-table .row{grid-template-columns:1fr 1fr 1fr;font-size:12px;}
+  }
+  @media (max-width:760px){
+    main.col{padding:24px 18px 48px;}
+    .status-strip, .avail-grid, .doc-grid{grid-template-columns:1fr;}
+    .page-head h1{font-size:36px;}
+    nav.top .wrap{padding:14px 20px;flex-wrap:wrap;gap:12px;}
+    .driver-id{order:3;flex-basis:100%;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================  TOP BAR  ====================== -->
+<nav class="top">
+  <div class="wrap">
+    <a class="wordmark" href="/"><span class="leaf"></span>EarthMove<span class="dot">.</span></a>
+    <div class="driver-id">
+      <span class="name">Marco Delgado</span>
+      <span class="lozenge">TRI-AXLE &middot; 14T</span>
+      <span class="lozenge">DOT 3,748,221</span>
+    </div>
+    <div class="top-right">
+      <div class="duty-toggle">
+        <span class="seg on">On duty</span>
+        <span class="seg">Off duty</span>
+      </div>
+      <a class="signout" href="/sign-out">Sign out</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ======================  SHELL  ====================== -->
+<div class="shell">
+
+  <!-- ============= LEFT SIDEBAR ============= -->
+  <aside class="side">
+    <div class="nav-stack">
+
+      <div class="sec">Operations</div>
+      <a class="item active" href="#today">Today's runs <span class="badge">1 ACTIVE</span></a>
+      <a class="item" href="#available">Available loads <span class="badge">3</span></a>
+      <a class="item" href="#schedule">Schedule + preferences</a>
+
+      <div class="sec">Earnings</div>
+      <a class="item" href="#week">This week <span class="badge">$2,180</span></a>
+      <a class="item" href="#settlements">Settlements &amp; pay stubs</a>
+      <a class="item" href="#tax">1099 + tax archive</a>
+
+      <div class="sec">Protection</div>
+      <a class="item" href="#groundcheck">Groundcheck a project</a>
+      <a class="item" href="#liens">Lien intent filings <span class="badge">0</span></a>
+      <a class="item" href="#insurance">Insurance certificates</a>
+
+      <div class="sec">Documents</div>
+      <a class="item" href="#docs">My documents <span class="badge">7 / 8</span></a>
+      <a class="item" href="#truck">Truck &amp; company</a>
+
+      <div class="sec">Account</div>
+      <a class="item" href="#payment">Payment method</a>
+      <a class="item" href="#notif">Notifications</a>
+      <a class="item" href="#help">Help</a>
+    </div>
+
+    <div class="stat-block">
+      <span class="l">Week to date</span>
+      <div class="v">$2,180</div>
+      <div class="delta">&uarr; 12% vs last week</div>
+      <div class="settle">Settles Fri Apr 30</div>
+    </div>
+  </aside>
+
+  <!-- ============= MAIN COLUMN ============= -->
+  <main class="col">
+
+    <!-- ============= 1. PAGE HEADER ============= -->
+    <section class="page-head">
+      <span class="section-label">Driver dashboard &middot; Friday Apr 24 &middot; Dallas-Fort Worth</span>
+      <h1>Today, <em>at a glance</em>.</h1>
+      <p class="lede">Four loads done, one open, settlement Friday.</p>
+    </section>
+
+    <!-- ============= 2. STATUS STRIP ============= -->
+    <section class="status-strip ops-card" style="display:grid;grid-template-columns:repeat(4,1fr);">
+      <div><span class="l">On duty since</span><div class="v">06:42 <small>am cst</small></div><div class="meta">10 hr 48 min logged</div></div>
+      <div><span class="l">Loads today</span><div class="v">4 <small>completed</small></div><div class="meta">1 active &middot; Singleton → Frisco</div></div>
+      <div><span class="l">Tons today</span><div class="v">53.2 <small>tons hauled</small></div><div class="meta">avg 13.3 t / load</div></div>
+      <div><span class="l">Pay accrued today</span><div class="v orange">$487 <small>pre-settle</small></div><div class="meta">includes mileage + load fee</div></div>
+    </section>
+
+    <!-- ============= 3. ACTIVE RUN PANEL ============= -->
+    <section class="active-run" id="today">
+      <div>
+        <span class="section-label">Active run &middot; DSP-4471</span>
+        <h3>Flex Base &middot; 14 t</h3>
+        <p class="route-line">Singleton Yard &rarr; Frisco &middot; 28.4 mi total</p>
+
+        <div class="mini-grid">
+          <div><span class="l">Pickup ETA</span><div class="v">11:34</div></div>
+          <div><span class="l">Drop ETA</span><div class="v">12:08</div></div>
+          <div><span class="l">Miles to drop</span><div class="v">8.2</div></div>
+          <div><span class="l">Pay this load</span><div class="v orange">$142</div></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary">Capture scale ticket</button>
+          <button class="btn btn-ghost">Open turn-by-turn</button>
+        </div>
+        <a class="mono-link issue" href="#">Report issue with this load &rarr;</a>
+      </div>
+
+      <div class="map">
+        <svg viewBox="0 0 320 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- soft ribbon roads (interstate-like) -->
+          <path d="M-20 180 Q 60 160 110 150 Q 160 140 200 110 Q 240 80 360 70" stroke="rgba(255,255,255,0.10)" stroke-width="22" fill="none" stroke-linecap="round"/>
+          <path d="M-10 90 Q 70 85 130 75 Q 180 68 250 55 Q 300 50 360 48" stroke="rgba(255,255,255,0.06)" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <path d="M40 -10 Q 80 60 90 100 Q 100 140 60 220" stroke="rgba(255,255,255,0.06)" stroke-width="12" fill="none" stroke-linecap="round"/>
+          <path d="M260 -10 Q 240 60 245 110 Q 250 160 280 220" stroke="rgba(255,255,255,0.06)" stroke-width="12" fill="none" stroke-linecap="round"/>
+          <!-- secondary thin streets -->
+          <path d="M0 130 L 320 130" stroke="rgba(255,255,255,0.04)" stroke-width="1" fill="none"/>
+          <path d="M0 60 L 320 60" stroke="rgba(255,255,255,0.04)" stroke-width="1" fill="none"/>
+          <path d="M150 0 L 150 220" stroke="rgba(255,255,255,0.04)" stroke-width="1" fill="none"/>
+          <path d="M210 0 L 210 220" stroke="rgba(255,255,255,0.04)" stroke-width="1" fill="none"/>
+          <!-- main route -->
+          <path d="M40 175 Q 80 165 110 155 Q 145 140 165 125 Q 195 105 220 85 Q 250 70 285 55" stroke="#E5701B" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-dasharray="0"/>
+          <!-- truck position marker (current location, mid-route) -->
+          <circle cx="195" cy="105" r="11" fill="rgba(229,112,27,0.18)"/>
+          <circle cx="195" cy="105" r="5" fill="#E5701B" stroke="#FFFFFF" stroke-width="2"/>
+          <!-- start pin: Singleton Yard (emerald) -->
+          <circle cx="40" cy="175" r="9" fill="#FFFFFF"/>
+          <circle cx="40" cy="175" r="4.2" fill="#2DB37A"/>
+          <!-- end pin: Frisco drop (orange) -->
+          <circle cx="285" cy="55" r="9" fill="#FFFFFF"/>
+          <circle cx="285" cy="55" r="4.2" fill="#E5701B"/>
+        </svg>
+        <span class="lozenge solid-emerald map-loz"><span class="d"></span>8.2 MI TO DROP</span>
+      </div>
+    </section>
+
+    <!-- ============= 4. AVAILABLE LOADS ============= -->
+    <section class="avail" id="available">
+      <span class="section-label">Available &middot; DFW &middot; refreshed 2 min ago</span>
+      <h2><em>3 loads</em> ready to claim.</h2>
+
+      <div class="avail-grid">
+
+        <!-- LOAD 1 -->
+        <article class="load-card">
+          <span class="lozenge solid-emerald price-loz">$142</span>
+          <h4>Flex Base &middot; 14 t</h4>
+          <p class="route">Singleton Yard &rarr; Frisco &middot; 28.4 mi total</p>
+          <div class="meta">
+            <b>Pickup</b> 7:15 &middot; 6.4 mi<br/>
+            <b>Drop</b> 8:00 &middot; 22.0 mi
+          </div>
+          <div class="trust">
+            <span class="dot emerald"></span>
+            <span>GC verified &middot; 0 active liens &middot; 14 d avg pay</span>
+          </div>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm">Decline</button>
+            <button class="btn btn-primary btn-sm">Accept</button>
+            <a class="gc-link" href="#">Run Groundcheck</a>
+          </div>
+        </article>
+
+        <!-- LOAD 2 -->
+        <article class="load-card">
+          <span class="lozenge solid-emerald price-loz">$118</span>
+          <h4>#57 Stone &middot; 22 t</h4>
+          <p class="route">Mountain Creek &rarr; Plano &middot; 31.8 mi total</p>
+          <div class="meta">
+            <b>Pickup</b> 9:30 &middot; 11.2 mi<br/>
+            <b>Drop</b> 10:20 &middot; 20.6 mi
+          </div>
+          <div class="trust">
+            <span class="dot amber"></span>
+            <span><a class="mono-link orange" href="#" style="text-transform:none;font-family:var(--sans);font-size:12px;letter-spacing:0;font-weight:500;">Run Groundcheck on this contractor &rarr;</a></span>
+          </div>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm">Decline</button>
+            <button class="btn btn-primary btn-sm">Accept</button>
+            <a class="gc-link" href="#">Run Groundcheck</a>
+          </div>
+        </article>
+
+        <!-- LOAD 3 -->
+        <article class="load-card">
+          <span class="lozenge solid-emerald price-loz">$96</span>
+          <h4>Concrete Sand &middot; 14 t</h4>
+          <p class="route">Eagle Ford Yard &rarr; Mansfield &middot; 19.6 mi total</p>
+          <div class="meta">
+            <b>Pickup</b> 12:45 &middot; 4.8 mi<br/>
+            <b>Drop</b> 13:25 &middot; 14.8 mi
+          </div>
+          <div class="trust">
+            <span class="dot emerald"></span>
+            <span>GC verified &middot; 0 active liens &middot; 9 d avg pay</span>
+          </div>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm">Decline</button>
+            <button class="btn btn-primary btn-sm">Accept</button>
+            <a class="gc-link" href="#">Run Groundcheck</a>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ============= 5. THIS WEEK'S RUNS ============= -->
+    <section class="week-runs" id="week">
+      <span class="section-label">This week &middot; Mon Apr 20 – today</span>
+      <h2>Settles <em>this Friday</em>.</h2>
+
+      <div class="week-table">
+        <div class="row head">
+          <span>Date</span>
+          <span>Material</span>
+          <span>Route</span>
+          <span>Tons</span>
+          <span>Pay</span>
+          <span class="stat">Status</span>
+        </div>
+
+        <!-- last week PAID rows -->
+        <div class="row">
+          <span class="date">Sat Apr 18</span>
+          <span class="mat">Crushed Limestone</span>
+          <span>Hanson Aggregates &middot; Forney → Wylie</span>
+          <span class="tons">22.0 t</span>
+          <span class="pay">$132</span>
+          <span class="stat"><span class="lozenge solid-emerald">PAID FRI APR 17</span></span>
+        </div>
+        <div class="row">
+          <span class="date">Sat Apr 18</span>
+          <span class="mat">#57 Stone</span>
+          <span>Trinity Materials &middot; Mountain Creek → Plano</span>
+          <span class="tons">22.0 t</span>
+          <span class="pay">$118</span>
+          <span class="stat"><span class="lozenge solid-emerald">PAID FRI APR 17</span></span>
+        </div>
+        <div class="row">
+          <span class="date">Fri Apr 17</span>
+          <span class="mat">Flex Base</span>
+          <span>ABC Stone &middot; Singleton → Lewisville</span>
+          <span class="tons">14.0 t</span>
+          <span class="pay">$148</span>
+          <span class="stat"><span class="lozenge solid-emerald">PAID FRI APR 17</span></span>
+        </div>
+        <div class="row">
+          <span class="date">Fri Apr 17</span>
+          <span class="mat">Fill Dirt</span>
+          <span>Trinity Materials &middot; Eagle Ford → Garland</span>
+          <span class="tons">14.0 t</span>
+          <span class="pay">$104</span>
+          <span class="stat"><span class="lozenge solid-emerald">PAID FRI APR 17</span></span>
+        </div>
+        <div class="row">
+          <span class="date">Thu Apr 16</span>
+          <span class="mat">Bedding Sand</span>
+          <span>Hanson Aggregates &middot; Forney → McKinney</span>
+          <span class="tons">14.0 t</span>
+          <span class="pay">$156</span>
+          <span class="stat"><span class="lozenge solid-emerald">PAID FRI APR 17</span></span>
+        </div>
+        <div class="row">
+          <span class="date">Wed Apr 15</span>
+          <span class="mat">Recycled Base</span>
+          <span>ABC Stone &middot; Singleton → Irving</span>
+          <span class="tons">14.0 t</span>
+          <span class="pay">$98</span>
+          <span class="stat"><span class="lozenge solid-emerald">PAID FRI APR 17</span></span>
+        </div>
+
+        <!-- this week PENDING rows -->
+        <div class="row">
+          <span class="date">Mon Apr 20</span>
+          <span class="mat">Flex Base</span>
+          <span>ABC Stone &middot; Singleton → Allen</span>
+          <span class="tons">14.0 t</span>
+          <span class="pay">$152</span>
+          <span class="stat"><span class="lozenge">PENDING &middot; FRI APR 30</span></span>
+        </div>
+        <div class="row">
+          <span class="date">Tue Apr 21</span>
+          <span class="mat">#57 Stone</span>
+          <span>Trinity Materials &middot; Mountain Creek → Carrollton</span>
+          <span class="tons">22.0 t</span>
+          <span class="pay">$124</span>
+          <span class="stat"><span class="lozenge">PENDING &middot; FRI APR 30</span></span>
+        </div>
+        <div class="row">
+          <span class="date">Wed Apr 22</span>
+          <span class="mat">Concrete Sand</span>
+          <span>Trinity Materials &middot; Eagle Ford → Mansfield</span>
+          <span class="tons">14.0 t</span>
+          <span class="pay">$96</span>
+          <span class="stat"><span class="lozenge">PENDING &middot; FRI APR 30</span></span>
+        </div>
+        <div class="row">
+          <span class="date">Thu Apr 23</span>
+          <span class="mat">Pea Gravel</span>
+          <span>Hanson Aggregates &middot; Forney → Rockwall</span>
+          <span class="tons">8.0 t</span>
+          <span class="pay">$115</span>
+          <span class="stat"><span class="lozenge">PENDING &middot; FRI APR 30</span></span>
+        </div>
+
+        <div class="foot">
+          <span class="l">Week to date</span>
+          <span class="totals">17 loads &middot; 224 t &middot; <b>$2,180</b></span>
+          <span class="right">
+            <span class="settle">Settles Friday Apr 30</span>
+            <a class="mono-link" href="#">Download statement preview &rarr;</a>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= 6. PROTECTION PANEL ============= -->
+    <section class="protect" id="groundcheck">
+
+      <!-- LEFT: Groundcheck -->
+      <div class="card light">
+        <span class="section-label emerald">Groundcheck a project</span>
+        <h3>Vet a contractor <em>before</em> you load.</h3>
+        <p>Pulls TX Secretary of State entity record, 90-day lien history, FMCSA carrier safety, and EarthMove's own dispatch payment history. Free, unlimited, entity-only.</p>
+
+        <input class="gc-input" type="text" placeholder="Contractor LLC name, EIN, or project address" />
+
+        <div class="recent-label">Recent lookups</div>
+        <div class="chip-row">
+          <span class="chip">Highland Park Custom Homes</span>
+          <span class="chip">BRT Civil Construction</span>
+          <span class="chip">Tarrant Paving LLC</span>
+          <span class="chip">DFW Site Prep Inc</span>
+          <span class="chip">Lone Star Earthworks</span>
+        </div>
+
+        <div class="recent-label" style="margin-top:4px;">What gets pulled</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-family:var(--mono);font-size:10.5px;letter-spacing:0.04em;color:var(--ink-2);line-height:1.7;">
+          <span>&bull; TX Sec. of State entity</span>
+          <span>&bull; 90-day lien filings</span>
+          <span>&bull; FMCSA carrier safety</span>
+          <span>&bull; EarthMove dispatch pay history</span>
+        </div>
+
+        <div class="footstrip">Entity-only &middot; FCRA-safe &middot; LLCs, corps, partnerships</div>
+      </div>
+
+      <!-- RIGHT: Lien intent filings -->
+      <div class="card dark" id="liens">
+        <span class="section-label amber">Lien intent filings</span>
+        <h3>Unpaid load? <em>File intent</em> in 90 seconds.</h3>
+        <p>Texas Property Code Ch. 56 covers aggregate haulers — file a notice of intent within the statutory window and you preserve your lien on the project. EarthMove generates the form, mails certified, stores the green card.</p>
+
+        <div class="mini-grid">
+          <div><span class="l">Active filings</span><div class="v">0</div></div>
+          <div><span class="l">Resolved this year</span><div class="v">0</div></div>
+          <div><span class="l">Avg recovery</span><div class="v">&mdash;</div></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary">Start a new filing</button>
+        </div>
+        <div class="qual">Texas only at launch &middot; Colorado + Arizona Q3 2026</div>
+
+        <div class="divider"></div>
+        <div class="disclaimer">Filing assistance, not legal representation. EarthMove generates statutory notice forms and provides certified-mail service. Consult counsel for litigation or contested liens.</div>
+      </div>
+
+    </section>
+
+    <!-- ============= 7. DOCUMENT VAULT ============= -->
+    <section class="doc-vault" id="docs">
+      <div class="doc-head">
+        <div class="left">
+          <span class="section-label">Documents on file</span>
+          <h2>Your <em>paperwork</em>, in one place.</h2>
+        </div>
+        <button class="btn btn-primary">Upload document</button>
+      </div>
+
+      <div class="doc-grid">
+
+        <!-- 1. ACTION REQUIRED first -->
+        <article class="doc-card">
+          <span class="lozenge solid-orange">Action required &middot; upload now</span>
+          <h4>COI &middot; General Liability</h4>
+          <p class="desc">$1M / $2M general liability certificate naming EarthMove as additional insured.</p>
+          <span class="uploaded">Last on file Mar 14, 2024 &middot; expired</span>
+          <div class="actions">
+            <a href="#">Upload</a><span class="sep">&middot;</span>
+            <a href="#">View requirements</a>
+          </div>
+        </article>
+
+        <!-- 2. EXPIRES SOON -->
+        <article class="doc-card">
+          <span class="lozenge solid-amber">Expires in 23 days</span>
+          <h4>DOT Medical Card</h4>
+          <p class="desc">FMCSA medical examiner's certificate. Expires May 21, 2026.</p>
+          <span class="uploaded">Uploaded May 21, 2024 &middot; 1.4 MB</span>
+          <div class="actions">
+            <a href="#">Replace</a><span class="sep">&middot;</span>
+            <a href="#">Download</a><span class="sep">&middot;</span>
+            <a href="#">Remove</a>
+          </div>
+        </article>
+
+        <!-- 3. ON FILE no expiration -->
+        <article class="doc-card">
+          <span class="lozenge solid-emerald">On file</span>
+          <h4>W-9</h4>
+          <p class="desc">Form W-9 for Marco Delgado Hauling LLC. Used for 1099 reporting.</p>
+          <span class="uploaded">Uploaded Mar 14, 2025 &middot; 0.4 MB</span>
+          <div class="actions">
+            <a href="#">Replace</a><span class="sep">&middot;</span>
+            <a href="#">Download</a><span class="sep">&middot;</span>
+            <a href="#">Remove</a>
+          </div>
+        </article>
+
+        <!-- 4. ON FILE auto liab -->
+        <article class="doc-card">
+          <span class="lozenge solid-emerald">On file &middot; expires Mar 14, 2027</span>
+          <h4>COI &middot; Auto Liability</h4>
+          <p class="desc">$1M auto liability for hired and non-owned tri-axle dump operations.</p>
+          <span class="uploaded">Uploaded Mar 14, 2026 &middot; 2.1 MB</span>
+          <div class="actions">
+            <a href="#">Replace</a><span class="sep">&middot;</span>
+            <a href="#">Download</a><span class="sep">&middot;</span>
+            <a href="#">Remove</a>
+          </div>
+        </article>
+
+        <!-- 5. CDL -->
+        <article class="doc-card">
+          <span class="lozenge solid-emerald">On file &middot; expires Dec 02, 2028</span>
+          <h4>CDL &middot; front + back</h4>
+          <p class="desc">Class A commercial driver license, Texas. Status only — number not displayed.</p>
+          <span class="uploaded">Uploaded Dec 02, 2024 &middot; 1.8 MB</span>
+          <div class="actions">
+            <a href="#">Replace</a><span class="sep">&middot;</span>
+            <a href="#">Download</a><span class="sep">&middot;</span>
+            <a href="#">Remove</a>
+          </div>
+        </article>
+
+        <!-- 6. Truck reg -->
+        <article class="doc-card">
+          <span class="lozenge solid-emerald">On file &middot; expires Jan 31, 2027</span>
+          <h4>Truck Registration</h4>
+          <p class="desc">TX commercial vehicle registration for plate 8C-3 4471.</p>
+          <span class="uploaded">Uploaded Jan 31, 2026 &middot; 0.9 MB</span>
+          <div class="actions">
+            <a href="#">Replace</a><span class="sep">&middot;</span>
+            <a href="#">Download</a><span class="sep">&middot;</span>
+            <a href="#">Remove</a>
+          </div>
+        </article>
+
+        <!-- 7. DOT Annual Inspection -->
+        <article class="doc-card">
+          <span class="lozenge solid-emerald">On file &middot; expires Aug 09, 2026</span>
+          <h4>DOT Annual Inspection</h4>
+          <p class="desc">FMCSA 396.17 annual inspection report. Performed by certified inspector.</p>
+          <span class="uploaded">Uploaded Aug 09, 2025 &middot; 1.2 MB</span>
+          <div class="actions">
+            <a href="#">Replace</a><span class="sep">&middot;</span>
+            <a href="#">Download</a><span class="sep">&middot;</span>
+            <a href="#">Remove</a>
+          </div>
+        </article>
+
+        <!-- 8. EMPTY ADD -->
+        <article class="doc-card empty">
+          <span class="add">+ Add another document</span>
+          <span class="sub">(Drug screen, IFTA, IRP, etc.)</span>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ============= 8. TRUCK & COMPANY ============= -->
+    <section class="truck-row" id="truck">
+
+      <div class="card">
+        <span class="section-label">Business entity</span>
+        <h4>Marco Delgado Hauling LLC</h4>
+        <div class="row"><span>EIN</span><span class="v">&bull;&bull;&ndash;&bull;&bull;&bull;1842</span></div>
+        <div class="row"><span>DOT number</span><span class="v">3,748,221</span></div>
+        <div class="row"><span>MC number</span><span class="v">MC-12,991</span></div>
+        <div class="row"><span>TX entity status</span><span class="v">Active (verified Apr 18)</span></div>
+        <div class="row"><span>Registered agent</span><span class="v">On file</span></div>
+        <div class="row"><span>Formed</span><span class="v">March 2021</span></div>
+        <div class="foot"><button class="btn btn-ghost btn-sm">Edit</button></div>
+      </div>
+
+      <div class="card">
+        <span class="section-label">Truck &amp; equipment</span>
+        <h4>2019 Mack Granite GU713</h4>
+        <div class="row"><span>Class</span><span class="v">Tri-axle dump</span></div>
+        <div class="row"><span>Plate</span><span class="v">TX 8C-3 4471</span></div>
+        <div class="row"><span>VIN</span><span class="v">Last 6: &bull;&bull;&bull;&bull;&bull;&bull;H82914</span></div>
+        <div class="row"><span>Capacity</span><span class="v">14 tons / 12 cubic yards</span></div>
+        <div class="row"><span>Body</span><span class="v">Williamsen 12-yard steel</span></div>
+        <div class="row"><span>Last service</span><span class="v">Apr 02, 2026 (8,400 mi)</span></div>
+        <div class="foot"><button class="btn btn-ghost btn-sm">Edit</button></div>
+      </div>
+
+    </section>
+
+    <!-- ============= 9. PAYMENT METHOD ============= -->
+    <section class="pay-card" id="payment">
+      <div>
+        <span class="section-label">Settlement method</span>
+        <h4>ACH to Chase &bull;&bull;2218</h4>
+        <p class="meta">Routing on file &middot; Last settlement Apr 18 &middot; Next settlement Apr 30</p>
+      </div>
+      <div class="right">
+        <button class="btn btn-ghost btn-sm">Switch to direct deposit via Stripe</button>
+        <a class="mono-link" href="#">Add a backup method &rarr;</a>
+      </div>
+    </section>
+
+    <!-- ============= 10. SCHEDULE & DISPATCH ============= -->
+    <section class="sched-row" id="schedule">
+
+      <div class="card white">
+        <span class="section-label">Dispatch preferences</span>
+        <h4>What you'll be offered.</h4>
+        <div class="pref"><span>Max distance from home yard</span><span class="v">35 mi</span></div>
+        <div class="pref"><span>Truck classes you run</span><span class="chips"><span class="v">TRI-AXLE</span><span class="v">TANDEM</span></span></div>
+        <div class="pref"><span>Materials you'll haul</span><span class="v">ALL</span></div>
+        <div class="pref"><span>Earliest pickup</span><span class="v">06:00</span></div>
+        <div class="pref"><span>Latest dispatch acceptance</span><span class="v">16:30</span></div>
+        <a class="mono-link foot-link" href="#">Edit preferences &rarr;</a>
+      </div>
+
+      <div class="card paper">
+        <span class="section-label">Blackout dates</span>
+        <h4>Days you're not dispatchable.</h4>
+        <div class="blackouts">
+          <span class="v">May 12-13</span>
+          <span class="v">May 27</span>
+          <span class="v">Jun 04</span>
+        </div>
+        <button class="btn btn-ghost add-bo">Add a blackout day</button>
+        <div class="bo-note">We won't show you loads on these dates.</div>
+      </div>
+
+    </section>
+
+    <!-- ============= 11. FOOTER BAND ============= -->
+    <section class="footer-band">
+      <div class="grid">
+
+        <div class="footer-card">
+          <span class="section-label">For drivers</span>
+          <h3>Hauling for EarthMove pays <em>weekly</em>, not on net-30.</h3>
+          <p>If you run a tri-axle, tandem, or end-dump in the DFW metro, we have steady runs from 6 yards inside the loop. Settled at end of week. Real dispatch, no chasing checks.</p>
+          <div class="row">
+            <a class="btn btn-primary" href="/drivers">Apply to drive</a>
+            <a class="btn btn-link" href="/drivers#requirements">Requirements &rarr;</a>
+          </div>
+        </div>
+
+        <div class="footer-card">
+          <span class="section-label">For contractors</span>
+          <h3>Open a contractor account, <em>build a reorder list</em>.</h3>
+          <p>Saved drop sites, billing on PO, FCRA-compliant trust reports for new subs, and one ticketing trail across every load you order. Free to open.</p>
+          <div class="row">
+            <a class="btn btn-primary" href="/sign-up?role=contractor">Open an account</a>
+            <a class="btn btn-link" href="/contractors">What's included &rarr;</a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="legal-strip">
+        <span>EarthMove, Inc. &middot; 3220 Singleton Blvd, Dallas TX 75212</span>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/legal/terms">Terms</a></li>
+          <li><a href="/legal/privacy">Privacy</a></li>
+          <li><a href="/legal/fcra">FCRA disclosure</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============= MOBILE PREVIEW ============= -->
+    <section class="mobile-preview">
+      <span class="label">Mobile preview &middot; stacked layout &middot; 380 px</span>
+      <div class="mobile-frame">
+        <div class="top">
+          <a class="wordmark" href="/" style="font-size:18px;"><span class="leaf"></span>EarthMove<span class="dot">.</span></a>
+          <div class="duty-toggle" style="font-size:9.5px;">
+            <span class="seg on">On</span>
+            <span class="seg">Off</span>
+          </div>
+        </div>
+        <div class="body">
+          <div>
+            <span class="section-label" style="font-size:10px;">Today &middot; Apr 24</span>
+            <h2 class="mh">Today, <em>at a glance</em>.</h2>
+          </div>
+
+          <div class="stat-strip">
+            <div class="ops-card">
+              <span class="l">Loads today</span>
+              <div class="v">4</div>
+              <div class="meta">1 active</div>
+            </div>
+            <div class="ops-card">
+              <span class="l">Pay today</span>
+              <div class="v" style="color:var(--orange);">$487</div>
+              <div class="meta">pre-settle</div>
+            </div>
+          </div>
+
+          <div class="mload">
+            <span class="section-label" style="font-size:10px;">Active &middot; DSP-4471</span>
+            <div style="font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-0.015em;">Flex Base &middot; 14 t</div>
+            <div style="font-size:13px;color:var(--ink-2);">Singleton Yard &rarr; Frisco</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="lozenge solid-emerald"><span class="d"></span>8.2 MI</span>
+              <span class="lozenge">DROP 12:08</span>
+              <span class="lozenge solid-orange">$142</span>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top:4px;">Capture scale ticket</button>
+          </div>
+
+          <div class="mload">
+            <span class="section-label emerald" style="font-size:10px;">Groundcheck</span>
+            <div style="font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-0.015em;">Vet a contractor <em style="font-style:italic;font-weight:500;">before</em> you load.</div>
+            <input class="gc-input" type="text" placeholder="LLC name, EIN, or project address" style="padding:10px 12px;font-size:12px;"/>
+            <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:0.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;">Entity-only &middot; FCRA-safe</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+</body>
+</html>
