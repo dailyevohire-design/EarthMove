@@ -31,6 +31,16 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  // Legacy /learn slugs that have no canonical successor — redirect to the
+  // hub at the edge (308 permanent). Successor-based slugs are handled by
+  // permanentRedirect() in src/app/(marketplace)/learn/[slug]/page.tsx.
+  // Keep the slug list here in sync with LEGACY_HUB_REDIRECTS in
+  // src/lib/learn/articles.ts.
+  async redirects() {
+    return [
+      { source: '/learn/spring-project-guide-2025', destination: '/learn', permanent: true },
+    ]
+  },
 }
 
 export default nextConfig
