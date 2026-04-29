@@ -2,14 +2,20 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Forward the request pathname as x-pathname header so server components
+  // (e.g. dashboard/layout.tsx) can read it via headers() and seed redirectTo.
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pathname', request.nextUrl.pathname)
+  const passThrough = () => NextResponse.next({ request: { headers: requestHeaders } })
+
   const password = process.env.SITE_PASSWORD
-  if (!password) return NextResponse.next()
+  if (!password) return passThrough()
 
   // Allow API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) return NextResponse.next()
+  if (request.nextUrl.pathname.startsWith('/api/')) return passThrough()
 
   // Check access cookie
-  if (request.cookies.get('site_access')?.value === 'granted') return NextResponse.next()
+  if (request.cookies.get('site_access')?.value === 'granted') return passThrough()
 
   // Handle password submission via POST (never via query string — Referer leaks)
   if (request.method === 'POST' && request.nextUrl.pathname === '/__gate') {
