@@ -46,6 +46,19 @@ export const MATERIAL_IMAGES: Record<string, string> = {
 }
 
 export const ARTICLE_IMAGES: Record<string, string> = {
+  // ── V2 canonical slugs (current as of 2026-04 redesign) ──
+  // Driveway guide 2026 → cracked earth (driveway context)
+  'driveway-gravel-complete-guide-2026': 'https://images.unsplash.com/photo-1699796553666-171dea76625b?w=1200&q=80',
+  // French drains → pebbles (drainage material)
+  'best-materials-french-drains': 'https://images.unsplash.com/photo-1760774713181-7e74c20e6d75?w=1200&q=80',
+  // Aggregate grades → angular gravel
+  'aggregate-grades-explained-57-67-flex-base': 'https://images.unsplash.com/photo-1698220726355-62f370544733?w=1200&q=80',
+  // Cubic yards calculator → crushed stone surface
+  'cubic-yards-calculator': 'https://images.unsplash.com/photo-1699796553666-171dea76625b?w=1200&q=80',
+  // $3,000 mistake → rip rap (dramatic rocks)
+  'three-thousand-dollar-mistake': 'https://images.unsplash.com/photo-1699032582554-7c1e6cfce1d1?w=1200&q=80',
+
+  // ── Legacy slugs (kept for SEO continuity) ──
   // Driveway guide → cracked earth (driveway context)
   'driveway-gravel-guide': 'https://images.unsplash.com/photo-1699796553666-171dea76625b?w=1200&q=80',
   // Fill dirt vs topsoil → rich dark soil
@@ -54,8 +67,6 @@ export const ARTICLE_IMAGES: Record<string, string> = {
   'french-drain-materials': 'https://images.unsplash.com/photo-1760774713181-7e74c20e6d75?w=1200&q=80',
   // How much gravel → crushed gravel close-up
   'how-much-gravel-do-i-need': 'https://images.unsplash.com/photo-1698220726355-62f370544733?w=1200&q=80',
-  // Spring project guide → construction earthwork
-  'spring-project-guide-2025': 'https://images.unsplash.com/photo-1766595680977-fd4818afa337?w=1200&q=80',
   // Gravel calculator → crushed stone surface
   'gravel-calculator': 'https://images.unsplash.com/photo-1699796553666-171dea76625b?w=1200&q=80',
   // Material grades → angular gravel
