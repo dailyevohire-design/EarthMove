@@ -53,7 +53,7 @@ export function SignupForm({
 
       // Honor the post-signup destination (e.g. back to the product page they
       // were trying to check out from). Falls back to /browse.
-      router.push(redirectTo ?? '/browse')
+      router.push(redirectTo ?? '/dashboard')
       router.refresh()
     })
   }

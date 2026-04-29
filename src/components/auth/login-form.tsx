@@ -23,7 +23,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
         setError('Invalid email or password.')
         return
       }
-      router.push(redirectTo ?? '/browse')
+      router.push(redirectTo ?? '/dashboard')
       router.refresh()
     })
   }

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import {
@@ -24,9 +25,11 @@ const CUSTOMER_NAV = [
 ]
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const pathname = (await headers()).get('x-pathname') ?? '/dashboard';
+  const loginRedirect = `/login?redirectTo=${encodeURIComponent(pathname)}`;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect(loginRedirect)
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -34,7 +37,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('id', user.id)
     .single()
 
-  if (!profile) redirect('/login')
+  if (!profile) redirect(loginRedirect)
 
   const role = profile.role ?? 'customer'
   const displayName = profile.company_name ?? profile.first_name ?? user.email?.split('@')[0] ?? 'Account'
