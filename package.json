@@ -37,6 +37,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "h3-js": "^4.4.0",
+    "inngest": "^4.2.6",
     "lucide-react": "^0.460.0",
     "maplibre-gl": "^4.7.1",
     "marked": "^12",

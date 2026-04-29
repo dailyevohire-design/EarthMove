@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { validateInput } from '@/lib/trust/prompt-guards'
 import { getRateLimiter, checkDailyCostCap, checkAnonDailyCap } from '@/lib/trust/rate-limiter'
 import { runFreeTier } from '@/lib/trust/trust-engine'
+import { inngest } from '@/lib/inngest'
 
 export const runtime = 'nodejs'
 export const maxDuration = 180
@@ -90,7 +91,11 @@ export async function POST(req: NextRequest) {
   }
   const { name, city: sCity, state, hints } = validation.clean!
 
-  const REDEMPTION_TIERS = new Set(['standard', 'plus', 'deep_dive'])
+  // Credit-backed report SKUs (consume 1 credit from trust_credits_ledger).
+  const REDEMPTION_TIERS = new Set(['standard', 'plus', 'deep_dive', 'forensic'])
+  // Subset of REDEMPTION_TIERS that runs async via Inngest. 'standard' is
+  // credit-backed but synchronous (Sonar+Anthropic during the request).
+  const JOB_TIERS = new Set(['plus', 'deep_dive', 'forensic'])
   if (
     !['free', 'standard', 'pro'].includes(tier) &&
     !REDEMPTION_TIERS.has(tier)
@@ -198,8 +203,17 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Credit-backed tiers: redeem one ledger entry up front. 'standard' falls
+  // through to the sync Sonar+Anthropic path below; JOB_TIERS enqueue an
+  // async trust_jobs row and emit a trust/job.enqueued Inngest event,
+  // returning 202 + a poll URL.
+  let redeemedCreditId:        string | null = null
+  let redeemedAlreadyRedeemed: boolean       = false
+  let redeemedNewBalance:      number        = 0
+  let idempotencyKey:          string        = ''
+
   if (REDEMPTION_TIERS.has(tier)) {
-    const idempotency_key: string =
+    idempotencyKey =
       (typeof body.idempotency_key === 'string' && body.idempotency_key.length > 0)
         ? body.idempotency_key
         : 'req:' + randomUUID()
@@ -209,7 +223,7 @@ export async function POST(req: NextRequest) {
       p_tier:            tier,
       p_contractor_name: name,
       p_state_code:      state,
-      p_idempotency_key: idempotency_key,
+      p_idempotency_key: idempotencyKey,
     })
 
     if (redeemErr) {
@@ -230,28 +244,56 @@ export async function POST(req: NextRequest) {
       console.error('[TrustAPI] redeem_credit_atomic returned no ledger_id', { redeemRow })
       return NextResponse.json({ error: 'redemption_failed' }, { status: 500 })
     }
+    redeemedCreditId        = redeemRow.ledger_id
+    redeemedAlreadyRedeemed = Boolean(redeemRow.already_redeemed)
+    redeemedNewBalance      = Number(redeemRow.new_balance ?? 0)
 
-    const { data: jobData, error: jobErr } = await admin.rpc('enqueue_trust_job', {
-      p_contractor_name: name,
-      p_state_code:      state,
-      p_city:            sCity || null,
-      p_tier:            tier,
-      p_user_id:         user!.id,
-      p_credit_id:       redeemRow.ledger_id,
-      p_idempotency_key: 'job:' + idempotency_key,
-    })
+    // Async branch: enqueue + Inngest send + 202. Standard falls through.
+    if (JOB_TIERS.has(tier)) {
+      const { data: jobData, error: jobErr } = await admin.rpc('enqueue_trust_job', {
+        p_contractor_name: name,
+        p_state_code:      state,
+        p_city:            sCity || null,
+        p_tier:            tier,
+        p_user_id:         user!.id,
+        p_credit_id:       redeemedCreditId,
+        p_idempotency_key: 'job:' + idempotencyKey,
+      })
 
-    if (jobErr) {
-      console.error('[TrustAPI] enqueue_trust_job failed', { err: jobErr.message })
-      return NextResponse.json({ error: 'enqueue_failed' }, { status: 500 })
+      if (jobErr) {
+        console.error('[TrustAPI] enqueue_trust_job failed', { err: jobErr.message })
+        return NextResponse.json({ error: 'enqueue_failed' }, { status: 500 })
+      }
+
+      const jobRow = Array.isArray(jobData) ? jobData[0] : jobData
+      if (!jobRow?.id) {
+        console.error('[TrustAPI] enqueue_trust_job returned no id', { jobRow })
+        return NextResponse.json({ error: 'enqueue_failed' }, { status: 500 })
+      }
+
+      // Best-effort dispatch. The job row is durable; if Inngest is
+      // unavailable, a fallback dispatcher (Tranche B) can re-emit the event.
+      try {
+        await inngest.send({
+          name: 'trust/job.enqueued',
+          data: { job_id: jobRow.id },
+        })
+      } catch (sendErr) {
+        console.error('[TrustAPI] inngest.send failed (job is enqueued; can be redispatched)', sendErr)
+      }
+
+      return NextResponse.json(
+        {
+          status:           'queued',
+          job_id:           jobRow.id,
+          poll_url:         `/api/trust/jobs/${jobRow.id}`,
+          already_redeemed: redeemedAlreadyRedeemed,
+          new_balance:      redeemedNewBalance,
+        },
+        { status: 202 }
+      )
     }
-
-    const jobRow = Array.isArray(jobData) ? jobData[0] : jobData
-    return NextResponse.json({
-      job_id:            jobRow?.id ?? null,
-      already_redeemed:  Boolean(redeemRow.already_redeemed),
-      new_balance:       Number(redeemRow.new_balance ?? 0),
-    })
+    // 'standard': credit redeemed, fall through to sync path below.
   }
 
   const hintParts = [
@@ -379,6 +421,13 @@ export async function POST(req: NextRequest) {
     cached: false,
     cache_read_tokens: cacheReadTokens,
     cache_creation_tokens: cacheCreationTokens,
+    credit: redeemedCreditId
+      ? {
+          ledger_id:        redeemedCreditId,
+          already_redeemed: redeemedAlreadyRedeemed,
+          new_balance:      redeemedNewBalance,
+        }
+      : null,
     meta: {
       cost_usd:              Number(costUsd.toFixed(4)),
       tokens_in:             tokensIn,
