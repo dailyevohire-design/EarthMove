@@ -92,13 +92,13 @@ export async function POST(req: NextRequest) {
 
   const REDEMPTION_TIERS = new Set(['standard', 'plus', 'deep_dive'])
   if (
-    !['free', 'pro', 'enterprise'].includes(tier) &&
+    !['free', 'standard', 'pro'].includes(tier) &&
     !REDEMPTION_TIERS.has(tier)
   ) {
     return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
   }
 
-  if ((tier === 'pro' || tier === 'enterprise' || REDEMPTION_TIERS.has(tier)) && !user) {
+  if ((tier === 'pro' || REDEMPTION_TIERS.has(tier)) && !user) {
     return NextResponse.json({ error: 'Sign in required for paid tiers' }, { status: 401 })
   }
 
@@ -133,10 +133,23 @@ export async function POST(req: NextRequest) {
     }, { status: 422 })
   }
 
+  // Resolve tier server-side from v_trust_entitlement. Drives both rate-limit
+  // bucket selection and the daily cost cap; body `tier` is a *requested* tier
+  // (still used for credit-redemption branch routing) — never authoritative
+  // for enforcement.
+  const resolvedTier = user
+    ? await resolveTrustTier(admin, user.id)
+    : 'anon'
+  if (user && tier !== resolvedTier) {
+    console.info('[TrustAPI] requested tier differs from entitlement — using entitlement', {
+      userId: user.id, requested: tier, resolved: resolvedTier,
+    })
+  }
+
   const rlKey = user?.id ?? ip ?? 'anon'
   let rlOk = false
   try {
-    const limiter = getRateLimiter(tier)
+    const limiter = getRateLimiter(resolvedTier)
     const { success } = await limiter.limit(rlKey)
     rlOk = success
   } catch (rlErr) {
@@ -170,12 +183,6 @@ export async function POST(req: NextRequest) {
       )
     }
   } else {
-    const resolvedTier = await resolveTrustTier(admin, user.id)
-    if (tier !== resolvedTier) {
-      console.info('[TrustAPI] requested tier differs from entitlement — using entitlement', {
-        userId: user.id, requested: tier, resolved: resolvedTier,
-      })
-    }
     const capResult = await checkDailyCostCap(user.id, resolvedTier)
     if (!capResult.allowed) {
       return NextResponse.json(
