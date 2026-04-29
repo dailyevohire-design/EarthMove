@@ -1,32 +1,27 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import { getArticleImage } from '@/lib/material-images'
 import {
-  ArrowRight, Calculator, Leaf, HardHat, Home,
-  Grid3X3, Clock, TrendingUp, Zap,
+  ArrowRight, Clock, TrendingUp, Zap,
 } from 'lucide-react'
-
-/* ─── ARTICLES DATA ─── */
-const ARTICLES = [
-  { slug: 'driveway-gravel-guide', title: 'The Complete Guide to Driveway Gravel in 2025', desc: 'Everything about choosing, calculating, and installing driveway materials.', time: '12 min', cat: 'Homeowner', featured: true },
-  { slug: 'fill-dirt-vs-topsoil', title: 'Fill Dirt vs Topsoil: Which One Do You Actually Need?', desc: 'The difference could save you thousands on your next project.', time: '8 min', cat: 'Homeowner', featured: true },
-  { slug: 'french-drain-materials', title: 'Best Materials for French Drains', desc: 'Stop water damage before it starts. Complete drainage guide.', time: '10 min', cat: 'Homeowner', featured: false },
-  { slug: 'how-much-gravel-do-i-need', title: 'How Much Gravel Do I Need?', desc: 'Never over-order or under-order again.', time: '6 min', cat: 'Calculator', featured: false },
-  { slug: 'spring-project-guide-2025', title: '2025 Spring Project Guide', desc: 'Beat the price increases. Seasonal planning guide.', time: '9 min', cat: 'Seasonal', featured: false },
-  { slug: 'gravel-calculator', title: 'Free Gravel & Aggregate Calculator', desc: 'Calculate cubic yards, tons, and truckloads instantly.', time: '2 min', cat: 'Calculator', featured: false },
-  { slug: 'material-grades-explained', title: 'Aggregate Grades Explained', desc: '#57, #67, Grade 1 flex base — decoded for contractors.', time: '7 min', cat: 'Contractor', featured: false },
-  { slug: 'ordering-wrong-material', title: 'The $3,000 Mistake', desc: 'Real stories of costly material mistakes and how to avoid them.', time: '8 min', cat: 'Homeowner', featured: false },
-]
+import {
+  type Article,
+  ARTICLES,
+  getHeroArticle,
+  getSecondaryFeaturedArticles,
+  getArticlesByCategory,
+} from '@/lib/learn/articles'
 
 const FILTERS = [
-  { key: 'all', label: 'All', icon: Grid3X3 },
-  { key: 'Homeowner', label: 'Homeowner', icon: Home },
-  { key: 'Contractor', label: 'Contractor', icon: HardHat },
-  { key: 'Calculator', label: 'Calculators', icon: Calculator },
-  { key: 'Seasonal', label: 'Seasonal', icon: Leaf },
-]
+  { key: 'all',         label: 'All' },
+  { key: 'homeowner',   label: 'Homeowner' },
+  { key: 'contractor',  label: 'Contractor' },
+  { key: 'calculator',  label: 'Calculators' },
+] as const
+
+type FilterKey = typeof FILTERS[number]['key']
 
 const PROJECTS = [
   { num: '01', name: 'Driveway', desc: 'Most ordered project type nationwide', accent: '#f59e0b', materials: [{ name: 'Flex Base', price: 'from $24/ton' }, { name: 'Road Base', price: 'from $16/ton' }, { name: 'Pea Gravel', price: 'from $35/ton' }], icon: 'M4 20 L12 4 L20 20 M4 20 L20 20' },
@@ -117,7 +112,7 @@ function useCountUp(target: number, duration = 2000) {
 
 /* ─── MAIN COMPONENT ─── */
 export function LearnHub() {
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState<FilterKey>('all')
   const [city, setCity] = useState('Dallas')
   const [tipIdx, setTipIdx] = useState(0)
   const [hoveredProject, setHoveredProject] = useState<string | null>(null)
@@ -129,9 +124,19 @@ export function LearnHub() {
     return () => clearInterval(t)
   }, [])
 
-  const filtered = filter === 'all' ? ARTICLES : ARTICLES.filter(a => a.cat === filter)
-  const heroArticle = ARTICLES.find(a => a.featured) ?? ARTICLES[0]
-  const sideArticles = ARTICLES.filter(a => a.featured && a.slug !== heroArticle.slug).slice(0, 2)
+  const allArticles = ARTICLES
+  const filtered = useMemo(
+    () => filter === 'all' ? allArticles : getArticlesByCategory(filter),
+    [filter, allArticles]
+  )
+  let heroArticle: Article
+  try {
+    heroArticle = getHeroArticle()
+  } catch (err) {
+    console.error('learn-hub: getHeroArticle() failed', err)
+    heroArticle = allArticles.find(a => !a.isStub) ?? allArticles[0]
+  }
+  const sideArticles = getSecondaryFeaturedArticles()
   const prices = CITY_PRICES[city] ?? CITY_PRICES['Dallas']
 
   return (
@@ -159,7 +164,7 @@ export function LearnHub() {
           {/* Feature cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
             {[
-              { icon: '🧮', title: 'Material Calculator', desc: 'Calculate exactly what you need', href: '/learn/gravel-calculator' },
+              { icon: '🧮', title: 'Material Calculator', desc: 'Calculate exactly what you need', href: '/learn/cubic-yards-calculator' },
               { icon: '🔍', title: 'Material Match', desc: 'Find your perfect material', href: '/material-match' },
               { icon: '📈', title: 'Price Intelligence', desc: 'Current prices across 10 cities', href: '#prices' },
             ].map(c => (
@@ -236,12 +241,10 @@ export function LearnHub() {
           {/* Filters */}
           <div className="flex flex-wrap gap-2 mb-8">
             {FILTERS.map(f => {
-              const Icon = f.icon
               const active = filter === f.key
               return (
                 <button key={f.key} onClick={() => setFilter(f.key)}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${active ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-white text-gray-700 border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50'}`}>
-                  <Icon size={15} />
                   {f.label}
                 </button>
               )
@@ -258,17 +261,17 @@ export function LearnHub() {
                     <img src={getArticleImage(heroArticle.slug)} alt={heroArticle.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="eager" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold">{heroArticle.cat}</span>
+                      <span className="px-3 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold capitalize">{heroArticle.category}</span>
                     </div>
                     <div className="absolute top-4 right-4">
-                      <span className="px-3 py-1 rounded-lg bg-black/50 text-white text-xs font-medium flex items-center gap-1"><Clock size={10} /> {heroArticle.time}</span>
+                      <span className="px-3 py-1 rounded-lg bg-black/50 text-white text-xs font-medium flex items-center gap-1"><Clock size={10} /> {heroArticle.readTime} min</span>
                     </div>
                     <div className="absolute bottom-4 left-4 right-4">
                       <h3 className="text-white font-extrabold text-2xl leading-tight">{heroArticle.title}</h3>
                     </div>
                   </div>
                   <div className="p-5">
-                    <p className="text-gray-500 text-sm line-clamp-2">{heroArticle.desc}</p>
+                    <p className="text-gray-500 text-sm line-clamp-2">{heroArticle.description}</p>
                     <span className="inline-flex items-center gap-1 mt-3 text-emerald-600 text-sm font-bold group-hover:gap-2 transition-all">Read guide <ArrowRight size={14} /></span>
                   </div>
                 </div>
@@ -282,7 +285,7 @@ export function LearnHub() {
                       <div className="relative h-36 overflow-hidden">
                         <img src={getArticleImage(a.slug)} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
                         <div className="absolute top-3 left-3">
-                          <span className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold">{a.cat}</span>
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold capitalize">{a.category}</span>
                         </div>
                       </div>
                       <div className="p-4 flex-1 flex flex-col">
@@ -298,22 +301,21 @@ export function LearnHub() {
 
           {/* Article grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {(filter === 'all' ? ARTICLES.filter(a => !a.featured) : filtered).map(a => (
+            {(filter === 'all' ? allArticles.filter(a => !a.isFeatured && !a.isHero) : filtered).map(a => (
               <Link key={a.slug} href={`/learn/${a.slug}`} className="group block">
-                <div className={`rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${a.cat === 'Calculator' ? 'bg-gray-900 text-white' : 'bg-white'}`}>
+                <div className={`rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${a.category === 'calculator' ? 'bg-gray-900 text-white' : 'bg-white'}`}>
                   <div className="relative h-44 overflow-hidden">
                     <img src={getArticleImage(a.slug)} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute top-3 left-3">
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                        a.cat === 'Homeowner' ? 'bg-blue-500 text-white' :
-                        a.cat === 'Contractor' ? 'bg-orange-500 text-white' :
-                        a.cat === 'Calculator' ? 'bg-emerald-500 text-white' :
-                        'bg-amber-500 text-white'
-                      }`}>{a.cat}</span>
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize ${
+                        a.category === 'homeowner' ? 'bg-blue-500 text-white' :
+                        a.category === 'contractor' ? 'bg-orange-500 text-white' :
+                        'bg-emerald-500 text-white'
+                      }`}>{a.category}</span>
                     </div>
                     <div className="absolute top-3 right-3">
-                      <span className="px-2 py-0.5 rounded bg-black/50 text-white text-[10px] font-medium">{a.time}</span>
+                      <span className="px-2 py-0.5 rounded bg-black/50 text-white text-[10px] font-medium">{a.readTime} min</span>
                     </div>
                     {/* Hover read button */}
                     <div className="absolute inset-x-3 bottom-3 translate-y-12 group-hover:translate-y-0 transition-transform duration-300">
@@ -321,8 +323,8 @@ export function LearnHub() {
                     </div>
                   </div>
                   <div className="p-4">
-                    <h3 className={`font-bold text-sm leading-snug line-clamp-2 ${a.cat === 'Calculator' ? 'text-white group-hover:text-emerald-400' : 'text-gray-900 group-hover:text-emerald-600'} transition-colors`}>{a.title}</h3>
-                    <p className={`text-xs mt-2 line-clamp-2 ${a.cat === 'Calculator' ? 'text-gray-400' : 'text-gray-500'}`}>{a.desc}</p>
+                    <h3 className={`font-bold text-sm leading-snug line-clamp-2 ${a.category === 'calculator' ? 'text-white group-hover:text-emerald-400' : 'text-gray-900 group-hover:text-emerald-600'} transition-colors`}>{a.title}</h3>
+                    <p className={`text-xs mt-2 line-clamp-2 ${a.category === 'calculator' ? 'text-gray-400' : 'text-gray-500'}`}>{a.description}</p>
                   </div>
                 </div>
               </Link>
