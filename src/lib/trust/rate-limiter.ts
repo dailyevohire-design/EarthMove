@@ -1,18 +1,19 @@
 import { createAdminClient } from '@/lib/supabase/server'
 
-// Tier-aware rate limits (per 60s window). Preserves free=5/min, pro=20/min from
-// the prior Upstash implementation.
+// Tier-aware rate limits (per 60s window), keyed on plan_id from trust_plans.
+// Unknown tier falls through to free.
 const TIER_RATE_LIMITS: Record<string, { max: number; windowSeconds: number }> = {
-  free:       { max: 5,  windowSeconds: 60 },
-  pro:        { max: 20, windowSeconds: 60 },
-  enterprise: { max: 20, windowSeconds: 60 },
+  free:     { max: 5,  windowSeconds: 60 },
+  standard: { max: 10, windowSeconds: 60 },
+  pro:      { max: 20, windowSeconds: 60 },
 }
 
-// Daily cost caps (USD). Preserves values from the prior Upstash implementation.
+// Daily cost caps (USD), keyed on plan_id from trust_plans / v_trust_entitlement.
+// Unknown tier (legacy values, 'anon', etc.) falls through to the free cap.
 const TIER_COST_CAPS: Record<string, number> = {
-  free:       2.0,
-  pro:        25.0,
-  enterprise: 200.0,
+  free:     2.0,
+  standard: 10.0,
+  pro:      25.0,
 }
 
 // Upstash-compatible result shape. /api/trust/route.ts destructures { success }.

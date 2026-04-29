@@ -10,6 +10,36 @@ export const maxDuration = 180
 
 const ENTITY_SUFFIX_RE = /\b(LLC|L\.L\.C\.?|INC|INCORPORATED|CORP|CORPORATION|LTD|LIMITED|CO\.?|COMPANY|GROUP|HOLDINGS|ENTERPRISES|LP|LLP|PLLC|PC|P\.C\.|ASSOCIATES|PARTNERS|SOLUTIONS|SERVICES|CONSTRUCTION|CONTRACTING|BUILDERS|EXCAVATION|GRADING|HAULING|MATERIALS|AGGREGATES)\b/i
 
+// Resolve the user's trust tier server-side from v_trust_entitlement. The
+// request body's tier is a *requested* tier (used for credit-redemption
+// branch selection); never trust it for cap enforcement.
+async function resolveTrustTier(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+): Promise<string> {
+  try {
+    const { data, error } = await admin
+      .from('v_trust_entitlement')
+      .select('plan_id')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle()
+    if (error) {
+      console.error('[TrustAPI] resolveTrustTier query error — defaulting to free', {
+        userId, err: error.message,
+      })
+      return 'free'
+    }
+    return data?.plan_id ?? 'free'
+  } catch (err) {
+    console.error('[TrustAPI] resolveTrustTier threw — defaulting to free', {
+      userId, err: err instanceof Error ? err.message : String(err),
+    })
+    return 'free'
+  }
+}
+
 export async function POST(req: NextRequest) {
   const start = Date.now()
 
@@ -140,13 +170,19 @@ export async function POST(req: NextRequest) {
       )
     }
   } else {
-    const capResult = await checkDailyCostCap(user.id, tier)
+    const resolvedTier = await resolveTrustTier(admin, user.id)
+    if (tier !== resolvedTier) {
+      console.info('[TrustAPI] requested tier differs from entitlement — using entitlement', {
+        userId: user.id, requested: tier, resolved: resolvedTier,
+      })
+    }
+    const capResult = await checkDailyCostCap(user.id, resolvedTier)
     if (!capResult.allowed) {
       return NextResponse.json(
         {
           error:   'daily_cost_cap_reached',
           message: `Daily lookup limit reached ($${capResult.used.toFixed(2)} / $${capResult.cap.toFixed(2)}). Resets at midnight UTC.`,
-          tier,
+          tier:    resolvedTier,
           used:    capResult.used,
           cap:     capResult.cap,
         },

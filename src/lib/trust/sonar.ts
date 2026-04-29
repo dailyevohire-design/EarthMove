@@ -8,6 +8,18 @@
 // Pricing (2026): $5 per 1k requests + ~$1/M tokens for sonar-pro.
 // Typical cost per report: ~$0.007. Tune SONAR_COST_PER_CALL_USD as needed.
 
+// Sonar Pro inlines `<cite index="X-Y">…</cite>` markup around quoted spans in
+// its content. Anthropic synthesis copies that markup into red_flags / summary
+// fields verbatim, where it renders as raw tags in the UI. Strip at the source
+// so synthesis never sees it. citations[] stays untouched — that's structured
+// metadata, not display text.
+function stripCiteTags(text: string): string {
+  if (!text) return text
+  return text
+    .replace(/<cite\s+index="[^"]*">([\s\S]*?)<\/cite>/gi, '$1')
+    .replace(/<\/?cite[^>]*>/gi, '')
+}
+
 const SONAR_ENDPOINT       = 'https://api.perplexity.ai/chat/completions'
 const SONAR_MODEL          = 'sonar-pro'
 const SONAR_TIMEOUT_MS     = 30000
@@ -108,7 +120,7 @@ export async function runSonarResearch(
     usage?:     { prompt_tokens?: number; completion_tokens?: number }
   }
 
-  const content   = data.choices?.[0]?.message?.content ?? ''
+  const content   = stripCiteTags(data.choices?.[0]?.message?.content ?? '')
   const citations = Array.isArray(data.citations)
     ? data.citations.filter((c: unknown): c is string => typeof c === 'string' && c.length > 0).slice(0, 20)
     : []
