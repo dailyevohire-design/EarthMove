@@ -14,6 +14,8 @@ const config: Config = {
         mono: ['var(--font-mono)', 'monospace'],
         display: ['var(--font-bricolage)', 'Bricolage Grotesque', 'serif'],
         body: ['var(--font-geist)', 'Geist', 'ui-sans-serif', 'sans-serif'],
+        fraunces: ['var(--font-fraunces)', 'Iowan Old Style', 'Georgia', 'serif'],
+        inter:    ['var(--font-inter)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
       colors: {
         // shadcn-compat — primitives in commit 2 read these via bg-background etc.
