@@ -159,3 +159,45 @@ export async function checkTrustRateLimit(identifier: string): Promise<RateLimit
     return denyOnError(max)
   }
 }
+
+/**
+ * Per-IP daily cap for anonymous (unauthenticated) callers. One trust
+ * report per IP per 24 hours. Authenticated users skip this entirely —
+ * they're tracked by user_id and per-tier dollar caps via checkDailyCostCap.
+ */
+export async function checkAnonDailyCap(ip: string): Promise<RateLimitResult> {
+  const max = 1
+  const windowSeconds = 86400
+  try {
+    const db = createAdminClient()
+    const { data, error } = await db.rpc('check_trust_rate_limit', {
+      p_identifier:     ip,
+      p_bucket:         'gc:trust:anon-daily',
+      p_max_requests:   max,
+      p_window_seconds: windowSeconds,
+    })
+    if (error || data == null) {
+      console.error('[trust-rate-limiter] anon-daily rpc error — failing closed', {
+        fn: 'check_trust_rate_limit', bucket: 'gc:trust:anon-daily', ip,
+        err: error?.message ?? 'null_data',
+      })
+      return denyOnError(max)
+    }
+    const row = Array.isArray(data) ? data[0] : data
+    if (row == null) return denyOnError(max)
+    return {
+      success:   Boolean(row.allowed),
+      limit:     max,
+      remaining: Number(row.remaining ?? 0),
+      reset:     row.reset_at
+        ? new Date(row.reset_at).getTime()
+        : Date.now() + windowSeconds * 1000,
+    }
+  } catch (err) {
+    console.error('[trust-rate-limiter] anon-daily threw — failing closed', {
+      fn: 'check_trust_rate_limit', bucket: 'gc:trust:anon-daily', ip,
+      err: err instanceof Error ? err.message : String(err),
+    })
+    return denyOnError(max)
+  }
+}

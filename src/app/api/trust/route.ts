@@ -2,34 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHash, randomUUID } from 'crypto'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { validateInput } from '@/lib/trust/prompt-guards'
-import { getRateLimiter } from '@/lib/trust/rate-limiter'
+import { getRateLimiter, checkDailyCostCap, checkAnonDailyCap } from '@/lib/trust/rate-limiter'
 import { runFreeTier } from '@/lib/trust/trust-engine'
 
 export const runtime = 'nodejs'
 export const maxDuration = 180
 
-// P0-7. Minimal entity-suffix heuristic. A non-match rejects the query as an
-// individual (natural-person) lookup, routing the user to Checkr rather than
-// running a Claude search against a real person's name. Word-boundary match
-// so "COMPANY OF FLORIDA" still triggers on COMPANY.
 const ENTITY_SUFFIX_RE = /\b(LLC|L\.L\.C\.?|INC|INCORPORATED|CORP|CORPORATION|LTD|LIMITED|CO\.?|COMPANY|GROUP|HOLDINGS|ENTERPRISES|LP|LLP|PLLC|PC|P\.C\.|ASSOCIATES|PARTNERS|SOLUTIONS|SERVICES|CONSTRUCTION|CONTRACTING|BUILDERS|EXCAVATION|GRADING|HAULING|MATERIALS|AGGREGATES)\b/i
 
 export async function POST(req: NextRequest) {
   const start = Date.now()
 
-  // CVE-2025-29927 defense-in-depth: reject any request carrying the
-  // middleware-subrequest header. Next 16 blocks this at the framework level;
-  // this is layer 2.
   if (req.headers.get('x-middleware-subrequest')) {
     return NextResponse.json({ error: 'malformed_request' }, { status: 400 })
   }
 
-  // Re-verify auth inside handler (CVE-2025-29927 hardening — never trust middleware alone)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Server-side activeness check. Anonymous free-tier callers are preserved by
-  // the !user skip — no profile lookup happens for them.
   if (user) {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -44,7 +34,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Parse body
   let body: any
   try { body = await req.json() }
   catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
@@ -60,7 +49,6 @@ export async function POST(req: NextRequest) {
     ein_last4,
   } = body
 
-  // Validate + sanitize inputs (prompt injection defense)
   const validation = validateInput(
     contractor_name ?? '',
     city ?? '',
@@ -72,10 +60,6 @@ export async function POST(req: NextRequest) {
   }
   const { name, city: sCity, state, hints } = validation.clean!
 
-  // Tier validation. {standard, plus, deep_dive} are the credit-backed paid
-  // tiers introduced alongside GROUNDCHECK_CHECKOUT_ENABLED — they redeem a
-  // row from trust_credits_ledger and enqueue a background trust_job instead
-  // of running the synchronous free-tier Claude path.
   const REDEMPTION_TIERS = new Set(['standard', 'plus', 'deep_dive'])
   if (
     !['free', 'pro', 'enterprise'].includes(tier) &&
@@ -84,12 +68,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
   }
 
-  // Paid tiers require auth
   if ((tier === 'pro' || tier === 'enterprise' || REDEMPTION_TIERS.has(tier)) && !user) {
     return NextResponse.json({ error: 'Sign in required for paid tiers' }, { status: 401 })
   }
 
-  // Admin client for cache, audit log, and writes (bypasses RLS)
   const admin = createAdminClient()
 
   const ip =
@@ -97,10 +79,6 @@ export async function POST(req: NextRequest) {
     req.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ??
     null
 
-  // P0-7. FCRA / entity-type gate. Reject anything without a business-entity
-  // suffix before spending any tokens. Log every rejection to trust_audit_log
-  // so legal has a paper trail of queries we refused. Non-blocking on audit
-  // write failure — the rejection itself is the safety property.
   const nameForClassification = name.replace(/[.,]/g, ' ')
   const looksLikeEntity = ENTITY_SUFFIX_RE.test(nameForClassification)
   if (!looksLikeEntity) {
@@ -125,9 +103,6 @@ export async function POST(req: NextRequest) {
     }, { status: 422 })
   }
 
-  // Rate limiting — P0-1. The limiter now fails closed internally (rate-limiter.ts
-  // catches RPC errors and returns { success: false }). Wrap in try/catch as a
-  // belt-and-suspenders guard against library-level throws.
   const rlKey = user?.id ?? ip ?? 'anon'
   let rlOk = false
   try {
@@ -148,39 +123,38 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // P0-2. Daily cost cap — fail CLOSED on RPC error. Previously if
-  // admin.rpc() returned { data: null, error: ... } the short-circuit
-  // `capRow && !capRow.allowed` skipped the check and the request
-  // proceeded to Claude. Read `error` explicitly and 503 on any anomaly.
-  const capUsd = user
-    ? Number(process.env.TRUST_USER_DAILY_CAP_USD ?? '25')
-    : Number(process.env.TRUST_ANON_DAILY_CAP_USD ?? '50')
-  const { data: capData, error: capErr } = await admin.rpc('check_trust_daily_cost_cap', {
-    p_user_id: user?.id ?? null,
-    p_cap_usd: capUsd,
-  })
-  if (capErr || capData == null) {
-    console.error('[TrustAPI] cost cap rpc error — failing closed', {
-      err: capErr?.message ?? 'null_data',
-    })
-    return NextResponse.json({ error: 'cost_cap_unavailable' }, { status: 503 })
-  }
-  const capRow = Array.isArray(capData) ? capData[0] : capData
-  if (capRow == null) {
-    return NextResponse.json({ error: 'cost_cap_unavailable' }, { status: 503 })
-  }
-  if (!capRow.allowed) {
-    return NextResponse.json(
-      { error: `Daily lookup limit reached ($${Number(capRow.used_usd).toFixed(2)} / $${Number(capRow.cap_usd)}). Resets at midnight UTC.` },
-      { status: 429 }
-    )
+  if (!user) {
+    if (!ip) {
+      console.error('[TrustAPI] anon request with no IP header — failing closed')
+      return NextResponse.json({ error: 'cannot_identify_caller' }, { status: 503 })
+    }
+    const anonResult = await checkAnonDailyCap(ip)
+    if (!anonResult.success) {
+      return NextResponse.json(
+        {
+          error:   'anon_daily_limit_reached',
+          message: "You've used your free daily search. Create a free account for unlimited free reports — no credit card required.",
+          reset:   anonResult.reset,
+        },
+        { status: 429 }
+      )
+    }
+  } else {
+    const capResult = await checkDailyCostCap(user.id, tier)
+    if (!capResult.allowed) {
+      return NextResponse.json(
+        {
+          error:   'daily_cost_cap_reached',
+          message: `Daily lookup limit reached ($${capResult.used.toFixed(2)} / $${capResult.cap.toFixed(2)}). Resets at midnight UTC.`,
+          tier,
+          used:    capResult.used,
+          cap:     capResult.cap,
+        },
+        { status: 429 }
+      )
+    }
   }
 
-  // Credit-redemption branch for {standard, plus, deep_dive}. user is non-null
-  // here (paid-tiers-require-auth guard above). Redeem atomically from the
-  // ledger; on INSUFFICIENT_CREDITS return 402 so the client can route to
-  // /api/trust/checkout. Otherwise enqueue a background trust_job and return
-  // its id for the client to poll via /api/trust/job/[id].
   if (REDEMPTION_TIERS.has(tier)) {
     const idempotency_key: string =
       (typeof body.idempotency_key === 'string' && body.idempotency_key.length > 0)
@@ -237,8 +211,6 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // Hint fingerprint — included in cache key so disambiguation retries
-  // don't hit stale cache for the no-hint version of the same query.
   const hintParts = [
     hints?.address        ?? '',
     hints?.principal      ?? '',
@@ -249,7 +221,6 @@ export async function POST(req: NextRequest) {
     ? createHash('md5').update(hintParts).digest('hex')
     : ''
 
-  // Cache check (skip enterprise — always fresh)
   if (tier !== 'enterprise') {
     const { data: cached } = await admin.rpc('get_cached_trust_report', {
       p_contractor: name,
@@ -262,7 +233,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Run verification
   const searches: string[] = []
   let report: any
   let costUsd = 0
@@ -288,7 +258,6 @@ export async function POST(req: NextRequest) {
 
   const processingMs = Date.now() - start
 
-  // Persist + cache (non-fatal)
   let savedReportId: string | null = null
   try {
     const { data: saved } = await admin.from('trust_reports').insert({
@@ -341,8 +310,6 @@ export async function POST(req: NextRequest) {
     console.error('[TrustAPI] DB write error (non-fatal):', dbErr)
   }
 
-  // P1-12. If the PII scrubber fired, log to audit with the persisted
-  // report id (if any) so legal can trace which report had signals.
   if (piiHits.length > 0) {
     try {
       await admin.from('trust_audit_log').insert({
