@@ -1,11 +1,18 @@
+import type { ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentMarket } from '@/lib/market'
 import { deriveDisplayPrice } from '@/lib/pricing-engine'
 import type { MarketMaterialCard } from '@/types'
-import { MaterialCard, DealCard } from '@/components/marketplace/material-card'
 import Link from 'next/link'
-import { Zap } from 'lucide-react'
 import { collectionPageSchema, itemListSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
+import { HeroBand } from '@/components/marketplace/browse-v2/HeroBand'
+import { DealsCarousel } from '@/components/marketplace/browse-v2/DealsCarousel'
+import { BrowseFilterBar } from '@/components/marketplace/browse-v2/BrowseFilterBar'
+import { CategoryGroup } from '@/components/marketplace/browse-v2/CategoryGroup'
+
+const FRAUNCES = "'Fraunces', serif"
+const MONO = "'JetBrains Mono', ui-monospace, monospace"
+const SANS = "'Inter', -apple-system, system-ui, sans-serif"
 
 interface BrowseProps {
   searchParams: Promise<{ category?: string; deals?: string }>
@@ -108,31 +115,50 @@ export const metadata = {
 }
 
 export default async function BrowsePage({ searchParams }: BrowseProps) {
-  const { category, deals } = await searchParams
+  // searchParams preserved for API compatibility; V2 renders all categories on one page (anchor nav).
+  // followup: scroll-to-anchor for ?category=, deals=1 redirect to /deals.
+  await searchParams
+
   const market = await getCurrentMarket()
   const marketId = market?.id ?? null
-  const [cards, categories] = await Promise.all([
-    marketId ? getCards(marketId, category, deals === '1') : [],
+  const [cards, categoriesRaw] = await Promise.all([
+    marketId ? getCards(marketId) : [],
     getCategories(),
   ])
 
-  const activeCategory = categories.find((c: any) => c.slug === category)
-  const dealsCards = cards.filter(c => c.badge_label || c.is_deal_of_day)
-  const isDealsPage = deals === '1'
+  const marketName = market?.name ?? 'your market'
 
-  const pageTitle = isDealsPage
-    ? "Today's Deals on Bulk Materials"
-    : activeCategory
-      ? `${activeCategory.name} Materials`
-      : 'All Bulk Materials'
+  // Empty categories must NEVER render — filter to categories with at least one card in this market.
+  const categoriesEnriched = (categoriesRaw as Array<{ id: string; name: string; slug: string }>)
+    .map((cat) => {
+      const catCards = cards.filter((c) => c.category_slug === cat.slug)
+      if (catCards.length === 0) return null
+      const prices = catCards.map((c) => c.display_price)
+      const allTon = catCards.every((c) => c.unit === 'ton')
+      const allYd = catCards.every((c) => c.unit === 'cubic_yard')
+      const unit = allTon ? 'ton' : allYd ? 'yd³' : 'unit'
+      return {
+        slug: cat.slug,
+        name: cat.name,
+        materialCount: catCards.length,
+        priceMin: Math.min(...prices),
+        priceMax: Math.max(...prices),
+        unit,
+        cards: catCards,
+      }
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null)
+
+  const totalCount = cards.length
+
   const collectionSchema = collectionPageSchema({
-    name: pageTitle,
-    description: `${cards.length} bulk materials available for delivery${market ? ` in ${market.name}` : ''}.`,
-    url: `/browse${category ? `?category=${category}` : ''}${isDealsPage ? '?deals=1' : ''}`,
-    itemCount: cards.length,
+    name: 'All Bulk Materials',
+    description: `${totalCount} bulk materials available for delivery${market ? ` in ${market.name}` : ''}.`,
+    url: '/browse',
+    itemCount: totalCount,
   })
   const listSchema = itemListSchema(
-    cards.slice(0, 20).map(c => ({
+    cards.slice(0, 20).map((c) => ({
       name: c.name,
       url: `/browse/${c.slug}`,
       image: c.image_url ?? undefined,
@@ -143,86 +169,135 @@ export default async function BrowsePage({ searchParams }: BrowseProps) {
   const crumbs = breadcrumbSchema([
     { name: 'Home', url: '/' },
     { name: 'Browse', url: '/browse' },
-    ...(activeCategory ? [{ name: activeCategory.name, url: `/browse?category=${activeCategory.slug}` }] : []),
-    ...(isDealsPage ? [{ name: 'Deals', url: '/browse?deals=1' }] : []),
   ])
 
   return (
-    <div className="bg-gray-50/30 min-h-screen">
+    <div id="cat-top" className="min-h-screen" style={{ background: '#F1ECE2', color: '#15201B' }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(collectionSchema) }} />
-      {cards.length > 0 && (
+      {totalCount > 0 && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(listSchema) }} />
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(crumbs) }} />
-      {/* Sticky category bar */}
-      <div className="bg-white border-b border-gray-100 sticky top-16 z-20">
-        <div className="container-main py-3">
-          <div className="flex gap-2 overflow-x-auto scrollbar-none">
-            <Link
-              href="/browse"
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all ${!category && !isDealsPage ? 'bg-gray-900 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
-            >
-              All
-            </Link>
-            <Link
-              href="/browse?deals=1"
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-1.5 ${isDealsPage ? 'bg-red-500 text-white shadow-md shadow-red-500/25' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
-            >
-              <Zap size={12} className={isDealsPage ? 'fill-current' : ''} />
-              Deals
-            </Link>
-            {categories.map((c: any) => (
-              <Link
-                key={c.id}
-                href={`/browse?category=${c.slug}`}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all ${category === c.slug ? 'bg-gray-900 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
-              >
-                {c.name}
-              </Link>
-            ))}
-          </div>
-        </div>
+
+      <main className="max-w-[1440px] mx-auto px-10">
+        <HeroBand
+          marketName={marketName}
+          materialCount={totalCount}
+          categoryCount={categoriesEnriched.length}
+        />
+
+        <DealsCarousel marketName={marketName} />
+
+        <BrowseFilterBar
+          categories={categoriesEnriched.map((c) => ({
+            slug: c.slug,
+            name: c.name,
+            materialCount: c.materialCount,
+          }))}
+          totalCount={totalCount}
+        />
+
+        {categoriesEnriched.map((cat) => (
+          <CategoryGroup
+            key={cat.slug}
+            category={{ slug: cat.slug, name: cat.name }}
+            priceRange={{ min: cat.priceMin, max: cat.priceMax, unit: cat.unit }}
+            cards={cat.cards}
+          />
+        ))}
+
+        <FooterBand />
+      </main>
+    </div>
+  )
+}
+
+function FooterBand() {
+  return (
+    <section className="mt-16 pt-12 pb-16" style={{ borderTop: '1px solid #D8D2C4' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-[18px]">
+        <FooterCard
+          eyebrow="For drivers"
+          title={<>Hauling for EarthMove pays <em className="italic font-medium">weekly</em>, not on net-30.</>}
+          body="If you run a tri-axle, tandem, or end-dump in the DFW metro, we have steady runs from 6 yards inside the loop. Settled at end of week. Real dispatch, no chasing checks."
+          primary={{ href: '/drivers', label: 'Apply to drive' }}
+          link={{ href: '/drivers#requirements', label: 'Requirements →' }}
+        />
+        <FooterCard
+          eyebrow="For contractors"
+          title={<>Open a contractor account, <em className="italic font-medium">build a reorder list</em>.</>}
+          body="Saved drop sites, billing on PO, FCRA-compliant trust reports for new subs, and one ticketing trail across every load you order. Free to open."
+          primary={{ href: '/sign-up?role=contractor', label: 'Open an account' }}
+          link={{ href: '/contractors', label: "What's included →" }}
+        />
       </div>
 
-      <div className="container-main py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold text-gray-900">
-            {isDealsPage ? "Today's Deals" : activeCategory ? activeCategory.name : 'All Materials'}
-          </h1>
-          <p className="text-gray-500 text-sm mt-1.5">
-            {cards.length} material{cards.length !== 1 ? 's' : ''} available in {market?.name ?? 'your area'}
-          </p>
-        </div>
+      <div
+        className="mt-8 pt-[18px] pb-8 flex justify-between items-center gap-3.5 flex-wrap text-[11px] tracking-[0.04em] text-[#5C645F]"
+        style={{ borderTop: '1px solid #D8D2C4', fontFamily: MONO }}
+      >
+        <span>EarthMove, Inc. &middot; 3220 Singleton Blvd, Dallas TX 75212</span>
+        <ul className="flex gap-[18px] list-none m-0 p-0">
+          <li><Link href="/about" className="hover:text-[#15201B]">About</Link></li>
+          <li><Link href="/contact" className="hover:text-[#15201B]">Contact</Link></li>
+          <li><Link href="/legal/terms" className="hover:text-[#15201B]">Terms</Link></li>
+          <li><Link href="/legal/privacy" className="hover:text-[#15201B]">Privacy</Link></li>
+          <li><Link href="/legal/fcra" className="hover:text-[#15201B]">FCRA disclosure</Link></li>
+        </ul>
+      </div>
+    </section>
+  )
+}
 
-        {/* Deals carousel on browse page */}
-        {!isDealsPage && dealsCards.length > 0 && (
-          <div className="mb-10">
-            <div className="flex items-center gap-2 mb-5">
-              <div className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center">
-                <Zap size={14} className="text-white fill-white" />
-              </div>
-              <h2 className="text-lg font-extrabold text-gray-900">Deals near you</h2>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
-              {dealsCards.map(card => <DealCard key={card.market_material_id} card={card} />)}
-            </div>
-          </div>
-        )}
-
-        {/* Grid */}
-        {cards.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {cards.map(card => <MaterialCard key={card.market_material_id} card={card} />)}
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-gray-200 p-20 text-center">
-            <div className="text-4xl mb-4">🔍</div>
-            <p className="text-gray-600 font-medium mb-1">No materials found</p>
-            <p className="text-gray-400 text-sm mb-6">Try a different category or check back later.</p>
-            <Link href="/browse" className="btn-primary btn-md">View all materials</Link>
-          </div>
-        )}
+function FooterCard({
+  eyebrow,
+  title,
+  body,
+  primary,
+  link,
+}: {
+  eyebrow: string
+  title: ReactNode
+  body: string
+  primary: { href: string; label: string }
+  link: { href: string; label: string }
+}) {
+  return (
+    <div
+      className="rounded-[24px] p-8 flex flex-col gap-3.5"
+      style={{ background: '#F6F2E8', border: '1px solid #D8D2C4' }}
+    >
+      <span
+        className="inline-flex items-center gap-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#2A332E] whitespace-nowrap"
+        style={{ fontFamily: SANS }}
+      >
+        <span aria-hidden className="inline-block w-[18px] h-[1.5px] bg-[#2A332E]" />
+        {eyebrow}
+      </span>
+      <h3
+        className="text-[24px] sm:text-[28px] lg:text-[32px] font-semibold tracking-[-0.02em] leading-[1.05] text-[#15201B] m-0 max-w-[20ch]"
+        style={{ fontFamily: FRAUNCES }}
+      >
+        {title}
+      </h3>
+      <p className="text-[14px] text-[#2A332E] leading-[1.55] m-0 max-w-[54ch]" style={{ textWrap: 'pretty' }}>
+        {body}
+      </p>
+      <div className="mt-2.5 flex flex-wrap gap-2.5 items-center">
+        <Link
+          href={primary.href}
+          className="inline-flex items-center justify-center gap-2 rounded-[10px] font-semibold text-[14px] px-[18px] py-3 bg-[#E5701B] text-white border border-transparent hover:bg-[#C95F12] transition-colors"
+          style={{ fontFamily: SANS }}
+        >
+          {primary.label}
+        </Link>
+        <Link
+          href={link.href}
+          className="text-[14px] font-medium text-[#2A332E] hover:text-[#15201B]"
+          style={{ fontFamily: SANS }}
+        >
+          {link.label}
+        </Link>
       </div>
     </div>
   )
