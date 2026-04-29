@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import Link from 'next/link'
 import { ArrowRight, ArrowLeft, Check, Star, AlertCircle, Loader2 } from 'lucide-react'
 import { recordVerifiedIntent, submitSourcingRequiredLead } from '@/app/(marketplace)/material-match/actions'
 
@@ -19,12 +18,9 @@ const CATALOG = {
   TOPSOIL: '5914c3ff-a3f9-45f6-8080-edccc1fd7396',
 } as const
 
-const VERIFIED_STOCK_IDS = new Set<string>([
-  CATALOG.CRUSHED_LIMESTONE_57,
-  CATALOG.ROAD_BASE,
-  CATALOG.FILL_DIRT,
-  CATALOG.TOPSOIL,
-])
+// Note: verification rule is currently project_type/sub_type-based (see
+// getMatchResult below). When C4.1 swaps in a real supplier_offerings query,
+// the catalog UUIDs above become the SELECT key set.
 
 // =============================================================================
 // WIZARD QUESTIONS
@@ -251,7 +247,6 @@ const PAGE_BG = 'bg-[#faf7f2]'
 const INK = 'text-[#1a1f1c]'
 const MUTED = 'text-[#6b6e6c]'
 const PRIMARY = '#0a6e3f'
-const PRIMARY_DARK = '#084d2c'
 const TINT = '#f0f7f3'
 const HAIRLINE = 'rgba(0,0,0,0.08)'
 
@@ -954,6 +949,3 @@ function Field({
     </label>
   )
 }
-
-// Suppress unused-import warnings if any optional Link feature is later removed
-void Link
