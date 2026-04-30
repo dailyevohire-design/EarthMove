@@ -14,6 +14,7 @@ export interface RelatedMaterial {
 }
 
 interface Material {
+  id: string
   slug: string
   name: string
   description: string | null
@@ -435,6 +436,8 @@ export function BrowseDetailClient(props: Props) {
             <aside className="order-col">
               {props.state === 'A' ? (
                 <OrderCardStateA
+                  materialId={props.material.id}
+                  materialName={props.material.name}
                   materialSlug={props.material.slug}
                   displayName={props.displayName}
                   unit={props.unit}
@@ -554,6 +557,8 @@ function SpecCard({ l, v, unit }: { l: string; v: string; unit?: string }) {
 }
 
 interface OrderCardStateAProps {
+  materialId: string
+  materialName: string
   materialSlug: string
   displayName: string
   unit: 'ton' | 'cubic_yard'
@@ -586,8 +591,15 @@ function OrderCardStateA(p: OrderCardStateAProps) {
   const total = base.effective * safeQty
   const unitWord = p.unit === 'ton' ? 'ton' : 'yd³'
 
-  // PRESERVED: identical href format to legacy CommerceBlock — do not rewire.
-  const orderHref = `/contact?material=${encodeURIComponent(p.materialSlug)}&qty=${qty}&action=order`
+  // C-PDP-2: route to /checkout/start using the canonical param shape from
+  // material-match/actions.ts (material_catalog_id uuid, material name, tons,
+  // source). Replaces the legacy /contact?…&action=order link, which targeted
+  // a route that does not exist in the app.
+  const orderHref =
+    `/checkout/start?material_catalog_id=${encodeURIComponent(p.materialId)}` +
+    `&material=${encodeURIComponent(p.materialName)}` +
+    `&tons=${qty}` +
+    `&source=pdp`
 
   const yardTag = p.supplierName
     ? p.yardName ? `${p.supplierName} · ${p.yardName}` : p.supplierName
@@ -679,8 +691,11 @@ interface OrderCardStateBProps {
 }
 
 function OrderCardStateB(p: OrderCardStateBProps) {
-  // PRESERVED: identical href format to legacy CommerceBlock State B.
-  const quoteHref = `/contact?material=${encodeURIComponent(p.materialSlug)}&action=quote`
+  // C-PDP-2: route quote-only ("between contracts") to /material-match with
+  // the slug pre-filled. material-match's wizard handles sourcing-required
+  // leads via submitSourcingRequiredLead. Replaces the legacy /contact?…&action=quote
+  // link, which targeted a route that does not exist in the app.
+  const quoteHref = `/material-match?material=${encodeURIComponent(p.materialSlug)}`
   return (
     <div className="order-card">
       <span className="eyebrow">

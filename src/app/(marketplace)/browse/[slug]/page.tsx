@@ -128,6 +128,7 @@ export default async function MaterialDetailPage({ params }: Props) {
       <BrowseDetailClient
         state={isStateA ? 'A' : 'B'}
         material={{
+          id: material.id,
           slug: material.slug,
           name: material.name,
           description: material.description ?? null,
