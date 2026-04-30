@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -373,11 +374,195 @@ function ChevronDown() {
   )
 }
 
+interface AccordionItemData {
+  id: string
+  title: string
+  summary: string
+  iconPath: ReactNode
+  body?: ReactNode
+}
+
+const ACCORDION_ITEMS: AccordionItemData[] = [
+  {
+    id: 'identity',
+    title: 'Identity & legitimacy',
+    summary: 'Subject confirmed · Long operating history · Status current',
+    iconPath: (
+      <>
+        <rect x="3" y="3" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M3 7 L15 7" stroke="currentColor" strokeWidth="1.5" />
+      </>
+    ),
+    body: (
+      <ul>
+        <li>
+          <span className="lic">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 7 L6 11 L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <span><b>Operating entity confirmed legitimate</b> · 12-year continuous operating history · No interruptions or status changes</span>
+        </li>
+        <li>
+          <span className="lic">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 7 L6 11 L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <span><b>Contact and operating presence verified</b> · Address and reachability confirmed across independent checks</span>
+        </li>
+        <li>
+          <span className="lic">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 7 L6 11 L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <span><b>Tax registration in good standing</b> · No flags raised on legitimacy of business operation</span>
+        </li>
+        <li>
+          <span className="lic">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 7 L6 11 L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <span><b>Ownership structure consistent</b> · Named principals match across all reviewed sources</span>
+        </li>
+      </ul>
+    ),
+  },
+  {
+    id: 'operating-fitness',
+    title: 'Operating fitness',
+    summary: 'Cleared on operational requirements · No flagged issues',
+    iconPath: (
+      <>
+        <path d="M4 4 L14 4 L14 14 L4 14 Z" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M7 8 L11 8 M7 11 L10 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </>
+    ),
+  },
+  {
+    id: 'risk-posture',
+    title: 'Risk posture',
+    summary: 'Low-risk profile · No elevated indicators in recent activity',
+    iconPath: (
+      <path d="M9 2 L15 5 L15 10 C15 13 12 15 9 16 C6 15 3 13 3 10 L3 5 Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    ),
+  },
+  {
+    id: 'conflict-record',
+    title: 'Conflict record',
+    summary: 'Clean active record · One historical issue, resolved',
+    iconPath: (
+      <path d="M3 9 L9 3 L15 9 L9 15 Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    ),
+  },
+  {
+    id: 'market-reputation',
+    title: 'Market reputation',
+    summary: 'Strong positive signal across reviewed market sources',
+    iconPath: (
+      <path d="M9 2 L11 7 L16 7 L12 10.5 L13.5 16 L9 13 L4.5 16 L6 10.5 L2 7 L7 7 Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    ),
+  },
+]
+
+interface FaqItemData {
+  id: string
+  question: string
+  answer: ReactNode
+}
+
+const FAQ_ITEMS: FaqItemData[] = [
+  {
+    id: 'methodology',
+    question: "Why don't you publish your verification methodology?",
+    answer: (
+      <>
+        Two reasons. First, our verification methodology is patent-pending intellectual property — publishing the source mix would invite imitation and dilute the value of the score. Second, transparency about specific sources can be gamed by entities trying to manage their result. What we do tell you: the categories we verified, the confidence level on each, and the recency of the underlying signal. What we don&rsquo;t tell you: the full source list. The score is the deliverable, and we stand behind it.
+      </>
+    ),
+  },
+  {
+    id: 'pro-vs-premium',
+    question: "What's the difference between Pro and Premium — why the price gap?",
+    answer: (
+      <>
+        Pro and Premium both give you unlimited fresh lookups. The difference is depth and stakes. Pro is calibrated for typical hiring decisions — picking a contractor, vetting a sub, checking a supplier you&rsquo;re about to issue a PO to. Premium adds enhanced verification depth and priority processing, designed for higher-stakes vendor due diligence: major contracts, ongoing relationships, or decisions where the cost of being wrong meaningfully exceeds the cost of the report. We don&rsquo;t break out exactly what makes &ldquo;enhanced&rdquo; deeper — same reason we don&rsquo;t publish methodology.
+      </>
+    ),
+  },
+  {
+    id: 'credit-or-background',
+    question: 'Is this a credit check or background check?',
+    answer: (
+      <>
+        No. Trust reports cover registered business entities only — LLCs, corporations, partnerships, and trusts. We do not pull personal credit, criminal history, SSN, or any consumer report data. For FCRA-regulated background checks on individual workers, we route through a licensed partner. <a href="#pricing">Learn about FCRA limits →</a>
+      </>
+    ),
+  },
+  {
+    id: 'individual-contractor',
+    question: 'Can I run a check on an individual contractor (not an LLC)?',
+    answer: (
+      <>
+        Sole proprietors operating under a personal name fall outside our entity-only boundary. For individual checks, we partner with a licensed FCRA provider — same workflow, separate consent flow required by law. Most established contractors operate under an LLC or corporation; if you&rsquo;re not sure, ask them for their business legal name.
+      </>
+    ),
+  },
+  {
+    id: 'freshness',
+    question: 'How fresh is the information?',
+    answer: (
+      <>
+        Cached reports show the most recent successful verification — typically within the last 30 days. Pro and Premium subscribers run fresh on-demand verifications that complete in roughly 30 seconds. Each report shows recency at the category level so you can see exactly what was last refreshed.
+      </>
+    ),
+  },
+  {
+    id: 'states',
+    question: 'What states do you cover today?',
+    answer: (
+      <>
+        Eight launch states: Colorado, Texas, Arizona, Nevada, Georgia, Florida, North Carolina, and Oregon. We&rsquo;re expanding state by state — if your state isn&rsquo;t covered yet, sign up free and you&rsquo;ll be notified when it launches.
+      </>
+    ),
+  },
+  {
+    id: 'export',
+    question: 'Can I export reports or share with a team?',
+    answer: (
+      <>
+        Pro: PDF export, email delivery, and shareable read-only links per report. Premium: all of that plus a multi-user team workspace with shared report history and API access for integrating Groundcheck into your own tooling.
+      </>
+    ),
+  },
+  {
+    id: 'searches',
+    question: 'What happens to my searches?',
+    answer: (
+      <>
+        Reports are stored in your account and on our audit ledger for 7 years — that retention is required for compliance and useful for you when a vendor relationship goes sideways and you need to prove what was known when. Searches are private to your account; we don&rsquo;t sell or share your search history.
+      </>
+    ),
+  },
+]
+
 export function TrustPublicClient() {
   const router = useRouter()
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
+  const [openFaqId, setOpenFaqId] = useState<string | null>(FAQ_ITEMS[0].id)
+  const [openAccordionId, setOpenAccordionId] = useState<string | null>(ACCORDION_ITEMS[0].id)
 
   function onRunCheck() {
     router.push(SIGNUP_HREF)
+  }
+
+  function toggleFaq(id: string) {
+    setOpenFaqId((cur) => (cur === id ? null : id))
+  }
+  function toggleAccordion(id: string) {
+    setOpenAccordionId((cur) => (cur === id ? null : id))
   }
 
   return (
@@ -422,9 +607,25 @@ export function TrustPublicClient() {
                 <p>Homeowner doing a one-off renovation? Free is enough. Running a GC business with 20 active subs? You want Pro. Vetting six-figure vendor relationships? Premium pays for itself in a week.</p>
               </div>
               <div className="toggle-wrap">
-                <div className="toggle">
-                  <button className="active" type="button">Monthly</button>
-                  <button type="button">Annual</button>
+                <div className="toggle" role="tablist" aria-label="Billing period">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={billingPeriod === 'monthly'}
+                    className={billingPeriod === 'monthly' ? 'active' : ''}
+                    onClick={() => setBillingPeriod('monthly')}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={billingPeriod === 'annual'}
+                    className={billingPeriod === 'annual' ? 'active' : ''}
+                    onClick={() => setBillingPeriod('annual')}
+                  >
+                    Annual
+                  </button>
                 </div>
                 <span className="save-pill">Save 20% annual</span>
               </div>
@@ -462,10 +663,16 @@ export function TrustPublicClient() {
                 </div>
                 <div className="price-block">
                   <div className="price">
-                    <span className="num">$49.99</span>
+                    <span className="num">{billingPeriod === 'monthly' ? '$49.99' : '$39.99'}</span>
                     <span className="unit">/ month</span>
                   </div>
-                  <div className="billed">Annual: <b>$39.99/mo</b> · billed $479.88/yr · save $120</div>
+                  <div className="billed">
+                    {billingPeriod === 'monthly' ? (
+                      <>Annual: <b>$39.99/mo</b> · billed $479.88/yr · save $120</>
+                    ) : (
+                      <>Billed $479.88 / year · <b>$120 saved</b></>
+                    )}
+                  </div>
                 </div>
                 <ul className="feats">
                   <li><TierCheck /><span><b>Unlimited fresh lookups</b> on demand</span></li>
@@ -485,10 +692,16 @@ export function TrustPublicClient() {
                 </div>
                 <div className="price-block">
                   <div className="price">
-                    <span className="num">$100</span>
+                    <span className="num">{billingPeriod === 'monthly' ? '$100' : '$80'}</span>
                     <span className="unit">/ month</span>
                   </div>
-                  <div className="billed">Annual: <b>$80/mo</b> · billed $960/yr · save $240</div>
+                  <div className="billed">
+                    {billingPeriod === 'monthly' ? (
+                      <>Annual: <b>$80/mo</b> · billed $960/yr · save $240</>
+                    ) : (
+                      <>Billed $960 / year · <b>$240 saved</b></>
+                    )}
+                  </div>
                 </div>
                 <ul className="feats">
                   <li><TierCheck /><span>Everything in Pro</span></li>
@@ -743,80 +956,14 @@ export function TrustPublicClient() {
 
               {/* accordion */}
               <div className="accordion">
-                <div className="acc-item open">
-                  <div className="acc-head">
-                    <div className="left">
-                      <span className="icon">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-                          <rect x="3" y="3" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-                          <path d="M3 7 L15 7" stroke="currentColor" strokeWidth="1.5" />
-                        </svg>
-                      </span>
-                      <div>
-                        <h4>Identity &amp; legitimacy</h4>
-                        <span className="summary">Subject confirmed · Long operating history · Status current</span>
-                      </div>
-                    </div>
-                    <span className="chev"><ChevronDown /></span>
-                  </div>
-                  <div className="acc-body">
-                    <ul>
-                      <li>
-                        <span className="lic">
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                            <path d="M2 7 L6 11 L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </span>
-                        <span><b>Operating entity confirmed legitimate</b> · 12-year continuous operating history · No interruptions or status changes</span>
-                      </li>
-                      <li>
-                        <span className="lic">
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                            <path d="M2 7 L6 11 L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </span>
-                        <span><b>Contact and operating presence verified</b> · Address and reachability confirmed across independent checks</span>
-                      </li>
-                      <li>
-                        <span className="lic">
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                            <path d="M2 7 L6 11 L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </span>
-                        <span><b>Tax registration in good standing</b> · No flags raised on legitimacy of business operation</span>
-                      </li>
-                      <li>
-                        <span className="lic">
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                            <path d="M2 7 L6 11 L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </span>
-                        <span><b>Ownership structure consistent</b> · Named principals match across all reviewed sources</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-
-                <ClosedAccItem
-                  title="Operating fitness"
-                  summary="Cleared on operational requirements · No flagged issues"
-                  iconPath={<><path d="M4 4 L14 4 L14 14 L4 14 Z" stroke="currentColor" strokeWidth="1.5" /><path d="M7 8 L11 8 M7 11 L10 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></>}
-                />
-                <ClosedAccItem
-                  title="Risk posture"
-                  summary="Low-risk profile · No elevated indicators in recent activity"
-                  iconPath={<path d="M9 2 L15 5 L15 10 C15 13 12 15 9 16 C6 15 3 13 3 10 L3 5 Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />}
-                />
-                <ClosedAccItem
-                  title="Conflict record"
-                  summary="Clean active record · One historical issue, resolved"
-                  iconPath={<path d="M3 9 L9 3 L15 9 L9 15 Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />}
-                />
-                <ClosedAccItem
-                  title="Market reputation"
-                  summary="Strong positive signal across reviewed market sources"
-                  iconPath={<path d="M9 2 L11 7 L16 7 L12 10.5 L13.5 16 L9 13 L4.5 16 L6 10.5 L2 7 L7 7 Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />}
-                />
+                {ACCORDION_ITEMS.map((item) => (
+                  <AccordionItem
+                    key={item.id}
+                    item={item}
+                    isOpen={openAccordionId === item.id}
+                    onToggle={() => toggleAccordion(item.id)}
+                  />
+                ))}
               </div>
 
               {/* paywall */}
@@ -887,71 +1034,14 @@ export function TrustPublicClient() {
               <h2>Common questions, <em>direct answers.</em></h2>
             </div>
             <div className="faq-list">
-              <FaqItem
-                open
-                q="Why don't you publish your verification methodology?"
-                a={
-                  <>
-                    Two reasons. First, our verification methodology is patent-pending intellectual property — publishing the source mix would invite imitation and dilute the value of the score. Second, transparency about specific sources can be gamed by entities trying to manage their result. What we do tell you: the categories we verified, the confidence level on each, and the recency of the underlying signal. What we don&rsquo;t tell you: the full source list. The score is the deliverable, and we stand behind it.
-                  </>
-                }
-              />
-              <FaqItem
-                q="What's the difference between Pro and Premium — why the price gap?"
-                a={
-                  <>
-                    Pro and Premium both give you unlimited fresh lookups. The difference is depth and stakes. Pro is calibrated for typical hiring decisions — picking a contractor, vetting a sub, checking a supplier you&rsquo;re about to issue a PO to. Premium adds enhanced verification depth and priority processing, designed for higher-stakes vendor due diligence: major contracts, ongoing relationships, or decisions where the cost of being wrong meaningfully exceeds the cost of the report. We don&rsquo;t break out exactly what makes &ldquo;enhanced&rdquo; deeper — same reason we don&rsquo;t publish methodology.
-                  </>
-                }
-              />
-              <FaqItem
-                q="Is this a credit check or background check?"
-                a={
-                  <>
-                    No. Trust reports cover registered business entities only — LLCs, corporations, partnerships, and trusts. We do not pull personal credit, criminal history, SSN, or any consumer report data. For FCRA-regulated background checks on individual workers, we route through a licensed partner. <a href="#pricing">Learn about FCRA limits →</a>
-                  </>
-                }
-              />
-              <FaqItem
-                q="Can I run a check on an individual contractor (not an LLC)?"
-                a={
-                  <>
-                    Sole proprietors operating under a personal name fall outside our entity-only boundary. For individual checks, we partner with a licensed FCRA provider — same workflow, separate consent flow required by law. Most established contractors operate under an LLC or corporation; if you&rsquo;re not sure, ask them for their business legal name.
-                  </>
-                }
-              />
-              <FaqItem
-                q="How fresh is the information?"
-                a={
-                  <>
-                    Cached reports show the most recent successful verification — typically within the last 30 days. Pro and Premium subscribers run fresh on-demand verifications that complete in roughly 30 seconds. Each report shows recency at the category level so you can see exactly what was last refreshed.
-                  </>
-                }
-              />
-              <FaqItem
-                q="What states do you cover today?"
-                a={
-                  <>
-                    Eight launch states: Colorado, Texas, Arizona, Nevada, Georgia, Florida, North Carolina, and Oregon. We&rsquo;re expanding state by state — if your state isn&rsquo;t covered yet, sign up free and you&rsquo;ll be notified when it launches.
-                  </>
-                }
-              />
-              <FaqItem
-                q="Can I export reports or share with a team?"
-                a={
-                  <>
-                    Pro: PDF export, email delivery, and shareable read-only links per report. Premium: all of that plus a multi-user team workspace with shared report history and API access for integrating Groundcheck into your own tooling.
-                  </>
-                }
-              />
-              <FaqItem
-                q="What happens to my searches?"
-                a={
-                  <>
-                    Reports are stored in your account and on our audit ledger for 7 years — that retention is required for compliance and useful for you when a vendor relationship goes sideways and you need to prove what was known when. Searches are private to your account; we don&rsquo;t sell or share your search history.
-                  </>
-                }
-              />
+              {FAQ_ITEMS.map((item) => (
+                <FaqItem
+                  key={item.id}
+                  item={item}
+                  isOpen={openFaqId === item.id}
+                  onToggle={() => toggleFaq(item.id)}
+                />
+              ))}
             </div>
           </div>
         </section>
@@ -1014,51 +1104,78 @@ function BreakdownRow({
   )
 }
 
-function ClosedAccItem({
-  title,
-  summary,
-  iconPath,
+function AccordionItem({
+  item,
+  isOpen,
+  onToggle,
 }: {
-  title: string
-  summary: string
-  iconPath: React.ReactNode
+  item: AccordionItemData
+  isOpen: boolean
+  onToggle: () => void
 }) {
+  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onToggle()
+    }
+  }
   return (
-    <div className="acc-item">
-      <div className="acc-head">
+    <div className={`acc-item${isOpen ? ' open' : ''}`}>
+      <div
+        className="acc-head"
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
+        onClick={onToggle}
+        onKeyDown={onKeyDown}
+      >
         <div className="left">
           <span className="icon">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-              {iconPath}
+              {item.iconPath}
             </svg>
           </span>
           <div>
-            <h4>{title}</h4>
-            <span className="summary">{summary}</span>
+            <h4>{item.title}</h4>
+            <span className="summary">{item.summary}</span>
           </div>
         </div>
         <span className="chev"><ChevronDown /></span>
       </div>
+      {item.body && <div className="acc-body">{item.body}</div>}
     </div>
   )
 }
 
 function FaqItem({
-  q,
-  a,
-  open = false,
+  item,
+  isOpen,
+  onToggle,
 }: {
-  q: string
-  a: React.ReactNode
-  open?: boolean
+  item: FaqItemData
+  isOpen: boolean
+  onToggle: () => void
 }) {
+  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onToggle()
+    }
+  }
   return (
-    <div className={`faq-item${open ? ' open' : ''}`}>
-      <div className="q">
-        {q}
+    <div className={`faq-item${isOpen ? ' open' : ''}`}>
+      <div
+        className="q"
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
+        onClick={onToggle}
+        onKeyDown={onKeyDown}
+      >
+        {item.question}
         <span className="chev"><ChevronDown /></span>
       </div>
-      <div className="a">{a}</div>
+      <div className="a">{item.answer}</div>
     </div>
   )
 }
