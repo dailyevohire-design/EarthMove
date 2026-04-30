@@ -57,6 +57,7 @@
     "zustand": "^5.0.1"
   },
   "devDependencies": {
+    "@inngest/test": "^1.0.0",
     "@playwright/test": "^1.48.2",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "^20",

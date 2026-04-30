@@ -1,10 +1,10 @@
 import { serve } from 'inngest/next'
 import { inngest } from '@/lib/inngest'
-import { runTrustJob } from '@/lib/trust/inngest-functions'
+import { runTrustJob, runTrustJobV2 } from '@/lib/trust/inngest-functions'
 
 export const runtime = 'nodejs'
 
 export const { GET, POST, PUT } = serve({
   client:    inngest,
-  functions: [runTrustJob],
+  functions: [runTrustJob, runTrustJobV2],
 })

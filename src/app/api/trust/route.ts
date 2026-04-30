@@ -274,8 +274,10 @@ export async function POST(req: NextRequest) {
       // Best-effort dispatch. The job row is durable; if Inngest is
       // unavailable, a fallback dispatcher (Tranche B) can re-emit the event.
       try {
+        const trustJobVersion = process.env.TRUST_JOB_VERSION === 'v2' ? 'v2' : 'v1'
+        const trustEventName = trustJobVersion === 'v2' ? 'trust/job.requested.v2' : 'trust/job.enqueued'
         await inngest.send({
-          name: 'trust/job.enqueued',
+          name: trustEventName,
           data: { job_id: jobRow.id },
         })
       } catch (sendErr) {

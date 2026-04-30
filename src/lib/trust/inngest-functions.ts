@@ -1,5 +1,7 @@
 import { inngest } from '@/lib/inngest'
 import { createAdminClient } from '@/lib/supabase/server'
+import { persistEvidence } from './scrapers/persist-evidence'
+import { runScraper, sourcesForTier } from './scrapers/registry'
 
 // Tranche A: mock orchestration spine. One Inngest function consumes
 // trust/job.enqueued events, runs a single mock scraper, finalizes the
@@ -115,5 +117,143 @@ export const runTrustJob = inngest.createFunction(
         .eq('id', job_id)
       throw err
     }
+  },
+)
+
+export const runTrustJobV2 = inngest.createFunction(
+  {
+    id: 'run-trust-job-v2',
+    triggers: [{ event: 'trust/job.requested.v2' }],
+    concurrency: { limit: 5 },
+    retries: 2,
+    onFailure: async ({ event, error }) => {
+      // event.data.event holds the original triggering event
+      const orig = (event.data as any)?.event?.data ?? {}
+      const adminClient = createAdminClient()
+      if (orig.job_id) {
+        await adminClient
+          .from('trust_jobs')
+          .update({
+            status: 'failed',
+            completed_at: new Date().toISOString(),
+            failure_reason: String(error?.message ?? error).slice(0, 500),
+          })
+          .eq('id', orig.job_id)
+      }
+    },
+  },
+  async ({ event, step }) => {
+    const { job_id } = event.data as { job_id: string }
+    const admin = createAdminClient()
+
+    // 1. Load job + tier + contractor identity
+    const job = await step.run('v2-load-job', async () => {
+      const { data, error } = await admin
+        .from('trust_jobs')
+        .select('id, tier, contractor_name, state_code, city, contractor_id')
+        .eq('id', job_id)
+        .single()
+      if (error) throw new Error(`v2-load-job: ${error.message}`)
+      return data
+    })
+
+    // 2. Resolve or create contractor row, link to job
+    const contractorRow = await step.run('v2-resolve-contractor', async () => {
+      const { data, error } = await admin.rpc('resolve_or_create_contractor', {
+        p_legal_name: job.contractor_name,
+        p_state_code: job.state_code,
+        p_city: job.city,
+      })
+      if (error) throw new Error(`v2-resolve-contractor: ${error.message}`)
+      if (!job.contractor_id && data?.id) {
+        await admin.from('trust_jobs').update({ contractor_id: data.id }).eq('id', job_id)
+      }
+      return data
+    })
+
+    // 3. Determine sources for this tier
+    const sources = sourcesForTier(job.tier)
+
+    // 4. Mark running + plan counters
+    await step.run('v2-mark-running', async () => {
+      await admin
+        .from('trust_jobs')
+        .update({
+          status: 'running',
+          started_at: new Date().toISOString(),
+          total_sources_planned: sources.length,
+        })
+        .eq('id', job_id)
+    })
+
+    // 5. Fan out scrapers serially within the function (per-job).
+    //    Serial because persistEvidence sequence_number requires per-job
+    //    ordering; the (job_id, sequence_number) unique index would reject
+    //    parallel inserts. Concurrency 5 across DIFFERENT jobs is the parallelism.
+    let completed = 0
+    let failed = 0
+    for (const sourceKey of sources) {
+      const result = await step.run(`v2-scrape-${sourceKey}`, async () => {
+        try {
+          const evidence = await runScraper(sourceKey, {
+            legalName: job.contractor_name,
+            stateCode: job.state_code,
+            city: job.city,
+          })
+          const persisted = await persistEvidence({
+            jobId: job_id,
+            contractorId: contractorRow?.id ?? null,
+            evidence,
+            supabase: admin as any,
+          })
+          return { ok: true, evidenceId: persisted.evidenceId, sourceKey }
+        } catch (err: any) {
+          const errorEvidence = {
+            source_key: sourceKey,
+            finding_type: 'source_error' as const,
+            confidence: 'low_inference' as const,
+            finding_summary: `Scraper failed for ${sourceKey}: ${String(err?.message ?? err).slice(0, 300)}`,
+            extracted_facts: { error_class: err?.constructor?.name ?? 'Error' },
+            query_sent: null,
+            response_sha256: null,
+            response_snippet: null,
+            duration_ms: 0,
+            cost_cents: 0,
+          }
+          await persistEvidence({
+            jobId: job_id,
+            contractorId: contractorRow?.id ?? null,
+            evidence: errorEvidence,
+            supabase: admin as any,
+          })
+          return { ok: false, sourceKey, error: String(err?.message ?? err) }
+        }
+      })
+      if (result.ok) completed += 1
+      else failed += 1
+    }
+
+    // 6. Update counters + flip to 'synthesizing'.
+    //    runTrustJobV2 ENDS HERE. Synthesis (Sonar+Anthropic call →
+    //    score_and_finalize_trust_report → trust_project_evidence_to_report)
+    //    will be a separate runTrustSynthesizeV2 function in a later commit,
+    //    triggered on event 'trust/job.synthesize.requested'.
+    await step.run('v2-update-counters', async () => {
+      const { count } = await admin
+        .from('trust_evidence')
+        .select('id', { count: 'exact', head: true })
+        .eq('job_id', job_id)
+      await admin
+        .from('trust_jobs')
+        .update({
+          status: 'synthesizing',
+          sources_completed: completed,
+          sources_failed: failed,
+          evidence_count: count ?? completed + failed,
+        })
+        .eq('id', job_id)
+    })
+
+    return { job_id, sources_attempted: sources.length, completed, failed }
   },
 )
