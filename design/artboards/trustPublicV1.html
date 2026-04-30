@@ -1,0 +1,1582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Groundcheck · Know who you're hiring before you sign · earthmove.io/trust</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* =========================================================
+     TOKENS — inherited verbatim from ContractorCheck-Default
+     ========================================================= */
+  :root{
+    --paper:#F1ECE2; --paper-2:#E9E3D5; --card:#FFFFFF; --card-muted:#F6F2E8;
+    --panel:#14322A; --panel-2:#0F2920; --panel-grid:rgba(255,255,255,0.04);
+    --ink:#15201B; --ink-2:#2A332E; --ink-3:#5C645F;
+    --ink-on-panel:#F1ECE2; --ink-on-panel-2:#A9B4AC;
+    --orange:#E5701B; --orange-press:#C95F12;
+    --emerald:#2DB37A; --emerald-soft:#1F8A5C; --emerald-pale:#E6F1E9;
+    --amber:#E0A52A; --amber-pale:#FBEFD0;
+    --red:#C24A2A; --red-pale:#F5DCD2;
+    --hair:#D8D2C4; --hair-strong:#C8C0AC;
+    --display:'Fraunces',serif;
+    --sans:'Inter',-apple-system,system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;border:0;background:transparent;color:inherit;}
+  ul,ol{margin:0;padding:0;list-style:none;}
+  img,svg{display:block;}
+
+  /* =========================================================
+     TOP NAV
+     ========================================================= */
+  .topnav{
+    position:relative;z-index:5;
+    border-bottom:1px solid var(--hair);
+    background:var(--paper);
+  }
+  .topnav .wrap{
+    max-width:1280px;margin:0 auto;padding:18px 32px;
+    display:flex;align-items:center;justify-content:space-between;gap:24px;
+  }
+  .topnav .brand{display:flex;align-items:center;gap:10px;}
+  .topnav .brand .logo{
+    width:30px;height:30px;border-radius:7px;background:var(--panel);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .topnav .brand .name{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-0.01em;line-height:1;}
+  .topnav .brand .sub{font-family:var(--mono);font-size:9.5px;color:var(--ink-3);letter-spacing:0.14em;text-transform:uppercase;margin-top:3px;}
+  .topnav nav.links{display:flex;gap:28px;align-items:center;}
+  .topnav nav.links a{font-size:13.5px;color:var(--ink-2);font-weight:500;}
+  .topnav nav.links a:hover{color:var(--ink);}
+  .topnav .actions{display:flex;gap:12px;align-items:center;}
+  .topnav .actions .signin{font-size:13.5px;color:var(--ink-2);font-weight:500;padding:9px 14px;}
+  .topnav .actions .signup{
+    background:var(--panel);color:#fff;
+    padding:10px 16px;border-radius:8px;font-size:13.5px;font-weight:600;
+    transition:background 0.15s;
+  }
+  .topnav .actions .signup:hover{background:var(--panel-2);}
+
+  /* =========================================================
+     HERO — DARK COMMERCE PANEL
+     ========================================================= */
+  .hero{
+    background:var(--panel);
+    color:var(--ink-on-panel);
+    padding:64px 32px 72px;
+    position:relative;overflow:hidden;
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--panel-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--panel-grid) 1px, transparent 1px);
+    background-size:64px 64px;
+    background-position:-1px -1px;
+    pointer-events:none;
+  }
+  .hero .wrap{max-width:1100px;margin:0 auto;position:relative;}
+  .hero .eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+    color:var(--ink-on-panel-2);display:inline-flex;align-items:center;gap:10px;
+  }
+  .hero .eyebrow::before{content:"";width:18px;height:1.5px;background:var(--ink-on-panel-2);display:inline-block;}
+  .hero h1{
+    font-family:var(--display);font-weight:600;
+    font-size:clamp(40px, 5.4vw, 64px);line-height:1.0;letter-spacing:-0.025em;
+    margin:18px 0 14px;color:#fff;max-width:780px;
+  }
+  .hero h1 em{font-style:italic;font-weight:500;color:var(--ink-on-panel);}
+  .hero .lede{
+    font-size:17px;line-height:1.55;color:var(--ink-on-panel-2);
+    max-width:640px;margin:0 0 32px;
+  }
+  .hero .lede b{color:#fff;font-weight:500;}
+
+  /* search bar — light island on dark panel */
+  .search{
+    background:var(--card);
+    border:1px solid var(--hair);
+    border-radius:18px;
+    padding:8px;
+    box-shadow:0 18px 48px -24px rgba(0,0,0,0.45), 0 1px 0 rgba(0,0,0,0.04);
+    max-width:880px;
+  }
+  .search .row1{display:flex;align-items:center;gap:0;padding:6px 8px;}
+  .search .row1 .icon{width:38px;display:flex;justify-content:center;color:var(--ink-3);}
+  .search .row1 input{
+    flex:1;border:0;outline:0;background:transparent;color:var(--ink);
+    font-family:var(--sans);font-size:22px;font-weight:500;letter-spacing:-0.01em;padding:14px 8px;
+  }
+  .search .row1 input::placeholder{color:#9DA39E;font-weight:400;}
+  .search .row1 .caret{
+    width:2px;height:26px;background:var(--orange);border-radius:1px;
+    animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0;}}
+  .search .row1 input:not(:placeholder-shown) ~ .caret{display:none;}
+  .search .divider{height:1px;background:var(--hair);margin:0 4px;}
+
+  .search .row2{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;flex-wrap:wrap;}
+  .tier-chips{display:flex;gap:6px;flex-wrap:wrap;}
+  .tier{
+    display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;
+    font-size:12.5px;font-weight:500;color:var(--ink-2);background:var(--card-muted);
+    border:1px solid var(--hair);line-height:1;
+  }
+  .tier .lz{
+    font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+    background:rgba(20,32,27,0.06);color:var(--ink-2);padding:3px 6px;border-radius:5px;
+  }
+  .tier .price{font-family:var(--mono);font-size:11px;color:var(--ink-3);}
+  .tier.is-active{background:var(--panel);color:#fff;border-color:var(--panel);}
+  .tier.is-active .lz{background:rgba(255,255,255,0.14);color:#fff;}
+  .tier.is-active .price{color:rgba(255,255,255,0.78);}
+  .tier.is-dim{opacity:0.55;}
+
+  .geo{
+    margin-left:auto;display:flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.04em;
+  }
+  .geo label{text-transform:uppercase;}
+  .geo select,.geo input{
+    border:1px solid var(--hair);background:var(--card);color:var(--ink);
+    padding:6px 8px;border-radius:6px;font-family:var(--mono);font-size:11px;outline:0;
+  }
+  .geo input{width:80px;}
+
+  .search .submit-row{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:6px 10px 8px;flex-wrap:wrap;
+  }
+  .search .submit-row .legal{
+    font-size:11.5px;color:var(--ink-3);letter-spacing:0.01em;line-height:1.5;
+  }
+  .search .submit-row .legal a{color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--hair-strong);text-underline-offset:3px;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;padding:13px 20px;
+    border-radius:10px;font-weight:600;font-size:14px;line-height:1;letter-spacing:-0.005em;
+    transition:transform 0.08s ease, background 0.15s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--orange);color:#fff;}
+  .btn-primary:hover{background:var(--orange-press);}
+  .btn-primary .arrow{font-family:var(--mono);font-weight:500;}
+
+  /* hero tier strip — compact preview cards on dark panel */
+  .hero-tiers{
+    display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:14px;
+    max-width:880px;margin:0 0 22px;
+  }
+  .ht-card{
+    position:relative;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.10);
+    border-radius:14px;
+    padding:20px 22px 18px;
+    display:flex;flex-direction:column;gap:14px;
+    transition:background 0.18s, border-color 0.18s, transform 0.18s;
+  }
+  .ht-card:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.16);}
+  .ht-card.pro{
+    background:linear-gradient(180deg, rgba(45,179,122,0.12) 0%, rgba(45,179,122,0.04) 100%);
+    border-color:rgba(45,179,122,0.45);
+  }
+  .ht-card.pro:hover{border-color:rgba(45,179,122,0.65);}
+  .ht-card .ht-pill{
+    position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+    background:var(--emerald-soft);color:#fff;
+    font-family:var(--mono);font-size:10px;letter-spacing:0.1em;font-weight:600;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;white-space:nowrap;
+  }
+  .ht-card .ht-name{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-on-panel-2);
+  }
+  .ht-card.pro .ht-name{color:var(--emerald);}
+  .ht-card .ht-price{
+    display:flex;align-items:baseline;gap:5px;
+  }
+  .ht-card .ht-price .num{
+    font-family:var(--display);font-weight:700;font-size:34px;line-height:1;letter-spacing:-0.025em;color:#fff;
+  }
+  .ht-card .ht-price .unit{font-family:var(--mono);font-size:11px;color:var(--ink-on-panel-2);}
+  .ht-card .ht-prop{
+    font-size:13px;line-height:1.45;color:var(--ink-on-panel);font-weight:500;
+  }
+  .ht-card .ht-prop b{color:#fff;}
+  .ht-card .ht-cta{
+    margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:10px 14px;border-radius:9px;font-size:13px;font-weight:600;line-height:1;
+    transition:background 0.15s;
+  }
+  .ht-card .ht-cta.outline{
+    background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.22);
+  }
+  .ht-card .ht-cta.outline:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.36);}
+  .ht-card .ht-cta.solid{background:var(--orange);color:#fff;}
+  .ht-card .ht-cta.solid:hover{background:var(--orange-press);}
+  .ht-card .ht-cta.subtle{
+    background:rgba(255,255,255,0.06);color:#fff;border:1px solid rgba(255,255,255,0.14);
+  }
+  .ht-card .ht-cta.subtle:hover{background:rgba(255,255,255,0.10);}
+
+  .hero-tiers-foot{
+    display:flex;align-items:center;justify-content:flex-end;gap:14px;
+    margin:-14px 0 24px;max-width:880px;
+    font-family:var(--mono);font-size:11.5px;color:var(--ink-on-panel-2);letter-spacing:0.04em;
+  }
+  .hero-tiers-foot a{
+    color:#fff;border-bottom:1px dashed rgba(255,255,255,0.32);padding-bottom:1px;
+  }
+  .hero-tiers-foot a:hover{border-bottom-color:#fff;}
+
+  /* hero search — slim variant (no inline tier chips) */
+  .search.slim .row2{display:none;}
+  .search.slim .submit-row{padding:14px 12px 10px;}
+  .search.slim .row1{padding:10px 8px;border-bottom:1px solid var(--hair);}
+  .search.slim .submit-row .legal{
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .search.slim .submit-row .legal .free-pill{
+    background:var(--emerald-pale);color:var(--emerald-soft);
+    font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+    padding:4px 8px;border-radius:6px;
+  }
+  .search.slim .submit-row .geo{
+    margin-right:auto;margin-left:0;
+  }
+  .search.slim .submit-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .search.slim .submit-row .geo{order:1;}
+  .search.slim .submit-row .legal{order:2;flex:1;justify-content:flex-end;text-align:right;}
+  .search.slim .submit-row .btn{order:3;}
+
+  .hero .reassure{
+    margin-top:28px;display:flex;flex-wrap:wrap;gap:28px;
+    color:var(--ink-on-panel-2);font-size:13px;
+  }
+  .hero .reassure .item{display:inline-flex;align-items:center;gap:8px;}
+  .hero .reassure svg{color:var(--emerald);}
+
+  /* =========================================================
+     OPS SIGNALS STRIP
+     ========================================================= */
+  .ops-band{background:var(--paper);border-bottom:1px solid var(--hair);}
+  .ops-band .wrap{max-width:1100px;margin:0 auto;padding:36px 32px;}
+  .ops{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+    border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:var(--card);
+  }
+  .ops .cell{padding:20px 22px;border-right:1px solid var(--hair);display:flex;flex-direction:column;gap:6px;}
+  .ops .cell:last-child{border-right:0;}
+  .ops .cell .l{font-family:var(--mono);font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);}
+  .ops .cell .v{font-family:var(--display);font-weight:600;font-size:24px;letter-spacing:-0.015em;line-height:1.05;color:var(--ink);}
+  .ops .cell .v em{font-style:normal;color:var(--orange);font-weight:700;}
+  .ops .cell .sub{font-size:11.5px;color:var(--ink-3);line-height:1.4;}
+
+  /* =========================================================
+     HOW IT WORKS
+     ========================================================= */
+  .how{padding:72px 32px;}
+  .how .wrap{max-width:1100px;margin:0 auto;}
+  .how .head{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;margin-bottom:36px;flex-wrap:wrap;}
+  .how .head .label{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-2);
+    display:inline-flex;align-items:center;gap:10px;
+  }
+  .how .head .label::before{content:"";width:18px;height:1.5px;background:var(--ink-2);}
+  .how .head h2{
+    font-family:var(--display);font-weight:600;
+    font-size:38px;line-height:1.05;letter-spacing:-0.02em;margin:10px 0 0;max-width:640px;
+  }
+  .how .head h2 em{font-style:italic;font-weight:500;}
+  .how .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .how .step{
+    background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:28px;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .how .step .num{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.14em;color:var(--ink-3);
+  }
+  .how .step .ico{
+    width:44px;height:44px;border-radius:11px;background:var(--card-muted);
+    border:1px solid var(--hair);display:flex;align-items:center;justify-content:center;color:var(--panel);
+  }
+  .how .step h3{font-family:var(--display);font-weight:600;font-size:22px;letter-spacing:-0.01em;margin:0;line-height:1.1;}
+  .how .step p{font-size:14px;line-height:1.55;color:var(--ink-2);margin:0;}
+
+  /* =========================================================
+     PROGRESS PANEL — "What you see while it runs"
+     ========================================================= */
+  .progress-band{
+    background:var(--panel);color:var(--ink-on-panel);padding:64px 32px;
+    position:relative;overflow:hidden;
+  }
+  .progress-band::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--panel-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--panel-grid) 1px, transparent 1px);
+    background-size:64px 64px;pointer-events:none;
+  }
+  .progress-band .wrap{max-width:1100px;margin:0 auto;position:relative;display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:center;}
+  .progress-band .left .label{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-on-panel-2);
+    display:inline-flex;align-items:center;gap:10px;
+  }
+  .progress-band .left .label::before{content:"";width:18px;height:1.5px;background:var(--ink-on-panel-2);}
+  .progress-band .left h2{
+    font-family:var(--display);font-weight:600;font-size:40px;line-height:1.04;letter-spacing:-0.02em;
+    margin:14px 0 16px;color:#fff;
+  }
+  .progress-band .left h2 em{font-style:italic;font-weight:500;color:var(--ink-on-panel);}
+  .progress-band .left p{font-size:15px;color:var(--ink-on-panel-2);line-height:1.6;max-width:420px;margin:0;}
+
+  .progress-card{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px;padding:28px;
+    backdrop-filter:blur(4px);
+  }
+  .progress-card .target{
+    font-family:var(--mono);font-size:12px;color:var(--ink-on-panel-2);letter-spacing:0.04em;
+    padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:18px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .progress-card .target b{color:#fff;font-weight:500;}
+  .progress-card .target .timer{color:var(--emerald);font-family:var(--mono);}
+  .progress-card .progress-list{display:flex;flex-direction:column;gap:13px;}
+  .progress-card .pl-row{
+    display:flex;align-items:center;gap:12px;
+    font-family:var(--mono);font-size:13px;letter-spacing:0.01em;
+    color:var(--ink-on-panel);
+  }
+  .progress-card .pl-row .dot{
+    width:18px;height:18px;border-radius:50%;
+    background:rgba(45,179,122,0.15);color:var(--emerald);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .progress-card .pl-row.active{color:#fff;}
+  .progress-card .pl-row.active .dot{
+    background:rgba(229,112,27,0.18);color:var(--orange);
+    animation:spin 1.4s linear infinite;
+  }
+  @keyframes spin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+  .progress-card .pl-row.pending{color:var(--ink-on-panel-2);opacity:0.5;}
+  .progress-card .pl-row.pending .dot{background:rgba(255,255,255,0.05);color:var(--ink-on-panel-2);}
+
+  /* =========================================================
+     RESULT — TRUST REPORT CARD
+     ========================================================= */
+  .result-band{padding:80px 32px;}
+  .result-band .wrap{max-width:1100px;margin:0 auto;}
+  .result-band .preface{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-2);
+    display:inline-flex;align-items:center;gap:10px;margin-bottom:8px;
+  }
+  .result-band .preface::before{content:"";width:18px;height:1.5px;background:var(--ink-2);}
+  .result-band h2{
+    font-family:var(--display);font-weight:600;font-size:38px;line-height:1.05;letter-spacing:-0.02em;
+    margin:0 0 8px;
+  }
+  .result-band h2 em{font-style:italic;font-weight:500;}
+  .result-band .preamble-lede{font-size:15px;color:var(--ink-2);max-width:580px;margin:0 0 32px;line-height:1.55;}
+
+  .report{
+    background:var(--card);border:1px solid var(--hair);border-radius:20px;
+    padding:0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,0.02);
+  }
+  .report .r-head{
+    padding:36px 40px 32px;border-bottom:1px solid var(--hair);
+    display:grid;grid-template-columns:1fr auto;gap:32px;align-items:start;
+  }
+  .report .r-head .left .stamp{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--emerald-soft);
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .report .r-head .left .stamp .live{
+    width:6px;height:6px;border-radius:50%;background:var(--emerald);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+  .report .r-head .left h3{
+    font-family:var(--display);font-weight:600;font-size:36px;line-height:1.05;letter-spacing:-0.02em;margin:8px 0 6px;
+  }
+  .report .r-head .left .meta{
+    font-family:var(--mono);font-size:12px;color:var(--ink-3);letter-spacing:0.04em;
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  }
+  .report .r-head .left .meta .sep{opacity:0.4;}
+  .report .r-head .left .verdict{
+    font-family:var(--display);font-style:italic;font-weight:500;font-size:20px;line-height:1.4;
+    margin:18px 0 0;color:var(--ink-2);max-width:540px;
+  }
+
+  .score-block{
+    display:flex;align-items:center;gap:18px;
+    background:var(--emerald-pale);border:1px solid rgba(45,179,122,0.22);
+    border-radius:16px;padding:18px 22px 18px 24px;min-width:280px;
+  }
+  .score-num{
+    font-family:var(--display);font-weight:700;font-size:84px;line-height:0.9;letter-spacing:-0.04em;color:var(--emerald-soft);
+    position:relative;
+  }
+  .score-num::after{
+    content:"/100";font-family:var(--mono);font-size:13px;font-weight:500;color:var(--emerald-soft);
+    letter-spacing:0.02em;margin-left:4px;vertical-align:top;position:relative;top:6px;
+  }
+  .score-meta{display:flex;flex-direction:column;gap:6px;}
+  .score-meta .grade{
+    font-family:var(--display);font-weight:600;font-size:32px;line-height:1;letter-spacing:-0.02em;color:var(--emerald-soft);
+  }
+  .score-meta .timestamp{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:0.04em;}
+  .score-meta .cache{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:0.04em;color:var(--ink-2);
+  }
+  .score-meta .cache a{color:var(--orange);text-decoration:underline;text-underline-offset:2px;}
+
+  /* breakdown */
+  .breakdown{padding:32px 40px 28px;border-bottom:1px solid var(--hair);}
+  .breakdown .heading{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:18px;
+  }
+  .bd-row{
+    display:grid;grid-template-columns:200px 70px 1fr 24px;gap:18px;align-items:center;
+    padding:14px 0;border-top:1px solid var(--hair);
+  }
+  .bd-row:first-of-type{border-top:0;}
+  .bd-row .name{font-weight:600;font-size:14px;color:var(--ink);letter-spacing:-0.005em;}
+  .bd-row .num{font-family:var(--mono);font-size:13px;color:var(--ink-2);font-weight:500;}
+  .bd-row .num em{font-style:normal;color:var(--ink-3);font-weight:400;}
+  .bd-row .bar-wrap{display:flex;flex-direction:column;gap:6px;}
+  .bd-row .bar{height:6px;background:rgba(20,32,27,0.06);border-radius:999px;overflow:hidden;}
+  .bd-row .bar .fill{height:100%;border-radius:999px;}
+  .bd-row .bar .fill.green{background:var(--emerald);}
+  .bd-row .bar .fill.amber{background:var(--amber);}
+  .bd-row .bar .fill.red{background:var(--red);}
+  .bd-row .outcome{font-size:12.5px;color:var(--ink-3);line-height:1.45;}
+  .bd-row .check{
+    color:var(--emerald);width:18px;height:18px;display:flex;align-items:center;justify-content:center;
+  }
+  .bd-row .check.warn{color:var(--amber);}
+  .bd-row .check.fail{color:var(--red);}
+
+  /* accordion */
+  .accordion{padding:8px 40px 0;}
+  .acc-item{border-top:1px solid var(--hair);padding:18px 0;}
+  .acc-item:first-of-type{border-top:0;}
+  .acc-item .acc-head{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;
+  }
+  .acc-item .acc-head .left{display:flex;align-items:center;gap:14px;}
+  .acc-item .acc-head .icon{
+    width:36px;height:36px;border-radius:9px;background:var(--card-muted);
+    display:flex;align-items:center;justify-content:center;color:var(--panel);border:1px solid var(--hair);
+  }
+  .acc-item .acc-head h4{
+    font-family:var(--display);font-weight:600;font-size:18px;letter-spacing:-0.01em;margin:0;line-height:1.2;
+  }
+  .acc-item .acc-head .summary{font-size:12.5px;color:var(--ink-3);margin-top:2px;}
+  .acc-item .acc-head .chev{color:var(--ink-3);transition:transform 0.2s;}
+  .acc-item.open .acc-head .chev{transform:rotate(180deg);}
+  .acc-item .acc-body{
+    margin-top:14px;padding-left:50px;display:none;
+  }
+  .acc-item.open .acc-body{display:block;}
+  .acc-item .acc-body ul{display:flex;flex-direction:column;gap:8px;}
+  .acc-item .acc-body li{
+    display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--ink-2);line-height:1.5;
+  }
+  .acc-item .acc-body li .lic{
+    color:var(--emerald);width:16px;height:16px;flex-shrink:0;margin-top:3px;
+  }
+  .acc-item .acc-body li .lic.warn{color:var(--amber);}
+  .acc-item .acc-body li b{font-weight:600;color:var(--ink);}
+
+  /* paywall */
+  .paywall{
+    margin:18px 40px 32px;background:var(--card-muted);border:1px solid var(--hair);border-radius:14px;
+    padding:24px 28px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
+  }
+  .paywall .pw-text h4{
+    font-family:var(--display);font-weight:600;font-size:20px;line-height:1.2;letter-spacing:-0.01em;margin:0 0 6px;
+  }
+  .paywall .pw-text p{font-size:13px;color:var(--ink-2);line-height:1.55;margin:0;max-width:520px;}
+  .paywall .pw-text p b{color:var(--ink);}
+  .paywall .pw-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+  .paywall .pw-link{font-size:12.5px;color:var(--ink-3);}
+  .paywall .pw-link a{color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;}
+
+  /* fcra disclaimer */
+  .disclaimer{
+    margin:0 40px 32px;padding-top:20px;border-top:1px solid var(--hair);
+    font-size:11.5px;color:var(--ink-3);line-height:1.55;font-style:italic;
+  }
+  .disclaimer b{color:var(--ink-2);font-style:normal;font-weight:600;}
+
+  /* =========================================================
+     "Or try it first" — search merged INTO pricing-band
+     ========================================================= */
+  .pricing-band .try-it{
+    margin-top:40px;
+    padding-top:32px;
+    border-top:1px dashed var(--hair-strong);
+  }
+  .pricing-band .try-it-head{
+    display:flex;align-items:baseline;justify-content:flex-start;gap:18px;flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .pricing-band .try-it-head h3{
+    font-family:var(--display);font-weight:600;font-size:26px;letter-spacing:-0.02em;line-height:1.1;margin:0;
+  }
+  .pricing-band .try-it-head h3 em{font-style:italic;font-weight:500;}
+  .pricing-band .try-it-head .sub{
+    font-size:14px;color:var(--ink-2);line-height:1.5;
+  }
+  .pricing-band .try-it .search{
+    box-shadow:0 14px 36px -22px rgba(20,32,27,0.16), 0 1px 0 rgba(20,32,27,0.04);
+    max-width:none;
+  }
+  .pricing-band .try-it .reassure{
+    margin-top:20px;display:flex;flex-wrap:wrap;gap:24px;font-size:12.5px;
+  }
+  .pricing-band .try-it .reassure .item{display:inline-flex;align-items:center;gap:8px;color:var(--ink-2);}
+  .pricing-band .try-it .reassure svg{color:var(--emerald-soft);}
+
+  /* =========================================================
+     PRICING BAND
+     ========================================================= */
+  .pricing-band{background:var(--paper-2);padding:64px 32px 72px;}
+  .pricing-band .wrap{max-width:1180px;margin:0 auto;}
+  .pricing-band .head{
+    display:flex;align-items:flex-end;justify-content:space-between;gap:32px;margin-bottom:40px;flex-wrap:wrap;
+  }
+  .pricing-band .head .left{max-width:640px;}
+  .pricing-band .head .label{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-2);
+    display:inline-flex;align-items:center;gap:10px;
+  }
+  .pricing-band .head .label::before{content:"";width:18px;height:1.5px;background:var(--ink-2);}
+  .pricing-band .head h2{
+    font-family:var(--display);font-weight:600;font-size:42px;line-height:1.05;letter-spacing:-0.02em;
+    margin:14px 0 8px;
+  }
+  .pricing-band .head h2 em{font-style:italic;font-weight:500;}
+  .pricing-band .head p{font-size:15px;color:var(--ink-2);line-height:1.55;margin:0;max-width:520px;}
+
+  .toggle-wrap{display:flex;align-items:center;gap:12px;}
+  .toggle{
+    display:inline-flex;background:var(--card);border:1px solid var(--hair);border-radius:999px;
+    padding:4px;position:relative;
+  }
+  .toggle button{
+    padding:8px 18px;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-2);
+    transition:all 0.18s;
+  }
+  .toggle button.active{background:var(--panel);color:#fff;}
+  .save-pill{
+    background:var(--orange);color:#fff;padding:5px 10px;border-radius:999px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:0.06em;font-weight:600;
+  }
+
+  .tiers{
+    display:grid;grid-template-columns:1fr 1.05fr 1fr 0.85fr;gap:18px;align-items:stretch;
+  }
+  .tier-card{
+    background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:32px 28px 28px;
+    display:flex;flex-direction:column;gap:18px;position:relative;
+  }
+  .tier-card.featured{
+    border:2px solid var(--emerald-soft);
+    box-shadow:0 18px 48px -28px rgba(31,138,92,0.4);
+    transform:translateY(-8px);
+    background:linear-gradient(180deg, #fff 0%, var(--emerald-pale) 100%);
+  }
+  .tier-card.enterprise{background:var(--panel);color:var(--ink-on-panel);border-color:var(--panel);}
+  .tier-card .badge{
+    position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+    background:var(--emerald-soft);color:#fff;padding:6px 14px;border-radius:999px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:0.1em;font-weight:600;text-transform:uppercase;
+  }
+  .tier-card .tier-name{
+    font-family:var(--display);font-weight:600;font-size:24px;letter-spacing:-0.01em;line-height:1;
+  }
+  .tier-card.enterprise .tier-name{color:#fff;}
+  .tier-card .tier-tagline{font-size:13px;color:var(--ink-3);line-height:1.5;}
+  .tier-card.enterprise .tier-tagline{color:var(--ink-on-panel-2);}
+
+  .tier-card .price-block{padding-bottom:18px;border-bottom:1px solid var(--hair);}
+  .tier-card.featured .price-block{border-bottom-color:rgba(31,138,92,0.18);}
+  .tier-card.enterprise .price-block{border-bottom-color:rgba(255,255,255,0.1);}
+  .tier-card .price{
+    display:flex;align-items:baseline;gap:6px;
+  }
+  .tier-card .price .num{
+    font-family:var(--display);font-weight:700;font-size:48px;line-height:1;letter-spacing:-0.03em;color:var(--ink);
+  }
+  .tier-card.enterprise .price .num{color:#fff;font-size:32px;font-style:italic;font-weight:500;}
+  .tier-card .price .unit{font-family:var(--mono);font-size:12px;color:var(--ink-3);letter-spacing:0.02em;}
+  .tier-card.enterprise .price .unit{color:var(--ink-on-panel-2);}
+  .tier-card .billed{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:6px;letter-spacing:0.02em;}
+  .tier-card .billed b{color:var(--orange);font-weight:600;}
+
+  .tier-card ul.feats{display:flex;flex-direction:column;gap:10px;flex:1;}
+  .tier-card ul.feats li{
+    display:flex;align-items:flex-start;gap:10px;font-size:13.5px;line-height:1.5;color:var(--ink-2);
+  }
+  .tier-card.enterprise ul.feats li{color:var(--ink-on-panel);}
+  .tier-card ul.feats li svg{
+    color:var(--emerald);width:16px;height:16px;flex-shrink:0;margin-top:3px;
+  }
+  .tier-card.enterprise ul.feats li svg{color:var(--emerald);}
+
+  .tier-card .cta{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    padding:13px 18px;border-radius:10px;font-weight:600;font-size:14px;line-height:1;
+    transition:background 0.15s;
+  }
+  .tier-card .cta.secondary{background:var(--card-muted);color:var(--ink);border:1px solid var(--hair);}
+  .tier-card .cta.secondary:hover{background:var(--paper-2);}
+  .tier-card .cta.primary{background:var(--orange);color:#fff;}
+  .tier-card .cta.primary:hover{background:var(--orange-press);}
+  .tier-card .cta.dark{background:var(--panel);color:#fff;}
+  .tier-card .cta.dark:hover{background:var(--panel-2);}
+  .tier-card .cta.outline{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);}
+  .tier-card .cta.outline:hover{background:rgba(255,255,255,0.08);}
+
+  .anchor{
+    margin-top:28px;text-align:center;font-style:italic;font-size:12.5px;color:var(--ink-3);letter-spacing:0.01em;
+  }
+
+  /* =========================================================
+     USE CASES
+     ========================================================= */
+  .use{padding:96px 32px;border-top:1px solid var(--hair);}
+  .use .wrap{max-width:1100px;margin:0 auto;}
+  .use .head{margin-bottom:40px;}
+  .use .head .label{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-2);
+    display:inline-flex;align-items:center;gap:10px;
+  }
+  .use .head .label::before{content:"";width:18px;height:1.5px;background:var(--ink-2);}
+  .use .head h2{
+    font-family:var(--display);font-weight:600;font-size:42px;line-height:1.05;letter-spacing:-0.02em;
+    margin:14px 0 0;max-width:740px;
+  }
+  .use .head h2 em{font-style:italic;font-weight:500;}
+  .use-cards{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .use-card{
+    background:var(--card);border:1px solid var(--hair);border-radius:18px;
+    padding:36px 36px 32px;display:flex;flex-direction:column;gap:18px;
+  }
+  .use-card .ic{
+    width:48px;height:48px;border-radius:12px;background:var(--card-muted);
+    border:1px solid var(--hair);display:flex;align-items:center;justify-content:center;color:var(--panel);
+  }
+  .use-card .audience{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .use-card h3{
+    font-family:var(--display);font-weight:600;font-size:26px;letter-spacing:-0.015em;line-height:1.1;margin:0;
+  }
+  .use-card h3 em{font-style:italic;font-weight:500;}
+  .use-card p{font-size:14px;line-height:1.6;color:var(--ink-2);margin:0;}
+  .use-card .stat{
+    background:var(--card-muted);border:1px solid var(--hair);border-radius:10px;
+    padding:14px 16px;font-size:13px;color:var(--ink-2);font-style:italic;line-height:1.45;
+  }
+  .use-card .stat b{font-style:normal;font-weight:600;color:var(--ink);font-family:var(--display);}
+  .use-card .link{
+    margin-top:auto;font-size:13px;font-weight:600;color:var(--orange);
+    display:inline-flex;align-items:center;gap:6px;
+  }
+
+  /* =========================================================
+     FAQ
+     ========================================================= */
+  .faq{padding:96px 32px;background:var(--paper-2);border-top:1px solid var(--hair);}
+  .faq .wrap{max-width:880px;margin:0 auto;}
+  .faq .head{text-align:left;margin-bottom:32px;}
+  .faq .head .label{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-2);
+    display:inline-flex;align-items:center;gap:10px;
+  }
+  .faq .head .label::before{content:"";width:18px;height:1.5px;background:var(--ink-2);}
+  .faq .head h2{
+    font-family:var(--display);font-weight:600;font-size:36px;line-height:1.05;letter-spacing:-0.02em;
+    margin:14px 0 0;
+  }
+  .faq .head h2 em{font-style:italic;font-weight:500;}
+  .faq-list{background:var(--card);border:1px solid var(--hair);border-radius:14px;overflow:hidden;}
+  .faq-item{border-top:1px solid var(--hair);padding:20px 24px;}
+  .faq-item:first-child{border-top:0;}
+  .faq-item .q{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;
+    font-weight:600;font-size:15px;letter-spacing:-0.005em;color:var(--ink);
+  }
+  .faq-item .q .chev{color:var(--ink-3);transition:transform 0.2s;}
+  .faq-item.open .q .chev{transform:rotate(180deg);}
+  .faq-item .a{display:none;margin-top:12px;font-size:13.5px;line-height:1.6;color:var(--ink-2);max-width:680px;}
+  .faq-item.open .a{display:block;}
+  .faq-item .a a{color:var(--orange);text-decoration:underline;text-underline-offset:3px;}
+
+  /* =========================================================
+     FOOTER
+     ========================================================= */
+  footer{background:var(--paper);border-top:1px solid var(--hair);padding:32px;}
+  footer .wrap{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;}
+  footer .left{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.04em;}
+  footer .right{display:flex;gap:20px;font-size:12.5px;color:var(--ink-3);}
+  footer .right a:hover{color:var(--ink);}
+
+  /* =========================================================
+     MOBILE
+     ========================================================= */
+  @media (max-width:900px){
+    .topnav nav.links{display:none;}
+    .pricing-band{padding:48px 22px 56px;}
+    .pricing-band .head{flex-direction:column;align-items:flex-start;}
+    .tiers{grid-template-columns:1fr;}
+    .tier-card.featured{transform:none;}
+    .pricing-band .try-it{margin-top:32px;padding-top:24px;}
+    .pricing-band .try-it-head{flex-direction:column;gap:6px;}
+    .pricing-band .try-it-head h3{font-size:22px;}
+    .search.slim .submit-row{flex-direction:column;align-items:stretch;}
+    .search.slim .submit-row .geo,
+    .search.slim .submit-row .legal,
+    .search.slim .submit-row .btn{order:initial;text-align:left;justify-content:flex-start;}
+    .search.slim .submit-row .btn{align-self:stretch;justify-content:center;}
+    .ops{grid-template-columns:1fr 1fr;}
+    .ops .cell{border-right:1px solid var(--hair);border-bottom:1px solid var(--hair);}
+    .ops .cell:nth-child(2){border-right:0;}
+    .ops .cell:nth-child(3),.ops .cell:nth-child(4){border-bottom:0;}
+    .ops .cell:nth-child(4){border-right:0;}
+    .how .steps{grid-template-columns:1fr;}
+    .progress-band .wrap{grid-template-columns:1fr;gap:32px;}
+    .report .r-head{grid-template-columns:1fr;}
+    .score-block{align-self:start;}
+    .breakdown,.accordion,.paywall,.disclaimer{padding-left:24px;padding-right:24px;margin-left:0;margin-right:0;}
+    .paywall{grid-template-columns:1fr;}
+    .paywall .pw-actions{align-items:flex-start;}
+    .pricing-band{padding:64px 22px;}
+    .pricing-band .head{flex-direction:column;align-items:flex-start;}
+    .tiers{grid-template-columns:1fr;}
+    .tier-card.featured{transform:none;}
+    .use-cards{grid-template-columns:1fr;}
+    .bd-row{grid-template-columns:1fr;gap:8px;}
+    .bd-row .num{order:2;}
+    .bd-row .bar-wrap{order:3;}
+    .bd-row .check{order:0;justify-self:flex-end;}
+  }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     TOP NAV
+     ========================================================= -->
+<header class="topnav">
+  <div class="wrap">
+    <a href="/" class="brand">
+      <span class="logo">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8 L7 12 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span>
+        <span class="name">Groundcheck</span>
+        <span class="sub">by EarthMove</span>
+      </span>
+    </a>
+    <nav class="links">
+      <a href="#">Trust lookup</a>
+      <a href="#">How it works</a>
+      <a href="#">Pricing</a>
+      <a href="#">For Contractors</a>
+      <a href="#">For Homeowners</a>
+    </nav>
+    <div class="actions">
+      <a href="/login" class="signin">Sign in</a>
+      <a href="/signup" class="signup">Sign up free</a>
+    </div>
+  </div>
+</header>
+
+<!-- =========================================================
+     HERO
+     ========================================================= -->
+<!-- =========================================================
+     PRICING-AS-HERO — first thing visitors see
+     ========================================================= -->
+<section class="pricing-band" id="pricing">
+  <div class="wrap">
+    <div class="head">
+      <div class="left">
+        <span class="label">Trust lookup · know before you sign</span>
+        <h2>Three tiers. Pick what <em>matches your risk.</em></h2>
+        <p>Homeowner doing a one-off renovation? Free is enough. Running a GC business with 20 active subs? You want Pro. Vetting six-figure vendor relationships? Premium pays for itself in a week.</p>
+      </div>
+      <div class="toggle-wrap">
+        <div class="toggle">
+          <button class="active" type="button">Monthly</button>
+          <button type="button">Annual</button>
+        </div>
+        <span class="save-pill">Save 20% annual</span>
+      </div>
+    </div>
+
+    <div class="tiers">
+      <!-- FREE -->
+      <article class="tier-card">
+        <div>
+          <h3 class="tier-name">Free</h3>
+          <p class="tier-tagline">Just kicking the tires. One-off check before signing a contract.</p>
+        </div>
+        <div class="price-block">
+          <div class="price">
+            <span class="num">$0</span>
+            <span class="unit">forever</span>
+          </div>
+          <div class="billed">No credit card required</div>
+        </div>
+        <ul class="feats">
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>1 lookup per month</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>View existing cached reports</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Standard verification depth</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Personal use, single device</span>
+          </li>
+        </ul>
+        <a href="/signup" class="cta secondary">Sign up free</a>
+      </article>
+
+      <!-- PRO -->
+      <article class="tier-card featured">
+        <span class="badge">Most popular</span>
+        <div>
+          <h3 class="tier-name">Pro</h3>
+          <p class="tier-tagline">Standard hiring decisions. Typical residential, sub vetting, supplier checks.</p>
+        </div>
+        <div class="price-block">
+          <div class="price">
+            <span class="num">$49.99</span>
+            <span class="unit">/ month</span>
+          </div>
+          <div class="billed">Annual: <b>$39.99/mo</b> · billed $479.88/yr · save $120</div>
+        </div>
+        <ul class="feats">
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><b>Unlimited fresh lookups</b> on demand</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Standard verification depth</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>7-year searchable history</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>PDF + email export · shareable links</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Email support</span>
+          </li>
+        </ul>
+        <a href="/signup?plan=pro" class="cta primary">Start Pro <span class="arrow">→</span></a>
+      </article>
+
+      <!-- PREMIUM -->
+      <article class="tier-card">
+        <div>
+          <h3 class="tier-name">Premium</h3>
+          <p class="tier-tagline">High-stakes decisions. Major contracts, ongoing vendor due diligence.</p>
+        </div>
+        <div class="price-block">
+          <div class="price">
+            <span class="num">$100</span>
+            <span class="unit">/ month</span>
+          </div>
+          <div class="billed">Annual: <b>$80/mo</b> · billed $960/yr · save $240</div>
+        </div>
+        <ul class="feats">
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Everything in Pro</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><b>Enhanced verification depth</b></span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Priority report generation</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Multi-user team workspace</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>API access for integrations</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Priority support · 24-hour response</span>
+          </li>
+        </ul>
+        <a href="/signup?plan=premium" class="cta dark">Start Premium <span class="arrow">→</span></a>
+      </article>
+
+      <!-- ENTERPRISE -->
+      <article class="tier-card enterprise">
+        <div>
+          <h3 class="tier-name">Enterprise</h3>
+          <p class="tier-tagline">High-volume operations. Owner-developers, platform partners.</p>
+        </div>
+        <div class="price-block">
+          <div class="price">
+            <span class="num">Talk to us</span>
+          </div>
+          <div class="billed" style="color:var(--ink-on-panel-2);">Volume + integrations</div>
+        </div>
+        <ul class="feats">
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Volume pricing</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>SSO + custom integrations</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Dedicated success manager</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L6.5 11.5 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Service-level agreement</span>
+          </li>
+        </ul>
+        <a href="mailto:enterprise@earthmove.io" class="cta outline">Contact sales <span class="arrow">→</span></a>
+      </article>
+    </div>
+
+    <p class="anchor">Compare to industry-standard contractor verification at $1,700–$5,000 per subscriber per year.</p>
+
+    <!-- Try it first — merged into pricing band so it's right under the tiers, no perceived section break -->
+    <div class="try-it">
+      <div class="try-it-head">
+        <h3>Or try it <em>first.</em></h3>
+        <span class="sub">Test it on any contractor right now — your first lookup is free, no signup required.</span>
+      </div>
+
+      <div class="search slim">
+        <div class="row1">
+          <span class="icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6"/><path d="M14 14l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span>
+          <input type="text" placeholder="Type a company name or LLC…" autofocus />
+          <span class="caret"></span>
+        </div>
+        <div class="submit-row">
+          <div class="geo">
+            <label>State</label>
+            <select>
+              <option>CO</option><option>TX</option><option>AZ</option><option>NV</option>
+              <option>GA</option><option>FL</option><option>NC</option><option>OR</option>
+            </select>
+            <label style="margin-left:6px;">City</label>
+            <input type="text" value="Denver" />
+          </div>
+          <div class="legal">
+            <span class="free-pill">Free trial</span>
+            <span>Your first lookup is on us · No signup required</span>
+          </div>
+          <button class="btn btn-primary" type="button">Run trust check <span class="arrow">→</span></button>
+        </div>
+      </div>
+
+      <div class="reassure">
+        <span class="item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L7 12 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Independent verification
+        </span>
+        <span class="item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L7 12 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          ~30 second results
+        </span>
+        <span class="item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L7 12 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          7-year audit retention
+        </span>
+        <span class="item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8 L7 12 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Patent-pending methodology
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     OPS SIGNALS STRIP
+     ========================================================= -->
+<section class="ops-band">
+  <div class="wrap">
+    <div class="ops">
+      <div class="cell">
+        <span class="l">Average lookup</span>
+        <span class="v"><em>~30</em> sec</span>
+        <span class="sub">Independent verification</span>
+      </div>
+      <div class="cell">
+        <span class="l">Coverage</span>
+        <span class="v"><em>8</em> launch states</span>
+        <span class="sub">CO · TX · AZ · NV · GA · FL · NC · OR</span>
+      </div>
+      <div class="cell">
+        <span class="l">This month</span>
+        <span class="v">1,247 lookups</span>
+        <span class="sub">Across homeowners and contractors</span>
+      </div>
+      <div class="cell">
+        <span class="l">Audit retention</span>
+        <span class="v">7-year trail</span>
+        <span class="sub">Reports stored, shareable, exportable</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     HOW IT WORKS
+     ========================================================= -->
+<section class="how">
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <span class="label">How it works</span>
+        <h2>Three minutes to avoid <em>a six-figure mistake.</em></h2>
+      </div>
+    </div>
+    <div class="steps">
+      <article class="step">
+        <span class="num">01</span>
+        <span class="ico">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6"/><path d="M14 14l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </span>
+        <h3>Search</h3>
+        <p>Type any contractor, supplier, or business entity. Legal name, DBA, or LLC works. State + city help disambiguate.</p>
+      </article>
+      <article class="step">
+        <span class="num">02</span>
+        <span class="ico">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10 L8 15 L17 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <h3>Verify</h3>
+        <p>Independent verification across multiple categories of trust signal. Score generated in under a minute.</p>
+      </article>
+      <article class="step">
+        <span class="num">03</span>
+        <span class="ico">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3 L17 7 L17 12 C17 15 14 17 10 18 C6 17 3 15 3 12 L3 7 Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </span>
+        <h3>Decide</h3>
+        <p>Trust score 0-100, plain-language verdict, full breakdown by category. Cached and shareable for 7 years.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     PROGRESS PANEL — what you see while it runs
+     ========================================================= -->
+<section class="progress-band">
+  <div class="wrap">
+    <div class="left">
+      <span class="label">In progress</span>
+      <h2>What you see <em>while it runs.</em></h2>
+      <p>Live progress as each verification step completes. Most reports finish in under 30 seconds. If we already have a recent report cached, it returns instantly.</p>
+    </div>
+    <div class="progress-card">
+      <div class="target">
+        <span>Verifying <b>Bemas Construction · Denver, CO</b></span>
+        <span class="timer">22.4s</span>
+      </div>
+      <ul class="progress-list">
+        <li class="pl-row">
+          <span class="dot">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Located subject
+        </li>
+        <li class="pl-row">
+          <span class="dot">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Confirmed identity
+        </li>
+        <li class="pl-row">
+          <span class="dot">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Validated operating fitness
+        </li>
+        <li class="pl-row">
+          <span class="dot">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Assessed risk posture
+        </li>
+        <li class="pl-row active">
+          <span class="dot">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 2"/></svg>
+          </span>
+          Reviewing conflict record…
+        </li>
+        <li class="pl-row pending">
+          <span class="dot"></span>
+          Aggregate market reputation
+        </li>
+        <li class="pl-row pending">
+          <span class="dot"></span>
+          Compute trust score
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     RESULT — TRUST REPORT CARD
+     ========================================================= -->
+<section class="result-band">
+  <div class="wrap">
+    <span class="preface">Sample report</span>
+    <h2>What a finished trust check <em>looks like.</em></h2>
+    <p class="preamble-lede">Score, verdict, breakdown by category, and accordion detail. Cached reports are free for signed-in users; fresh on-demand reports are Pro and Premium.</p>
+
+    <div class="report">
+      <!-- header -->
+      <div class="r-head">
+        <div class="left">
+          <span class="stamp"><span class="live"></span>Verified · Apr 29, 2026 · 7:42 PM MT</span>
+          <h3>Bemas Construction</h3>
+          <div class="meta">
+            <span>Denver, CO</span>
+            <span class="sep">·</span>
+            <span>Registered entity</span>
+            <span class="sep">·</span>
+            <span>12-year operating history</span>
+          </div>
+          <p class="verdict">"Solid track record. No flags raised across primary verification categories. One minor profile inconsistency worth a phone call."</p>
+        </div>
+        <div class="score-block">
+          <span class="score-num">87</span>
+          <div class="score-meta">
+            <span class="grade">A−</span>
+            <span class="timestamp">Cached · 4 days old</span>
+            <span class="cache"><a href="#pricing">Refresh on Pro →</a></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- breakdown -->
+      <div class="breakdown">
+        <div class="heading">Score breakdown · 87 of 100</div>
+
+        <div class="bd-row">
+          <span class="name">Identity &amp; legitimacy</span>
+          <span class="num">25 <em>/ 25</em></span>
+          <div class="bar-wrap">
+            <div class="bar"><div class="fill green" style="width:100%;"></div></div>
+            <span class="outcome">Confirmed legitimate operating entity · Long continuous history · Status current</span>
+          </div>
+          <span class="check">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9 L7 13 L15 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+
+        <div class="bd-row">
+          <span class="name">Operating fitness</span>
+          <span class="num">22 <em>/ 25</em></span>
+          <div class="bar-wrap">
+            <div class="bar"><div class="fill green" style="width:88%;"></div></div>
+            <span class="outcome">Cleared on operational requirements for state of operation · No flagged issues</span>
+          </div>
+          <span class="check">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9 L7 13 L15 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+
+        <div class="bd-row">
+          <span class="name">Risk posture</span>
+          <span class="num">13 <em>/ 15</em></span>
+          <div class="bar-wrap">
+            <div class="bar"><div class="fill green" style="width:87%;"></div></div>
+            <span class="outcome">Low-risk profile · No elevated risk indicators in recent activity</span>
+          </div>
+          <span class="check">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9 L7 13 L15 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+
+        <div class="bd-row">
+          <span class="name">Market reputation</span>
+          <span class="num">12 <em>/ 15</em></span>
+          <div class="bar-wrap">
+            <div class="bar"><div class="fill green" style="width:80%;"></div></div>
+            <span class="outcome">Strong positive reputation across reviewed market signals</span>
+          </div>
+          <span class="check">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9 L7 13 L15 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+
+        <div class="bd-row">
+          <span class="name">Conflict record</span>
+          <span class="num">9 <em>/ 10</em></span>
+          <div class="bar-wrap">
+            <div class="bar"><div class="fill green" style="width:90%;"></div></div>
+            <span class="outcome">Clean active record · One historical issue, resolved</span>
+          </div>
+          <span class="check">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9 L7 13 L15 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+
+        <div class="bd-row">
+          <span class="name">Profile coherence</span>
+          <span class="num">6 <em>/ 10</em></span>
+          <div class="bar-wrap">
+            <div class="bar"><div class="fill amber" style="width:60%;"></div></div>
+            <span class="outcome">Minor profile inconsistency detected · Verify direct contact before signing</span>
+          </div>
+          <span class="check warn">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3 L9 11 M9 14 L9 14.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.6"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- accordion -->
+      <div class="accordion">
+        <div class="acc-item open">
+          <div class="acc-head">
+            <div class="left">
+              <span class="icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 7 L15 7" stroke="currentColor" stroke-width="1.5"/></svg>
+              </span>
+              <div>
+                <h4>Identity &amp; legitimacy</h4>
+                <span class="summary">Subject confirmed · Long operating history · Status current</span>
+              </div>
+            </div>
+            <span class="chev">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+          <div class="acc-body">
+            <ul>
+              <li>
+                <span class="lic">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7 L6 11 L12 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span><b>Operating entity confirmed legitimate</b> · 12-year continuous operating history · No interruptions or status changes</span>
+              </li>
+              <li>
+                <span class="lic">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7 L6 11 L12 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span><b>Contact and operating presence verified</b> · Address and reachability confirmed across independent checks</span>
+              </li>
+              <li>
+                <span class="lic">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7 L6 11 L12 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span><b>Tax registration in good standing</b> · No flags raised on legitimacy of business operation</span>
+              </li>
+              <li>
+                <span class="lic">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7 L6 11 L12 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span><b>Ownership structure consistent</b> · Named principals match across all reviewed sources</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="acc-item">
+          <div class="acc-head">
+            <div class="left">
+              <span class="icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 4 L14 4 L14 14 L4 14 Z" stroke="currentColor" stroke-width="1.5"/><path d="M7 8 L11 8 M7 11 L10 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              <div>
+                <h4>Operating fitness</h4>
+                <span class="summary">Cleared on operational requirements · No flagged issues</span>
+              </div>
+            </div>
+            <span class="chev">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="acc-item">
+          <div class="acc-head">
+            <div class="left">
+              <span class="icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2 L15 5 L15 10 C15 13 12 15 9 16 C6 15 3 13 3 10 L3 5 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              </span>
+              <div>
+                <h4>Risk posture</h4>
+                <span class="summary">Low-risk profile · No elevated indicators in recent activity</span>
+              </div>
+            </div>
+            <span class="chev">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="acc-item">
+          <div class="acc-head">
+            <div class="left">
+              <span class="icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9 L9 3 L15 9 L9 15 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              </span>
+              <div>
+                <h4>Conflict record</h4>
+                <span class="summary">Clean active record · One historical issue, resolved</span>
+              </div>
+            </div>
+            <span class="chev">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="acc-item">
+          <div class="acc-head">
+            <div class="left">
+              <span class="icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2 L11 7 L16 7 L12 10.5 L13.5 16 L9 13 L4.5 16 L6 10.5 L2 7 L7 7 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              </span>
+              <div>
+                <h4>Market reputation</h4>
+                <span class="summary">Strong positive signal across reviewed market sources</span>
+              </div>
+            </div>
+            <span class="chev">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- paywall -->
+      <div class="paywall">
+        <div class="pw-text">
+          <h4>Want a fresh on-demand report?</h4>
+          <p>This report is from cache (last updated <b>4 days ago</b>). Pro members run unlimited fresh reports with the latest data — and Premium adds enhanced entity verification for higher-stakes contracts.</p>
+        </div>
+        <div class="pw-actions">
+          <a href="#pricing" class="btn btn-primary">Upgrade to Pro · $49.99/mo →</a>
+          <span class="pw-link"><a href="#pricing">See all plans →</a></span>
+        </div>
+      </div>
+
+      <!-- fcra disclaimer -->
+      <p class="disclaimer">
+        <b>Public-record only.</b> Trust reports do not include personal credit, criminal history, SSN, or any consumer report data. For FCRA-regulated background checks on individuals, we offer integrated screening through a licensed partner. Deep verification is restricted to registered business entities (LLC, corp, partnership, trust); sole proprietors operating under a personal name fall outside that boundary.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- =========================================================
+     USE CASES
+     ========================================================= -->
+<section class="use">
+  <div class="wrap">
+    <div class="head">
+      <span class="label">Built for two audiences</span>
+      <h2>The people who pay <em>when contractors fail.</em></h2>
+    </div>
+    <div class="use-cards">
+      <article class="use-card">
+        <span class="ic">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 11 L11 3 L19 11 L19 19 L13 19 L13 13 L9 13 L9 19 L3 19 Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="audience">For homeowners</span>
+        <h3>Before you sign <em>that contract.</em></h3>
+        <p>Hiring a contractor for a renovation, addition, or new build is a five- to seven-figure decision. Run a check in 30 seconds and find out if they're operationally sound and risk-clean — before your deposit is gone.</p>
+        <div class="stat">
+          A meaningful percentage of contractors fail at least one verification category. The first lookup is on us — find out before you sign.
+        </div>
+        <a href="#" class="link">See sample report →</a>
+      </article>
+
+      <article class="use-card">
+        <span class="ic">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 18 L19 18 M5 18 L5 8 L9 8 L9 18 M13 18 L13 4 L17 4 L17 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="audience">For general contractors</span>
+        <h3>Before you issue <em>that PO.</em></h3>
+        <p>Subs slip on operational standing. Suppliers run out of capacity mid-job. Vendor relationships go sideways. Run a check before each new vendor commitment, store the audit trail, and protect your project margins.</p>
+        <div class="stat">
+          Used by GCs across <b>8 launch states</b> to vet <b>1,247 vendors</b> this month.
+        </div>
+        <a href="#" class="link">See sample report →</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     FAQ
+     ========================================================= -->
+<section class="faq">
+  <div class="wrap">
+    <div class="head">
+      <span class="label">FAQ</span>
+      <h2>Common questions, <em>direct answers.</em></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item open">
+        <div class="q">
+          Why don't you publish your verification methodology?
+          <span class="chev">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="a">
+          Two reasons. First, our verification methodology is patent-pending intellectual property — publishing the source mix would invite imitation and dilute the value of the score. Second, transparency about specific sources can be gamed by entities trying to manage their result. What we do tell you: the categories we verified, the confidence level on each, and the recency of the underlying signal. What we don't tell you: the full source list. The score is the deliverable, and we stand behind it.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q">
+          What's the difference between Pro and Premium — why the price gap?
+          <span class="chev">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="a">
+          Pro and Premium both give you unlimited fresh lookups. The difference is depth and stakes. Pro is calibrated for typical hiring decisions — picking a contractor, vetting a sub, checking a supplier you're about to issue a PO to. Premium adds enhanced verification depth and priority processing, designed for higher-stakes vendor due diligence: major contracts, ongoing relationships, or decisions where the cost of being wrong meaningfully exceeds the cost of the report. We don't break out exactly what makes "enhanced" deeper — same reason we don't publish methodology.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q">
+          Is this a credit check or background check?
+          <span class="chev">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="a">
+          No. Trust reports cover registered business entities only — LLCs, corporations, partnerships, and trusts. We do not pull personal credit, criminal history, SSN, or any consumer report data. For FCRA-regulated background checks on individual workers, we route through a licensed partner. <a href="#">Learn about FCRA limits →</a>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q">
+          Can I run a check on an individual contractor (not an LLC)?
+          <span class="chev">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="a">
+          Sole proprietors operating under a personal name fall outside our entity-only boundary. For individual checks, we partner with a licensed FCRA provider — same workflow, separate consent flow required by law. Most established contractors operate under an LLC or corporation; if you're not sure, ask them for their business legal name.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q">
+          How fresh is the information?
+          <span class="chev">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="a">
+          Cached reports show the most recent successful verification — typically within the last 30 days. Pro and Premium subscribers run fresh on-demand verifications that complete in roughly 30 seconds. Each report shows recency at the category level so you can see exactly what was last refreshed.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q">
+          What states do you cover today?
+          <span class="chev">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="a">
+          Eight launch states: Colorado, Texas, Arizona, Nevada, Georgia, Florida, North Carolina, and Oregon. We're expanding state by state — if your state isn't covered yet, sign up free and you'll be notified when it launches.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q">
+          Can I export reports or share with a team?
+          <span class="chev">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="a">
+          Pro: PDF export, email delivery, and shareable read-only links per report. Premium: all of that plus a multi-user team workspace with shared report history and API access for integrating Groundcheck into your own tooling.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q">
+          What happens to my searches?
+          <span class="chev">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6 L8 10 L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="a">
+          Reports are stored in your account and on our audit ledger for 7 years — that retention is required for compliance and useful for you when a vendor relationship goes sideways and you need to prove what was known when. Searches are private to your account; we don't sell or share your search history.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+<footer>
+  <div class="wrap">
+    <div class="left">© 2026 EarthMove · Groundcheck</div>
+    <nav class="right">
+      <a href="/legal/refunds">Refunds</a>
+      <a href="/legal/terms">Terms</a>
+      <a href="/legal/privacy">Privacy</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
