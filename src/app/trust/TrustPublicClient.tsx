@@ -310,11 +310,11 @@ const GC_PAGE_CSS = `
 .gc-page .faq-item .a a { color:var(--orange); text-decoration:underline; text-underline-offset:3px; }
 
 /* FOOTER */
-.gc-page .gc-footer { background:var(--paper); border-top:1px solid var(--hair); padding:32px; }
-.gc-page .gc-footer .wrap { max-width:1100px; margin:0 auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:18px; }
-.gc-page .gc-footer .left { font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:0.04em; }
-.gc-page .gc-footer .right { display:flex; gap:20px; font-size:12.5px; color:var(--ink-3); }
-.gc-page .gc-footer .right a:hover { color:var(--ink); }
+.gc-page footer { background:var(--paper); border-top:1px solid var(--hair); padding:32px; }
+.gc-page footer .wrap { max-width:1100px; margin:0 auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:18px; }
+.gc-page footer .left { font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:0.04em; }
+.gc-page footer .right { display:flex; gap:20px; font-size:12.5px; color:var(--ink-3); }
+.gc-page footer .right a:hover { color:var(--ink); }
 
 /* KEYFRAMES (page-scoped via gc- prefix) */
 @keyframes gc-blink { 50% { opacity:0; } }
@@ -957,15 +957,14 @@ export function TrustPublicClient() {
         </section>
 
         {/* FOOTER */}
-        <footer className="gc-footer">
+        <footer>
           <div className="wrap">
             <div className="left">© 2026 EarthMove · Groundcheck</div>
             <nav className="right">
-              <Link href="/legal/refunds">Refunds</Link>
-              <Link href="/legal/terms">Terms</Link>
-              <Link href="/legal/privacy">Privacy</Link>
-              <Link href="/about">About</Link>
-              <Link href="/contact">Contact</Link>
+              <a href="mailto:support@earthmove.io?subject=Refund%20request">Refunds</a>
+              <Link href="/terms">Terms</Link>
+              <Link href="/privacy">Privacy</Link>
+              <a href="mailto:support@earthmove.io">Contact</a>
             </nav>
           </div>
         </footer>
