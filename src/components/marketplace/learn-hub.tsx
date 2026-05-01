@@ -21,21 +21,9 @@ const FILTERS = [
 
 type FilterKey = typeof FILTERS[number]['key']
 
-const PROJECTS = [
-  { num: '01', name: 'Driveway', desc: 'Most ordered project type nationwide', accent: '#f59e0b', materials: [{ name: 'Flex Base', price: 'from $24/ton' }, { name: 'Road Base', price: 'from $16/ton' }, { name: 'Pea Gravel', price: 'from $35/ton' }], icon: 'M4 20 L12 4 L20 20 M4 20 L20 20' },
-  { num: '02', name: 'Landscaping', desc: 'Transform any outdoor space', accent: '#10b981', materials: [{ name: 'Topsoil', price: 'from $45/yd' }, { name: 'River Rock', price: 'from $42/ton' }, { name: 'Decomposed Granite', price: 'from $38/ton' }], icon: 'M12 3 C12 3 5 10 5 14 C5 18 9 22 12 22 C15 22 19 18 19 14 C19 10 12 3 12 3' },
-  { num: '03', name: 'French Drain', desc: 'Stop water damage permanently', accent: '#3b82f6', materials: [{ name: 'Pea Gravel', price: 'from $35/ton' }, { name: 'Base Gravel #57', price: 'from $28/ton' }, { name: 'River Rock', price: 'from $42/ton' }], icon: 'M6 4 L6 14 C6 18 12 20 12 20 C12 20 18 18 18 14 L18 4 M3 8 L21 8 M3 12 L21 12' },
-  { num: '04', name: 'Pad Prep', desc: 'Build a solid foundation first', accent: '#8b5cf6', materials: [{ name: 'Flex Base', price: 'from $24/ton' }, { name: 'Fill Dirt', price: 'from $12/ton' }, { name: 'Road Base', price: 'from $16/ton' }], icon: 'M3 3 L21 3 L21 21 L3 21 Z M3 9 L21 9 M3 15 L21 15 M9 3 L9 21 M15 3 L15 21' },
-  { num: '05', name: 'Pool Backfill', desc: 'Fill right, avoid settling', accent: '#06b6d4', materials: [{ name: 'Select Fill', price: 'from $18/ton' }, { name: 'Concrete Sand', price: 'from $19/ton' }, { name: 'Pea Gravel', price: 'from $35/ton' }], icon: 'M4 8 C4 8 8 4 12 4 C16 4 20 8 20 8 L20 16 C20 16 16 20 12 20 C8 20 4 16 4 16 Z M6 10 C8 8 16 8 18 10' },
-  { num: '06', name: 'Garden Beds', desc: 'Rich soil for healthy growth', accent: '#84cc16', materials: [{ name: 'Topsoil', price: 'from $45/yd' }, { name: 'Masonry Sand', price: 'from $22/ton' }, { name: 'Pea Gravel', price: 'from $35/ton' }], icon: 'M12 22 L12 12 M8 18 L12 12 L16 18 M7 22 L17 22 M9 12 C9 8 6 6 6 4 M15 12 C15 8 18 6 18 4 M12 12 C12 8 12 6 12 2' },
-  { num: '07', name: 'Road Work', desc: 'Built to handle heavy traffic', accent: '#ef4444', materials: [{ name: 'Road Base', price: 'from $16/ton' }, { name: 'Flex Base', price: 'from $24/ton' }, { name: 'Crushed Concrete', price: 'from $14/ton' }], icon: 'M4 4 L10 4 L10 20 L4 20 M14 4 L20 4 L20 20 L14 20 M10 8 L14 8 M10 12 L14 12 M10 16 L14 16' },
-  { num: '08', name: 'Yard Leveling', desc: 'Grade and flatten any surface', accent: '#f97316', materials: [{ name: 'Fill Dirt', price: 'from $12/ton' }, { name: 'Topsoil', price: 'from $45/yd' }, { name: 'Select Fill', price: 'from $18/ton' }], icon: 'M2 16 L22 16 M2 12 L6 12 L10 8 L14 12 L22 12 M6 16 L6 12 M18 16 L18 12' },
-]
-
 /* ─── MAIN COMPONENT ─── */
 export function LearnHub() {
   const [filter, setFilter] = useState<FilterKey>('all')
-  const [hoveredProject, setHoveredProject] = useState<string | null>(null)
 
   const allArticles = ARTICLES
   const filtered = useMemo(
@@ -178,100 +166,6 @@ export function LearnHub() {
                 </div>
               </Link>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ SECTION 4: PROJECT INTELLIGENCE ═══ */}
-      {/* Divider */}
-      <div className="flex items-center justify-center py-4" style={{ background: '#080c14' }}>
-        <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-        <div className="w-2 h-2 rotate-45 mx-4" style={{ border: '1px solid rgba(255,255,255,0.12)' }} />
-        <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-      </div>
-
-      <section style={{ background: '#080c14', padding: '80px 0 100px' }}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          {/* Title */}
-          <div className="text-center mb-10 sm:mb-14">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-[0.2em]" style={{ color: '#10b981' }}>Project Intelligence</span>
-            <h2 className="text-2xl sm:text-4xl md:text-[48px] font-extrabold text-white mt-3 leading-tight">What are you building?</h2>
-            <p className="text-base sm:text-lg mt-3 sm:mt-4 max-w-2xl mx-auto" style={{ color: '#9ca3af' }}>
-              Select your project type for material recommendations, quantity estimates, and current pricing
-            </p>
-            <div className="w-[60px] h-[2px] mx-auto mt-6" style={{ background: '#10b981' }} />
-          </div>
-
-          {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1px]">
-            {PROJECTS.map(p => {
-              const isOpen = hoveredProject === p.name
-              return (
-                <div
-                  key={p.name}
-                  onClick={() => setHoveredProject(isOpen ? null : p.name)}
-                  className="cursor-pointer transition-all duration-300"
-                  style={{
-                    background: isOpen ? '#111827' : '#0d1117',
-                    border: `1px solid ${isOpen ? p.accent + '99' : 'rgba(255,255,255,0.06)'}`,
-                    borderRadius: 12,
-                    padding: 28,
-                    transform: isOpen ? 'translateY(-3px)' : 'none',
-                    boxShadow: isOpen ? `0 0 30px ${p.accent}14` : 'none',
-                  }}
-                >
-                  {/* Header row */}
-                  <div className="flex items-start justify-between mb-4">
-                    {/* Icon box */}
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: '#1a2332', border: `1px solid ${isOpen ? p.accent : p.accent + '40'}`, transition: 'border-color 300ms' }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={p.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d={p.icon} />
-                      </svg>
-                    </div>
-                    {/* Number */}
-                    <span className="text-[72px] font-black leading-none select-none" style={{ color: 'rgba(255,255,255,0.03)' }}>{p.num}</span>
-                  </div>
-
-                  {/* Name + desc */}
-                  <div className="text-white font-bold text-[17px] mb-1">{p.name}</div>
-                  <div className="text-[13px] mb-3" style={{ color: '#6b7280' }}>{p.desc}</div>
-
-                  {/* Explore link */}
-                  <div className="text-[12px] font-medium transition-all duration-300" style={{ color: isOpen ? p.accent : '#4b5563', transform: isOpen ? 'translateX(4px)' : 'none' }}>
-                    {isOpen ? '↑ Close' : 'Explore →'}
-                  </div>
-
-                  {/* Expansion panel */}
-                  <div className="overflow-hidden transition-all duration-500 ease-in-out" style={{ maxHeight: isOpen ? 300 : 0 }}>
-                    <div className="pt-5 mt-5" style={{ borderTop: `1px solid ${p.accent}33` }}>
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em]" style={{ color: '#10b981' }}>Recommended Materials</span>
-                      <div className="mt-3 space-y-2.5">
-                        {p.materials.map(m => (
-                          <div key={m.name} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-1.5 h-1.5 rounded-full" style={{ background: p.accent }} />
-                              <span className="text-white text-[14px]">{m.name}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="font-mono text-[13px]" style={{ color: '#10b981' }}>{m.price}</span>
-                              <Link href="/browse" onClick={e => e.stopPropagation()} className="text-[11px] font-semibold transition-colors hover:underline" style={{ color: p.accent }}>Order →</Link>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <Link
-                        href="/material-match"
-                        onClick={e => e.stopPropagation()}
-                        className="flex items-center justify-center gap-2 w-full mt-5 py-2.5 rounded-lg text-[13px] font-bold transition-all hover:opacity-90"
-                        style={{ background: p.accent, color: '#0d1117' }}
-                      >
-                        Plan this project in Material Match <ArrowRight size={13} />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
           </div>
         </div>
       </section>
