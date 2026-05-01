@@ -1122,7 +1122,7 @@ export function TrustPublicClient() {
           <div className="wrap">
             <div className="left">© 2026 EarthMove · Groundcheck</div>
             <nav className="right">
-              <a href="mailto:support@earthmove.io?subject=Refund%20request">Refunds</a>
+              <Link href="/legal/refunds">Refunds</Link>
               <Link href="/terms">Terms</Link>
               <Link href="/privacy">Privacy</Link>
               <a href="mailto:support@earthmove.io">Contact</a>
