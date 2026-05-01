@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { TrustPublicClient } from './TrustPublicClient'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: "Groundcheck — Know who you're hiring before you sign",
   description:

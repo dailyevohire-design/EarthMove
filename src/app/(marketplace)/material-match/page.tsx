@@ -2,6 +2,8 @@ import { Suspense } from 'react'
 import { MaterialQuiz } from '@/components/marketplace/material-quiz'
 import { breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Material Match — Find Your Perfect Material',
   description: 'Tell us about your project and we\'ll match you to the perfect bulk material. Takes 60 seconds. Used by 12,000+ homeowners and contractors.',

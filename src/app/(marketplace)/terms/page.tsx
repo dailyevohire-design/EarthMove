@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Terms of Service',
   description: 'EarthMove terms of service — the agreement governing your use of our platform.',

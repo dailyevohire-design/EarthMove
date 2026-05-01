@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Privacy Policy',
   description: 'EarthMove privacy policy — how we collect, use, and protect your information.',

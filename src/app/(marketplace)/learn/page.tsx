@@ -1,6 +1,8 @@
 import { LearnHub } from '@/components/marketplace/learn-hub'
 import { collectionPageSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Knowledge Center — Material Guides, Calculators & Intelligence',
   description: 'The most comprehensive resource for aggregate materials. Calculators, project guides, price intelligence, and expert knowledge.',

@@ -10,6 +10,8 @@ import {
   getSuccessorForLegacySlug,
 } from '@/lib/learn/articles'
 
+export const dynamic = 'force-dynamic'
+
 interface Props { params: Promise<{ slug: string }> }
 
 function StubArticleBody({ article }: { article: Article }) {
