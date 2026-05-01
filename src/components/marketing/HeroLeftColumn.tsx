@@ -130,6 +130,34 @@ export function HeroLeftColumn() {
         </div>
       </form>
 
+      {/* Mobile-only dispatch demo — desktop has full Control Tower in right column */}
+      <aside className="hv-mobile-dispatch" aria-label="Sample dispatch demo">
+        <div className="hmd-eyebrow">— Sample dispatch · Denver</div>
+        <div className="hmd-row">
+          <div className="hmd-id">
+            <span className="hmd-pip" />
+            <span className="hmd-truck">EM-DEMO</span>
+          </div>
+          <span className="hmd-eta">arriving 11:42</span>
+        </div>
+        <div className="hmd-ttl">Road Base · 14 tons</div>
+        <div className="hmd-status" role="list">
+          <span className="hmd-step" role="listitem">Loaded</span>
+          <span className="hmd-step hmd-step-active" role="listitem">In transit</span>
+          <span className="hmd-step" role="listitem">Drop confirmed</span>
+        </div>
+        <div className="hmd-photo">
+          <span className="hmd-photo-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+              <rect x="3" y="6" width="18" height="14" rx="2" />
+              <circle cx="12" cy="13" r="4" />
+              <path d="M8 6V4h8v2" />
+            </svg>
+          </span>
+          <span className="hmd-photo-chip">Photo on delivery</span>
+        </div>
+      </aside>
+
       <div className="hv-secondary-links">
         Or{' '}
         <Link href="/browse">browse all materials</Link>
