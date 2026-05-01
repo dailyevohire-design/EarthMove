@@ -124,12 +124,51 @@ const ABOUT_CSS = `
   .ab-page .principles { grid-template-columns: 1fr; }
   .ab-page .pull-quote { font-size: 22px; }
 }
+
+.ab-page .topnav { border-bottom: 1px solid var(--hair); background: var(--paper); }
+.ab-page .topnav .wrap { max-width: 1100px; margin: 0 auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+.ab-page .topnav .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-fraunces), serif; font-weight: 700; font-size: 18px; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
+.ab-page .topnav .brand .logo { width: 30px; height: 30px; border-radius: 7px; background: var(--panel); color: #F1ECE2; display: flex; align-items: center; justify-content: center; }
+.ab-page .topnav .links { display: flex; gap: 24px; font-size: 13.5px; color: var(--ink-2); }
+.ab-page .topnav .links a { color: var(--ink-2); text-decoration: none; }
+.ab-page .topnav .links a:hover { color: var(--ink); }
+
+.ab-page .page-footer { background: var(--paper); border-top: 1px solid var(--hair); padding: 32px; margin-top: 48px; }
+.ab-page .page-footer .wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
+.ab-page .page-footer .left { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; }
+.ab-page .page-footer .right { display: flex; gap: 20px; font-size: 12.5px; color: var(--ink-3); }
+.ab-page .page-footer .right a { color: var(--ink-3); text-decoration: none; }
+.ab-page .page-footer .right a:hover { color: var(--ink); }
+
+@media (max-width: 760px) {
+  .ab-page .topnav .wrap { padding: 14px 22px; }
+  .ab-page .topnav .links { gap: 14px; font-size: 12.5px; }
+  .ab-page .topnav .links a:nth-child(3) { display: none; }
+}
 `;
 
 export default function AboutPage() {
   return (
     <div className="ab-page">
       <style dangerouslySetInnerHTML={{ __html: ABOUT_CSS }} />
+      <header className="topnav">
+        <div className="wrap">
+          <Link href="/" className="brand">
+            <span className="logo">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8 L7 12 L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            EarthMove
+          </Link>
+          <nav className="links">
+            <Link href="/about">About</Link>
+            <Link href="/faq">FAQ</Link>
+            <Link href="/trust">Groundcheck</Link>
+            <a href="mailto:support@earthmove.io">Contact</a>
+          </nav>
+        </div>
+      </header>
       <main>
         <span className="label">About EarthMove</span>
         <h1>The marketplace for the <em>dirt economy.</em></h1>
@@ -226,6 +265,17 @@ export default function AboutPage() {
           <Link href="/material-match">Order materials →</Link>
         </div>
       </main>
+      <footer className="page-footer">
+        <div className="wrap">
+          <div className="left">© 2026 EarthMove · Earth Pro Connect LLC</div>
+          <nav className="right">
+            <Link href="/legal/refunds">Refunds</Link>
+            <Link href="/terms">Terms</Link>
+            <Link href="/privacy">Privacy</Link>
+            <a href="mailto:support@earthmove.io">Contact</a>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -210,6 +210,27 @@ const FAQ_CSS = `
   .fq-page main { padding: 48px 22px 64px; }
   .fq-page h1 { font-size: 36px; }
 }
+
+.fq-page .topnav { border-bottom: 1px solid var(--hair); background: var(--paper); }
+.fq-page .topnav .wrap { max-width: 1100px; margin: 0 auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+.fq-page .topnav .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-fraunces), serif; font-weight: 700; font-size: 18px; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
+.fq-page .topnav .brand .logo { width: 30px; height: 30px; border-radius: 7px; background: var(--panel); color: #F1ECE2; display: flex; align-items: center; justify-content: center; }
+.fq-page .topnav .links { display: flex; gap: 24px; font-size: 13.5px; color: var(--ink-2); }
+.fq-page .topnav .links a { color: var(--ink-2); text-decoration: none; }
+.fq-page .topnav .links a:hover { color: var(--ink); }
+
+.fq-page .page-footer { background: var(--paper); border-top: 1px solid var(--hair); padding: 32px; margin-top: 48px; }
+.fq-page .page-footer .wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
+.fq-page .page-footer .left { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; }
+.fq-page .page-footer .right { display: flex; gap: 20px; font-size: 12.5px; color: var(--ink-3); }
+.fq-page .page-footer .right a { color: var(--ink-3); text-decoration: none; }
+.fq-page .page-footer .right a:hover { color: var(--ink); }
+
+@media (max-width: 760px) {
+  .fq-page .topnav .wrap { padding: 14px 22px; }
+  .fq-page .topnav .links { gap: 14px; font-size: 12.5px; }
+  .fq-page .topnav .links a:nth-child(3) { display: none; }
+}
 `;
 
 export function FAQClient() {
@@ -218,6 +239,24 @@ export function FAQClient() {
   return (
     <div className="fq-page">
       <style dangerouslySetInnerHTML={{ __html: FAQ_CSS }} />
+      <header className="topnav">
+        <div className="wrap">
+          <Link href="/" className="brand">
+            <span className="logo">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8 L7 12 L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            EarthMove
+          </Link>
+          <nav className="links">
+            <Link href="/about">About</Link>
+            <Link href="/faq">FAQ</Link>
+            <Link href="/trust">Groundcheck</Link>
+            <a href="mailto:support@earthmove.io">Contact</a>
+          </nav>
+        </div>
+      </header>
       <main>
         <span className="label">Help &amp; Support</span>
         <h1>Frequently Asked <em>Questions.</em></h1>
@@ -261,6 +300,17 @@ export function FAQClient() {
           <a href="mailto:support@earthmove.io">support@earthmove.io →</a>
         </div>
       </main>
+      <footer className="page-footer">
+        <div className="wrap">
+          <div className="left">© 2026 EarthMove · Earth Pro Connect LLC</div>
+          <nav className="right">
+            <Link href="/legal/refunds">Refunds</Link>
+            <Link href="/terms">Terms</Link>
+            <Link href="/privacy">Privacy</Link>
+            <a href="mailto:support@earthmove.io">Contact</a>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }
