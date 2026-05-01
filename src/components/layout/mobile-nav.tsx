@@ -31,7 +31,7 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
     <div className="md:hidden">
       <button
         onClick={() => setOpen(true)}
-        className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+        className="p-2 rounded-lg text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] hover:bg-[var(--commerce-cream-2)] transition-colors"
         aria-label="Open menu"
       >
         <Menu size={22} />
@@ -43,16 +43,16 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
             className="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm"
             onClick={close}
           />
-          <div className="fixed top-0 right-0 bottom-0 w-72 bg-white border-l border-gray-200 z-50 flex flex-col shadow-2xl">
+          <div className="fixed top-0 right-0 bottom-0 w-72 bg-[var(--commerce-cream)] border-l border-[var(--commerce-line-strong)] z-50 flex flex-col shadow-2xl">
             {/* Header */}
-            <div className="flex items-center justify-between px-5 h-16 border-b border-gray-100">
+            <div className="flex items-center justify-between px-5 h-16 border-b border-[var(--commerce-line-strong)]">
               <div className="flex items-center gap-2.5">
                 <LogoMark size={18} />
-                <span className="font-semibold text-gray-900 text-[12px] uppercase tracking-[0.22em] leading-none">EARTHMOVE</span>
+                <span className="font-semibold text-[var(--commerce-ink)] text-[12px] uppercase tracking-[0.22em] leading-none">EARTHMOVE</span>
               </div>
               <button
                 onClick={close}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                className="p-1.5 rounded-lg text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] hover:bg-[var(--commerce-cream-2)] transition-colors"
               >
                 <X size={18} />
               </button>
@@ -67,7 +67,7 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
 
               {isLoggedIn && (
                 <>
-                  <div className="h-px bg-gray-100 my-3" />
+                  <div className="h-px bg-[var(--commerce-line)] my-3" />
                   <NavLink href="/account" icon={<User size={15} />} onClick={close}>My Account</NavLink>
                   <NavLink href="/account/orders" icon={<Package size={15} />} onClick={close}>My Orders</NavLink>
                   {role === 'admin' && (
@@ -81,11 +81,11 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
             </nav>
 
             {/* Footer */}
-            <div className="px-3 py-4 border-t border-gray-100">
+            <div className="px-3 py-4 border-t border-[var(--commerce-line-strong)]">
               {isLoggedIn ? (
                 <button
                   onClick={signOut}
-                  className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm text-[var(--commerce-ink-3)] hover:bg-[var(--commerce-cream-2)] hover:text-red-600 transition-colors"
                 >
                   <LogOut size={15} />
                   Sign out
@@ -116,11 +116,11 @@ function NavLink({
       onClick={onClick}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
         accent
-          ? 'text-emerald-600 hover:bg-emerald-50'
-          : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+          ? 'text-[var(--commerce-trust)] hover:bg-[var(--commerce-cream-2)]'
+          : 'text-[var(--commerce-ink-2)] hover:bg-[var(--commerce-cream-2)] hover:text-[var(--commerce-ink)]'
       }`}
     >
-      {icon && <span className="text-gray-400">{icon}</span>}
+      {icon && <span className="text-[var(--commerce-ink-3)]">{icon}</span>}
       {children}
     </Link>
   )
