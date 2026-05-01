@@ -143,6 +143,7 @@ export function HeroLeftColumn() {
         <span className="mk"><CheckIcon /> Photo-confirmed at drop</span>
         <span className="mk"><CheckIcon /> Net-30 for qualified contractors</span>
         <span className="mk"><CheckIcon /> <b>Yard-verified</b> network</span>
+        <span className="mk"><CheckIcon /> Live ETA from dispatch</span>
       </div>
 
       <div className="hv-sig">
