@@ -1,11 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { getArticleImage } from '@/lib/material-images'
-import {
-  ArrowRight, Clock, TrendingUp, Zap,
-} from 'lucide-react'
+import { ArrowRight, Clock } from 'lucide-react'
 import {
   type Article,
   ARTICLES,
@@ -34,95 +32,10 @@ const PROJECTS = [
   { num: '08', name: 'Yard Leveling', desc: 'Grade and flatten any surface', accent: '#f97316', materials: [{ name: 'Fill Dirt', price: 'from $12/ton' }, { name: 'Topsoil', price: 'from $45/yd' }, { name: 'Select Fill', price: 'from $18/ton' }], icon: 'M2 16 L22 16 M2 12 L6 12 L10 8 L14 12 L22 12 M6 16 L6 12 M18 16 L18 12' },
 ]
 
-const CITY_PRICES: Record<string, Array<{ mat: string; price: string; trend: string; trendDir: 'up' | 'down' | 'flat'; vsAvg: string }>> = {
-  'Dallas': [
-    { mat: 'Fill Dirt', price: '$12.00/ton', trend: '↑ 3%', trendDir: 'up', vsAvg: '-8% below' },
-    { mat: 'Flex Base', price: '$24.00/ton', trend: '→ stable', trendDir: 'flat', vsAvg: 'At avg' },
-    { mat: 'Topsoil', price: '$45.00/yd', trend: '↑ 5%', trendDir: 'up', vsAvg: '+2% above' },
-    { mat: 'Pea Gravel', price: '$35.00/ton', trend: '→ stable', trendDir: 'flat', vsAvg: '-3% below' },
-    { mat: 'Road Base', price: '$16.00/ton', trend: '↑ 2%', trendDir: 'up', vsAvg: 'At avg' },
-    { mat: 'River Rock', price: '$42.00/ton', trend: '↓ 1%', trendDir: 'down', vsAvg: '+5% above' },
-  ],
-  'Houston': [
-    { mat: 'Fill Dirt', price: '$10.50/ton', trend: '↑ 4%', trendDir: 'up', vsAvg: '-15% below' },
-    { mat: 'Flex Base', price: '$22.00/ton', trend: '→ stable', trendDir: 'flat', vsAvg: '-5% below' },
-    { mat: 'Topsoil', price: '$42.00/yd', trend: '↑ 6%', trendDir: 'up', vsAvg: '-4% below' },
-    { mat: 'Pea Gravel', price: '$33.00/ton', trend: '↑ 2%', trendDir: 'up', vsAvg: '-8% below' },
-    { mat: 'Road Base', price: '$14.50/ton', trend: '→ stable', trendDir: 'flat', vsAvg: '-7% below' },
-    { mat: 'River Rock', price: '$40.00/ton', trend: '→ stable', trendDir: 'flat', vsAvg: 'At avg' },
-  ],
-  'Denver': [
-    { mat: 'Fill Dirt', price: '$15.00/ton', trend: '↑ 8%', trendDir: 'up', vsAvg: '+12% above' },
-    { mat: 'Flex Base', price: '$27.00/ton', trend: '↑ 3%', trendDir: 'up', vsAvg: '+8% above' },
-    { mat: 'Topsoil', price: '$50.00/yd', trend: '↑ 10%', trendDir: 'up', vsAvg: '+14% above' },
-    { mat: 'Pea Gravel', price: '$36.00/ton', trend: '↑ 4%', trendDir: 'up', vsAvg: 'At avg' },
-    { mat: 'Road Base', price: '$17.00/ton', trend: '↑ 5%', trendDir: 'up', vsAvg: '+6% above' },
-    { mat: 'River Rock', price: '$46.00/ton', trend: '↑ 2%', trendDir: 'up', vsAvg: '+10% above' },
-  ],
-  'Atlanta': [
-    { mat: 'Fill Dirt', price: '$13.50/ton', trend: '→ stable', trendDir: 'flat', vsAvg: 'At avg' },
-    { mat: 'Flex Base', price: '$25.00/ton', trend: '↑ 2%', trendDir: 'up', vsAvg: 'At avg' },
-    { mat: 'Topsoil', price: '$46.00/yd', trend: '↑ 4%', trendDir: 'up', vsAvg: '+3% above' },
-    { mat: 'Pea Gravel', price: '$34.00/ton', trend: '→ stable', trendDir: 'flat', vsAvg: '-5% below' },
-    { mat: 'Road Base', price: '$16.00/ton', trend: '→ stable', trendDir: 'flat', vsAvg: 'At avg' },
-    { mat: 'River Rock', price: '$44.00/ton', trend: '↑ 1%', trendDir: 'up', vsAvg: '+5% above' },
-  ],
-  'Phoenix': [
-    { mat: 'Fill Dirt', price: '$14.00/ton', trend: '↑ 6%', trendDir: 'up', vsAvg: '+5% above' },
-    { mat: 'Flex Base', price: '$28.00/ton', trend: '↑ 4%', trendDir: 'up', vsAvg: '+10% above' },
-    { mat: 'Topsoil', price: '$52.00/yd', trend: '↑ 8%', trendDir: 'up', vsAvg: '+16% above' },
-    { mat: 'Pea Gravel', price: '$38.00/ton', trend: '↑ 3%', trendDir: 'up', vsAvg: '+5% above' },
-    { mat: 'Road Base', price: '$18.00/ton', trend: '↑ 5%', trendDir: 'up', vsAvg: '+10% above' },
-    { mat: 'River Rock', price: '$48.00/ton', trend: '→ stable', trendDir: 'flat', vsAvg: '+15% above' },
-  ],
-}
-
-const TIPS = [
-  'Fill dirt costs 40% more if ordered in April vs March',
-  'Always order 10% extra — second deliveries cost 2x',
-  'One truckload ≈ 14 tons of fill dirt or gravel',
-  'Flex base compacts 15-20% — factor that into calculations',
-  'Topsoil and fill dirt are NOT interchangeable',
-  'Pea gravel is the #1 material for French drains',
-]
-
-/* ─── COUNTER HOOK ─── */
-function useCountUp(target: number, duration = 2000) {
-  const [count, setCount] = useState(0)
-  const ref = useRef<HTMLDivElement>(null)
-  const started = useRef(false)
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !started.current) {
-        started.current = true
-        const t0 = Date.now()
-        const tick = () => {
-          const p = Math.min((Date.now() - t0) / duration, 1)
-          setCount(Math.floor((1 - Math.pow(1 - p, 3)) * target))
-          if (p < 1) requestAnimationFrame(tick)
-        }
-        requestAnimationFrame(tick)
-      }
-    }, { threshold: 0.3 })
-    if (ref.current) obs.observe(ref.current)
-    return () => obs.disconnect()
-  }, [target, duration])
-  return { count, ref }
-}
-
 /* ─── MAIN COMPONENT ─── */
 export function LearnHub() {
   const [filter, setFilter] = useState<FilterKey>('all')
-  const [city, setCity] = useState('Dallas')
-  const [tipIdx, setTipIdx] = useState(0)
   const [hoveredProject, setHoveredProject] = useState<string | null>(null)
-
-  const weeklyLearners = useCountUp(847, 1500)
-
-  useEffect(() => {
-    const t = setInterval(() => setTipIdx(i => (i + 1) % TIPS.length), 5000)
-    return () => clearInterval(t)
-  }, [])
 
   const allArticles = ARTICLES
   const filtered = useMemo(
@@ -137,7 +50,6 @@ export function LearnHub() {
     heroArticle = allArticles.find(a => !a.isStub) ?? allArticles[0]
   }
   const sideArticles = getSecondaryFeaturedArticles()
-  const prices = CITY_PRICES[city] ?? CITY_PRICES['Dallas']
 
   return (
     <div style={{ background: '#f8f9fa' }}>
@@ -154,19 +66,13 @@ export function LearnHub() {
             <p className="text-base sm:text-lg mt-3 sm:mt-4" style={{ color: 'rgba(255,255,255,0.65)' }}>
               Everything you need to know about aggregates. Built by industry experts.
             </p>
-            {/* Live stat */}
-            <div ref={weeklyLearners.ref} className="inline-flex items-center gap-2 mt-6 px-4 py-2 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-400 text-sm font-medium">{weeklyLearners.count} contractors learned something new this week</span>
-            </div>
           </div>
 
           {/* Feature cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
               { icon: '🧮', title: 'Material Calculator', desc: 'Calculate exactly what you need', href: '/learn/cubic-yards-calculator' },
               { icon: '🔍', title: 'Material Match', desc: 'Find your perfect material', href: '/material-match' },
-              { icon: '📈', title: 'Price Intelligence', desc: 'Current prices across 10 cities', href: '#prices' },
             ].map(c => (
               <Link key={c.title} href={c.href} className="group p-5 rounded-2xl transition-all duration-300 hover:-translate-y-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}>
                 <div className="text-3xl mb-3">{c.icon}</div>
@@ -174,63 +80,6 @@ export function LearnHub() {
                 <div className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{c.desc}</div>
               </Link>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ SECTION 2: INTELLIGENCE DASHBOARD ═══ */}
-      <section className="py-10" style={{ background: '#0d1117' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Left: Season intel */}
-            <div className="p-5 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={14} className="text-emerald-400" />
-                <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">Season Intel</span>
-              </div>
-              <div className="text-white font-bold text-lg mb-1">Demand ↑ 34% this week</div>
-              <div className="text-gray-500 text-xs mb-4">Spring ordering season has started</div>
-              {/* Mini bar chart */}
-              <div className="flex items-end gap-1 h-16">
-                {[40, 55, 45, 60, 72, 68, 85, 92].map((h, i) => (
-                  <div key={i} className="flex-1 rounded-t" style={{ height: `${h}%`, background: i >= 6 ? '#10b981' : 'rgba(255,255,255,0.08)', transition: 'height 1s ease' }} />
-                ))}
-              </div>
-              <div className="flex justify-between text-[10px] text-gray-600 mt-1">
-                <span>8 weeks ago</span><span>This week</span>
-              </div>
-            </div>
-
-            {/* Center: Season gauge */}
-            <div className="p-5 rounded-2xl text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4">Project Season Status</div>
-              {/* SVG gauge */}
-              <svg viewBox="0 0 120 70" className="w-40 mx-auto">
-                <path d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" strokeLinecap="round" />
-                <path d="M 10 65 A 50 50 0 0 1 85 20" fill="none" stroke="#10b981" strokeWidth="8" strokeLinecap="round" />
-                <text x="60" y="55" textAnchor="middle" fill="white" fontSize="18" fontWeight="900">67%</text>
-                <text x="60" y="66" textAnchor="middle" fill="#6b7280" fontSize="7">Peak Season Active</text>
-              </svg>
-              <div className="mt-3 text-emerald-400 font-bold text-sm animate-pulse">Best time to order: NOW</div>
-            </div>
-
-            {/* Right: Rotating tips */}
-            <div className="p-5 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="flex items-center gap-2 mb-4">
-                <Zap size={14} className="text-amber-400" />
-                <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">Quick Knowledge</span>
-              </div>
-              <div className="h-20 flex items-center">
-                <p className="text-white text-sm font-medium leading-relaxed transition-opacity duration-500" key={tipIdx}>
-                  "{TIPS[tipIdx]}"
-                </p>
-              </div>
-              <div className="flex gap-1 mt-3">
-                {TIPS.map((_, i) => (
-                  <div key={i} className="h-1 flex-1 rounded-full transition-colors" style={{ background: i === tipIdx ? '#f59e0b' : 'rgba(255,255,255,0.08)' }} />
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -427,61 +276,11 @@ export function LearnHub() {
         </div>
       </section>
 
-      {/* ═══ SECTION 5: PRICE INTELLIGENCE ═══ */}
-      <section id="prices" className="py-12" style={{ background: '#0d1117' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Live Data</span>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-white mt-1">Market Prices Across America</h2>
-          </div>
-
-          {/* City tabs */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-none mb-6 pb-1">
-            {Object.keys(CITY_PRICES).map(c => (
-              <button key={c} onClick={() => setCity(c)}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${city === c ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                {c}
-              </button>
-            ))}
-          </div>
-
-          {/* Price table */}
-          <div className="rounded-2xl overflow-x-auto" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div className="min-w-[520px]">
-              <div className="grid grid-cols-4 gap-4 px-5 py-3 text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                <span>Material</span><span>Price</span><span>30-Day Trend</span><span>vs National Avg</span>
-              </div>
-              {prices.map((row, i) => (
-                <div key={i} className="grid grid-cols-4 gap-4 px-5 py-3 text-sm" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                  <span className="text-white font-medium">{row.mat}</span>
-                  <span className="text-white font-bold font-mono">{row.price}</span>
-                  <span className={`font-medium ${row.trendDir === 'up' ? 'text-amber-400' : row.trendDir === 'down' ? 'text-emerald-400' : 'text-gray-500'}`}>{row.trend}</span>
-                  <span className="text-gray-500">{row.vsAvg}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ SECTION 6: SEASONAL STRIP ═══ */}
-      <section className="py-6" style={{ background: 'linear-gradient(90deg, #f59e0b, #d97706)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <div className="text-white font-extrabold text-lg flex items-center gap-2">🌱 Spring Rush: Order Now Before April Price Increases</div>
-            <div className="text-amber-100 text-sm mt-1">Prices rise an average of 15% in April as demand peaks. Lock in current prices today.</div>
-          </div>
-          <Link href="/browse" className="btn bg-white text-amber-700 hover:bg-amber-50 font-bold px-6 py-3 rounded-xl shadow-lg flex-shrink-0 text-sm">
-            Order at current prices →
-          </Link>
-        </div>
-      </section>
-
       {/* ═══ SECTION 7: NEWSLETTER ═══ */}
       <section className="py-14" style={{ background: '#0d1117' }}>
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl font-extrabold text-white mb-2">Join 12,000+ contractors and homeowners</h2>
-          <p className="text-gray-500 mb-6">Get weekly price alerts, project guides, and seasonal tips.</p>
+          <h2 className="text-2xl font-extrabold text-white mb-2">Project guides, sent monthly.</h2>
+          <p className="text-gray-500 mb-6">Spec deep-dives, calculators, and practical aggregate know-how. No spam.</p>
           <div className="flex gap-2 max-w-md mx-auto">
             <input type="email" placeholder="Enter your email" className="flex-1 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
             <button className="px-6 py-3 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors">Subscribe</button>
