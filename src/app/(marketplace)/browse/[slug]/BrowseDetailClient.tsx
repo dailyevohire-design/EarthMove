@@ -359,21 +359,75 @@ const PDP_PAGE_CSS = `
 .pdp-page .pdp-btn-link:hover { color:var(--ink); }
 
 /* RESPONSIVE — collapses grid, releases sticky */
+/* ============================================================
+   RESPONSIVE — tablet (≤1180) + mobile (≤760)
+   ============================================================ */
 @media (max-width:1180px) {
-  .pdp-page .pdp-grid { grid-template-columns:1fr; gap:32px; }
-  .pdp-page .order-card { position:static; }
-  .pdp-page .order-card h1 { font-size:42px; }
-  .pdp-page .order-card .price { font-size:48px; }
-  .pdp-page .related .grid { grid-template-columns:repeat(2,1fr); }
+  /* tablet: hero collapses, sticky releases, spec strip already handled above */
+  .pdp-page .pdp-grid { grid-template-columns: 1fr; gap: 32px; }
+  .pdp-page .order-card { position: static; }
+  .pdp-page .order-card h1 { font-size: clamp(36px, 5vw, 48px); }
+  .pdp-page .order-card .price { font-size: 48px; }
+  .pdp-page .spec-strip { grid-template-columns: repeat(2, 1fr); }
+  .pdp-page .related .grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width:760px) {
-  .pdp-page .pdp-wrap { padding:24px 20px 0; }
-  .pdp-page .related .grid, .pdp-page .footer-band .grid { grid-template-columns:1fr; }
-  .pdp-page .spec-strip { grid-template-columns:repeat(2,1fr); }
-  .pdp-page .order-card { padding:22px; }
-  .pdp-page .order-card h1 { font-size:36px; }
-  .pdp-page .order-card .price { font-size:44px; }
-  .pdp-page .what-block h2 { font-size:28px; }
+  /* mobile: tight padding, typography reduce, tap targets */
+  .pdp-page .pdp-wrap { padding: 24px 20px 0; }
+  .pdp-page .content-col { gap: 40px; }
+  .pdp-page .pdp-breadcrumb { gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .pdp-page .pdp-breadcrumb .current { font-size: 16px; }
+
+  /* hero image height contained */
+  .pdp-page .hero-image-wrap { border-radius: 14px; }
+
+  /* order card */
+  .pdp-page .order-card { padding: 22px; gap: 16px; border-radius: 18px; }
+  .pdp-page .order-card h1 { font-size: 32px; }
+  .pdp-page .order-card .price { font-size: 40px; }
+  .pdp-page .order-card .source { font-size: 13px; }
+
+  /* stepper — touch targets ≥44px */
+  .pdp-page .stepper { padding: 5px; gap: 6px; flex-wrap: wrap; }
+  .pdp-page .stepper button { width: 44px; height: 44px; }
+  .pdp-page .stepper input { width: 56px; font-size: 22px; }
+  .pdp-page .stepper .hint { padding-right: 6px; font-size: 10.5px; margin-left: auto; }
+
+  /* subtotal */
+  .pdp-page .subtotal { font-size: 32px; }
+  .pdp-page .pdp-cta { height: 52px; font-size: 15px; }
+
+  /* what-it's-for */
+  .pdp-page .what-block h2 { font-size: 26px; }
+  .pdp-page .what-block p { font-size: 14.5px; }
+
+  /* spec strip */
+  .pdp-page .spec-strip { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .pdp-page .spec-card { padding: 14px 16px; border-radius: 12px; }
+  .pdp-page .spec-card .v { font-size: 20px; }
+
+  /* aka chips — touch friendly */
+  .pdp-page .aka-chip { padding: 8px 14px; }
+
+  /* related materials full-stack */
+  .pdp-page .related { margin-top: 48px; }
+  .pdp-page .related h3 { font-size: 24px; }
+  .pdp-page .related .grid { grid-template-columns: 1fr; gap: 14px; }
+  .pdp-page .pdp-tile-body { padding: 16px 18px 18px; }
+  .pdp-page .pdp-tile-body h4 { font-size: 20px; }
+
+  /* footer band */
+  .pdp-page .footer-band { margin-top: 48px; padding: 36px 0 48px; }
+  .pdp-page .footer-band .grid { grid-template-columns: 1fr; gap: 14px; }
+  .pdp-page .footer-card { padding: 24px; border-radius: 18px; }
+  .pdp-page .footer-card h3 { font-size: 24px; }
+  .pdp-page .pdp-btn { min-height: 44px; padding: 12px 18px; }
+
+  /* legal strip — only PDP doesn't have one explicit; reserved if added later */
+}
+@media (max-width:380px) {
+  /* very narrow phones (iPhone SE etc.) — spec strip stacks fully */
+  .pdp-page .spec-strip { grid-template-columns: 1fr; }
 }
 `
 

@@ -354,3 +354,51 @@
 .marketing-v6 .hv-secondary-links a:hover {
   color: var(--commerce-ink);
 }
+
+/* ============================================================
+   C-MOBILE-1 — narrow-mobile patches (≤520) and (≤380)
+   The base styles are mobile-first, but a few elements (ZIP form,
+   pill rows, footer stripe) need extra care at narrow widths.
+   ============================================================ */
+@media (max-width: 520px) {
+  /* ZIP form: stack input above CTA so the ZIP isn't squeezed at <380 */
+  .marketing-v6 .hv-rq-form { flex-direction: column; gap: 10px; }
+  .marketing-v6 .hv-zip { width: 100%; }
+  .marketing-v6 .hv-cta { width: 100%; justify-content: center; padding: 0 18px; }
+
+  /* hero call-out marks — drop the inter-mark vertical separator on narrow */
+  .marketing-v6 .hv-marks .mk { padding: 0 12px; }
+  .marketing-v6 .hv-marks .mk:first-child { padding-left: 0; }
+  .marketing-v6 .hv-marks .mk + .mk { border-left: 0; padding-left: 0; }
+
+  /* signature row — same, drop dividers */
+  .marketing-v6 .hv-sig { gap: 14px; padding-top: 20px; }
+  .marketing-v6 .hv-sig .sig-item { padding: 0; }
+  .marketing-v6 .hv-sig .sig-item + .sig-item { border-left: 0; padding-left: 0; }
+
+  /* toggle button touch target */
+  .marketing-v6 .toggle button { min-height: 40px; padding: .5rem 1rem; }
+
+  /* foot pills tighter and tappable */
+  .marketing-v6 .foot-pill { padding: 6px 12px; min-height: 28px; }
+
+  /* hero request-quote container padding */
+  .marketing-v6 .hv-rq { padding: 12px; }
+  .marketing-v6 .hv-rq-top { padding-bottom: 10px; gap: 8px; }
+
+  /* section padding breathing room */
+  .marketing-v6 .hv-wrap { padding: 48px 0 56px; }
+
+  /* footer call-to-action padding */
+  .marketing-v6 .fcta { padding: 28px 24px; border-radius: 18px; }
+  .marketing-v6 .fcta h2 { font-size: 28px; }
+
+  /* overflow guard — stop any horizontal scroll on narrow */
+  .marketing-v6 { overflow-x: hidden; }
+}
+@media (max-width: 380px) {
+  /* very narrow (iPhone SE class) — clamp hero and tighten gutters */
+  .marketing-v6 .max { padding: 0 16px; }
+  .marketing-v6 .hv-h1 { font-size: clamp(36px, 11vw, 48px); }
+  .marketing-v6 .sec-title { font-size: 32px; }
+}

@@ -249,15 +249,54 @@ const BROWSE_PAGE_CSS = `
 .browse-page .legal-strip ul a:hover { color:var(--ink); }
 
 /* RESPONSIVE */
+/* ============================================================
+   RESPONSIVE — tablet (≤1180) + mobile (≤760)
+   ============================================================ */
 @media (max-width:1180px) {
-  .browse-page .hero-band { grid-template-columns:1fr; }
-  .browse-page .cat-group .grid { grid-template-columns:repeat(2,1fr); }
+  /* tablet: hero collapses, ops card sits below copy, grid drops to 2-col */
+  .browse-page .hero-band { grid-template-columns: 1fr; gap: 28px; align-items: stretch; }
+  .browse-page .hero-band h1 { font-size: clamp(40px, 6vw, 56px); max-width: none; }
+  .browse-page .hero-band .ops-card { gap: 12px 22px; }
+  .browse-page .cat-group .grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width:760px) {
-  .browse-page .br-page { padding:0 20px; }
-  .browse-page .hero-band h1 { font-size:42px; }
-  .browse-page .cat-group .grid, .browse-page .footer-band .grid { grid-template-columns:1fr; }
-  .browse-page .cat-group h3 { font-size:24px; }
+  /* mobile: tighter padding, single-col grids, touch targets, typography reduce */
+  .browse-page .br-page { padding: 0 20px; }
+  .browse-page .hero-band { padding: 28px 0 22px; gap: 22px; }
+  .browse-page .hero-band h1 { font-size: clamp(32px, 8.5vw, 44px); margin: 12px 0 14px; }
+  .browse-page .hero-band .lede { font-size: 15.5px; }
+  .browse-page .hero-band .ops-card { padding: 16px; gap: 12px 18px; border-radius: 14px; }
+  .browse-page .hero-band .ops-card .v { font-size: 18px; }
+
+  /* sticky filter — keep sticky but tighten size; horizontal-scroll handled by overflow-x already */
+  .browse-page .filter-bar { padding: 10px 0; margin-top: 24px; }
+  .browse-page .filter-pill { padding: 10px 14px; min-height: 40px; font-size: 13px; }
+
+  /* category groups */
+  .browse-page .cat-group { margin-top: 32px; }
+  .browse-page .cat-group .group-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .browse-page .cat-group h3 { font-size: 24px; }
+  .browse-page .cat-group .grid { grid-template-columns: 1fr; gap: 14px; }
+
+  /* tile body tighter */
+  .browse-page .br-tile-body { padding: 16px 18px 18px; }
+  .browse-page .br-tile-body h4 { font-size: 20px; }
+
+  /* footer band single-col */
+  .browse-page .footer-band { margin-top: 48px; padding: 36px 0 48px; }
+  .browse-page .footer-band .grid { grid-template-columns: 1fr; gap: 14px; }
+  .browse-page .footer-card { padding: 24px; border-radius: 18px; }
+  .browse-page .footer-card h3 { font-size: 24px; }
+
+  /* legal strip stacks */
+  .browse-page .legal-strip { flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px 0 24px; }
+
+  /* empty state tighter */
+  .browse-page .empty-state { padding: 32px 24px; margin-top: 32px; }
+  .browse-page .empty-state h3 { font-size: 24px; }
+
+  /* CTA button minimum height for tap accessibility */
+  .browse-page .br-btn { min-height: 44px; padding: 12px 18px; }
 }
 `
 

@@ -117,7 +117,7 @@ export function DealCard({ card }: { card: MarketMaterialCard }) {
   const imageUrl = getMaterialImage(card.slug)
 
   return (
-    <Link href={`/browse/${card.slug}`} className="group block flex-shrink-0 w-[320px] sm:w-[360px] touch-manipulation select-none">
+    <Link href={`/browse/${card.slug}`} className="group block flex-shrink-0 w-full max-w-[360px] sm:w-[360px] touch-manipulation select-none">
       <div className="rounded-2xl overflow-hidden bg-white border border-gray-200/80 transition-all duration-200 will-change-transform
         shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.04),0_14px_28px_-14px_rgba(15,23,42,0.14)]
         hover:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_4px_12px_rgba(15,23,42,0.08),0_28px_56px_-20px_rgba(239,68,68,0.3)]
