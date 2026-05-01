@@ -1,10 +1,8 @@
 /**
  * Homepage — v6 marketing landing (the without-market branch of `/`).
  *
- * Server component. Audience-dependent copy is wrapped in <AudienceProvider>;
- * interactive bits (ZIP form, calculator, nav scroll) are client islands.
- *
- * Source of truth for visual + copy: public/marketing/homepage_v6.html
+ * Server component. Contractor-only audience.
+ * Interactive bits (ZIP form, calculator, nav scroll) are client islands.
  *
  * LAUNCH MARKETS: Denver + Dallas–Fort Worth (2026). Co-equal launch.
  * Portland moved to expansion pipeline 2026-04-27 — list it in expansion contexts only.
@@ -14,7 +12,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { AudienceProvider } from './audience-context'
 import { NavScroll } from './NavScroll'
 import { HeroLeftColumn } from './HeroLeftColumn'
 import { MaterialsSubcopy } from './MaterialsSubcopy'
@@ -29,11 +26,6 @@ const ChevronDown = ({ size = 18 }: { size?: number }) => (
   </svg>
 )
 
-const ExternalArrow = ({ size = 11 }: { size?: number }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width={size} height={size}>
-    <path d="M7 17 17 7M7 7h10v10" />
-  </svg>
-)
 
 const ArrowRight = ({ size = 16, weight = 2 }: { size?: number; weight?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={weight} strokeLinecap="round" strokeLinejoin="round">
@@ -56,8 +48,7 @@ export async function Homepage() {
 
   return (
     <div className="marketing-v6">
-      <AudienceProvider>
-        <NavScroll>
+      <NavScroll>
           <div className="max nav-inner">
             <Link href="/" className="nav-logo">EarthMove<span className="dot">.</span></Link>
             <nav className="nav-links">
@@ -516,10 +507,6 @@ export async function Homepage() {
                   <div>Most aggregate sells by the ton. Rough rule: a cubic yard of fill or base weighs about 1.4 tons. The calculator above handles the conversion.</div>
                 </details>
                 <details>
-                  <summary><span>I'm a homeowner — can I order from here?</span><span className="chev"><ChevronDown /></span></summary>
-                  <div>Yes — try <Link href="/material-match" className="link" style={{ fontSize: 'inherit' }}>Material Match <span className="arr">→</span></Link> for a quick recommender. Homeowner-focused ordering also lives on our sister site, <a href="https://filldirtnearme.net" target="_blank" rel="noopener" className="link" style={{ fontSize: 'inherit' }}>FillDirtNearMe.net <span className="arr">→</span></a>.</div>
-                </details>
-                <details>
                   <summary><span>Do you serve contractors with net-30 terms?</span><span className="chev"><ChevronDown /></span></summary>
                   <div>Yes. Net-30 available to qualified contractors after a short underwriting review. Apply from your dashboard once the account is set up — most are approved within a business day.</div>
                 </details>
@@ -545,7 +532,7 @@ export async function Homepage() {
                   Quote my ZIP <ArrowRight size={16} weight={2} />
                 </a>
                 <Link href="/material-match" className="btn" style={{ height: 48, padding: '0 20px', fontSize: 15, background: 'rgba(255,255,255,.10)', color: '#fff', border: '1px solid rgba(255,255,255,.18)' }}>
-                  I'm a homeowner <ArrowRight size={14} />
+                  Find my material <ArrowRight size={14} />
                 </Link>
               </div>
             </div>
@@ -578,7 +565,7 @@ export async function Homepage() {
                 <div className="foot-h">Company</div>
                 <ul className="foot-list">
                   <li><Link href="/join">Suppliers</Link></li>
-                  <li><a href="https://filldirtnearme.net" target="_blank" rel="noopener" className="ext">Homeowner site<ExternalArrow /></a></li>
+                  <li><Link href="/about">About</Link></li>
                   <li><Link href="/login">Sign in</Link></li>
                 </ul>
               </div>
@@ -592,7 +579,6 @@ export async function Homepage() {
             </div>
           </div>
         </footer>
-      </AudienceProvider>
     </div>
   )
 }

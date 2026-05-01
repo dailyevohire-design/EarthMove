@@ -11,12 +11,12 @@ import {
   ARTICLES,
   getHeroArticle,
   getSecondaryFeaturedArticles,
-  getArticlesByCategory,
+  getArticlesByAudience,
 } from '@/lib/learn/articles'
 
 const FILTERS = [
   { key: 'all',         label: 'All' },
-  { key: 'homeowner',   label: 'Homeowner' },
+  { key: 'diy',         label: 'DIY' },
   { key: 'contractor',  label: 'Contractor' },
   { key: 'calculator',  label: 'Calculators' },
 ] as const
@@ -126,7 +126,7 @@ export function LearnHub() {
 
   const allArticles = ARTICLES
   const filtered = useMemo(
-    () => filter === 'all' ? allArticles : getArticlesByCategory(filter),
+    () => filter === 'all' ? allArticles : getArticlesByAudience(filter),
     [filter, allArticles]
   )
   let heroArticle: Article
@@ -261,7 +261,7 @@ export function LearnHub() {
                     <img src={getArticleImage(heroArticle.slug)} alt={heroArticle.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="eager" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold capitalize">{heroArticle.category}</span>
+                      <span className="px-3 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold capitalize">{heroArticle.audience}</span>
                     </div>
                     <div className="absolute top-4 right-4">
                       <span className="px-3 py-1 rounded-lg bg-black/50 text-white text-xs font-medium flex items-center gap-1"><Clock size={10} /> {heroArticle.readTime} min</span>
@@ -285,7 +285,7 @@ export function LearnHub() {
                       <div className="relative h-36 overflow-hidden">
                         <img src={getArticleImage(a.slug)} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
                         <div className="absolute top-3 left-3">
-                          <span className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold capitalize">{a.category}</span>
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold capitalize">{a.audience}</span>
                         </div>
                       </div>
                       <div className="p-4 flex-1 flex flex-col">
@@ -303,16 +303,16 @@ export function LearnHub() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {(filter === 'all' ? allArticles.filter(a => !a.isFeatured && !a.isHero) : filtered).map(a => (
               <Link key={a.slug} href={`/learn/${a.slug}`} className="group block">
-                <div className={`rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${a.category === 'calculator' ? 'bg-gray-900 text-white' : 'bg-white'}`}>
+                <div className={`rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${a.audience === 'calculator' ? 'bg-gray-900 text-white' : 'bg-white'}`}>
                   <div className="relative h-44 overflow-hidden">
                     <img src={getArticleImage(a.slug)} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute top-3 left-3">
                       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize ${
-                        a.category === 'homeowner' ? 'bg-blue-500 text-white' :
-                        a.category === 'contractor' ? 'bg-orange-500 text-white' :
+                        a.audience === 'diy' ? 'bg-blue-500 text-white' :
+                        a.audience === 'contractor' ? 'bg-orange-500 text-white' :
                         'bg-emerald-500 text-white'
-                      }`}>{a.category}</span>
+                      }`}>{a.audience}</span>
                     </div>
                     <div className="absolute top-3 right-3">
                       <span className="px-2 py-0.5 rounded bg-black/50 text-white text-[10px] font-medium">{a.readTime} min</span>
@@ -323,8 +323,8 @@ export function LearnHub() {
                     </div>
                   </div>
                   <div className="p-4">
-                    <h3 className={`font-bold text-sm leading-snug line-clamp-2 ${a.category === 'calculator' ? 'text-white group-hover:text-emerald-400' : 'text-gray-900 group-hover:text-emerald-600'} transition-colors`}>{a.title}</h3>
-                    <p className={`text-xs mt-2 line-clamp-2 ${a.category === 'calculator' ? 'text-gray-400' : 'text-gray-500'}`}>{a.description}</p>
+                    <h3 className={`font-bold text-sm leading-snug line-clamp-2 ${a.audience === 'calculator' ? 'text-white group-hover:text-emerald-400' : 'text-gray-900 group-hover:text-emerald-600'} transition-colors`}>{a.title}</h3>
+                    <p className={`text-xs mt-2 line-clamp-2 ${a.audience === 'calculator' ? 'text-gray-400' : 'text-gray-500'}`}>{a.description}</p>
                   </div>
                 </div>
               </Link>

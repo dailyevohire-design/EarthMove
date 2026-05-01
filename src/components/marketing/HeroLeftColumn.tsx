@@ -2,8 +2,6 @@
 
 import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useAudience } from './audience-context'
 
 const SERVICE_REGEXES: ReadonlyArray<RegExp> = [/^80\d{3}$/, /^75\d{3}$/, /^76\d{3}$/]
 const inService = (z: string) => SERVICE_REGEXES.some(rx => rx.test(z))
@@ -27,17 +25,11 @@ type ZipResult =
   | { kind: 'out-of-service'; zip: string; notified: boolean }
 
 export function HeroLeftColumn() {
-  const { audience, setAudience } = useAudience()
-  const router = useRouter()
   const [zip, setZip] = useState('')
   const [result, setResult] = useState<ZipResult | null>(null)
 
   function handleZipSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (audience === 'homeowner') {
-      router.push('/material-match')
-      return
-    }
     const z = zip.trim()
     if (!/^\d{5}$/.test(z)) {
       setResult({ kind: 'invalid' })
@@ -62,37 +54,15 @@ export function HeroLeftColumn() {
       </div>
 
       <h1 className="hv-h1" id="headline">
-        {audience === 'contractor' ? (
-          <>Bulk aggregate,<br />delivered <span className="em">to the hour.</span></>
-        ) : (
-          <>Homeowners — find <span className="em">your material.</span></>
-        )}
+        Bulk aggregate,<br />delivered <span className="em">to the hour.</span>
       </h1>
 
       <p className="hv-sub" id="subhead">
-        {audience === 'contractor' ? (
-          <>Spec-grade base, fill, and stone — quoted from the closest yard, dispatched on your schedule, photo-confirmed at the drop. <b>For contractors</b> who need it on time, and homeowners who need it once.</>
-        ) : (
-          <>Tell us about your project and we'll match you to the right bulk material. <b>Same yards, same trucks</b> — a simpler flow for one-off jobs.</>
-        )}
+        Spec-grade base, fill, and stone — quoted from the closest yard, dispatched on your schedule, photo-confirmed at the drop. Built for contractors who need it on time.
       </p>
 
       <form id="zipForm" className="hv-rq" onSubmit={handleZipSubmit} noValidate>
         <div className="hv-rq-top">
-          <div className="toggle" role="tablist">
-            <button
-              id="tab-c"
-              type="button"
-              className={audience === 'contractor' ? 'active' : ''}
-              onClick={() => setAudience('contractor')}
-            >Contractor</button>
-            <button
-              id="tab-h"
-              type="button"
-              className={audience === 'homeowner' ? 'active' : ''}
-              onClick={() => setAudience('homeowner')}
-            >Homeowner</button>
-          </div>
           <span className="hv-rq-hint">
             <span className="hv-rq-step">01</span>
             <span className="hv-rq-step-sep" />
@@ -115,7 +85,7 @@ export function HeroLeftColumn() {
             />
           </label>
           <button type="submit" className="hv-cta" id="ctaBtn">
-            <span id="ctaLbl">{audience === 'contractor' ? 'Quote my ZIP' : 'Find my material'}</span>
+            <span id="ctaLbl">Quote my ZIP</span>
             <span className="hv-cta-arrow"><ArrowRightIcon /></span>
           </button>
         </div>

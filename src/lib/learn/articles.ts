@@ -12,14 +12,14 @@
  *   Two articles should have `isFeatured: true && !isHero`.
  */
 
-export type Category = 'homeowner' | 'contractor' | 'calculator';
+export type Audience = 'diy' | 'contractor' | 'calculator';
 
 export interface Article {
   slug: string;
   title: string;
   description: string;
   readTime: number; // minutes
-  category: Category;
+  audience: Audience;
   isFeatured?: boolean;
   isHero?: boolean;
   isStub?: boolean;
@@ -28,13 +28,13 @@ export interface Article {
 }
 
 export const ARTICLES: Article[] = [
-  // === HOMEOWNER (12) ===
+  // === DIY (12) ===
   {
     slug: 'driveway-gravel-complete-guide-2026',
     title: 'The Complete Guide to Driveway Gravel in 2026',
     description: 'Everything about choosing, calculating, and installing driveway materials.',
     readTime: 12,
-    category: 'homeowner',
+    audience: 'diy',
     isFeatured: true,
     isHero: true,
     updatedAt: '2026-04-26',
@@ -44,7 +44,7 @@ export const ARTICLES: Article[] = [
     title: 'Fill Dirt vs Topsoil: Which One Do You Actually Need?',
     description: 'The difference could save you thousands on your next project.',
     readTime: 8,
-    category: 'homeowner',
+    audience: 'diy',
     isFeatured: true,
     updatedAt: '2026-04-26',
   },
@@ -53,7 +53,7 @@ export const ARTICLES: Article[] = [
     title: 'Best Materials for French Drains',
     description: 'Stop water damage before it starts. Complete drainage guide.',
     readTime: 10,
-    category: 'homeowner',
+    audience: 'diy',
     isFeatured: true,
     updatedAt: '2026-04-22',
     legacySlugs: ['french-drain-materials'],
@@ -61,9 +61,9 @@ export const ARTICLES: Article[] = [
   {
     slug: 'raising-low-spots-fill-dirt-howto',
     title: 'Raising Low Spots in Your Yard: A Fill-Dirt How-To',
-    description: 'A weekend project for ½ to 2 yards of fill, with the prep, compaction, and seeding steps the pros take that homeowners usually skip.',
+    description: 'A weekend project for ½ to 2 yards of fill, with the prep, compaction, and seeding steps DIYers usually skip.',
     readTime: 9,
-    category: 'homeowner',
+    audience: 'diy',
     isStub: true,
     updatedAt: '2026-04-26',
   },
@@ -72,7 +72,7 @@ export const ARTICLES: Article[] = [
     title: 'Decomposed Granite for Patios and Walkways',
     description: 'DG looks great and packs hard, but only if you screen, edge, and stabilize correctly. Here\'s what to specify.',
     readTime: 7,
-    category: 'homeowner',
+    audience: 'diy',
     isStub: true,
     updatedAt: '2026-04-23',
   },
@@ -81,7 +81,7 @@ export const ARTICLES: Article[] = [
     title: 'Pea Gravel for Landscaping: Sizing, Depth, and Edging',
     description: 'The most-misused material in residential landscaping — sized, edged, and laid the way it actually stays put.',
     readTime: 6,
-    category: 'homeowner',
+    audience: 'diy',
     isStub: true,
     updatedAt: '2026-04-25',
   },
@@ -90,7 +90,7 @@ export const ARTICLES: Article[] = [
     title: 'River Rock vs Crushed Stone for Drainage',
     description: 'They look similar, drain very differently. When to pay extra for river rock and when crushed stone wins.',
     readTime: 8,
-    category: 'homeowner',
+    audience: 'diy',
     isStub: true,
     updatedAt: '2026-04-24',
   },
@@ -99,7 +99,7 @@ export const ARTICLES: Article[] = [
     title: 'Topsoil for New Lawns: Depth, Amendments, Calculations',
     description: 'How much you actually need, what to amend it with, and the screened-vs-unscreened decision that determines if seed takes.',
     readTime: 9,
-    category: 'homeowner',
+    audience: 'diy',
     isStub: true,
     updatedAt: '2026-04-21',
   },
@@ -108,7 +108,7 @@ export const ARTICLES: Article[] = [
     title: 'Gravel for Shed and Playset Bases',
     description: 'A 4" pad of #57 stone over geotextile beats poured concrete for most backyard structures. The why.',
     readTime: 5,
-    category: 'homeowner',
+    audience: 'diy',
     isStub: true,
     updatedAt: '2026-04-20',
   },
@@ -117,7 +117,7 @@ export const ARTICLES: Article[] = [
     title: 'Riprap for Erosion Control on Residential Slopes',
     description: 'When the back yard washes out every storm, riprap is the answer — but the class matters more than the size.',
     readTime: 7,
-    category: 'homeowner',
+    audience: 'diy',
     isStub: true,
     updatedAt: '2026-04-18',
   },
@@ -126,7 +126,7 @@ export const ARTICLES: Article[] = [
     title: 'Mulch Alternatives: Gravel, Stone, DG Comparison',
     description: 'Mulch decomposes every year. These three alternatives don\'t — and the cost-per-decade math is brutal.',
     readTime: 6,
-    category: 'homeowner',
+    audience: 'diy',
     isStub: true,
     updatedAt: '2026-04-15',
   },
@@ -135,7 +135,7 @@ export const ARTICLES: Article[] = [
     title: 'The $3,000 Mistake: Real Stories of Costly Material Errors',
     description: 'Real stories of costly material mistakes and how to avoid them.',
     readTime: 8,
-    category: 'homeowner',
+    audience: 'diy',
     updatedAt: '2026-04-13',
     legacySlugs: ['ordering-wrong-material'],
   },
@@ -146,7 +146,7 @@ export const ARTICLES: Article[] = [
     title: 'Aggregate Grades Explained: #57, #67, Grade 1 Flex Base',
     description: 'A field reference for crew leads — what each grade compacts to, what it drains, and where it gets specified.',
     readTime: 7,
-    category: 'contractor',
+    audience: 'contractor',
     updatedAt: '2026-04-25',
     legacySlugs: ['material-grades-explained'],
   },
@@ -155,7 +155,7 @@ export const ARTICLES: Article[] = [
     title: 'Road Base Specs by State DOT: TX vs CO',
     description: 'TxDOT Item 247 vs CDOT Class 6 — the spec differences that matter when you bid across state lines.',
     readTime: 11,
-    category: 'contractor',
+    audience: 'contractor',
     isStub: true,
     updatedAt: '2026-04-22',
   },
@@ -164,7 +164,7 @@ export const ARTICLES: Article[] = [
     title: 'Recycled Concrete Aggregate: When Inspectors Approve It',
     description: 'RCA is 20-40% cheaper than virgin and increasingly required for green spec — but only if your gradation is right.',
     readTime: 9,
-    category: 'contractor',
+    audience: 'contractor',
     isStub: true,
     updatedAt: '2026-04-19',
   },
@@ -173,7 +173,7 @@ export const ARTICLES: Article[] = [
     title: 'Compaction Standards: Proctor Density and How to Hit It',
     description: '95% Standard Proctor sounds simple. The lift thickness, moisture window, and pass count that actually get you there.',
     readTime: 12,
-    category: 'contractor',
+    audience: 'contractor',
     isStub: true,
     updatedAt: '2026-04-21',
   },
@@ -182,7 +182,7 @@ export const ARTICLES: Article[] = [
     title: 'Subgrade Prep for Parking Lots',
     description: 'The undocumented sequence that prevents callbacks: proof-roll, undercut, geotextile, base, surface.',
     readTime: 10,
-    category: 'contractor',
+    audience: 'contractor',
     isStub: true,
     updatedAt: '2026-04-17',
   },
@@ -191,7 +191,7 @@ export const ARTICLES: Article[] = [
     title: 'Drainage Stone Selection for Retention Ponds',
     description: 'Pond bottoms, side slopes, outlet structures — three different stones, three different specs.',
     readTime: 8,
-    category: 'contractor',
+    audience: 'contractor',
     isStub: true,
     updatedAt: '2026-04-16',
   },
@@ -200,7 +200,7 @@ export const ARTICLES: Article[] = [
     title: 'Riprap Classes: D50, Gradation, FDOT vs TxDOT',
     description: 'The class system explained, with side-by-side TxDOT and FDOT spec callouts for cross-state work.',
     readTime: 11,
-    category: 'contractor',
+    audience: 'contractor',
     isStub: true,
     updatedAt: '2026-04-14',
   },
@@ -209,7 +209,7 @@ export const ARTICLES: Article[] = [
     title: 'Concrete Sand vs Mason Sand: Spec Compliance',
     description: 'ASTM C33 vs C144 — which one your inspector actually wants and how to source it without the upcharge.',
     readTime: 7,
-    category: 'contractor',
+    audience: 'contractor',
     isStub: true,
     updatedAt: '2026-04-12',
   },
@@ -218,7 +218,7 @@ export const ARTICLES: Article[] = [
     title: 'Trench Backfill Specs: Pipe Bedding to Final Cover',
     description: 'Bedding stone, haunching, initial cover, final cover — the four-layer system and which materials each layer requires.',
     readTime: 10,
-    category: 'contractor',
+    audience: 'contractor',
     isStub: true,
     updatedAt: '2026-04-10',
   },
@@ -227,7 +227,7 @@ export const ARTICLES: Article[] = [
     title: 'Lime Rock and Shell Rock: Florida Spec Guide',
     description: 'FDOT Section 911 vs 913 — the two materials that dominate Florida earthwork and where each one is the right call.',
     readTime: 9,
-    category: 'contractor',
+    audience: 'contractor',
     isStub: true,
     updatedAt: '2026-04-08',
   },
@@ -238,7 +238,7 @@ export const ARTICLES: Article[] = [
     title: 'Cubic Yards Calculator',
     description: 'Length × width × depth, with unit conversion. The fastest way to size your order before you call.',
     readTime: 2,
-    category: 'calculator',
+    audience: 'calculator',
     updatedAt: '2026-04-26',
     legacySlugs: ['gravel-calculator', 'how-much-gravel-do-i-need'],
   },
@@ -247,7 +247,7 @@ export const ARTICLES: Article[] = [
     title: 'Tonnage Estimator by Material Density',
     description: 'Cubic yards to tons for every common aggregate, with the density coefficient explained.',
     readTime: 3,
-    category: 'calculator',
+    audience: 'calculator',
     isStub: true,
     updatedAt: '2026-04-24',
   },
@@ -256,7 +256,7 @@ export const ARTICLES: Article[] = [
     title: 'Driveway Gravel Cost Estimator',
     description: 'Real-time cost estimate based on your driveway size and ZIP code — pricing pulls from verified suppliers in your market.',
     readTime: 4,
-    category: 'calculator',
+    audience: 'calculator',
     isStub: true,
     updatedAt: '2026-04-23',
   },
@@ -284,8 +284,8 @@ export function getSuccessorForLegacySlug(legacySlug: string): Article | undefin
   return ARTICLES.find((a) => a.legacySlugs?.includes(legacySlug));
 }
 
-export function getArticlesByCategory(category: Category): Article[] {
-  return ARTICLES.filter((a) => a.category === category);
+export function getArticlesByAudience(audience: Audience): Article[] {
+  return ARTICLES.filter((a) => a.audience === audience);
 }
 
 export function getHeroArticle(): Article {
@@ -298,11 +298,11 @@ export function getSecondaryFeaturedArticles(): Article[] {
   return ARTICLES.filter((a) => a.isFeatured && !a.isHero);
 }
 
-export function getCategoryCounts(): Record<Category, number> {
+export function getAudienceCounts(): Record<Audience, number> {
   return {
-    homeowner: ARTICLES.filter((a) => a.category === 'homeowner').length,
-    contractor: ARTICLES.filter((a) => a.category === 'contractor').length,
-    calculator: ARTICLES.filter((a) => a.category === 'calculator').length,
+    diy: ARTICLES.filter((a) => a.audience === 'diy').length,
+    contractor: ARTICLES.filter((a) => a.audience === 'contractor').length,
+    calculator: ARTICLES.filter((a) => a.audience === 'calculator').length,
   };
 }
 

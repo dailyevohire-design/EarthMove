@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Material Match — Find Your Perfect Material',
-  description: 'Tell us about your project and we\'ll match you to the perfect bulk material. Takes 60 seconds. Used by 12,000+ homeowners and contractors.',
+  description: 'Tell us about your project and we\'ll match you to the right bulk material — gradation, quantity, and the closest yard. Takes 60 seconds.',
   alternates: { canonical: '/material-match' },
   openGraph: {
     title: 'Material Match | EarthMove',

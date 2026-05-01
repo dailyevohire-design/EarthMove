@@ -146,7 +146,7 @@ export function articleSchema(article: {
   slug: string
   image: string
   readTime?: string
-  category?: string
+  audience?: string
   datePublished?: string
   dateModified?: string
 }) {
@@ -172,7 +172,7 @@ export function articleSchema(article: {
       logo: { '@type': 'ImageObject', url: `${BASE_URL}/logo.png` },
     },
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${BASE_URL}/learn/${article.slug}` },
-    ...(article.category && { articleSection: article.category }),
+    ...(article.audience && { articleSection: article.audience }),
   }
 }
 

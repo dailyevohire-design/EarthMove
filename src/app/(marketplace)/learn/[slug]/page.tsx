@@ -1148,7 +1148,7 @@ export default async function LearnArticlePage({ params }: Props) {
     description: article.description,
     slug: article.slug,
     image: heroImage,
-    category: article.category,
+    audience: article.audience,
     readTime: `${article.readTime} min read`,
   })
   const crumbs = breadcrumbSchema([
@@ -1183,7 +1183,7 @@ export default async function LearnArticlePage({ params }: Props) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div className="absolute bottom-0 inset-x-0 p-6 md:p-10 max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-3">
-            <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold capitalize">{article.category}</span>
+            <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold capitalize">{article.audience}</span>
             <span className="text-white/70 text-xs flex items-center gap-1"><Clock size={11} /> {article.readTime} min read</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white leading-tight">{article.title}</h1>
