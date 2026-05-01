@@ -146,12 +146,12 @@ export function LearnHub() {
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d2a1a 50%, #0d1117 100%)' }} />
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 60%, rgba(16,185,129,0.1) 0%, transparent 60%), radial-gradient(ellipse at 70% 30%, rgba(245,158,11,0.06) 0%, transparent 50%)' }} />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight" style={{ textShadow: '0 0 60px rgba(16,185,129,0.2)' }}>
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
+          <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-tight" style={{ textShadow: '0 0 60px rgba(16,185,129,0.2)' }}>
               The EarthMove<br /><span className="text-emerald-400">Knowledge Center</span>
             </h1>
-            <p className="text-lg mt-4" style={{ color: 'rgba(255,255,255,0.65)' }}>
+            <p className="text-base sm:text-lg mt-3 sm:mt-4" style={{ color: 'rgba(255,255,255,0.65)' }}>
               Everything you need to know about aggregates. Built by industry experts.
             </p>
             {/* Live stat */}
@@ -342,12 +342,12 @@ export function LearnHub() {
       </div>
 
       <section style={{ background: '#080c14', padding: '80px 0 100px' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           {/* Title */}
-          <div className="text-center mb-14">
+          <div className="text-center mb-10 sm:mb-14">
             <span className="text-[11px] font-mono font-bold uppercase tracking-[0.2em]" style={{ color: '#10b981' }}>Project Intelligence</span>
-            <h2 className="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white mt-3 leading-tight">What are you building?</h2>
-            <p className="text-lg mt-4 max-w-2xl mx-auto" style={{ color: '#9ca3af' }}>
+            <h2 className="text-2xl sm:text-4xl md:text-[48px] font-extrabold text-white mt-3 leading-tight">What are you building?</h2>
+            <p className="text-base sm:text-lg mt-3 sm:mt-4 max-w-2xl mx-auto" style={{ color: '#9ca3af' }}>
               Select your project type for material recommendations, quantity estimates, and current pricing
             </p>
             <div className="w-[60px] h-[2px] mx-auto mt-6" style={{ background: '#10b981' }} />
@@ -446,18 +446,20 @@ export function LearnHub() {
           </div>
 
           {/* Price table */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div className="grid grid-cols-4 gap-4 px-5 py-3 text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              <span>Material</span><span>Price</span><span>30-Day Trend</span><span>vs National Avg</span>
-            </div>
-            {prices.map((row, i) => (
-              <div key={i} className="grid grid-cols-4 gap-4 px-5 py-3 text-sm" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                <span className="text-white font-medium">{row.mat}</span>
-                <span className="text-white font-bold font-mono">{row.price}</span>
-                <span className={`font-medium ${row.trendDir === 'up' ? 'text-amber-400' : row.trendDir === 'down' ? 'text-emerald-400' : 'text-gray-500'}`}>{row.trend}</span>
-                <span className="text-gray-500">{row.vsAvg}</span>
+          <div className="rounded-2xl overflow-x-auto" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="min-w-[520px]">
+              <div className="grid grid-cols-4 gap-4 px-5 py-3 text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <span>Material</span><span>Price</span><span>30-Day Trend</span><span>vs National Avg</span>
               </div>
-            ))}
+              {prices.map((row, i) => (
+                <div key={i} className="grid grid-cols-4 gap-4 px-5 py-3 text-sm" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span className="text-white font-medium">{row.mat}</span>
+                  <span className="text-white font-bold font-mono">{row.price}</span>
+                  <span className={`font-medium ${row.trendDir === 'up' ? 'text-amber-400' : row.trendDir === 'down' ? 'text-emerald-400' : 'text-gray-500'}`}>{row.trend}</span>
+                  <span className="text-gray-500">{row.vsAvg}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

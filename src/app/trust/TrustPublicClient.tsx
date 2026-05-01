@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { MobileNav } from '@/components/layout/mobile-nav'
 
 const SIGNUP_HREF = '/signup?next=/trust&intent=trust-check'
 
@@ -363,7 +364,7 @@ const GC_PAGE_CSS = `
   .gc-page .ops-band .wrap { padding: 28px 20px; }
 
   /* typography */
-  .gc-page .hero h1 { font-size: clamp(32px, 9vw, 44px); }
+  .gc-page .hero h1 { font-size: clamp(24px, 9vw, 44px); }
   .gc-page .pricing-band h2 { font-size: 30px; line-height: 1.06; }
   .gc-page .how .head h2 { font-size: 28px; }
   .gc-page .progress-band .left h2 { font-size: 30px; }
@@ -425,6 +426,12 @@ const GC_PAGE_CSS = `
   .gc-page .toggle button { min-height: 44px; padding: 10px 18px; }
   .gc-page .geo select, .gc-page .geo input { min-height: 40px; padding: 8px 10px; font-size: 12px; }
   .gc-page .topnav .actions .signup { min-height: 40px; }
+}
+
+/* C-MOBILE-2: align inline-CTA hide with MobileNav's md:hidden (<768px). */
+@media (max-width:767px) {
+  .gc-page .topnav .actions .gc-desktop-only { display: none; }
+  .gc-page .topnav .actions { gap: 0; }
 }
 `
 
@@ -619,7 +626,12 @@ const FAQ_ITEMS: FaqItemData[] = [
   },
 ]
 
-export function TrustPublicClient() {
+interface TrustPublicClientProps {
+  isLoggedIn?: boolean
+  role?: string | null
+}
+
+export function TrustPublicClient({ isLoggedIn = false, role = null }: TrustPublicClientProps = {}) {
   const router = useRouter()
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
   const [openFaqId, setOpenFaqId] = useState<string | null>(FAQ_ITEMS[0].id)
@@ -662,8 +674,9 @@ export function TrustPublicClient() {
               <a href="#use">For Homeowners</a>
             </nav>
             <div className="actions">
-              <Link href="/login" className="signin">Sign in</Link>
-              <Link href="/signup" className="signup">Sign up free</Link>
+              <Link href="/login" className="signin gc-desktop-only">Sign in</Link>
+              <Link href="/signup" className="signup gc-desktop-only">Sign up free</Link>
+              <MobileNav isLoggedIn={isLoggedIn} role={role} />
             </div>
           </div>
         </header>

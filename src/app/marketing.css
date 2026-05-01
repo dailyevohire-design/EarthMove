@@ -77,8 +77,8 @@
 @media (min-width: 768px) { .marketing-v6 .section { padding: 120px 0; } }
 .marketing-v6 .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .10em; text-transform: uppercase; color: var(--brand); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .marketing-v6 .eyebrow::before { content: ""; width: 18px; height: 1.5px; background: var(--brand); display: inline-block; }
-.marketing-v6 .sec-title { font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; font-size: 40px; }
-@media (min-width: 768px) { .marketing-v6 .sec-title { font-size: 60px; } }
+.marketing-v6 .sec-title { font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; font-size: clamp(24px, 7vw, 40px); }
+@media (min-width: 768px) { .marketing-v6 .sec-title { font-size: clamp(32px, 5vw, 60px); } }
 
 /* LIVE DOT */
 .marketing-v6 .live { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ops-active); box-shadow: 0 0 0 0 rgba(40,199,111,.5); animation: marketing-lp 1.8s ease-in-out infinite; }
@@ -116,7 +116,7 @@
 .marketing-v6 .hv-status .rule { width: 1px; height: 10px; background: var(--line-strong); opacity: .85; }
 .marketing-v6 .hv-status .y { color: var(--ink); font-weight: 600; }
 
-.marketing-v6 .hv-h1 { font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; font-weight: 700; letter-spacing: -0.04em; line-height: .94; font-size: clamp(50px, 5.6vw, 86px); color: var(--ink); }
+.marketing-v6 .hv-h1 { font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; font-weight: 700; letter-spacing: -0.04em; line-height: .94; font-size: clamp(28px, 6vw, 86px); color: var(--ink); }
 .marketing-v6 .hv-h1 .em { font-style: italic; font-weight: 600; color: var(--brand); position: relative; white-space: nowrap; }
 .marketing-v6 .hv-h1 .em::after { content: ""; position: absolute; left: -1%; right: -1%; bottom: .07em; height: .14em; background: var(--action); opacity: .85; border-radius: 2px; z-index: -1; }
 
@@ -308,8 +308,8 @@
 /* FINAL CTA */
 .marketing-v6 .fcta { border-radius: 24px; padding: 40px; background: var(--brand); color: #fff; display: grid; grid-template-columns: 1fr; gap: 24px; align-items: center; }
 @media (min-width: 768px) { .marketing-v6 .fcta { padding: 56px; grid-template-columns: 8fr 4fr; gap: 32px; } }
-.marketing-v6 .fcta h2 { font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; font-weight: 700; letter-spacing: -0.035em; line-height: 1.05; font-size: 34px; color: #fff; }
-@media (min-width: 768px) { .marketing-v6 .fcta h2 { font-size: 48px; } }
+.marketing-v6 .fcta h2 { font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; font-weight: 700; letter-spacing: -0.035em; line-height: 1.05; font-size: clamp(22px, 6vw, 34px); color: #fff; }
+@media (min-width: 768px) { .marketing-v6 .fcta h2 { font-size: clamp(28px, 4.4vw, 48px); } }
 .marketing-v6 .fcta p { margin-top: 12px; font-size: 16px; color: rgba(255,255,255,.78); max-width: 560px; }
 .marketing-v6 .fcta-actions { display: flex; flex-direction: column; gap: 10px; }
 @media (min-width: 768px) { .marketing-v6 .fcta-actions { align-items: flex-end; } }
@@ -399,6 +399,12 @@
 @media (max-width: 380px) {
   /* very narrow (iPhone SE class) — clamp hero and tighten gutters */
   .marketing-v6 .max { padding: 0 16px; }
-  .marketing-v6 .hv-h1 { font-size: clamp(36px, 11vw, 48px); }
-  .marketing-v6 .sec-title { font-size: 32px; }
+  .marketing-v6 .hv-h1 { font-size: clamp(24px, 11vw, 48px); }
+  .marketing-v6 .sec-title { font-size: clamp(22px, 8vw, 32px); }
+}
+
+/* C-MOBILE-2 — hide desktop "Get a quote" CTA on mobile so the
+   MobileNav hamburger button is the only nav surface at <768px. */
+@media (max-width: 767px) {
+  .marketing-v6 .nav-cta-desktop { display: none; }
 }

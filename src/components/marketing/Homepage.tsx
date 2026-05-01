@@ -13,12 +13,14 @@
  */
 import Image from 'next/image'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import { AudienceProvider } from './audience-context'
 import { NavScroll } from './NavScroll'
 import { HeroLeftColumn } from './HeroLeftColumn'
 import { MaterialsSubcopy } from './MaterialsSubcopy'
 import { MaterialsCard6 } from './MaterialsCard6'
 import { CoverageCalculator } from './CoverageCalculator'
+import { MobileNav } from '@/components/layout/mobile-nav'
 import { getMaterialImage } from '@/lib/material-images'
 
 const ChevronDown = ({ size = 18 }: { size?: number }) => (
@@ -39,7 +41,19 @@ const ArrowRight = ({ size = 16, weight = 2 }: { size?: number; weight?: number 
   </svg>
 )
 
-export function Homepage() {
+export async function Homepage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let profileRole: string | null = null
+  if (user) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    profileRole = data?.role ?? null
+  }
+
   return (
     <div className="marketing-v6">
       <AudienceProvider>
@@ -53,7 +67,8 @@ export function Homepage() {
               <Link href="/material-match">Material Match</Link>
               <Link href="/login">Sign in</Link>
             </nav>
-            <a href="#zipForm" className="btn btn-primary" style={{ padding: '0 16px', height: 36, fontSize: 13.5 }}>Get a quote</a>
+            <a href="#zipForm" className="btn btn-primary nav-cta-desktop" style={{ padding: '0 16px', height: 36, fontSize: 13.5 }}>Get a quote</a>
+            <MobileNav isLoggedIn={!!user} role={profileRole} />
           </div>
         </NavScroll>
 

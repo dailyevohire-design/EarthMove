@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { createClient } from '@/lib/supabase/server'
 import { TrustPublicClient } from './TrustPublicClient'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,17 @@ export const metadata: Metadata = {
   },
 }
 
-export default function TrustPage() {
-  return <TrustPublicClient />
+export default async function TrustPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let role: string | null = null
+  if (user) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    role = data?.role ?? null
+  }
+  return <TrustPublicClient isLoggedIn={!!user} role={role} />
 }

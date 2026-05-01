@@ -255,7 +255,7 @@ const BROWSE_PAGE_CSS = `
 @media (max-width:1180px) {
   /* tablet: hero collapses, ops card sits below copy, grid drops to 2-col */
   .browse-page .hero-band { grid-template-columns: 1fr; gap: 28px; align-items: stretch; }
-  .browse-page .hero-band h1 { font-size: clamp(40px, 6vw, 56px); max-width: none; }
+  .browse-page .hero-band h1 { font-size: clamp(28px, 6vw, 56px); max-width: none; }
   .browse-page .hero-band .ops-card { gap: 12px 22px; }
   .browse-page .cat-group .grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -263,7 +263,7 @@ const BROWSE_PAGE_CSS = `
   /* mobile: tighter padding, single-col grids, touch targets, typography reduce */
   .browse-page .br-page { padding: 0 20px; }
   .browse-page .hero-band { padding: 28px 0 22px; gap: 22px; }
-  .browse-page .hero-band h1 { font-size: clamp(32px, 8.5vw, 44px); margin: 12px 0 14px; }
+  .browse-page .hero-band h1 { font-size: clamp(24px, 8.5vw, 44px); margin: 12px 0 14px; }
   .browse-page .hero-band .lede { font-size: 15.5px; }
   .browse-page .hero-band .ops-card { padding: 16px; gap: 12px 18px; border-radius: 14px; }
   .browse-page .hero-band .ops-card .v { font-size: 18px; }

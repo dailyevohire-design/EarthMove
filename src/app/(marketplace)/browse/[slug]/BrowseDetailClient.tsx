@@ -366,7 +366,7 @@ const PDP_PAGE_CSS = `
   /* tablet: hero collapses, sticky releases, spec strip already handled above */
   .pdp-page .pdp-grid { grid-template-columns: 1fr; gap: 32px; }
   .pdp-page .order-card { position: static; }
-  .pdp-page .order-card h1 { font-size: clamp(36px, 5vw, 48px); }
+  .pdp-page .order-card h1 { font-size: clamp(28px, 6vw, 48px); }
   .pdp-page .order-card .price { font-size: 48px; }
   .pdp-page .spec-strip { grid-template-columns: repeat(2, 1fr); }
   .pdp-page .related .grid { grid-template-columns: repeat(2, 1fr); }
