@@ -70,7 +70,7 @@ export const SUBMIT_SYNTHESIS_TOOL = {
       phoenix_pattern_assessment: {
         type: 'string',
         description:
-          'One-sentence assessment of phoenix-company patterns. If phoenix_score>0, ' +
+          'One-sentence assessment of phoenix-company patterns. If phoenix_score<80 (convention: 100=clean, 0=max signals), ' +
           'must explicitly address the phoenix pattern.',
       },
     },
@@ -94,7 +94,7 @@ export function buildSystemPrompt(): string {
     `2. NEVER use these words anywhere in your output: ${FORBIDDEN_VOCAB.join(', ')}.`,
     '   These are defamation risks. Use neutral factual language instead.',
     '3. Do NOT make hiring or do-business-with recommendations. Report facts.',
-    '4. If phoenix_pattern_score > 0, your phoenix_pattern_assessment MUST',
+    '4. If phoenix_score < 80 (RPC convention: 100=clean, 0=max signals), your phoenix_pattern_assessment MUST',
     '   explicitly address the phoenix pattern (use the word "phoenix" or',
     '   "successor entity").',
     '5. Set confidence=LOW if evidence_count<3 OR structured_hit_rate<0.4.',
@@ -260,10 +260,10 @@ export function validateSynthesis(
   }
 
   // Phoenix surfacing requirement
-  if (score.phoenix_score > 0) {
+  if (score.phoenix_score < 80) {
     const lower = phoenixAssessment.toLowerCase();
     if (!lower.includes('phoenix') && !lower.includes('successor entity')) {
-      errors.push('phoenix_score>0 but phoenix_pattern_assessment does not address phoenix pattern');
+      errors.push('phoenix_score<80 but phoenix_pattern_assessment does not address phoenix pattern');
     }
   }
 
@@ -307,7 +307,7 @@ export function buildFreeTierSynthesis(score: ScoreContext): SynthesisOutput {
       evidence_ids: FREE_TIER_SENTINEL,
     });
   }
-  if (score.phoenix_score > 0) {
+  if (score.phoenix_score < 80) {
     red_flags.push({
       text: 'Phoenix-company pattern indicators present.',
       evidence_ids: FREE_TIER_SENTINEL,
@@ -339,7 +339,7 @@ export function buildFreeTierSynthesis(score: ScoreContext): SynthesisOutput {
     score.evidence_count >= 8 && score.structured_hit_rate >= 0.7 ? 'HIGH' :
     'MEDIUM';
 
-  const phoenix_pattern_assessment = score.phoenix_score > 0
+  const phoenix_pattern_assessment = score.phoenix_score < 80
     ? `Phoenix-company indicators present (score=${score.phoenix_score}); successor entity review recommended.`
     : 'No phoenix-company indicators detected.';
 

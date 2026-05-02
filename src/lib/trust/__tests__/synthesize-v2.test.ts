@@ -10,7 +10,7 @@ const baseScore: ScoreContext = {
   composite_score: 78,
   grade: 'B',
   risk_level: 'medium',
-  phoenix_score: 0,
+  phoenix_score: 100,
   evidence_count: 5,
   structured_hit_rate: 0.6,
   sanction_hit: false,
@@ -145,7 +145,7 @@ describe('validateSynthesis', () => {
     if (r.ok) expect(r.output.confidence).toBe('HIGH');
   });
 
-  it('requires phoenix mention when phoenix_score>0', () => {
+  it('requires phoenix mention when phoenix_score<80', () => {
     const r = validateSynthesis(
       { ...baseValid, phoenix_pattern_assessment: 'No concerning patterns detected.' },
       baseEvidence, { ...baseScore, phoenix_score: 5 },
@@ -154,7 +154,7 @@ describe('validateSynthesis', () => {
     if (!r.ok) expect(r.errors.some((e) => e.includes('phoenix'))).toBe(true);
   });
 
-  it('accepts phoenix-aware assessment when phoenix_score>0', () => {
+  it('accepts phoenix-aware assessment when phoenix_score<80', () => {
     const r = validateSynthesis(
       { ...baseValid, phoenix_pattern_assessment: 'Phoenix pattern indicators present per filings.' },
       baseEvidence, { ...baseScore, phoenix_score: 5 },
@@ -196,7 +196,7 @@ describe('buildFreeTierSynthesis', () => {
     expect(out.red_flags.some((f) => f.text.toLowerCase().includes('suspended'))).toBe(true);
   });
 
-  it('flags phoenix_score>0', () => {
+  it('flags phoenix_score<80 (signals present)', () => {
     const out = buildFreeTierSynthesis({ ...baseScore, phoenix_score: 3 });
     expect(out.red_flags.some((f) => f.text.toLowerCase().includes('phoenix'))).toBe(true);
     expect(out.phoenix_pattern_assessment.toLowerCase()).toContain('phoenix');
