@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { resolveOffering, FulfillmentError } from '@/lib/fulfillment-resolver'
 import { buildPriceQuote, PricingError } from '@/lib/pricing-engine'
+import { resolveDistanceMiles } from '@/lib/distance-resolver'
 import { createCheckoutSession } from '@/lib/stripe'
 import type { ApiResult } from '@/types'
 
@@ -12,7 +13,6 @@ const Schema = z.object({
   quantity:                 z.number().positive().max(10000),
   delivery_type:            z.enum(['asap', 'scheduled']),
   fulfillment_method:       z.enum(['delivery', 'pickup']),
-  distance_miles:           z.number().min(0).optional(),
   delivery_address: z.object({
     street_line_1: z.string().min(3).max(200),
     street_line_2: z.string().max(100).optional(),
@@ -113,6 +113,25 @@ export async function createOrderAndCheckout(
 
     const platformFeeRate = feeRule?.config?.value ? feeRule.config.value / 100 : 0.09
 
+    let distanceMiles: number | undefined
+    if (input.fulfillment_method === 'delivery') {
+      const { data: market } = await adminClient
+        .from('markets')
+        .select('center_lat, center_lng')
+        .eq('id', mm.market_id)
+        .maybeSingle()
+
+      const resolvedDistance = await resolveDistanceMiles({
+        zip:             input.delivery_address?.zip,
+        yardId:          resolved.supply_yard.id,
+        yardLat:         resolved.supply_yard.lat ?? null,
+        yardLng:         resolved.supply_yard.lng ?? null,
+        marketCenterLat: market?.center_lat ?? null,
+        marketCenterLng: market?.center_lng ?? null,
+      })
+      distanceMiles = resolvedDistance.miles
+    }
+
     // Build authoritative quote (server-side — this is the price of record)
     let quote: ReturnType<typeof buildPriceQuote>
     try {
@@ -122,7 +141,7 @@ export async function createOrderAndCheckout(
         fulfillment_method: input.fulfillment_method,
         delivery_type:      input.delivery_type,
         market_material_id: input.market_material_id,
-        distance_miles:     input.distance_miles,
+        distance_miles:     distanceMiles,
         promotion:          promo ?? null,
         platform_fee_rate:  platformFeeRate,
       })

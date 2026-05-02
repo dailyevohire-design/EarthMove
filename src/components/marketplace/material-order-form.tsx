@@ -20,8 +20,6 @@ interface Props {
   displayPrice: number
   promo: Promotion | null
   marketState?: string
-  marketCenterLat?: number
-  marketCenterLng?: number
   /** When false, the form shows guest checkout fields and a sign-in option. */
   isAuthenticated?: boolean
 }
@@ -31,7 +29,7 @@ const WINDOWS = ['Morning (7am–12pm)', 'Afternoon (12pm–5pm)', 'Anytime'] as
 export function MaterialOrderForm({
   marketMaterialId, marketId, materialCatalogId,
   materialName: _materialName, offering, displayPrice, promo,
-  marketState = 'TX', marketCenterLat, marketCenterLng,
+  marketState = 'TX',
   isAuthenticated = false,
 }: Props) {
   const router = useRouter()
@@ -56,19 +54,6 @@ export function MaterialOrderForm({
   const adjustQty = (delta: number) =>
     setQuantity(q => Math.max(offering.minimum_order_quantity, +(q + delta).toFixed(1)))
 
-  // Estimate distance from market center using ZIP code centroid lookup
-  // Uses haversine approximation based on ZIP prefix → rough lat/lng
-  const estimateDistance = (): number => {
-    if (!marketCenterLat || !marketCenterLng) return 15 // fallback
-    // ZIP-based rough estimate: use market center distance of ~15mi as default
-    // Real geocoding would be better but this is a reasonable launch approximation
-    const zip = address.zip?.replace(/\s/g, '')
-    if (!zip || zip.length < 5) return 15
-    // For launch: use 15 miles as baseline since we serve within 50mi radius
-    // TODO: integrate geocoding API for precise distance
-    return 15
-  }
-
   const estimatedSubtotal = displayPrice * quantity
 
   const fetchQuote = async () => {
@@ -84,7 +69,7 @@ export function MaterialOrderForm({
           quantity,
           fulfillment_method: 'delivery',
           delivery_type: deliveryType,
-          distance_miles: estimateDistance(),
+          customer_zip: address.zip?.replace(/\s/g, '') || undefined,
         }),
       })
       const data = await res.json()
@@ -138,7 +123,6 @@ export function MaterialOrderForm({
         requested_delivery_date: deliveryType === 'scheduled' ? deliveryDate : null,
         requested_delivery_window: deliveryType === 'scheduled' ? deliveryWindow : null,
         delivery_notes: address.notes || null,
-        distance_miles: estimateDistance(),
         ...(isAuthenticated ? {} : {
           guest: {
             email: guestEmail.trim(),
