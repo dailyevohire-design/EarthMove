@@ -555,3 +555,175 @@
   margin-left: 4px;
   letter-spacing: 0.04em;
 }
+
+/* ============================================================
+   HOW IT WORKS — numbered rows + capability cards (Phase 7)
+   ============================================================ */
+.hiw {
+  background: var(--bg);
+}
+
+.hiw-head {
+  max-width: 720px;
+  margin: 0 0 clamp(48px, 7vw, 88px);
+}
+
+.hiw-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 16px;
+}
+
+.hiw-h2 {
+  font-family: var(--font-bricolage);
+  font-weight: 500;
+  font-size: clamp(36px, 5.6vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.hiw-em {
+  font-family: var(--font-fraunces);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+/* numbered rows */
+.hiw-steps {
+  list-style: none;
+  margin: 0 0 clamp(64px, 9vw, 112px);
+  padding: 0;
+  border-top: 1px solid var(--line-strong);
+}
+
+.hiw-step {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) 1fr;
+  gap: clamp(24px, 4vw, 64px);
+  padding: clamp(32px, 5vw, 56px) 0;
+  border-bottom: 1px solid var(--line-strong);
+  align-items: start;
+}
+
+.hiw-num {
+  font-family: var(--font-bricolage);
+  font-weight: 500;
+  font-size: clamp(64px, 9vw, 112px);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--ink-3);
+  display: block;
+}
+
+.hiw-step-body {
+  max-width: 560px;
+  padding-top: 8px;
+}
+
+.hiw-step-h {
+  font-family: var(--font-bricolage);
+  font-weight: 500;
+  font-size: clamp(22px, 2.4vw, 28px);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.hiw-step-p {
+  font-size: clamp(15px, 1.6vw, 17px);
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin: 0 0 8px;
+}
+
+.hiw-step-sub {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+@media (min-width: 1024px) {
+  .hiw-step[data-align='right'] {
+    grid-template-columns: 1fr minmax(120px, 180px);
+  }
+  .hiw-step[data-align='right'] .hiw-num {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+  .hiw-step[data-align='right'] .hiw-step-body {
+    grid-column: 1;
+    grid-row: 1;
+    text-align: right;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .hiw-step {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .hiw-num {
+    font-size: 56px;
+  }
+}
+
+/* capability cards */
+.hiw-caps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 2vw, 24px);
+}
+
+.hiw-cap {
+  background: var(--bg-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  padding: clamp(24px, 3vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hiw-cap-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-soft);
+  border-radius: 12px;
+  color: var(--ink);
+}
+
+.hiw-cap-h {
+  font-family: var(--font-bricolage);
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.hiw-cap-p {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .hiw-caps {
+    grid-template-columns: 1fr;
+  }
+}
