@@ -2,6 +2,19 @@ import { inngest } from '@/lib/inngest'
 import { createAdminClient } from '@/lib/supabase/server'
 import { persistEvidence } from './scrapers/persist-evidence'
 import { runScraper, sourcesForTier } from './scrapers/registry'
+import Anthropic from '@anthropic-ai/sdk';
+import {
+  TIER_CONFIG,
+  SUBMIT_SYNTHESIS_TOOL,
+  buildSystemPrompt,
+  buildUserPrompt,
+  buildFreeTierSynthesis,
+  validateSynthesis,
+  type EvidenceItem,
+  type ScoreContext,
+  type SynthesisOutput,
+  type SynthesisTier,
+} from './synthesize-v2-prompt';
 
 // Tranche A: mock orchestration spine. One Inngest function consumes
 // trust/job.enqueued events, runs a single mock scraper, finalizes the
@@ -233,11 +246,6 @@ export const runTrustJobV2 = inngest.createFunction(
       else failed += 1
     }
 
-    // 6. Update counters + flip to 'synthesizing'.
-    //    runTrustJobV2 ENDS HERE. Synthesis (Sonar+Anthropic call →
-    //    score_and_finalize_trust_report → trust_project_evidence_to_report)
-    //    will be a separate runTrustSynthesizeV2 function in a later commit,
-    //    triggered on event 'trust/job.synthesize.requested'.
     await step.run('v2-update-counters', async () => {
       const { count } = await admin
         .from('trust_evidence')
@@ -254,6 +262,158 @@ export const runTrustJobV2 = inngest.createFunction(
         .eq('id', job_id)
     })
 
+    await step.sendEvent('trust-synthesize-emit', {
+      name: 'trust/job.synthesize.requested',
+      data: { job_id },
+    })
+
     return { job_id, sources_attempted: sources.length, completed, failed }
   },
 )
+
+// ---------------------------------------------------------------------------
+// runTrustSynthesizeV2 — closes the v2 brain loop
+// Triggered by 'trust/job.synthesize.requested' emitted from runTrustJobV2.
+// Reduces trust_evidence rows + computed score into a structured report.
+// ---------------------------------------------------------------------------
+
+export const runTrustSynthesizeV2 = inngest.createFunction(
+  {
+    id: 'run-trust-synthesize-v2',
+    triggers: [{ event: 'trust/job.synthesize.requested' }],
+    concurrency: { limit: 4 },
+    retries: 2,
+  },
+  async ({ event, step }) => {
+    const job_id = event.data.job_id as string;
+    const admin = createAdminClient();
+
+    const job = await step.run('synth-load-job', async () => {
+      const { data, error } = await admin
+        .from('trust_jobs')
+        .select('id, tier, contractor_name_input, city, state_code, contractor_id, status')
+        .eq('id', job_id)
+        .single();
+      if (error || !data) throw new Error(`load job failed: ${error?.message ?? 'not found'}`);
+      return data;
+    });
+
+    if (job.status !== 'synthesizing') {
+      return { skipped: true, reason: `job.status=${job.status}` };
+    }
+
+    const tier = job.tier as SynthesisTier;
+    const tierCfg = TIER_CONFIG[tier];
+    if (!tierCfg) throw new Error(`unknown tier "${tier}"`);
+
+    const score = await step.run('synth-compute-score', async () => {
+      const { data, error } = await admin.rpc('calculate_contractor_trust_score', {
+        p_job_id: job_id,
+      });
+      if (error || !data) throw new Error(`score RPC failed: ${error?.message ?? 'no row'}`);
+      return data as ScoreContext;
+    });
+
+    const evidence = await step.run('synth-load-evidence', async () => {
+      const { data, error } = await admin
+        .from('trust_evidence')
+        .select('id, source_key, sequence_number, finding_type, confidence, finding_summary')
+        .eq('job_id', job_id)
+        .order('sequence_number', { ascending: true });
+      if (error) throw new Error(`evidence load failed: ${error.message}`);
+      return (data ?? []) as EvidenceItem[];
+    });
+
+    const synthesis: SynthesisOutput = await step.run('synth-generate', async () => {
+      if (!tierCfg.useLLM) {
+        return buildFreeTierSynthesis(score);
+      }
+      if (!process.env.ANTHROPIC_API_KEY) {
+        throw new Error('ANTHROPIC_API_KEY missing');
+      }
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+      const resp = await client.messages.create({
+        model: tierCfg.model!,
+        max_tokens: tierCfg.maxTokens,
+        temperature: 0,
+        system: buildSystemPrompt(),
+        tools: [SUBMIT_SYNTHESIS_TOOL as never],
+        tool_choice: { type: 'tool', name: 'submit_synthesis' },
+        messages: [
+          {
+            role: 'user',
+            content: buildUserPrompt({
+              contractorName: job.contractor_name_input,
+              city: job.city,
+              stateCode: String(job.state_code).trim(),
+              score,
+              evidence,
+            }),
+          },
+        ],
+      });
+
+      const inputCostMicrocents = resp.usage.input_tokens * (tierCfg.model === 'claude-opus-4-7' ? 500 : 300);
+      const outputCostMicrocents = resp.usage.output_tokens * (tierCfg.model === 'claude-opus-4-7' ? 2500 : 1500);
+      const totalCents = (inputCostMicrocents + outputCostMicrocents) / 1_000_000 * 100;
+      if (totalCents > tierCfg.costCapCents) {
+        throw new Error(`COST_CAP_EXCEEDED: ${totalCents.toFixed(2)}c > ${tierCfg.costCapCents}c`);
+      }
+
+      const toolBlock = resp.content.find((b) => b.type === 'tool_use' && b.name === 'submit_synthesis');
+      if (!toolBlock || toolBlock.type !== 'tool_use') {
+        throw new Error(`Anthropic did not return submit_synthesis tool_use; stop_reason=${resp.stop_reason}`);
+      }
+
+      const validation = validateSynthesis(toolBlock.input, evidence, score);
+      if (!validation.ok) {
+        throw new Error(`validator rejected synthesis: ${validation.errors.join('; ')}`);
+      }
+
+      await admin
+        .from('trust_jobs')
+        .update({ total_cost_cents: totalCents })
+        .eq('id', job_id);
+
+      return validation.output;
+    });
+
+    const report = await step.run('synth-finalize-report', async () => {
+      const synthesisModel = tierCfg.useLLM ? (tierCfg.model ?? 'unknown') : 'free_tier_templated';
+      const { data: finalReport, error: finalErr } = await admin.rpc('score_and_finalize_trust_report', {
+        p_job_id: job_id,
+        p_summary: synthesis.summary,
+        p_red_flags: synthesis.red_flags.map((rf) => rf.text),
+        p_positive_indicators: synthesis.positives.map((pp) => pp.text),
+        p_synthesis_model: synthesisModel,
+      });
+      if (finalErr || !finalReport) throw new Error(`score_and_finalize failed: ${finalErr?.message ?? 'no row'}`);
+
+      const reportRow = Array.isArray(finalReport) ? finalReport[0] : finalReport;
+      if (!reportRow?.id) throw new Error('finalize returned no report id');
+
+      const { error: projectErr } = await admin.rpc('trust_project_evidence_to_report', {
+        p_report_id: reportRow.id,
+      });
+      if (projectErr) throw new Error(`trust_project_evidence_to_report failed: ${projectErr.message}`);
+
+      return reportRow;
+    });
+
+    await step.run('synth-mark-completed', async () => {
+      const { error } = await admin
+        .from('trust_jobs')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          report_id: report.id,
+        })
+        .eq('id', job_id);
+      if (error) throw new Error(`mark completed failed: ${error.message}`);
+    });
+
+    return { job_id, reportId: report.id, tier, model: tierCfg.model ?? 'free_tier_templated' };
+  },
+);
+
