@@ -16,6 +16,7 @@ import { NavScroll } from './NavScroll'
 import { HeroLeftColumn } from './HeroLeftColumn'
 import { MaterialsSubcopy } from './MaterialsSubcopy'
 import { MaterialsCard6 } from './MaterialsCard6'
+import { MaterialSpecSection } from './MaterialSpecSection'
 import { CoverageCalculator } from './CoverageCalculator'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { getMaterialImage } from '@/lib/material-images'
@@ -324,6 +325,9 @@ export async function Homepage() {
             </div>
           </div>
         </section>
+
+        {/* MATERIAL SPECS */}
+        <MaterialSpecSection />
 
         {/* QUANTITY HELPER */}
         <section className="section" id="sizing">

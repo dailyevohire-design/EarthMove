@@ -427,3 +427,131 @@
 @media (max-width: 767px) {
   .marketing-v6 .nav-cta-desktop { display: none; }
 }
+
+/* ── Material spec section (Phase 6) ─────────────────────── */
+.marketing-v6 .ms-section {
+  padding: 96px 0;
+  background: var(--commerce-cream);
+  border-top: 1px solid var(--commerce-line-strong);
+}
+@media (max-width: 767px) {
+  .marketing-v6 .ms-section { padding: 64px 0; }
+}
+.marketing-v6 .ms-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.marketing-v6 .ms-eyebrow {
+  font-family: var(--font-mono, ui-monospace);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--commerce-trust);
+  font-weight: 500;
+}
+.marketing-v6 .ms-h2 {
+  font-family: var(--font-bricolage);
+  font-size: clamp(28px, 4.5vw, 44px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--commerce-ink);
+  margin: 12px 0 0;
+  max-width: 720px;
+}
+.marketing-v6 .ms-h2-em {
+  font-family: var(--font-fraunces);
+  font-style: italic;
+  font-weight: 400;
+}
+.marketing-v6 .ms-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-top: 48px;
+}
+@media (min-width: 768px) {
+  .marketing-v6 .ms-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+}
+.marketing-v6 .ms-card {
+  background: var(--commerce-cream-2, #EFEBE2);
+  border: 1px solid var(--commerce-line-strong);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.marketing-v6 .ms-card-image {
+  aspect-ratio: 4 / 3;
+  background-color: var(--commerce-cream-3, #E6E1D5);
+  background-size: cover;
+  background-position: center;
+}
+.marketing-v6 .ms-card-body {
+  padding: 22px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.marketing-v6 .ms-card-name {
+  font-family: var(--font-bricolage);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--commerce-ink);
+  line-height: 1.15;
+}
+.marketing-v6 .ms-card-grade {
+  font-family: var(--font-mono, ui-monospace);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--commerce-trust);
+  margin-top: -10px;
+}
+.marketing-v6 .ms-card-specs {
+  display: flex;
+  flex-direction: column;
+  margin: 4px 0 0;
+  border-top: 1px solid var(--commerce-line-strong);
+}
+.marketing-v6 .ms-card-spec {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--commerce-line-strong);
+}
+.marketing-v6 .ms-card-spec:last-child {
+  border-bottom: none;
+}
+.marketing-v6 .ms-card-spec-l {
+  font-family: var(--font-mono, ui-monospace);
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--commerce-ink-3, #8A8276);
+  font-weight: 500;
+  margin: 0;
+}
+.marketing-v6 .ms-card-spec-v {
+  font-family: var(--font-bricolage);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--commerce-ink);
+  margin: 0;
+  text-align: right;
+}
+.marketing-v6 .ms-card-spec-v small {
+  font-family: var(--font-mono, ui-monospace);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--commerce-ink-3, #8A8276);
+  margin-left: 4px;
+  letter-spacing: 0.04em;
+}
