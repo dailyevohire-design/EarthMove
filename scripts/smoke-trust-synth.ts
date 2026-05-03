@@ -165,7 +165,6 @@ interface JobRow {
   sources_completed: number | null;
   sources_failed: number | null;
   completed_at: string | null;
-  failure_reason: string | null;
   error_message: string | null;
 }
 
@@ -247,7 +246,7 @@ async function runMultiName(args: MultiArgs): Promise<void> {
     const pending = dispatched.filter((d) => !terminal.has(d.jobId)).map((d) => d.jobId);
     const { data, error } = await admin
       .from('trust_jobs')
-      .select('id, contractor_id, status, evidence_count, sources_completed, sources_failed, completed_at, failure_reason, error_message')
+      .select('id, contractor_id, status, evidence_count, sources_completed, sources_failed, completed_at, error_message')
       .in('id', pending);
 
     if (error) {
@@ -261,7 +260,7 @@ async function runMultiName(args: MultiArgs): Promise<void> {
         finalRows.set(row.id, row);
         const d = dispatched.find((x) => x.jobId === row.id)!;
         const elapsed = ((Date.now() - d.startedAt) / 1000).toFixed(1);
-        const errMsg = row.failure_reason ?? row.error_message;
+        const errMsg = row.error_message;
         console.log(
           `[smoke-multi] DONE name="${d.name}" job_id=${row.id} ` +
           `contractor_id=${row.contractor_id ?? 'null'} status=${row.status} ` +

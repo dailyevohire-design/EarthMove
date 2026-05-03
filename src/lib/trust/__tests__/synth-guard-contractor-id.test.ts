@@ -67,7 +67,7 @@ describe('runTrustSynthesizeV2 — Tier 1 #2 contractor_id guard', () => {
     expect(updateCalls).toHaveLength(1);
     expect(updateCalls[0]).toMatchObject({
       status: 'failed',
-      failure_reason: 'missing_contractor_id_pre_synth',
+      error_message: 'missing_contractor_id_pre_synth',
     });
     expect(typeof updateCalls[0].completed_at).toBe('string');
 

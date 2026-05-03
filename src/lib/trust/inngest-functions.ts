@@ -150,7 +150,7 @@ export const runTrustJobV2 = inngest.createFunction(
           .update({
             status: 'failed',
             completed_at: new Date().toISOString(),
-            failure_reason: String(error?.message ?? error).slice(0, 500),
+            error_message: String(error?.message ?? error).slice(0, 500),
           })
           .eq('id', orig.job_id)
       }
@@ -321,7 +321,7 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
           .from('trust_jobs')
           .update({
             status: 'failed',
-            failure_reason: 'missing_contractor_id_pre_synth',
+            error_message: 'missing_contractor_id_pre_synth',
             completed_at: new Date().toISOString(),
           })
           .eq('id', job_id);
