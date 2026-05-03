@@ -1,4 +1,28 @@
 /* ============================================================
+   EARTHMOVE BRAND TOKENS — canonical declaration at :root
+   ------------------------------------------------------------
+   Promoted from .marketing-v6 / .order-detail-page / etc.
+   scopes so portaled components (drawers, modals) and non-
+   marketing surfaces inherit. Surface-specific scopes below
+   may override individual tokens but should not redeclare
+   the full set.
+
+   Hex values match the canonical .marketing-v6 declaration
+   block where present; --em-stone and --em-hairline are
+   net-new tokens introduced at :root.
+   ============================================================ */
+:root {
+  --em-evergreen: #0E2A22;
+  --em-cream: #F5F1E8;
+  --em-paper: #F5F4F0;
+  --em-bone: #ECEAE3;
+  --em-graphite: #1A1B17;
+  --em-stone: #8E8E89;
+  --em-hairline: rgba(14, 42, 34, 0.08);
+  --em-safety: #FF6A1F;
+}
+
+/* ============================================================
    v6 marketing landing styles — namespaced under .marketing-v6
    so they do not collide with globals.css's .btn / .card / .input.
    Source of truth: public/marketing/homepage_v6.html
@@ -140,7 +164,6 @@
 .marketing-v6 .hv-rq-form { display: flex; gap: 8px; margin-top: 14px; align-items: stretch; }
 .marketing-v6 .hv-zip { flex: 1; display: flex; align-items: center; height: 56px; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 11px; transition: all .18s ease; overflow: hidden; }
 .marketing-v6 .hv-zip:focus-within { border-color: var(--ink); background: #fff; box-shadow: 0 0 0 4px rgba(15,20,17,.05); }
-.marketing-v6 .hv-zip-prefix { display: inline-flex; align-items: center; justify-content: center; height: 100%; padding: 0 14px 0 16px; font-size: 10.5px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: .18em; border-right: 1px solid var(--line); }
 .marketing-v6 .hv-zip input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; height: 100%; padding: 0 16px; font-size: 19px; color: var(--ink); font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; letter-spacing: .04em; font-weight: 500; }
 .marketing-v6 .hv-zip input::placeholder { color: var(--ink-3); font-weight: 400; }
 
@@ -433,7 +456,12 @@
 @media (max-width: 380px) {
   /* very narrow (iPhone SE class) — clamp hero and tighten gutters */
   .marketing-v6 .max { padding: 0 16px; }
-  .marketing-v6 .hv-h1 { font-size: clamp(24px, 11vw, 48px); }
+  .marketing-v6 .hv-h1 {
+    font-size: clamp(28px, 8.5vw, 44px);
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
   .marketing-v6 .sec-title { font-size: clamp(22px, 8vw, 32px); }
 }
 
@@ -837,17 +865,18 @@
   .marketing-v6 .section { padding: 48px 0; }
   .marketing-v6 .max     { padding: 0 20px; }
 
-  /* Market status strip — single-line, ellipsis if narrower than content */
+  /* Market status strip — allow 2-line wrap on narrow phones so longer
+     market list ("MORE CITIES COMING SOON") flows to second line. */
+  .marketing-v6 .mss {
+    font-size: 10px;
+  }
   .marketing-v6 .mss-inner {
-    flex-wrap: nowrap;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    flex-wrap: wrap;
+    white-space: normal;
+    row-gap: 4px;
+    line-height: 1.4;
   }
   .marketing-v6 .mss-markets {
-    overflow: hidden;
-    text-overflow: ellipsis;
     min-width: 0;
   }
 
@@ -936,6 +965,30 @@
     color: var(--commerce-ink-3);
   }
 }
+
+/* ============================================================
+   ACCENT ORANGE USAGE POLICY (--em-safety / #FF6A1F)
+   ------------------------------------------------------------
+   Orange is the single accent color in the EarthMove brand
+   system. Evergreen #0E2A22 is the primary brand color and
+   carries all default CTA chrome. Orange is reserved for:
+
+   1. Groundcheck "Run Free Search" button on /trust (the one
+      moment we want a homeowner to feel urgency).
+   2. "In transit" status highlight on dispatch cards (motion
+      cue, not a CTA).
+   3. Time-sensitive accent badges (e.g., "ARRIVING NOW").
+
+   Orange is NEVER used for:
+   - Primary marketing CTAs (those are evergreen)
+   - Multiple visible elements simultaneously
+   - Body links, secondary buttons, or chrome borders
+
+   Site-wide consolidation tracked as #ACCENT-ORANGE-AUDIT.
+   This block declares intent; existing orange refs predating
+   the policy are NOT reverted in this commit (24+ refs across
+   marketing.css + 2 React files — too wide for launch-eve).
+   ============================================================ */
 
 /* ============================================================
    INDUSTRIAL MOBILE REDESIGN — earthmove.io v2 (≤767px only)
@@ -1034,10 +1087,6 @@
     background: var(--em-paper) !important;
     border: 1px solid var(--em-fog) !important;
     border-radius: 8px !important;
-  }
-  .marketing-v6 .hv-zip-prefix {
-    font-family: var(--em-mono) !important;
-    color: var(--em-ash) !important;
   }
   .marketing-v6 .hv-zip input {
     font-family: var(--em-mono) !important;

@@ -50,7 +50,7 @@ export function HeroLeftColumn() {
       </h1>
 
       <p className="hv-sub" id="subhead">
-        Intelligence behind every load <em>— that&apos;s why our delivered cost is lower than any broker, any platform, any phone call you&apos;ve ever made.</em> And finally, a truck that shows up.
+        Intelligence behind every load — <em>that&apos;s why our delivered cost is lower than any broker, any platform, any phone call you&apos;ve ever made.</em> And finally, a truck that shows up.
       </p>
 
       <form id="zipForm" className="hv-rq" onSubmit={handleZipSubmit} noValidate>
@@ -59,7 +59,6 @@ export function HeroLeftColumn() {
         </div>
         <div className="hv-rq-form">
           <label className="hv-zip">
-            <span className="hv-zip-prefix">ZIP</span>
             <input
               id="zip"
               name="zip"
