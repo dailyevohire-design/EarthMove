@@ -45,14 +45,6 @@ export function HeroLeftColumn() {
 
   return (
     <div>
-      {/* Status strip — Denver + Dallas–Fort Worth · Launching 2026 */}
-      <div className="hv-status">
-        <span className="pip" />
-        <span className="lbl">Network online</span>
-        <span className="rule" />
-        <span><span className="y">Denver + Dallas–Fort Worth</span> · Launching 2026</span>
-      </div>
-
       <h1 className="hv-h1" id="headline">
         Bulk aggregate,<br />delivered <em className="em">to the hour.</em>
       </h1>
