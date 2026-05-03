@@ -19,10 +19,10 @@ export type TierConfig = {
 
 export const TIER_CONFIG: Record<SynthesisTier, TierConfig> = {
   free:      { useLLM: false, model: null,                  costCapCents: 0,   maxTokens: 0    },
-  standard:  { useLLM: true,  model: 'claude-sonnet-4-6',   costCapCents: 25,  maxTokens: 1500 },
-  plus:      { useLLM: true,  model: 'claude-sonnet-4-6',   costCapCents: 25,  maxTokens: 1500 },
-  deep_dive: { useLLM: true,  model: 'claude-opus-4-7',     costCapCents: 250, maxTokens: 3000 },
-  forensic:  { useLLM: true,  model: 'claude-opus-4-7',     costCapCents: 250, maxTokens: 3000 },
+  standard:  { useLLM: true,  model: 'claude-sonnet-4-6',   costCapCents: 200,  maxTokens: 1500 },
+  plus:      { useLLM: true,  model: 'claude-sonnet-4-6',   costCapCents: 200,  maxTokens: 1500 },
+  deep_dive: { useLLM: true,  model: 'claude-opus-4-7',     costCapCents: 500, maxTokens: 3000 },
+  forensic:  { useLLM: true,  model: 'claude-opus-4-7',     costCapCents: 500, maxTokens: 3000 },
 };
 
 // ---------------------------------------------------------------------------
