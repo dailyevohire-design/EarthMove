@@ -61,7 +61,7 @@ export async function Homepage() {
               <Link href="/material-match">Material Match</Link>
               <Link href="/login">Sign in</Link>
             </nav>
-            <a href="#zipForm" className="btn btn-primary nav-cta-desktop" style={{ padding: '0 16px', height: 36, fontSize: 13.5 }}>Get a quote</a>
+            <a href="#zipForm" className="btn btn-primary nav-cta-desktop" style={{ padding: '0 16px', height: 36, fontSize: 13.5 }}>Sign up</a>
             <MobileNav isLoggedIn={!!user} role={profileRole} />
           </div>
         </NavScroll>

@@ -2,8 +2,6 @@ import type { Metadata } from 'next'
 import { DM_Sans, DM_Mono, Bricolage_Grotesque, Geist, Fraunces, Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
-import { SupportWidget } from '@/components/layout/chat-widget'
-import { PromoBanner } from '@/components/layout/promo-banner'
 import { organizationSchema, websiteSchema, jsonLd } from '@/lib/structured-data'
 import { EmDsInit } from './_em-ds-init'
 
@@ -116,10 +114,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-white text-gray-900 antialiased min-h-screen flex flex-col">
         <EmDsInit />
-        <PromoBanner />
         {children}
         <Toaster />
-        <SupportWidget />
       </body>
     </html>
   )

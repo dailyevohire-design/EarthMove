@@ -822,6 +822,20 @@
   .marketing-v6 .section { padding: 48px 0; }
   .marketing-v6 .max     { padding: 0 20px; }
 
+  /* Market status strip — single-line, ellipsis if narrower than content */
+  .marketing-v6 .mss-inner {
+    flex-wrap: nowrap;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .marketing-v6 .mss-markets {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
   /* Hero typography */
   .marketing-v6 .hv-h1 {
     font-size: clamp(34px, 9.5vw, 42px);

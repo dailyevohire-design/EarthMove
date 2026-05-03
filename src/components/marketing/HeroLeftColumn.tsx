@@ -54,7 +54,7 @@ export function HeroLeftColumn() {
       </div>
 
       <h1 className="hv-h1" id="headline">
-        Bulk aggregate,<br />delivered <span className="em">to the hour.</span>
+        Bulk aggregate,<br />delivered <em className="em">to the hour.</em>
       </h1>
 
       <p className="hv-sub" id="subhead">
@@ -80,7 +80,7 @@ export function HeroLeftColumn() {
               maxLength={5}
               pattern="\d{5}"
               autoComplete="postal-code"
-              placeholder="00000"
+              placeholder=""
               value={zip}
               onChange={e => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))}
             />
