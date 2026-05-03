@@ -164,7 +164,7 @@ export const runTrustJobV2 = inngest.createFunction(
     const job = await step.run('v2-load-job', async () => {
       const { data, error } = await admin
         .from('trust_jobs')
-        .select('id, tier, contractor_name, state_code, city, contractor_id')
+        .select('id, tier, contractor_name:contractor_name_input, state_code, city, contractor_id')
         .eq('id', job_id)
         .single()
       if (error) throw new Error(`v2-load-job: ${error.message}`)
