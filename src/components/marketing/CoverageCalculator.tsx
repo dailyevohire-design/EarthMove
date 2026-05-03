@@ -20,14 +20,13 @@ const TRUCKS: { key: Exclude<TruckKey, ''>; label: string; tons: number; image: 
   { key: 'enddump',  label: 'End-dump · 24t', tons: 24, image: '/assets/trucks/end-dump.png' },
 ]
 
-function pickTruck(tons: number): { key: TruckKey; loads: number; message: string } {
-  if (tons === 0)  return { key: '',         loads: 0, message: 'Enter your area to see an estimate.' }
-  if (tons <= 5)   return { key: 'small',    loads: 1, message: "That's a small dump. One load, same-day if ordered before 10 AM." }
-  if (tons <= 12)  return { key: 'standard', loads: 1, message: "That's a standard dump. One load, scheduled to your window." }
-  if (tons <= 18)  return { key: 'triaxle',  loads: 1, message: "That's a tri-axle. One load, scheduled to your window." }
-  if (tons <= 24)  return { key: 'enddump',  loads: 1, message: "That's an end-dump. Needs open site access — large pad or commercial lot." }
-  const loads = Math.ceil(tons / 24)
-  return { key: 'enddump', loads, message: `Split across ${loads} end-dump loads.` }
+function pickTruck(tons: number): { key: TruckKey; loads: number } {
+  if (tons === 0)  return { key: '',         loads: 0 }
+  if (tons <= 5)   return { key: 'small',    loads: 1 }
+  if (tons <= 12)  return { key: 'standard', loads: 1 }
+  if (tons <= 18)  return { key: 'triaxle',  loads: 1 }
+  if (tons <= 24)  return { key: 'enddump',  loads: 1 }
+  return { key: 'enddump', loads: Math.ceil(tons / 24) }
 }
 
 export function CoverageCalculator() {
@@ -100,7 +99,12 @@ export function CoverageCalculator() {
               <span className="ink-2" style={{ fontSize: 22 }}>tons</span>
             </div>
             <p id="calcMsg" className="ink-2" style={{ fontSize: 14.5, marginTop: 8, maxWidth: 420 }}>
-              {truck.message}
+              {tons === 0 && 'Enter your area to see an estimate.'}
+              {tons > 0 && tons <= 5 && <>That&apos;s a <strong>small dump</strong>. One load, same-day if ordered before 10 AM.</>}
+              {tons > 5 && tons <= 12 && <>That&apos;s a <strong>standard dump</strong>. One load, scheduled to your window.</>}
+              {tons > 12 && tons <= 18 && <>That&apos;s a <strong>tri-axle</strong>. One load, scheduled to your window.</>}
+              {tons > 18 && tons <= 24 && <>That&apos;s an <strong>end-dump</strong>. Needs open site access — large pad or commercial lot.</>}
+              {tons > 24 && <>Split across <strong>{Math.ceil(tons / 24)}</strong> end-dump loads.</>}
             </p>
           </div>
           <div style={{ textAlign: 'right' }}>
