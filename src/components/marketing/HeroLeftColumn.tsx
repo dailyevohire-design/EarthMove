@@ -69,6 +69,7 @@ export function HeroLeftColumn() {
             Delivery ZIP
           </span>
         </div>
+        <div className="hv-zip-eyebrow"><span className="hv-zip-pill">Free quote · No call</span></div>
         <div className="hv-rq-form">
           <label className="hv-zip">
             <span className="hv-zip-prefix">ZIP</span>

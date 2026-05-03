@@ -727,3 +727,87 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   MARKET STATUS STRIP — full-width dark bar above hero
+   ============================================================ */
+.marketing-v6 .mss {
+  background: var(--ops-bg);
+  color: var(--ops-ink);
+  border-bottom: 1px solid var(--ops-line, #22324A);
+  font-family: var(--font-mono), 'DM Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.marketing-v6 .mss-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.marketing-v6 .mss-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ops-ink);
+}
+.marketing-v6 .mss-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ops-active);
+  box-shadow: 0 0 0 0 var(--ops-active);
+  animation: mss-pulse 2s ease-out infinite;
+}
+.marketing-v6 .mss-sep {
+  color: var(--ops-ink-3, #5E708B);
+}
+.marketing-v6 .mss-markets {
+  color: var(--ops-ink-2, #9AAAC2);
+  letter-spacing: 0.12em;
+}
+@keyframes mss-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(40, 199, 111, 0.55); }
+  70%  { box-shadow: 0 0 0 6px rgba(40, 199, 111, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(40, 199, 111, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marketing-v6 .mss-dot { animation: none; }
+}
+
+/* ============================================================
+   ZIP EYEBROW — "FREE QUOTE · NO CALL" pill above the input
+   ============================================================ */
+.marketing-v6 .hv-zip-eyebrow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin: 0 0 8px;
+  min-height: 22px;
+}
+.marketing-v6 .hv-zip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand-soft);
+  color: var(--trust);
+  font-family: var(--font-mono), 'DM Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.marketing-v6 .hv-zip-pill::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--trust);
+}

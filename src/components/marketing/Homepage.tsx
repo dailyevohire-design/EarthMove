@@ -18,6 +18,7 @@ import { MaterialsSubcopy } from './MaterialsSubcopy'
 import { MaterialsCard6 } from './MaterialsCard6'
 import { MaterialSpecSection } from './MaterialSpecSection'
 import { HowItWorksSection } from './HowItWorksSection'
+import { MarketStatusStrip } from './MarketStatusStrip'
 import { CoverageCalculator } from './CoverageCalculator'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { getMaterialImage } from '@/lib/material-images'
@@ -66,6 +67,7 @@ export async function Homepage() {
         </NavScroll>
 
         {/* HERO */}
+        <MarketStatusStrip />
         <section className="hv-bg">
           <div className="max hv-wrap">
             <div className="hv-grid">
