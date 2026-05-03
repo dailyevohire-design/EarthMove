@@ -2004,3 +2004,13 @@
 }
 /* Kill old icon container styling on cap */
 .marketing-v6 .hiw-cap-icon { display: none !important; }
+
+/* === Calc truck-card selected state — evergreen ring (Phase 5, commit 8) === */
+.marketing-v6 .calc-truck-grid .truck-card {
+  cursor: pointer;
+}
+.marketing-v6 .calc-truck-grid .truck-card.on {
+  border-color: var(--em-evergreen, #0E2A22) !important;
+  background: rgba(14, 42, 34, 0.04) !important;
+  box-shadow: inset 0 0 0 2px var(--em-evergreen, #0E2A22) !important;
+}
