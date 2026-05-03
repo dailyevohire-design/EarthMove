@@ -51,10 +51,10 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
         role="dialog"
         aria-modal="true"
         aria-label="Site navigation"
-        className="fixed inset-y-0 right-0 z-[100] w-[85vw] max-w-sm bg-[var(--em-cream)] border-l border-[var(--em-evergreen)]/15 shadow-2xl flex flex-col"
+        className="fixed inset-y-0 right-0 z-[100] w-[85vw] max-w-sm bg-[var(--em-cream)] border-l border-l-[#0E2A22]/15 shadow-2xl flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 h-16 border-b border-[var(--em-evergreen)]/15">
+        <div className="flex items-center justify-between px-5 h-16 border-b border-b-[#0E2A22]/15">
           <Logo variant="wordmark" size={20} theme="positive" />
           <button
             onClick={close}
@@ -88,7 +88,7 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
         </nav>
 
         {/* Footer */}
-        <div className="px-3 py-4 border-t border-[var(--em-evergreen)]/15">
+        <div className="px-3 py-4 border-t border-t-[#0E2A22]/15">
           {isLoggedIn ? (
             <button
               onClick={signOut}
