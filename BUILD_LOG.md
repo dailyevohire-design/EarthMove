@@ -921,3 +921,90 @@ filter or weight matches by program.
 
 **Severity:** LOW — current behavior is broader-than-necessary but not
 incorrect; surfaces all licenses for the entity.
+
+## 2026-05-03 — PR #11 + #12 hotfix chain followups (Smoke B path)
+
+### FOLLOWUP-INNGEST-REGISTRATION-DRIFT-CHECKLIST
+
+**Severity:** LOW (process)
+**Discovered:** 2026-05-03 (Smoke B chain, PR #10 → PR #11 hotfix).
+
+Every new Inngest function requires writes in TWO places:
+1. `src/lib/trust/inngest-functions.ts` — the function definition
+2. `src/app/api/inngest/route.ts` — registration in the `serve()` functions array
+
+PR #10 added `onTrustEvidenceAppended` and `onTrustReportCreated` to (1) only,
+not (2). Inngest accepted the events 200 OK but had no handler — silent no-op.
+
+**Mitigations now in place:**
+- Regression test at `src/lib/trust/__tests__/inngest-route-registration.test.ts`
+  asserts every exported Inngest function from inngest-functions.ts is in the
+  route's functions array. Fails with descriptive error naming the missing
+  function and id.
+
+**Reviewer note for any future Inngest-touching PR:** confirm BOTH files appear
+in the diff. The named-export `inngestFunctions` array on the worker module
+is the spread point in the serve route — referencing the array (not
+individual symbols) means future additions auto-register IF imported into
+the array.
+
+### FOLLOWUP-RESEND-NOT-CONFIGURED-IN-PROD
+
+**Severity:** HIGH (launch-blocker for email channel)
+**Discovered:** 2026-05-03 (Smoke B fire 1 dispatch row).
+
+`RESEND_API_KEY` is missing from Vercel prod env. Every email-channel
+`trust_alert_dispatches` row will land at `dispatch_status='failed'` with
+`failure_reason='resend_not_configured'`. The synthetic Smoke B fire
+exhibited this exact path.
+
+**Action before Tue wire-day:**
+- Configure `RESEND_API_KEY` in Vercel prod env (project-fv1ww + aggregatemarket)
+- Verify SPF/DKIM DNS for noreply@earthmove.io (per memory: "Resend SPF/DKIM
+  DNS pending" from email-confirmation deferral notes)
+- Re-fire a fresh synthetic Smoke B post-config to confirm `dispatch_status`
+  transitions to 'sent'
+
+Without this, watch/alerts UI ships but emits zero successful emails.
+Acceptable trade for Tue if we're not promoting watch/alerts in launch
+copy. **Confirm:** are we promoting it in any of the wire/pitches/social?
+If yes, fix before Mon 4 PM ET wire submit. If no, deferrable to Chunk 3.
+
+### FOLLOWUP-INNGEST-PLAN-CAP-5
+
+**Severity:** LOW (doc)
+**Discovered:** 2026-05-03 (PR #11 → PR #12).
+
+Current Inngest plan caps function concurrency at 5. Workers configured
+with `concurrency: { limit: > 5 }` will fail resync with the error:
+"The function 'X' has higher concurrency limits (N) than your plan limit of 5".
+
+**Convention going forward:** cap new worker concurrency at 5 unless the plan
+upgrade has explicitly been actioned. Document at point of plan upgrade
+which workers should bump and to what value.
+
+**Post-launch:** revisit plan tier when sustained event volume justifies it
+(rough heuristic: >5 concurrent runs sustained for >30s on any single
+function in production traffic).
+
+### FOLLOWUP-PR-DIFF-COVERAGE-MISSING-FILE-BUGS
+
+**Severity:** LOW (process)
+**Discovered:** 2026-05-03 (retro on PR #10 → PR #11).
+
+PR #10 review (both Claude.ai MCP review and Juan's spot-check) covered
+the 308-line diff in `inngest-functions.ts` but did not flag the absence
+of corresponding edits in `src/app/api/inngest/route.ts`. Diff coverage
+is good for "this change is correct" but blind to "this change requires
+a sibling change in another file that wasn't included."
+
+**Mitigations:**
+- Inngest registration drift caught by the regression test (above).
+- For future cross-file invariants (RLS policies on new tables, scraper
+  registry switch cases, etc.), prefer a regression test over a checklist.
+
+**Pattern to watch:** any new "thing" that requires registration in a
+central array/switch/registry. Schema migrations + RLS on the same
+table are already paired by convention; Inngest functions are now
+paired by test; scraper registry is already paired by failing tests
+on missing dispatch.
