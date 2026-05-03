@@ -6,6 +6,7 @@ import {
   emitFindings,
   emitFetchErrorFinding,
 } from './permit-normalize';
+import { normalizeForExternalQuery } from './_helpers/normalize-for-query';
 
 const SOURCE_KEY = 'denver_pim';
 const JURISDICTION = 'denver';
@@ -80,7 +81,12 @@ async function fetchLayer(args: {
   fetchFn: typeof fetch;
   signal: AbortSignal;
 }): Promise<DenverFeature[]> {
-  const escaped = args.legalName.replace(/'/g, "''");
+  // Strip entity-form suffixes ("Inc.", "LLC", etc.) and legacy markers from
+  // the SEARCH term before LIKE construction — Denver ArcGIS stores names
+  // without these suffixes, so a literal `PLAZA CONSTRUCTION, INC.` LIKE
+  // returns 0 hits while `PLAZA CONSTRUCTION` returns the actual rows.
+  const searchTerm = normalizeForExternalQuery(args.legalName);
+  const escaped = searchTerm.replace(/'/g, "''");
   const where = `UPPER(CONTRACTOR_NAME) LIKE UPPER('%${escaped}%')`;
   const url = `${args.url}/query?where=${encodeURIComponent(where)}&outFields=*&resultRecordCount=${MAX_ROWS}&f=json`;
   const resp = await args.fetchFn(url, { signal: args.signal });

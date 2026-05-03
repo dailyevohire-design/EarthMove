@@ -137,59 +137,40 @@ describe('scrapeCoSosBiz', () => {
     await expect(scrapeCoSosBiz({ legalName: '   ' })).rejects.toThrow('legalName required');
   });
 
-  describe('normalizeForSocrataQuery', () => {
-    it('strips trailing >> with optional preceding space', () => {
+  // Spot-check that the re-exported normalizer applies the full cross-source
+  // cleanup chain (full coverage lives in
+  // src/lib/trust/scrapers/_helpers/__tests__/normalize-for-query.test.ts).
+  describe('normalizeForSocrataQuery (re-exported shared helper)', () => {
+    it('strips legacy marker + entity-form suffix together (DEKAN case)', () => {
       expect(normalizeForSocrataQuery('DEKAN REMODELING AND CONSTRUCTION COMPANY, LLC >>'))
-        .toBe('DEKAN REMODELING AND CONSTRUCTION COMPANY, LLC');
-      expect(normalizeForSocrataQuery('ADATA CORPORATION>>'))
-        .toBe('ADATA CORPORATION');
+        .toBe('DEKAN REMODELING AND CONSTRUCTION COMPANY');
     });
 
-    it('strips trailing single > marker', () => {
-      expect(normalizeForSocrataQuery('Mile High Builders, LLC>'))
-        .toBe('Mile High Builders, LLC');
-    });
-
-    it('trims leading and trailing whitespace', () => {
-      expect(normalizeForSocrataQuery('  Trailing Whitespace LLC  '))
-        .toBe('Trailing Whitespace LLC');
-    });
-
-    it('collapses runs of internal whitespace', () => {
-      expect(normalizeForSocrataQuery('1006 13th  LLC'))
-        .toBe('1006 13th LLC');
-      expect(normalizeForSocrataQuery('$1.00 Scoop  Ice Cream Shop  LLC'))
-        .toBe('$1.00 Scoop Ice Cream Shop LLC');
-    });
-
-    it('strips trailing CO SOS status-comment suffixes baked into entityname', () => {
+    it('strips status suffix + entity-form suffix together', () => {
       expect(normalizeForSocrataQuery('Aardvark Airport Shuttle, LLC, Delinquent February 1, 2015'))
-        .toBe('Aardvark Airport Shuttle, LLC');
-      expect(normalizeForSocrataQuery('1032 W 37th Ave LLC, Dissolved August 9, 2021'))
-        .toBe('1032 W 37th Ave LLC');
-      expect(normalizeForSocrataQuery('Acosta Investments, LLC, Voluntarily Dissolved February 27, 2008'))
-        .toBe('Acosta Investments, LLC');
+        .toBe('Aardvark Airport Shuttle');
     });
 
-    it('combined cleanup: status-suffix + trailing >> + double space', () => {
-      expect(normalizeForSocrataQuery('  Foo  Bar LLC, Dissolved March 1, 2024 >>  '))
-        .toBe('Foo Bar LLC');
-    });
-
-    it('passes clean names through unchanged', () => {
+    it('strips entity-form suffix on suffix-less-comma form', () => {
       expect(normalizeForSocrataQuery('PCL Construction Services, Inc.'))
-        .toBe('PCL Construction Services, Inc.');
+        .toBe('PCL Construction Services');
+    });
+
+    it('passes truly suffix-less names through unchanged', () => {
+      expect(normalizeForSocrataQuery('Pinnacle Construction Group'))
+        .toBe('Pinnacle Construction Group');
     });
   });
 
-  it('SoQL URL uses normalized search term (strips >> from DEKAN)', async () => {
+  it('SoQL URL uses normalized search term (strips >> AND , LLC from DEKAN)', async () => {
     const fetchFn = vi.fn().mockResolvedValue(mockResponse([]));
     await scrapeCoSosBiz({
       legalName: 'DEKAN REMODELING AND CONSTRUCTION COMPANY, LLC >>',
       fetchFn,
     });
     const calledUrl = fetchFn.mock.calls[0][0] as string;
-    expect(calledUrl).toContain('DEKAN%20REMODELING%20AND%20CONSTRUCTION%20COMPANY%2C%20LLC');
+    expect(calledUrl).toContain('DEKAN%20REMODELING%20AND%20CONSTRUCTION%20COMPANY');
     expect(calledUrl).not.toContain('%3E%3E'); // no encoded >>
+    expect(calledUrl).not.toContain('%2C%20LLC'); // no encoded ", LLC"
   });
 });

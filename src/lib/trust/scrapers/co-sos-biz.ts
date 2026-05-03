@@ -12,25 +12,12 @@ const ENDPOINT = 'https://data.colorado.gov/resource/4ykn-tg5h.json';
 const DEFAULT_TIMEOUT_MS = 15_000;
 const MAX_ROWS = 10;
 
-// CO SOS entityname rows carry denormalized junk that breaks substring LIKE
-// matching when present in the search term:
-//   - trailing ">" or ">>" (legacy-name marker; observed on hundreds of rows)
-//   - trailing status comments baked into entityname itself,
-//     e.g. ", Delinquent February 1, 2015" / ", Dissolved August 9, 2021"
-//   - runs of internal whitespace (real rows: "1006 13th  LLC")
-// Helper applies ONLY to the SoQL search term, not to any stored value.
-const TRAILING_LEGACY_MARKER = /\s*>>?\s*$/;
-const TRAILING_STATUS_SUFFIX =
-  /,\s*(Delinquent|Dissolved|Voluntarily Dissolved|Forfeited|Withdrawn|Merged|Converted|Noncompliant)\b.*$/i;
+import { normalizeForExternalQuery } from './_helpers/normalize-for-query';
 
-export function normalizeForSocrataQuery(s: string): string {
-  return s
-    .trim()
-    .replace(TRAILING_LEGACY_MARKER, '')
-    .replace(TRAILING_STATUS_SUFFIX, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+// Re-exported under the historical name for back-compat with existing imports.
+// The shared helper additionally strips entity-form suffixes (Inc., LLC, etc.)
+// — see FOLLOWUP-CROSS-SOURCE-NAME-NORM resolution in Chunk 2.5.
+export const normalizeForSocrataQuery = normalizeForExternalQuery;
 
 export interface CoSosBizInput {
   legalName: string;

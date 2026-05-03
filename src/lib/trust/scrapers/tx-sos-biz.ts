@@ -6,6 +6,7 @@ import {
   ScraperUpstreamError,
   ScraperTimeoutError,
 } from './types';
+import { normalizeForExternalQuery } from './_helpers/normalize-for-query';
 
 const SOURCE_KEY = 'tx_sos_biz';
 const ENDPOINT = 'https://data.texas.gov/resource/9cir-efmm.json';
@@ -77,7 +78,10 @@ export async function scrapeTxSosBiz(input: TxSosBizInput): Promise<ScraperEvide
   const fetchFn = input.fetchFn ?? fetch;
   const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  const escaped = legalName.replace(/'/g, "''");
+  // Strip entity-form suffixes from the search term before LIKE construction
+  // (FOLLOWUP-CROSS-SOURCE-NAME-NORM, Chunk 2.5).
+  const searchTerm = normalizeForExternalQuery(legalName);
+  const escaped = searchTerm.replace(/'/g, "''");
   const where = `upper(taxpayer_name) like upper('%${escaped}%')`;
   const url = `${ENDPOINT}?$where=${encodeURIComponent(where)}&$limit=${MAX_ROWS}`;
 

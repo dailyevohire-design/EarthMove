@@ -6,6 +6,7 @@ import {
   emitFindings,
   emitFetchErrorFinding,
 } from './permit-normalize';
+import { normalizeForExternalQuery } from './_helpers/normalize-for-query';
 
 const SOURCE_KEY = 'dallas_open_data';
 const JURISDICTION = 'dallas';
@@ -98,8 +99,10 @@ export async function scrapeDallasPermits(input: DallasPermitsInput): Promise<Sc
     })];
   }
 
-  // Socrata SODA: $where=upper(contractor) like upper('%NAME%')
-  const escaped = legalName.replace(/'/g, "''");
+  // Strip entity-form suffixes from the search term before LIKE construction
+  // (FOLLOWUP-CROSS-SOURCE-NAME-NORM, Chunk 2.5).
+  const searchTerm = normalizeForExternalQuery(legalName);
+  const escaped = searchTerm.replace(/'/g, "''");
   const where = `upper(contractor) like upper('%${escaped}%')`;
   const url = `${ENDPOINT}?$where=${encodeURIComponent(where)}&$limit=${MAX_ROWS}`;
 
