@@ -62,9 +62,44 @@ export async function persistEvidence(input: PersistEvidenceInput): Promise<Pers
   if (!row?.id) {
     throw new Error('persistEvidence: RPC returned no row');
   }
+  const evidenceId = row.id as string;
+
+  // Tier 3 #1 commit 2: post-RPC officer-graph hook. Best-effort — failures
+  // are logged and swallowed so officer extraction never blocks the evidence
+  // write. The DB function returns { status, officers_processed, ... } and is
+  // a no-op when extracted_facts.officers[] is missing/empty/malformed.
+  try {
+    const { data: extractResult, error: extractError } = await supabase
+      .rpc('extract_officers_from_evidence', { p_evidence_id: evidenceId });
+    if (extractError) {
+      console.warn('[persist-evidence] officer extraction failed', {
+        evidenceId,
+        error: extractError.message,
+        code: extractError.code,
+      });
+    } else if (
+      extractResult
+      && typeof extractResult === 'object'
+      && typeof (extractResult as { officers_processed?: unknown }).officers_processed === 'number'
+      && (extractResult as { officers_processed: number }).officers_processed > 0
+    ) {
+      const r = extractResult as { officers_processed: number; officers_skipped?: number };
+      console.info('[persist-evidence] officers extracted', {
+        evidenceId,
+        officersProcessed: r.officers_processed,
+        officersSkipped: r.officers_skipped,
+      });
+    }
+    // status: 'no_officers' / 'evidence_not_found' / 'skipped_no_contractor' — silent, expected
+  } catch (err) {
+    console.warn('[persist-evidence] officer extraction threw', {
+      evidenceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 
   return {
-    evidenceId:     row.id as string,
+    evidenceId,
     sequenceNumber: row.sequence_number as number,
     chainHash:      row.chain_hash as string,
     prevHash:       (row.prev_hash as string | null) ?? null,

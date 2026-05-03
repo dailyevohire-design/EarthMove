@@ -18,6 +18,20 @@ class FakeSupabase {
 
   rpc(name: string, params: Record<string, unknown>) {
     this.rpcCalls.push({ name, params });
+    if (name === 'extract_officers_from_evidence') {
+      // Tier 3 #1 commit 2: post-append officer-graph hook. Mock as silent
+      // no-op (no officers in extracted_facts) — matches expected production
+      // path for sources that don't emit extracted_facts.officers[].
+      return Promise.resolve({
+        data: {
+          evidence_id: params.p_evidence_id,
+          status: 'no_officers',
+          officers_processed: 0,
+          officer_ids: [],
+        },
+        error: null,
+      });
+    }
     if (name !== 'append_trust_evidence') {
       return Promise.resolve({ data: null, error: { message: `unexpected rpc: ${name}` } });
     }
@@ -96,9 +110,9 @@ describe('persistEvidence — RPC-backed (post Tier 1 #3 refactor)', () => {
     expect(r.sequenceNumber).toBe(0);
     expect(r.prevHash).toBeNull();
     expect(r.chainHash).toMatch(/^[a-f0-9]{64}$/);
-    expect(supabase.rpcCalls).toHaveLength(1);
-    expect(supabase.rpcCalls[0].name).toBe('append_trust_evidence');
-    expect(supabase.rpcCalls[0].params).toMatchObject({
+    const appendCalls = supabase.rpcCalls.filter((c) => c.name === 'append_trust_evidence');
+    expect(appendCalls).toHaveLength(1);
+    expect(appendCalls[0].params).toMatchObject({
       p_job_id: 'job1',
       p_source_key: 'sam_gov_exclusions',
       p_finding_type: 'sanction_clear',
@@ -106,6 +120,10 @@ describe('persistEvidence — RPC-backed (post Tier 1 #3 refactor)', () => {
       p_response_sha256: 'a'.repeat(64),
       p_source_errored: false,
     });
+    // Tier 3 #1 commit 2: post-append officer extraction hook fires every time.
+    const extractCalls = supabase.rpcCalls.filter((c) => c.name === 'extract_officers_from_evidence');
+    expect(extractCalls).toHaveLength(1);
+    expect(extractCalls[0].params.p_evidence_id).toBe(r.evidenceId);
   });
 
   it('second insert: prev_hash = first.chainHash, sequence 1', async () => {
@@ -122,7 +140,11 @@ describe('persistEvidence — RPC-backed (post Tier 1 #3 refactor)', () => {
     const b = await persistEvidence({ jobId: 'job1', evidence: SAMPLE_EVIDENCE, supabase: supabase as never });
     expect(b.evidenceId).toBe(a.evidenceId);
     expect(supabase.rows).toHaveLength(1);
-    expect(supabase.rpcCalls).toHaveLength(2);
+    const appendCalls = supabase.rpcCalls.filter((c) => c.name === 'append_trust_evidence');
+    expect(appendCalls).toHaveLength(2);
+    // Officer-extraction hook runs after each append, including the idempotent one.
+    const extractCalls = supabase.rpcCalls.filter((c) => c.name === 'extract_officers_from_evidence');
+    expect(extractCalls).toHaveLength(2);
   });
 
   it('different jobs are independent chains, distinct chain_hashes', async () => {
@@ -155,5 +177,53 @@ describe('persistEvidence — RPC-backed (post Tier 1 #3 refactor)', () => {
     };
     await expect(persistEvidence({ jobId: 'job1', evidence: SAMPLE_EVIDENCE, supabase: failing as never }))
       .rejects.toThrow(/append_trust_evidence RPC failed: mock_failure/);
+  });
+
+  it('hook failure does not block evidence write (Tier 3 #1)', async () => {
+    // Custom mock: append succeeds, extract throws.
+    const partialFailing = {
+      _calls: [] as string[],
+      rpc(name: string, _params: Record<string, unknown>) {
+        void _params;
+        this._calls.push(name);
+        if (name === 'append_trust_evidence') {
+          return Promise.resolve({
+            data: {
+              id: 'ev-1', sequence_number: 0,
+              prev_hash: null, chain_hash: 'a'.repeat(64),
+            },
+            error: null,
+          });
+        }
+        if (name === 'extract_officers_from_evidence') {
+          return Promise.resolve({ data: null, error: { message: 'graph_unavailable', code: 'PG-MOCK' } });
+        }
+        return Promise.resolve({ data: null, error: { message: `unexpected: ${name}` } });
+      },
+    };
+    const r = await persistEvidence({ jobId: 'job1', evidence: SAMPLE_EVIDENCE, supabase: partialFailing as never });
+    expect(r.evidenceId).toBe('ev-1');
+    expect(partialFailing._calls).toEqual(['append_trust_evidence', 'extract_officers_from_evidence']);
+  });
+
+  it('hook throw does not block evidence write (Tier 3 #1)', async () => {
+    // append succeeds, extract throws synchronously
+    const throwingExtract = {
+      rpc(name: string, _params: Record<string, unknown>) {
+        if (name === 'append_trust_evidence') {
+          return Promise.resolve({
+            data: {
+              id: 'ev-2', sequence_number: 0,
+              prev_hash: null, chain_hash: 'b'.repeat(64),
+            },
+            error: null,
+          });
+        }
+        // Simulate a thrown error from the supabase client itself.
+        throw new Error('client_disconnect');
+      },
+    };
+    const r = await persistEvidence({ jobId: 'job1', evidence: SAMPLE_EVIDENCE, supabase: throwingExtract as never });
+    expect(r.evidenceId).toBe('ev-2');
   });
 });
