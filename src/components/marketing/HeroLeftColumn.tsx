@@ -65,11 +65,11 @@ export function HeroLeftColumn() {
         <div className="hv-rq-top">
           <span className="hv-rq-hint">
             <span className="hv-rq-step">01</span>
-            <span className="hv-rq-step-sep" />
+            <span aria-hidden="true">—</span>
             Delivery ZIP
           </span>
+          <span className="hv-zip-pill">Free quote · No call</span>
         </div>
-        <div className="hv-zip-eyebrow"><span className="hv-zip-pill">Free quote · No call</span></div>
         <div className="hv-rq-form">
           <label className="hv-zip">
             <span className="hv-zip-prefix">ZIP</span>
