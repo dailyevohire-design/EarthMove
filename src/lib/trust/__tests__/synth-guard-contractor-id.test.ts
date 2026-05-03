@@ -115,6 +115,16 @@ describe('runTrustSynthesizeV2 — Tier 1 #2 contractor_id guard', () => {
         },
         { id: 'synth-finalize-report', handler: () => ({ id: 'report-uuid' }) },
         { id: 'synth-mark-completed', handler: () => null },
+        {
+          id: 'load-report-for-event',
+          handler: () => ({
+            report_id: 'report-uuid',
+            job_id: 'job-with-contractor',
+            contractor_id: 'contractor-uuid',
+            trust_score: 85,
+          }),
+        },
+        { id: 'trust-report-created-emit', handler: () => null },
       ],
     });
 
