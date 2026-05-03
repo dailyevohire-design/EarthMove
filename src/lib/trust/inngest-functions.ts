@@ -218,6 +218,7 @@ export const runTrustJobV2 = inngest.createFunction(
           // per source. Persist each finding via the same chain — sequence
           // numbers are assigned atomically by append_trust_evidence RPC.
           const evidenceIds: string[] = []
+          const emittedFindings: Array<{ evidence_id: string; finding_type: string }> = []
           for (const f of findings) {
             const persisted = await persistEvidence({
               jobId: job_id,
@@ -226,8 +227,9 @@ export const runTrustJobV2 = inngest.createFunction(
               supabase: admin as any,
             })
             evidenceIds.push(persisted.evidenceId)
+            emittedFindings.push({ evidence_id: persisted.evidenceId, finding_type: f.finding_type })
           }
-          return { ok: true, evidenceIds, sourceKey, findingCount: findings.length }
+          return { ok: true as const, evidenceIds, sourceKey, findingCount: findings.length, emittedFindings, contractorId: contractorRow?.id ?? null }
         } catch (err: any) {
           const errorEvidence = {
             source_key: sourceKey,
@@ -247,10 +249,28 @@ export const runTrustJobV2 = inngest.createFunction(
             evidence: errorEvidence,
             supabase: admin as any,
           })
-          return { ok: false, sourceKey, error: String(err?.message ?? err) }
+          return { ok: false as const, sourceKey, error: String(err?.message ?? err) }
         }
       })
-      if (result.ok) completed += 1
+      if (result.ok) {
+        completed += 1
+        // Emit one trust/evidence.appended event per finding so the
+        // watch-alert worker (onTrustEvidenceAppended) can fan out
+        // dispatch rows for any user watching this contractor. Cheap —
+        // alert-worthy filter is applied inside the worker, not here.
+        if (result.emittedFindings && result.emittedFindings.length > 0 && result.contractorId) {
+          await step.sendEvent(`trust-evidence-appended-${sourceKey}`, result.emittedFindings.map((ef: { evidence_id: string; finding_type: string }) => ({
+            name: 'trust/evidence.appended',
+            data: {
+              evidence_id: ef.evidence_id,
+              finding_type: ef.finding_type,
+              source_key: sourceKey,
+              job_id,
+              contractor_id: result.contractorId,
+            },
+          })))
+        }
+      }
       else failed += 1
     }
 
@@ -462,7 +482,291 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
       if (error) throw new Error(`mark completed failed: ${error.message}`);
     });
 
+    // Emit trust/report.created so the score-drop watch worker
+    // (onTrustReportCreated) can compute delta vs prior history and
+    // fan out dispatch rows to any user watching this contractor.
+    // Re-fetch the report row to guarantee contractor_id + trust_score
+    // are present in the event payload (RPC return shape isn't typed).
+    const reportPayload = await step.run('load-report-for-event', async () => {
+      const { data: row } = await admin
+        .from('trust_reports')
+        .select('id, contractor_id, trust_score')
+        .eq('id', report.id)
+        .single();
+      return {
+        report_id: report.id,
+        job_id,
+        contractor_id: row?.contractor_id ?? null,
+        trust_score: row?.trust_score ?? null,
+      };
+    });
+    await step.sendEvent('trust-report-created-emit', {
+      name: 'trust/report.created',
+      data: reportPayload,
+    });
+
     return { job_id, reportId: report.id, tier, model: tierCfg.model ?? 'free_tier_templated' };
   },
 );
+
+// ---------------------------------------------------------------------------
+// onTrustEvidenceAppended — watch-alert worker
+// Triggered by 'trust/evidence.appended' fired from runTrustJobV2's scrape
+// step. For each new alert-worthy finding type, finds active subscriptions
+// matching the contractor and INSERTs trust_alert_dispatches rows with
+// idempotency_key = sha256(evidence_id|subscription_id|channel) so retries
+// don't duplicate alerts. Inline-dispatches via the channel-specific
+// dispatcher so the user gets the alert in the same Inngest run.
+// ---------------------------------------------------------------------------
+
+const ALERT_WORTHY_FINDING_TYPES = new Set([
+  'license_revoked',
+  'license_suspended',
+  'license_disciplinary_action',
+  'license_revoked_but_operating',
+  'civil_judgment_against',
+  'osha_willful_citation',
+  'osha_repeat_citation',
+  'osha_fatality_finding',
+  'sanction_hit',
+  'phoenix_signal',
+])
+
+export const onTrustEvidenceAppended = inngest.createFunction(
+  { id: 'on-trust-evidence-appended', triggers: [{ event: 'trust/evidence.appended' }], concurrency: { limit: 10 }, retries: 2 },
+  async ({ event, step }) => {
+    const { evidence_id, finding_type, source_key, job_id, contractor_id } = event.data as {
+      evidence_id: string
+      finding_type: string
+      source_key: string
+      job_id: string
+      contractor_id: string
+    }
+
+    if (!ALERT_WORTHY_FINDING_TYPES.has(finding_type)) {
+      return { skipped: true, reason: 'finding_type_not_alert_worthy', finding_type }
+    }
+
+    const admin = createAdminClient()
+
+    const subs = await step.run('load-active-subscriptions', async () => {
+      const { data, error } = await admin
+        .from('trust_watch_subscriptions')
+        .select('id, user_id, channels, notify_on_finding_types')
+        .eq('contractor_id', contractor_id)
+        .eq('active', true)
+      if (error) throw new Error(`load subscriptions: ${error.message}`)
+      return (data ?? []) as Array<{
+        id: string; user_id: string; channels: string[]; notify_on_finding_types: string[]
+      }>
+    })
+
+    if (subs.length === 0) {
+      return { skipped: true, reason: 'no_active_subscriptions', evidence_id }
+    }
+
+    const dispatchIds: string[] = []
+    for (const sub of subs) {
+      if (!sub.notify_on_finding_types?.includes(finding_type)) continue
+      for (const channel of sub.channels ?? ['email']) {
+        const idemKey = await step.run(`compute-idem-${sub.id}-${channel}`, async () => {
+          const { createHash } = await import('node:crypto')
+          return createHash('sha256').update(`${evidence_id}|${sub.id}|${channel}`).digest('hex')
+        })
+
+        const inserted = await step.run(`insert-dispatch-${sub.id}-${channel}`, async () => {
+          // Look up contractor name for the payload.
+          const { data: contractor } = await admin
+            .from('contractors')
+            .select('legal_name')
+            .eq('id', contractor_id)
+            .single()
+          // Look up evidence summary for the payload.
+          const { data: evidence } = await admin
+            .from('trust_evidence')
+            .select('finding_summary')
+            .eq('id', evidence_id)
+            .single()
+          const payload = {
+            contractor_id,
+            contractor_name: contractor?.legal_name ?? null,
+            finding_type,
+            finding_summary: evidence?.finding_summary ?? '',
+            source_key,
+            evidence_id,
+            job_id,
+          }
+          const { data, error } = await admin
+            .from('trust_alert_dispatches')
+            .upsert(
+              {
+                subscription_id: sub.id,
+                evidence_id,
+                trigger_type: 'finding_type',
+                payload,
+                channel,
+                idempotency_key: idemKey,
+              },
+              { onConflict: 'idempotency_key', ignoreDuplicates: false },
+            )
+            .select('id, dispatch_status')
+            .single()
+          if (error) throw new Error(`insert dispatch: ${error.message}`)
+          return data
+        })
+
+        if (inserted?.dispatch_status === 'pending') {
+          dispatchIds.push(inserted.id)
+          await step.run(`dispatch-${channel}-${inserted.id}`, async () => {
+            if (channel === 'email') {
+              const { dispatchAlertEmail } = await import('./notify/email')
+              return dispatchAlertEmail(inserted.id)
+            }
+            if (channel === 'sms') {
+              const { dispatchAlertSms } = await import('./notify/sms')
+              return dispatchAlertSms(inserted.id)
+            }
+            return { status: 'suppressed', reason: `unknown_channel_${channel}` }
+          })
+        }
+      }
+
+      await step.run(`update-last-alerted-${sub.id}`, async () => {
+        await admin
+          .from('trust_watch_subscriptions')
+          .update({ last_alerted_at: new Date().toISOString() })
+          .eq('id', sub.id)
+      })
+    }
+
+    return { evidence_id, dispatched: dispatchIds.length }
+  },
+)
+
+// ---------------------------------------------------------------------------
+// onTrustReportCreated — score-drop watch worker
+// Triggered by 'trust/report.created' fired at end of runTrustSynthesizeV2.
+// Computes delta vs the most-recent prior trust_score_history row for the
+// same contractor; if any subscription has notify_on_score_drop_threshold
+// set AND the (negative) delta meets the threshold, fans out dispatch
+// rows. Idempotency_key = sha256(report_id|subscription_id|channel).
+// ---------------------------------------------------------------------------
+
+export const onTrustReportCreated = inngest.createFunction(
+  { id: 'on-trust-report-created', triggers: [{ event: 'trust/report.created' }], concurrency: { limit: 10 }, retries: 2 },
+  async ({ event, step }) => {
+    const { report_id, contractor_id, trust_score } = event.data as {
+      report_id: string
+      contractor_id: string | null
+      trust_score: number | null
+    }
+
+    if (!contractor_id || trust_score === null) {
+      return { skipped: true, reason: 'missing_contractor_or_score' }
+    }
+
+    const admin = createAdminClient()
+
+    const priorScore = await step.run('load-prior-score', async () => {
+      const { data, error } = await admin
+        .from('trust_score_history')
+        .select('trust_score, captured_at')
+        .eq('contractor_id', contractor_id)
+        .neq('source_report_id', report_id)
+        .order('captured_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (error) throw new Error(`load prior score: ${error.message}`)
+      return data?.trust_score ?? null
+    })
+
+    if (priorScore === null) {
+      return { skipped: true, reason: 'no_prior_history' }
+    }
+
+    const delta = trust_score - priorScore
+    if (delta >= 0) {
+      return { skipped: true, reason: 'score_did_not_drop', delta }
+    }
+    const dropMagnitude = -delta // positive number
+
+    const subs = await step.run('load-score-drop-subscriptions', async () => {
+      const { data, error } = await admin
+        .from('trust_watch_subscriptions')
+        .select('id, user_id, channels, notify_on_score_drop_threshold')
+        .eq('contractor_id', contractor_id)
+        .eq('active', true)
+        .not('notify_on_score_drop_threshold', 'is', null)
+      if (error) throw new Error(`load subs: ${error.message}`)
+      return (data ?? []).filter((s: { notify_on_score_drop_threshold: number | null }) =>
+        (s.notify_on_score_drop_threshold ?? 0) > 0
+        && dropMagnitude >= (s.notify_on_score_drop_threshold ?? Infinity)
+      ) as Array<{ id: string; user_id: string; channels: string[]; notify_on_score_drop_threshold: number }>
+    })
+
+    if (subs.length === 0) {
+      return { skipped: true, reason: 'no_subs_match_threshold', delta }
+    }
+
+    const dispatchIds: string[] = []
+    for (const sub of subs) {
+      for (const channel of sub.channels ?? ['email']) {
+        const idemKey = await step.run(`compute-idem-${sub.id}-${channel}`, async () => {
+          const { createHash } = await import('node:crypto')
+          return createHash('sha256').update(`${report_id}|${sub.id}|${channel}`).digest('hex')
+        })
+
+        const inserted = await step.run(`insert-dispatch-${sub.id}-${channel}`, async () => {
+          const { data: contractor } = await admin
+            .from('contractors')
+            .select('legal_name')
+            .eq('id', contractor_id)
+            .single()
+          const payload = {
+            contractor_id,
+            contractor_name: contractor?.legal_name ?? null,
+            prior_score: priorScore,
+            current_score: trust_score,
+            delta,
+            report_id,
+          }
+          const { data, error } = await admin
+            .from('trust_alert_dispatches')
+            .upsert(
+              {
+                subscription_id: sub.id,
+                evidence_id: null,
+                trigger_type: 'score_drop',
+                payload,
+                channel,
+                idempotency_key: idemKey,
+              },
+              { onConflict: 'idempotency_key', ignoreDuplicates: false },
+            )
+            .select('id, dispatch_status')
+            .single()
+          if (error) throw new Error(`insert dispatch: ${error.message}`)
+          return data
+        })
+
+        if (inserted?.dispatch_status === 'pending') {
+          dispatchIds.push(inserted.id)
+          await step.run(`dispatch-${channel}-${inserted.id}`, async () => {
+            if (channel === 'email') {
+              const { dispatchAlertEmail } = await import('./notify/email')
+              return dispatchAlertEmail(inserted.id)
+            }
+            if (channel === 'sms') {
+              const { dispatchAlertSms } = await import('./notify/sms')
+              return dispatchAlertSms(inserted.id)
+            }
+            return { status: 'suppressed', reason: `unknown_channel_${channel}` }
+          })
+        }
+      }
+    }
+
+    return { report_id, delta, dispatched: dispatchIds.length }
+  },
+)
 
