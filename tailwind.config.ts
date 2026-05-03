@@ -18,6 +18,9 @@ const config: Config = {
         inter:    ['var(--font-inter)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
       colors: {
+        // brand tokens — cascade-E lockup system
+        'em-evergreen': '#0E2A22',
+        'em-cream': '#F5F1E8',
         // shadcn-compat — primitives in commit 2 read these via bg-background etc.
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

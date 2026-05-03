@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 575 230" width="575" height="230" role="img">
+  <title>Earthmove</title>
+  <desc>Earthmove reverse lockup — intelligence behind every load.</desc>
+  <g transform="translate(40, 50)">
+    <path d="M0 0 L64 0 L72 6 L64 12 L0 12 Z" fill="#F5F1E8"/>
+    <path d="M0 33 L46 33 L54 39 L46 45 L0 45 Z" fill="#F5F1E8"/>
+    <path d="M0 66 L64 66 L72 72 L64 78 L0 78 Z" fill="#F5F1E8"/>
+  </g>
+  <text x="111" y="128" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="500" font-size="110" letter-spacing="-5.5" fill="#F5F1E8">ar</text>
+  <text x="203" y="128" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="500" font-size="110" letter-spacing="-5.5" fill="#F5F1E8">thmove</text>
+  <text x="287.5" y="178" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="22" fill="#F5F1E8">intelligence behind every load.</text>
+</svg>
