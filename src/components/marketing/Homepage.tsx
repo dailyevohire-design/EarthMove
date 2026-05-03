@@ -21,6 +21,7 @@ import { HowItWorksSection } from './HowItWorksSection'
 import { MarketStatusStrip } from './MarketStatusStrip'
 import { CoverageCalculator } from './CoverageCalculator'
 import { MobileNav } from '@/components/layout/mobile-nav'
+import { SiteFooter } from '@/components/layout/site-footer'
 import { Logo } from '@/components/logo'
 import { getMaterialImage } from '@/lib/material-images'
 
@@ -522,46 +523,8 @@ export async function Homepage() {
           </div>
         </section>
 
-        {/* FOOTER */}
-        <footer>
-          <div className="max">
-            <div className="foot-grid">
-              <div>
-                <div className="foot-logo">earthmove<span className="dot">.</span>io</div>
-                <p className="ink-2" style={{ fontSize: 15, marginTop: 12, maxWidth: 360 }}>Bulk aggregate, delivered to the hour.</p>
-                <div className="foot-pills">
-                  <span className="foot-pill">Denver, CO</span>
-                  <span className="foot-pill">Dallas–Fort Worth, TX</span>
-                  <span className="foot-pill dashed">Houston · Austin · Phoenix · more soon</span>
-                </div>
-              </div>
-              <div>
-                <div className="foot-h">Product</div>
-                <ul className="foot-list">
-                  <li><Link href="/browse">Materials</Link></li>
-                  <li><Link href="/material-match">Material Match</Link></li>
-                  <li><Link href="/deals">Deals</Link></li>
-                  <li><Link href="/learn">Learn</Link></li>
-                </ul>
-              </div>
-              <div>
-                <div className="foot-h">Company</div>
-                <ul className="foot-list">
-                  <li><Link href="/join">Suppliers</Link></li>
-                  <li><Link href="/about">About</Link></li>
-                  <li><Link href="/login">Sign in</Link></li>
-                </ul>
-              </div>
-            </div>
-            <div className="foot-bottom">
-              <div>© 2026 earthmove.io</div>
-              <div className="right">
-                <Link href="/privacy">Privacy</Link>
-                <Link href="/terms">Terms</Link>
-              </div>
-            </div>
-          </div>
-        </footer>
+        {/* FOOTER — em-evergreen reverse surface, brand sign-off */}
+        <SiteFooter />
     </div>
   )
 }
