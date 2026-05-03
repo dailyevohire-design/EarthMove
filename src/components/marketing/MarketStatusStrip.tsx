@@ -12,7 +12,7 @@ export function MarketStatusStrip() {
           Network online
         </span>
         <span className="mss-sep" aria-hidden="true">·</span>
-        <span className="mss-markets">DEN · DFW</span>
+        <span className="mss-markets">DEN · DFW · MORE CITIES COMING SOON</span>
       </div>
     </div>
   )
