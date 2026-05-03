@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Check, ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
 
@@ -7,7 +8,49 @@ export const metadata: Metadata = {
   description: 'Sign up to save 5% or continue as guest. Your project is locked in.',
 }
 
-export default function CheckoutStartPage() {
+interface SearchParams {
+  material_catalog_id?: string
+  material?: string
+  tons?: string
+  zip?: string
+  project_type?: string
+  sub_type?: string
+  delivery_window?: string
+  source?: string
+}
+
+export default async function CheckoutStartPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
+  const params = await searchParams
+  const tons = params.tons ? parseFloat(params.tons) : 0
+
+  // Guard: missing required context → bounce back to the quiz
+  if (!params.material_catalog_id || !Number.isFinite(tons) || tons <= 0) {
+    redirect('/material-match')
+  }
+
+  // Forward all match params into /checkout (drop control-only `source`).
+  const forward = new URLSearchParams()
+  forward.set('material_catalog_id', params.material_catalog_id)
+  if (params.material) forward.set('material', params.material)
+  forward.set('tons', String(tons))
+  if (params.zip) forward.set('zip', params.zip)
+  if (params.project_type) forward.set('project_type', params.project_type)
+  if (params.sub_type) forward.set('sub_type', params.sub_type)
+  if (params.delivery_window) forward.set('delivery_window', params.delivery_window)
+
+  const checkoutHref = `/checkout?${forward.toString()}`
+  const guestHref    = `/checkout?guest=1&${forward.toString()}`
+  const signupHref   = `/signup?redirectTo=${encodeURIComponent(checkoutHref)}&from_order=1`
+  const loginHref    = `/login?redirectTo=${encodeURIComponent(checkoutHref)}`
+
+  const materialName   = params.material ?? 'Bulk material'
+  const zipDisplay     = params.zip ?? ''
+  const deliveryWindow = params.delivery_window?.replace(/_/g, ' ') ?? 'flexible'
+
   return (
     <main className="bg-[#faf7f2] min-h-screen">
       <div className="max-w-[1200px] mx-auto px-8 py-12 md:py-16">
@@ -25,9 +68,6 @@ export default function CheckoutStartPage() {
           </p>
         </header>
 
-        {/* TODO(C3): replace hardcoded strip with searchParams-driven data
-            once /material-match → /checkout/start hands off real values via
-            ?material_catalog_id=…&tons=…&zip=…&delivery_window=… */}
         <section
           aria-label="Your project"
           className="max-w-[1080px] mx-auto mb-8 bg-[#e8f1ec] border border-[rgba(10,110,63,0.14)] rounded-xl h-20 flex items-center px-6 gap-5"
@@ -44,7 +84,7 @@ export default function CheckoutStartPage() {
             </span>
           </div>
           <div className="flex-1 font-mono text-[13px] font-medium text-[#3a3f3c] tracking-[0.04em] uppercase text-center px-3 truncate">
-            22.4 tons<span className="text-[#6b6e6c] mx-2">·</span>#57 crushed stone<span className="text-[#6b6e6c] mx-2">·</span>75201<span className="text-[#6b6e6c] mx-2">·</span>this week
+            {tons} tons<span className="text-[#6b6e6c] mx-2">·</span>{materialName}{zipDisplay && (<><span className="text-[#6b6e6c] mx-2">·</span>{zipDisplay}</>)}<span className="text-[#6b6e6c] mx-2">·</span>{deliveryWindow}
           </div>
           <Link
             href="/material-match"
@@ -100,7 +140,7 @@ export default function CheckoutStartPage() {
             </ul>
 
             <Link
-              href="/signup?next=/checkout&promo=WELCOME5"
+              href={signupHref}
               className="mt-auto inline-flex items-center justify-center bg-[#0a6e3f] hover:bg-[#084d2c] text-white font-fraunces font-semibold text-lg h-14 rounded-xl transition-colors"
             >
               Sign up + save 5% <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2.5} />
@@ -137,7 +177,7 @@ export default function CheckoutStartPage() {
             <div className="flex-1" />
 
             <Link
-              href="/checkout?guest=1"
+              href={guestHref}
               className="mt-auto inline-flex items-center justify-center bg-white hover:bg-[#fafafa] text-[#0a6e3f] font-fraunces font-semibold text-lg h-14 rounded-xl border border-[#0a6e3f] transition-colors"
             >
               Continue as guest <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2.5} />
@@ -151,7 +191,7 @@ export default function CheckoutStartPage() {
         {/* Login link below cards */}
         <p className="text-center text-sm text-[#6b6e6c] mt-8">
           Already have an account?{' '}
-          <Link href="/login?next=/checkout" className="text-[#0a6e3f] hover:text-[#084d2c] font-semibold transition-colors">
+          <Link href={loginHref} className="text-[#0a6e3f] hover:text-[#084d2c] font-semibold transition-colors">
             Log in →
           </Link>
         </p>
