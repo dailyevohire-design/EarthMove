@@ -4,6 +4,7 @@ import { scrapeSamGovExclusions } from './sam-gov';
 import { scrapeDallasPermits } from './dallas-open-data';
 import { scrapeDenverPermits } from './denver-pim';
 import { scrapeCoSosBiz } from './co-sos-biz';
+import { scrapeTxSosBiz } from './tx-sos-biz';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -43,12 +44,14 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
     case 'co_sos_biz':
       return scrapeCoSosBiz({ legalName: input.legalName });
 
+    case 'tx_sos_biz':
+      return scrapeTxSosBiz({ legalName: input.legalName });
+
     case 'mock_source':
       return mockScraperEvidence(input);
 
     case 'osha_est_search':
     case 'courtlistener_fed':
-    case 'tx_sos_biz':
     case 'denver_cpd':
     case 'cslb_ca':
     case 'roc_az':
