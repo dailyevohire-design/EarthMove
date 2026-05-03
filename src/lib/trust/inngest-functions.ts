@@ -302,6 +302,29 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
       return { skipped: true, reason: `job.status=${job.status}` };
     }
 
+    // Tier 1 #2 — Trust-Synth-Guard. enqueue_trust_job populates contractor_id
+    // atomically via contractors upsert, so a NULL here means something
+    // bypassed the RPC. Fail the job cleanly instead of letting NULL
+    // propagate into a hard PG crash mid-pipeline (e.g., score_and_finalize
+    // would reject with not-null violation on contractor_trust_scores).
+    if (!job.contractor_id) {
+      await step.run('synth-guard-fail-no-contractor', async () => {
+        const { error } = await admin
+          .from('trust_jobs')
+          .update({
+            status: 'failed',
+            failure_reason: 'missing_contractor_id_pre_synth',
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', job_id);
+        if (error) console.warn('[synth-guard] mark-failed update error:', error.message);
+      });
+      console.warn('[synth-guard] tripped: missing_contractor_id_pre_synth', {
+        job_id, status: job.status,
+      });
+      return { skipped: true, reason: 'missing_contractor_id_pre_synth' };
+    }
+
     const tier = job.tier as SynthesisTier;
     const tierCfg = TIER_CONFIG[tier];
     if (!tierCfg) throw new Error(`unknown tier "${tier}"`);
