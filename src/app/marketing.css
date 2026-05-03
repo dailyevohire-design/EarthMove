@@ -1549,3 +1549,20 @@
     overflow-x: clip;
   }
 }
+
+/* ============================================================
+   HIDE DESKTOP .op PANEL ON MOBILE (≤767px)
+   The .op panel is the right-column dispatch-demo ops card
+   designed for desktop 1.18fr slot. On mobile it overflows
+   AND duplicates .hv-mobile-dispatch (the mobile-native version).
+   Hide on mobile; the mobile dispatch already replaces it.
+   ============================================================ */
+@media (max-width: 767px) {
+  .marketing-v6 .op {
+    display: none !important;
+  }
+  /* Parent column wrapper that contained the op panel — collapse */
+  .marketing-v6 .hv-grid > div:has(> .op:only-child) {
+    display: none !important;
+  }
+}
