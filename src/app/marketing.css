@@ -1810,3 +1810,50 @@
 .marketing-v6 .hv-sub {
   text-align: center !important;
 }
+
+/* === ZIP card overhaul (Phase 5, commit 3) === */
+.marketing-v6 .hv-rq-title {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 500;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--em-evergreen, #0E2A22);
+  margin: 0 0 16px;
+}
+@media (min-width: 768px) {
+  .marketing-v6 .hv-rq-title { font-size: 24px; }
+}
+
+/* ZIP input — taller, more padding */
+.marketing-v6 .hv-zip input {
+  height: 56px !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  font-size: 17px !important;
+}
+@media (min-width: 768px) {
+  .marketing-v6 .hv-zip input {
+    height: 64px !important;
+    font-size: 18px !important;
+  }
+}
+.marketing-v6 .hv-zip {
+  height: 56px !important;
+}
+@media (min-width: 768px) {
+  .marketing-v6 .hv-zip { height: 64px !important; }
+}
+
+/* CTA: evergreen, not safety orange */
+.marketing-v6 .hv-cta {
+  background: #0E2A22 !important;
+  color: #FFFFFF !important;
+  height: 56px !important;
+}
+.marketing-v6 .hv-cta:hover,
+.marketing-v6 .hv-cta:focus {
+  background: #0A1F19 !important;
+}
+@media (min-width: 768px) {
+  .marketing-v6 .hv-cta { height: 64px !important; }
+}

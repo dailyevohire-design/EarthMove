@@ -55,12 +55,7 @@ export function HeroLeftColumn() {
 
       <form id="zipForm" className="hv-rq" onSubmit={handleZipSubmit} noValidate>
         <div className="hv-rq-top">
-          <span className="hv-rq-hint">
-            <span className="hv-rq-step">01</span>
-            <span aria-hidden="true">—</span>
-            Delivery ZIP
-          </span>
-          <span className="hv-zip-pill">Free quote · No call</span>
+          <h2 className="hv-rq-title">Instant Quote</h2>
         </div>
         <div className="hv-rq-form">
           <label className="hv-zip">
@@ -72,7 +67,7 @@ export function HeroLeftColumn() {
               maxLength={5}
               pattern="\d{5}"
               autoComplete="postal-code"
-              placeholder=""
+              placeholder="Delivery ZIP"
               value={zip}
               onChange={e => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))}
             />
