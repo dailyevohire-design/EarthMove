@@ -27,7 +27,7 @@ export async function scrapeSamGovExclusions(input: SamGovInput): Promise<Scrape
   if (!input.legalName?.trim()) {
     throw new Error('scrapeSamGovExclusions: legalName required');
   }
-  const apiKey = input.apiKey ?? process.env.SAM_GOV_API_KEY;
+  const apiKey = input.apiKey ?? process.env.SAM_GOV_API;
   if (!apiKey) {
     throw new ScraperAuthError('SAM_GOV_API_KEY not set', SOURCE_KEY);
   }

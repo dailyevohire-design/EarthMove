@@ -64,10 +64,10 @@ describe('scrapeSamGovExclusions', () => {
   });
 
   it('throws when api key missing', async () => {
-    const orig = process.env.SAM_GOV_API_KEY;
-    delete process.env.SAM_GOV_API_KEY;
+    const orig = process.env.SAM_GOV_API;
+    delete process.env.SAM_GOV_API;
     await expect(scrapeSamGovExclusions({ legalName: 'X' })).rejects.toBeInstanceOf(ScraperAuthError);
-    if (orig) process.env.SAM_GOV_API_KEY = orig;
+    if (orig) process.env.SAM_GOV_API = orig;
   });
 
   it('throws on non-JSON response', async () => {
