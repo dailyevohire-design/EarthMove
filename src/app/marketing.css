@@ -1692,3 +1692,107 @@
     padding-bottom: 40px !important;
   }
 }
+
+/* === Browse listing mobile polish (Phase 3, commit 5) === */
+@media (max-width: 767px) {
+  /* Browse hero band: reduce vertical bleed */
+  .browse-page .hero-band,
+  .browse-page [class*="HeroBand"] {
+    padding-top: 24px !important;
+    padding-bottom: 32px !important;
+  }
+  .browse-page .hero-band h1 {
+    font-size: clamp(1.75rem, 7vw, 2.25rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Filter bar: sticky-top, compact */
+  .browse-page .filter-bar,
+  .browse-page [class*="FilterBar"] {
+    position: sticky !important;
+    top: 56px !important;
+    z-index: 30 !important;
+    padding: 8px 16px !important;
+    background: var(--em-cream, #F5F1E8) !important;
+    border-bottom: 1px solid var(--em-bone, #E8E2D5) !important;
+  }
+
+  /* Material tile / card: photo-forward vertical layout */
+  .browse-page .material-card,
+  .browse-page [class*="MaterialTile"] {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    background: #fff !important;
+    border: 1px solid var(--em-bone, #E8E2D5) !important;
+    margin-bottom: 16px !important;
+    cursor: pointer !important;
+  }
+  .browse-page .material-card .card-photo,
+  .browse-page .material-card img:first-of-type,
+  .browse-page [class*="MaterialTile"] img:first-of-type {
+    width: 100% !important;
+    height: 200px !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+  .browse-page .material-card .card-body,
+  .browse-page .material-card > div:not(:first-child),
+  .browse-page [class*="MaterialTile"] > div:not(:first-child) {
+    padding: 14px 16px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+  .browse-page .material-card .card-title,
+  .browse-page .material-card h3,
+  .browse-page [class*="MaterialTile"] h3 {
+    font-size: 1.0625rem !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    color: var(--em-evergreen, #0E2A22) !important;
+    margin: 0 !important;
+  }
+  .browse-page .material-card .card-price,
+  .browse-page .material-card [class*="price"] {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: var(--em-evergreen, #0E2A22) !important;
+    margin-top: 4px !important;
+  }
+  .browse-page .material-card .card-meta,
+  .browse-page .material-card [class*="meta"],
+  .browse-page .material-card [class*="distance"] {
+    font-size: 0.8125rem !important;
+    color: var(--em-graphite, #4A4A48) !important;
+  }
+
+  /* Category group: single column under 480, 2up otherwise on mobile */
+  .browse-page .category-group .grid,
+  .browse-page [class*="CategoryGroupSection"] .grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  @media (min-width: 480px) {
+    .browse-page .category-group .grid,
+    .browse-page [class*="CategoryGroupSection"] .grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 14px !important;
+    }
+  }
+
+  /* Empty state: center, generous spacing */
+  .browse-page [class*="EmptyState"] {
+    padding: 56px 24px !important;
+    text-align: center !important;
+  }
+
+  /* Footer band on browse: tighter */
+  .browse-page [class*="FooterBand"] {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
+  }
+}
