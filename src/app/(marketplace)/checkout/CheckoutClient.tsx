@@ -112,20 +112,20 @@ export function CheckoutClient(props: Props) {
   }
 
   return (
-    <main className="bg-[#faf7f2] min-h-screen">
+    <main className="bg-[var(--commerce-cream)] min-h-screen">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-8 py-10 lg:py-14">
         {/* Header */}
         <div className="max-w-[760px] mb-8">
-          <div className="text-xs font-semibold text-[#0a6e3f] tracking-[0.18em] uppercase mb-3">
+          <div className="text-xs font-semibold text-[var(--commerce-trust)] tracking-[0.18em] uppercase mb-3">
             Checkout
           </div>
           <h1
-            className="text-4xl md:text-5xl leading-[1.1] font-medium tracking-[-0.02em] text-[#1a1f1c]"
+            className="text-4xl md:text-5xl leading-[1.1] font-medium tracking-[-0.02em] text-[var(--commerce-ink)]"
             style={{ fontFamily: FRAUNCES }}
           >
             Where should we deliver?
           </h1>
-          <p className="text-[#6b6e6c] text-base mt-2">
+          <p className="text-[var(--commerce-ink-3)] text-base mt-2">
             One step from sending a truck. Card and payment details on the next page.
           </p>
         </div>
@@ -133,7 +133,7 @@ export function CheckoutClient(props: Props) {
         {props.cancelled && (
           <div className="mb-6 p-4 rounded-xl bg-[#fef3c7] border border-[#f59e0b]/40 flex items-start gap-3 max-w-[760px]">
             <AlertCircle className="w-5 h-5 text-[#a16207] flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-[#3a3f3c]">
+            <p className="text-sm text-[var(--commerce-ink-2)]">
               You stepped back from Stripe checkout. No payment was taken. Confirm details and try again when you&apos;re ready.
             </p>
           </div>
@@ -145,11 +145,11 @@ export function CheckoutClient(props: Props) {
             {/* CARD 1: Delivery */}
             <article className="bg-white border border-[rgba(0,0,0,0.08)] rounded-xl p-6 md:p-8">
               <div className="flex items-center gap-3 mb-5">
-                <span className="w-7 h-7 rounded-full bg-[#0a6e3f] text-white text-sm font-semibold flex items-center justify-center">
+                <span className="w-7 h-7 rounded-full bg-[var(--commerce-trust)] text-white text-sm font-semibold flex items-center justify-center">
                   1
                 </span>
                 <h2
-                  className="text-2xl text-[#1a1f1c] font-medium tracking-[-0.015em]"
+                  className="text-2xl text-[var(--commerce-ink)] font-medium tracking-[-0.015em]"
                   style={{ fontFamily: FRAUNCES }}
                 >
                   Delivery address
@@ -217,14 +217,14 @@ export function CheckoutClient(props: Props) {
                 </Field>
 
                 {props.deliveryWindow && DELIVERY_WINDOW_LABEL[props.deliveryWindow] && (
-                  <div className="flex items-center gap-2 text-sm text-[#3a3f3c] pt-1">
-                    <Check className="w-4 h-4 text-[#0a6e3f]" strokeWidth={3} />
+                  <div className="flex items-center gap-2 text-sm text-[var(--commerce-ink-2)] pt-1">
+                    <Check className="w-4 h-4 text-[var(--commerce-trust)]" strokeWidth={3} />
                     <span>
                       Delivery window: <strong>{DELIVERY_WINDOW_LABEL[props.deliveryWindow]}</strong>
                       {' · '}
                       <Link
                         href="/material-match"
-                        className="text-[#0a6e3f] hover:text-[#084d2c] underline underline-offset-2 transition-colors"
+                        className="text-[var(--commerce-trust)] hover:text-[var(--commerce-trust)] underline underline-offset-2 transition-colors"
                       >
                         change
                       </Link>
@@ -237,11 +237,11 @@ export function CheckoutClient(props: Props) {
             {/* CARD 2: Contact */}
             <article className="bg-white border border-[rgba(0,0,0,0.08)] rounded-xl p-6 md:p-8">
               <div className="flex items-center gap-3 mb-5">
-                <span className="w-7 h-7 rounded-full bg-[#0a6e3f] text-white text-sm font-semibold flex items-center justify-center">
+                <span className="w-7 h-7 rounded-full bg-[var(--commerce-trust)] text-white text-sm font-semibold flex items-center justify-center">
                   2
                 </span>
                 <h2
-                  className="text-2xl text-[#1a1f1c] font-medium tracking-[-0.015em]"
+                  className="text-2xl text-[var(--commerce-ink)] font-medium tracking-[-0.015em]"
                   style={{ fontFamily: FRAUNCES }}
                 >
                   Your contact details
@@ -308,7 +308,7 @@ export function CheckoutClient(props: Props) {
           <aside className="lg:sticky lg:top-6 lg:h-fit">
             <div className="bg-white border border-[rgba(0,0,0,0.08)] rounded-xl p-6 md:p-7">
               <h2
-                className="text-xl text-[#1a1f1c] font-medium tracking-[-0.015em] mb-5"
+                className="text-xl text-[var(--commerce-ink)] font-medium tracking-[-0.015em] mb-5"
                 style={{ fontFamily: FRAUNCES }}
               >
                 Order summary
@@ -317,10 +317,10 @@ export function CheckoutClient(props: Props) {
               {/* Material line */}
               <div className="pb-5 border-b border-[rgba(0,0,0,0.08)]">
                 <div className="flex justify-between gap-4 mb-1">
-                  <span className="text-[15px] font-semibold text-[#1a1f1c]">{props.materialName}</span>
-                  <span className="text-[15px] font-medium text-[#1a1f1c] font-mono">{fmt(props.subtotalCents)}</span>
+                  <span className="text-[15px] font-semibold text-[var(--commerce-ink)]">{props.materialName}</span>
+                  <span className="text-[15px] font-medium text-[var(--commerce-ink)] font-mono">{fmt(props.subtotalCents)}</span>
                 </div>
-                <div className="text-xs text-[#6b6e6c] font-mono">
+                <div className="text-xs text-[var(--commerce-ink-3)] font-mono">
                   {props.tons} tons × {fmt(props.pricePerTonCents)}/ton
                 </div>
               </div>
@@ -328,25 +328,25 @@ export function CheckoutClient(props: Props) {
               {/* Subtotals */}
               <dl className="py-5 space-y-2.5 text-[14px]">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-[#6b6e6c]">Subtotal</dt>
-                  <dd className="text-[#1a1f1c] font-mono">{fmt(props.subtotalCents)}</dd>
+                  <dt className="text-[var(--commerce-ink-3)]">Subtotal</dt>
+                  <dd className="text-[var(--commerce-ink)] font-mono">{fmt(props.subtotalCents)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-[#6b6e6c]">Delivery</dt>
-                  <dd className="text-[#1a1f1c] font-mono">{fmt(props.deliveryFeeCents)}</dd>
+                  <dt className="text-[var(--commerce-ink-3)]">Delivery</dt>
+                  <dd className="text-[var(--commerce-ink)] font-mono">{fmt(props.deliveryFeeCents)}</dd>
                 </div>
               </dl>
 
               {/* WELCOME5 isolation row when eligible */}
               {props.welcome5Eligible && props.welcome5DiscountCents > 0 && (
-                <div className="py-3 px-4 -mx-1 mb-1 bg-[#f0f7f3] border border-[#0a6e3f]/20 rounded-lg flex justify-between items-center gap-4">
+                <div className="py-3 px-4 -mx-1 mb-1 bg-[#f0f7f3] border border-[var(--commerce-trust)]/20 rounded-lg flex justify-between items-center gap-4">
                   <div>
-                    <div className="text-xs font-semibold tracking-[0.14em] uppercase text-[#0a6e3f]">
+                    <div className="text-xs font-semibold tracking-[0.14em] uppercase text-[var(--commerce-trust)]">
                       WELCOME5 applied
                     </div>
-                    <div className="text-[11px] text-[#3a3f3c] mt-0.5">5% off your first order</div>
+                    <div className="text-[11px] text-[var(--commerce-ink-2)] mt-0.5">5% off your first order</div>
                   </div>
-                  <span className="text-[15px] font-medium text-[#0a6e3f] font-mono">
+                  <span className="text-[15px] font-medium text-[var(--commerce-trust)] font-mono">
                     −{fmt(props.welcome5DiscountCents)}
                   </span>
                 </div>
@@ -354,9 +354,9 @@ export function CheckoutClient(props: Props) {
 
               {/* Total */}
               <div className="pt-5 border-t border-[rgba(0,0,0,0.08)] flex justify-between items-baseline gap-4 mb-5">
-                <span className="text-[15px] font-semibold text-[#1a1f1c]">Total</span>
+                <span className="text-[15px] font-semibold text-[var(--commerce-ink)]">Total</span>
                 <span
-                  className="text-2xl font-medium text-[#1a1f1c]"
+                  className="text-2xl font-medium text-[var(--commerce-ink)]"
                   style={{ fontFamily: FRAUNCES }}
                 >
                   {fmt(props.finalTotalCents)}
@@ -367,7 +367,7 @@ export function CheckoutClient(props: Props) {
               <button
                 type="submit"
                 disabled={pending}
-                className="w-full inline-flex items-center justify-center bg-[#0a6e3f] hover:bg-[#084d2c] disabled:bg-[#0a6e3f]/60 text-white font-semibold text-base h-14 rounded-xl transition-colors"
+                className="w-full inline-flex items-center justify-center bg-[var(--commerce-trust)] hover:bg-[var(--commerce-trust)] disabled:bg-[var(--commerce-trust)]/60 text-white font-semibold text-base h-14 rounded-xl transition-colors"
                 style={{ fontFamily: FRAUNCES }}
               >
                 {pending ? (
@@ -377,7 +377,7 @@ export function CheckoutClient(props: Props) {
                 )}
               </button>
 
-              <p className="text-[11px] text-[#6b6e6c] text-center mt-3 leading-relaxed">
+              <p className="text-[11px] text-[var(--commerce-ink-3)] text-center mt-3 leading-relaxed">
                 Secure payment via Stripe. Card details collected on the next screen.
               </p>
             </div>
@@ -394,13 +394,13 @@ export function CheckoutClient(props: Props) {
           background: #fff;
           border: 1px solid rgba(0,0,0,0.12);
           border-radius: 8px;
-          color: #1a1f1c;
+          color: var(--commerce-ink);
           font-size: 14px;
           transition: border-color 120ms;
         }
         textarea.text-input { height: auto; padding: 10px 12px; line-height: 1.5; }
         .text-input::placeholder { color: #9ca3af; }
-        .text-input:focus { outline: none; border-color: #0a6e3f; box-shadow: 0 0 0 3px rgba(10,110,63,0.1); }
+        .text-input:focus { outline: none; border-color: var(--commerce-trust); box-shadow: 0 0 0 3px rgba(10,110,63,0.1); }
       `}</style>
     </main>
   )
@@ -419,11 +419,11 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-semibold text-[#1a1f1c] mb-1.5 block">
+      <span className="text-sm font-semibold text-[var(--commerce-ink)] mb-1.5 block">
         {label} {required && <span className="text-red-600">*</span>}
       </span>
       {children}
-      {hint && <span className="text-xs text-[#6b6e6c] mt-1 block">{hint}</span>}
+      {hint && <span className="text-xs text-[var(--commerce-ink-3)] mt-1 block">{hint}</span>}
     </label>
   )
 }

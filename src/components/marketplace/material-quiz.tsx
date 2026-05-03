@@ -243,10 +243,10 @@ function getMatchResult(
 // MAIN COMPONENT
 // =============================================================================
 
-const PAGE_BG = 'bg-[#faf7f2]'
-const INK = 'text-[#1a1f1c]'
-const MUTED = 'text-[#6b6e6c]'
-const PRIMARY = '#0a6e3f'
+const PAGE_BG = 'bg-[var(--commerce-cream)]'
+const INK = 'text-[var(--commerce-ink)]'
+const MUTED = 'text-[var(--commerce-ink-3)]'
+const PRIMARY = 'var(--commerce-trust)'
 const TINT = '#f0f7f3'
 const HAIRLINE = 'rgba(0,0,0,0.08)'
 
@@ -337,13 +337,13 @@ function ProgressStrip({ current, onBack }: { current: number; onBack: () => voi
   return (
     <div className="mb-10">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold tracking-[0.18em] uppercase text-[#6b6e6c]">
+        <span className="text-xs font-semibold tracking-[0.18em] uppercase text-[var(--commerce-ink-3)]">
           Step {Math.min(current, 5)} of 5
         </span>
         {current > 1 && (
           <button
             onClick={onBack}
-            className="text-xs text-[#6b6e6c] hover:text-[#1a1f1c] flex items-center gap-1.5 transition-colors"
+            className="text-xs text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] flex items-center gap-1.5 transition-colors"
           >
             <ArrowLeft size={12} /> Back
           </button>
@@ -403,7 +403,7 @@ function Step({
               <div className={`${INK} font-semibold text-[15.5px] leading-tight`}>{opt.label}</div>
               <div className={`${MUTED} text-[13.5px] mt-1`}>{opt.desc}</div>
             </div>
-            <ArrowRight size={16} className="text-[#6b6e6c] group-hover:text-[#0a6e3f] transition-colors mt-1" />
+            <ArrowRight size={16} className="text-[var(--commerce-ink-3)] group-hover:text-[var(--commerce-trust)] transition-colors mt-1" />
           </button>
         ))}
       </div>
@@ -446,17 +446,17 @@ function TonsStep({
           value={val}
           onChange={(e) => setVal(e.target.value)}
           placeholder="e.g. 18"
-          className={`w-full h-16 px-5 pr-20 rounded-xl bg-white border border-[${HAIRLINE}] text-2xl font-medium text-[#1a1f1c] focus:outline-none focus:border-[#0a6e3f] focus:ring-2 focus:ring-[#0a6e3f]/10`}
+          className={`w-full h-16 px-5 pr-20 rounded-xl bg-white border border-[${HAIRLINE}] text-2xl font-medium text-[var(--commerce-ink)] focus:outline-none focus:border-[var(--commerce-trust)] focus:ring-2 focus:ring-[var(--commerce-trust)]/10`}
           style={{ fontFamily: 'var(--font-fraunces), serif' }}
         />
-        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[#6b6e6c] font-mono text-sm">
+        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[var(--commerce-ink-3)] font-mono text-sm">
           tons
         </span>
       </div>
       <button
         type="submit"
         disabled={!valid}
-        className="mt-6 inline-flex items-center justify-center bg-[#0a6e3f] hover:bg-[#084d2c] disabled:bg-[#0a6e3f]/40 disabled:cursor-not-allowed text-white font-semibold text-base h-12 px-6 rounded-full transition-colors"
+        className="mt-6 inline-flex items-center justify-center bg-[var(--commerce-trust)] hover:bg-[var(--commerce-trust)] disabled:bg-[var(--commerce-trust)]/40 disabled:cursor-not-allowed text-white font-semibold text-base h-12 px-6 rounded-full transition-colors"
         style={{ fontFamily: 'var(--font-fraunces), serif' }}
       >
         Continue <ArrowRight className="ml-2 w-4 h-4" />
@@ -498,13 +498,13 @@ function ZipStep({
           value={val}
           onChange={(e) => setVal(e.target.value.replace(/\D/g, ''))}
           placeholder="75201"
-          className={`w-full h-16 px-5 rounded-xl bg-white border border-[${HAIRLINE}] text-2xl font-mono tracking-[0.1em] text-[#1a1f1c] focus:outline-none focus:border-[#0a6e3f] focus:ring-2 focus:ring-[#0a6e3f]/10`}
+          className={`w-full h-16 px-5 rounded-xl bg-white border border-[${HAIRLINE}] text-2xl font-mono tracking-[0.1em] text-[var(--commerce-ink)] focus:outline-none focus:border-[var(--commerce-trust)] focus:ring-2 focus:ring-[var(--commerce-trust)]/10`}
         />
       </div>
       <button
         type="submit"
         disabled={!valid}
-        className="mt-6 inline-flex items-center justify-center bg-[#0a6e3f] hover:bg-[#084d2c] disabled:bg-[#0a6e3f]/40 disabled:cursor-not-allowed text-white font-semibold text-base h-12 px-6 rounded-full transition-colors"
+        className="mt-6 inline-flex items-center justify-center bg-[var(--commerce-trust)] hover:bg-[var(--commerce-trust)] disabled:bg-[var(--commerce-trust)]/40 disabled:cursor-not-allowed text-white font-semibold text-base h-12 px-6 rounded-full transition-colors"
         style={{ fontFamily: 'var(--font-fraunces), serif' }}
       >
         Continue <ArrowRight className="ml-2 w-4 h-4" />
@@ -526,7 +526,7 @@ function RestartHint({ onRestart }: { onRestart: () => void }) {
         <p className={`${MUTED} mb-6`}>We need a few details to recommend a material.</p>
         <button
           onClick={onRestart}
-          className="inline-flex items-center justify-center bg-[#0a6e3f] hover:bg-[#084d2c] text-white font-semibold text-base h-12 px-6 rounded-full transition-colors"
+          className="inline-flex items-center justify-center bg-[var(--commerce-trust)] hover:bg-[var(--commerce-trust)] text-white font-semibold text-base h-12 px-6 rounded-full transition-colors"
           style={{ fontFamily: 'var(--font-fraunces), serif' }}
         >
           Start the wizard <ArrowRight className="ml-2 w-4 h-4" />
@@ -562,7 +562,7 @@ function ResultPage({
       <div className="max-w-[1080px] mx-auto px-6 py-12 md:py-16">
         <button
           onClick={onRestart}
-          className="text-xs text-[#6b6e6c] hover:text-[#1a1f1c] flex items-center gap-1.5 transition-colors mb-6"
+          className="text-xs text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] flex items-center gap-1.5 transition-colors mb-6"
         >
           <ArrowLeft size={12} /> Start over
         </button>
@@ -584,7 +584,7 @@ function VerifiedLayout({ result, ctx }: { result: VerifiedResult; ctx: ResultCt
       <article
         className={`bg-white border border-[${HAIRLINE}] rounded-xl p-8 md:p-10`}
       >
-        <div className="text-xs font-semibold tracking-[0.18em] uppercase text-[#0a6e3f] mb-3">
+        <div className="text-xs font-semibold tracking-[0.18em] uppercase text-[var(--commerce-trust)] mb-3">
           Best match
         </div>
         <h1
@@ -594,7 +594,7 @@ function VerifiedLayout({ result, ctx }: { result: VerifiedResult; ctx: ResultCt
           {result.hero.name}
         </h1>
         <p className={`${INK} text-lg leading-[1.5] mb-6 max-w-[640px]`}>{result.hero.whyLong}</p>
-        <div className="font-mono text-[12.5px] text-[#3a3f3c] tracking-[0.04em] uppercase mb-6">
+        <div className="font-mono text-[12.5px] text-[var(--commerce-ink-2)] tracking-[0.04em] uppercase mb-6">
           {result.hero.specs}
         </div>
         <div className="flex items-baseline gap-3 mb-8">
@@ -640,7 +640,7 @@ function VerifiedLayout({ result, ctx }: { result: VerifiedResult; ctx: ResultCt
               {alt.name}
             </h3>
             <p className={`${MUTED} text-sm leading-[1.5] mb-4`}>{alt.why}</p>
-            <div className="font-mono text-[11px] text-[#6b6e6c] tracking-[0.04em] uppercase mb-3 leading-relaxed">
+            <div className="font-mono text-[11px] text-[var(--commerce-ink-3)] tracking-[0.04em] uppercase mb-3 leading-relaxed">
               {alt.specs}
             </div>
             <div className={`${INK} text-base font-medium mb-4 mt-auto`}>
@@ -695,8 +695,8 @@ function VerifiedCTAForm({
         disabled={pending}
         className={
           variant === 'primary'
-            ? 'w-full inline-flex items-center justify-center bg-[#0a6e3f] hover:bg-[#084d2c] disabled:bg-[#0a6e3f]/60 text-white font-semibold text-lg h-16 rounded-xl transition-colors'
-            : 'w-full inline-flex items-center justify-center bg-white hover:bg-[#fafafa] disabled:bg-[#fafafa] text-[#0a6e3f] font-semibold text-base h-12 rounded-xl border border-[#0a6e3f] transition-colors'
+            ? 'w-full inline-flex items-center justify-center bg-[var(--commerce-trust)] hover:bg-[var(--commerce-trust)] disabled:bg-[var(--commerce-trust)]/60 text-white font-semibold text-lg h-16 rounded-xl transition-colors'
+            : 'w-full inline-flex items-center justify-center bg-white hover:bg-[#fafafa] disabled:bg-[#fafafa] text-[var(--commerce-trust)] font-semibold text-base h-12 rounded-xl border border-[var(--commerce-trust)] transition-colors'
         }
         style={{ fontFamily: 'var(--font-fraunces), serif' }}
       >
@@ -728,7 +728,7 @@ function SourcingLayout({ result, ctx }: { result: SourcingResult; ctx: ResultCt
 
         <div className="flex items-start gap-3 mb-8 p-4 rounded-lg bg-[#fef3c7]/40 border border-[#f59e0b]/20">
           <Star className="w-4 h-4 text-[#a16207] fill-current flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-[#3a3f3c] leading-[1.5]">
+          <p className="text-sm text-[var(--commerce-ink-2)] leading-[1.5]">
             We&apos;ve sourced 47 specialty materials for DFW projects in the last 90 days.
             Avg sourcing time: <strong>38 hours</strong>.
           </p>
@@ -738,7 +738,7 @@ function SourcingLayout({ result, ctx }: { result: SourcingResult; ctx: ResultCt
           <>
             <button
               onClick={() => setReserveOpen(true)}
-              className="w-full inline-flex items-center justify-center bg-[#0a6e3f] hover:bg-[#084d2c] text-white font-semibold text-lg h-16 rounded-xl transition-colors"
+              className="w-full inline-flex items-center justify-center bg-[var(--commerce-trust)] hover:bg-[var(--commerce-trust)] text-white font-semibold text-lg h-16 rounded-xl transition-colors"
               style={{ fontFamily: 'var(--font-fraunces), serif' }}
             >
               Reserve this material <ArrowRight className="ml-2 w-5 h-5" />
@@ -783,7 +783,7 @@ function SourcingLayout({ result, ctx }: { result: SourcingResult; ctx: ResultCt
                 {alt.name}
               </h3>
               <p className={`${MUTED} text-sm leading-[1.5] mb-4`}>{alt.why}</p>
-              <div className="font-mono text-[11px] text-[#6b6e6c] tracking-[0.04em] uppercase mb-3 leading-relaxed">
+              <div className="font-mono text-[11px] text-[var(--commerce-ink-3)] tracking-[0.04em] uppercase mb-3 leading-relaxed">
                 {alt.specs}
               </div>
               <div className={`${INK} text-base font-medium mb-4 mt-auto`}>
@@ -821,8 +821,8 @@ function ReserveLeadForm({
 
   if (submitted) {
     return (
-      <div className="rounded-xl bg-[#f0f7f3] border border-[#0a6e3f]/30 p-6 flex items-start gap-4">
-        <span className="w-10 h-10 rounded-full bg-[#0a6e3f] text-white flex items-center justify-center flex-shrink-0">
+      <div className="rounded-xl bg-[#f0f7f3] border border-[var(--commerce-trust)]/30 p-6 flex items-start gap-4">
+        <span className="w-10 h-10 rounded-full bg-[var(--commerce-trust)] text-white flex items-center justify-center flex-shrink-0">
           <Check className="w-5 h-5" strokeWidth={3} />
         </span>
         <div>
@@ -881,7 +881,7 @@ function ReserveLeadForm({
             {(['phone', 'text', 'email'] as const).map((m) => (
               <label
                 key={m}
-                className="flex-1 flex items-center justify-center gap-2 h-11 px-4 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white cursor-pointer hover:border-[#0a6e3f] has-[:checked]:border-[#0a6e3f] has-[:checked]:bg-[#f0f7f3] transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 h-11 px-4 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white cursor-pointer hover:border-[var(--commerce-trust)] has-[:checked]:border-[var(--commerce-trust)] has-[:checked]:bg-[#f0f7f3] transition-colors"
               >
                 <input
                   type="radio"
@@ -908,7 +908,7 @@ function ReserveLeadForm({
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 inline-flex items-center justify-center bg-[#0a6e3f] hover:bg-[#084d2c] disabled:bg-[#0a6e3f]/60 text-white font-semibold text-base h-12 rounded-full transition-colors"
+          className="flex-1 inline-flex items-center justify-center bg-[var(--commerce-trust)] hover:bg-[var(--commerce-trust)] disabled:bg-[var(--commerce-trust)]/60 text-white font-semibold text-base h-12 rounded-full transition-colors"
           style={{ fontFamily: 'var(--font-fraunces), serif' }}
         >
           {pending ? <Loader2 className="animate-spin w-4 h-4" /> : <>Reserve <ArrowRight className="ml-2 w-4 h-4" /></>}
@@ -935,7 +935,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-semibold text-[#1a1f1c] mb-1.5 block">
+      <span className="text-sm font-semibold text-[var(--commerce-ink)] mb-1.5 block">
         {label} {required && <span className="text-red-600">*</span>}
       </span>
       <input
@@ -944,7 +944,7 @@ function Field({
         required={required}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="w-full h-11 px-4 rounded-lg bg-white border border-[rgba(0,0,0,0.08)] text-[#1a1f1c] focus:outline-none focus:border-[#0a6e3f] focus:ring-2 focus:ring-[#0a6e3f]/10 placeholder:text-[#9ca3af]"
+        className="w-full h-11 px-4 rounded-lg bg-white border border-[rgba(0,0,0,0.08)] text-[var(--commerce-ink)] focus:outline-none focus:border-[var(--commerce-trust)] focus:ring-2 focus:ring-[var(--commerce-trust)]/10 placeholder:text-[#9ca3af]"
       />
     </label>
   )
