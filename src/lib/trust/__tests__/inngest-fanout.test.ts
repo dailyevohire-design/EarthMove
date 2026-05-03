@@ -47,8 +47,10 @@ function makeFakeAdmin() {
   };
 }
 
-// TIER_SOURCES.standard now dispatches 5 sources per job — sam-gov + 2 SOS + 2 permits.
-const PAID_SOURCES = ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'];
+// TIER_SOURCES paid tiers now dispatch 4 sources — sam-gov + 2 SOS + denver permits.
+// dallas_open_data temporarily deferred (commit 326bbf4) pending persistEvidence
+// CHECK-violation isolation; re-add to this list when the source is restored.
+const PAID_SOURCES = ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim'];
 
 describe('runTrustJobV2 — fan-out smoke', () => {
   it('runs the standard-tier flow with mocked steps', async () => {

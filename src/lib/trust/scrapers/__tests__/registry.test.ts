@@ -39,7 +39,9 @@ describe('runScraper', () => {
 });
 
 describe('sourcesForTier', () => {
-  const PAID_TIER_SOURCES = ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'];
+  // dallas_open_data temporarily deferred (commit 326bbf4) — re-add when
+  // persistEvidence CHECK violation is isolated.
+  const PAID_TIER_SOURCES = ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim'];
 
   it('returns expected source list per tier', () => {
     expect(sourcesForTier('free')).toEqual(['mock_source']);
