@@ -56,9 +56,10 @@ export default async function OrderPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-8">
+      {/* Header — dispatched-ticket strip on mobile */}
+      <div className="order-top-strip flex items-start justify-between gap-4 mb-8">
         <div>
+          <span className="dispatched-pill">{statusConfig?.label ?? order.status}</span>
           <h1 className="text-2xl font-bold text-gray-900">
             Order #{order.id.slice(-8).toUpperCase()}
           </h1>

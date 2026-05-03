@@ -40,9 +40,9 @@ export function LearnHub() {
   const sideArticles = getSecondaryFeaturedArticles()
 
   return (
-    <div style={{ background: 'var(--commerce-cream)' }}>
+    <div className="learn-page" style={{ background: 'var(--commerce-cream)' }}>
       {/* ═══ SECTION 1: HERO ═══ */}
-      <section className="relative overflow-hidden min-h-[520px] flex flex-col justify-center">
+      <section className="knowledge-hero relative overflow-hidden min-h-[520px] flex flex-col justify-center">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d2a1a 50%, #0d1117 100%)' }} />
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 60%, rgba(16,185,129,0.1) 0%, transparent 60%), radial-gradient(ellipse at 70% 30%, rgba(245,158,11,0.06) 0%, transparent 50%)' }} />
 
@@ -57,15 +57,15 @@ export function LearnHub() {
           </div>
 
           {/* Feature cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          <div className="tool-tiles grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
               { icon: '🧮', title: 'Material Calculator', desc: 'Calculate exactly what you need', href: '/learn/cubic-yards-calculator' },
               { icon: '🔍', title: 'Material Match', desc: 'Find your perfect material', href: '/material-match' },
             ].map(c => (
-              <Link key={c.title} href={c.href} className="group p-5 rounded-2xl transition-all duration-300 hover:-translate-y-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}>
+              <Link key={c.title} href={c.href} className="tool-tile group p-5 rounded-2xl transition-all duration-300 hover:-translate-y-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}>
                 <div className="text-3xl mb-3">{c.icon}</div>
-                <div className="text-white font-bold text-sm">{c.title}</div>
-                <div className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{c.desc}</div>
+                <div className="tile-title text-white font-bold text-sm">{c.title}</div>
+                <div className="tile-sub text-sm mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{c.desc}</div>
               </Link>
             ))}
           </div>

@@ -21,7 +21,7 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
   const imageUrl = getMaterialImage(card.slug)
 
   return (
-    <Link href={`/browse/${card.slug}`} className="group block touch-manipulation select-none">
+    <Link href={`/browse/${card.slug}`} className="material-card group block touch-manipulation select-none">
       <div className="relative rounded-2xl overflow-hidden bg-white border border-gray-200/80 transition-all duration-200 will-change-transform
         shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.04),0_14px_28px_-14px_rgba(15,23,42,0.14)]
         hover:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_4px_12px_rgba(15,23,42,0.08),0_28px_56px_-20px_rgba(16,185,129,0.28)]
@@ -29,7 +29,7 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
         active:translate-y-0 active:scale-[0.985] active:duration-75
         active:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.06)]">
         {/* Image */}
-        <div className="relative overflow-hidden" style={{ height: 220, background: fallbackBg }}>
+        <div className="material-card-photo relative overflow-hidden" style={{ height: 220, background: fallbackBg }}>
           <img
             src={imageUrl}
             alt={card.name}
@@ -43,7 +43,7 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
           {/* Category pill */}
           <div className="absolute top-3 left-3">
             <span
-              className="px-2.5 py-1 rounded-lg text-white text-[10px] font-bold uppercase tracking-wide"
+              className="material-card-category px-2.5 py-1 rounded-lg text-white text-[10px] font-bold uppercase tracking-wide"
               style={{ backgroundColor: catColor }}
             >
               {card.category_name}
@@ -88,13 +88,13 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="material-card-content p-4">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-bold text-gray-900 text-[15px] leading-snug group-hover:text-emerald-600 transition-colors">
+            <h3 className="material-card-name font-bold text-gray-900 text-[15px] leading-snug group-hover:text-emerald-600 transition-colors">
               {card.name}
             </h3>
             <div className="flex-shrink-0 text-right">
-              <div className="font-extrabold text-gray-900 text-lg">{formatCurrency(card.display_price)}</div>
+              <div className="material-card-price font-extrabold text-gray-900 text-lg">{formatCurrency(card.display_price)}</div>
               <div className="text-gray-400 text-[10px] font-medium">per {unitLabel(card.unit, 1)}</div>
             </div>
           </div>
