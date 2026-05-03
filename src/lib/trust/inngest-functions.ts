@@ -533,7 +533,7 @@ const ALERT_WORTHY_FINDING_TYPES = new Set([
 ])
 
 export const onTrustEvidenceAppended = inngest.createFunction(
-  { id: 'on-trust-evidence-appended', triggers: [{ event: 'trust/evidence.appended' }], concurrency: { limit: 10 }, retries: 2 },
+  { id: 'on-trust-evidence-appended', triggers: [{ event: 'trust/evidence.appended' }], concurrency: { limit: 5 }, retries: 2 },
   async ({ event, step }) => {
     const { evidence_id, finding_type, source_key, job_id, contractor_id } = event.data as {
       evidence_id: string
@@ -653,7 +653,7 @@ export const onTrustEvidenceAppended = inngest.createFunction(
 // ---------------------------------------------------------------------------
 
 export const onTrustReportCreated = inngest.createFunction(
-  { id: 'on-trust-report-created', triggers: [{ event: 'trust/report.created' }], concurrency: { limit: 10 }, retries: 2 },
+  { id: 'on-trust-report-created', triggers: [{ event: 'trust/report.created' }], concurrency: { limit: 5 }, retries: 2 },
   async ({ event, step }) => {
     const { report_id, contractor_id, trust_score } = event.data as {
       report_id: string
