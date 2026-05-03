@@ -5,6 +5,7 @@ import {
   runTrustJobV2,
   runTrustSynthesizeV2,
   onTrustEvidenceAppended,
+  onTrustReportCreated,
 } from '@/lib/trust/inngest-functions'
 
 export const runtime = 'nodejs'
@@ -14,6 +15,7 @@ export const inngestFunctions = [
   runTrustJobV2,
   runTrustSynthesizeV2,
   onTrustEvidenceAppended,
+  onTrustReportCreated,
 ]
 
 export const { GET, POST, PUT } = serve({
