@@ -51,7 +51,7 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
         role="dialog"
         aria-modal="true"
         aria-label="Site navigation"
-        className="fixed inset-y-0 right-0 z-[100] w-[85vw] max-w-sm bg-[var(--em-cream)] border-l border-l-[#0E2A22]/15 shadow-2xl flex flex-col"
+        className="fixed inset-y-0 right-0 z-[100] w-[85vw] max-w-sm bg-[#F5F1E8] border-l border-l-[#0E2A22]/15 shadow-2xl flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-b-[#0E2A22]/15">
