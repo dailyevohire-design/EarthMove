@@ -46,11 +46,11 @@ export function HeroLeftColumn() {
   return (
     <div>
       <h1 className="hv-h1" id="headline">
-        Bulk aggregate,<br />delivered <em className="em">to the hour.</em>
+        We move earth. All of it.
       </h1>
 
       <p className="hv-sub" id="subhead">
-        Spec-grade base, fill, and stone — quoted from the closest yard, dispatched on your schedule, photo-confirmed at the drop. Built for contractors who need it on time.
+        Intelligence behind every load <em>— that&apos;s why our delivered cost is lower than any broker, any platform, any phone call you&apos;ve ever made.</em> And finally, a truck that shows up.
       </p>
 
       <form id="zipForm" className="hv-rq" onSubmit={handleZipSubmit} noValidate>

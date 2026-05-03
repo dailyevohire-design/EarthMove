@@ -1804,3 +1804,9 @@
   margin-top: 8px !important;
   line-height: 1.4 !important;
 }
+
+/* === Hero centered text (Phase 5, commit 2) === */
+.marketing-v6 .hv-h1,
+.marketing-v6 .hv-sub {
+  text-align: center !important;
+}
