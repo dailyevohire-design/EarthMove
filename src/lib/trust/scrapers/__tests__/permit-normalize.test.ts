@@ -54,9 +54,9 @@ describe('normalizePermits', () => {
 describe('computeSignals', () => {
   it('empty input → all zeros + null most_recent', () => {
     const s = computeSignals([], NOW);
-    expect(s.permit_count_total).toBe(0);
+    expect(s.total_permits).toBe(0);
     expect(s.permit_count_last_12mo).toBe(0);
-    expect(s.permit_count_last_5yr).toBe(0);
+    expect(s.permits_5y).toBe(0);
     expect(s.most_recent_permit_date).toBeNull();
     expect(s.work_class_distribution).toEqual({});
   });
@@ -74,8 +74,8 @@ describe('computeSignals', () => {
       }, i));
     }
     const s = computeSignals(permits, NOW);
-    expect(s.permit_count_total).toBe(25);
-    expect(s.permit_count_last_5yr).toBe(25);
+    expect(s.total_permits).toBe(25);
+    expect(s.permits_5y).toBe(25);
     expect(s.permit_count_last_12mo).toBeGreaterThanOrEqual(5);
     expect(s.permit_count_last_12mo).toBeLessThanOrEqual(7);
     expect(s.most_recent_permit_date).toMatch(/^2026-03-/);
@@ -140,9 +140,24 @@ describe('emitFindings', () => {
     const findings = emitFindings(permits, computeSignals(permits, NOW), ctx);
     const clean = findings.find((f) => f.finding_type === 'permit_history_clean');
     expect(clean).toBeDefined();
-    expect(clean!.extracted_facts.permit_count_last_5yr).toBe(3);
+    expect(clean!.extracted_facts.permits_5y).toBe(3);
+    expect(clean!.extracted_facts.total_permits).toBe(3);
+    expect(clean!.extracted_facts.most_recent_permit_date).toMatch(/^2026-/);
+    expect(clean!.extracted_facts.address_match_count).toBe(1);
     expect(clean!.extracted_facts.jurisdiction).toBe('denver');
     expect(clean!.response_sha256).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it('address_match_count counts distinct uppercased addresses (denver-style aggregation)', () => {
+    const permits: PermitRecord[] = [
+      mkPermit({ permit_number: 'A', address: '123 Main St' }, 0),
+      mkPermit({ permit_number: 'B', address: '123 MAIN ST' }, 1),
+      mkPermit({ permit_number: 'C', address: '456 Oak Ave' }, 2),
+      mkPermit({ permit_number: 'D', address: '' }, 3),
+    ];
+    const findings = emitFindings(permits, computeSignals(permits, NOW), ctx);
+    const clean = findings.find((f) => f.finding_type === 'permit_history_clean')!;
+    expect(clean.extracted_facts.address_match_count).toBe(2);
   });
 
   it('15 permits all 3yr+ ago → stale + clean (no robust, no low)', () => {

@@ -22,9 +22,9 @@ export interface PermitRecord {
 }
 
 export interface PermitSignals {
-  permit_count_total: number;
+  total_permits: number;
   permit_count_last_12mo: number;
-  permit_count_last_5yr: number;
+  permits_5y: number;
   most_recent_permit_date: string | null;       // ISO 8601 date or null
   work_class_distribution: Record<string, number>;
 }
@@ -79,9 +79,9 @@ export function computeSignals(permits: PermitRecord[], asOf: Date): PermitSigna
   }
 
   return {
-    permit_count_total: permits.length,
+    total_permits: permits.length,
     permit_count_last_12mo: last12,
-    permit_count_last_5yr: last5,
+    permits_5y: last5,
     most_recent_permit_date: mostRecent,
     work_class_distribution: dist,
   };
@@ -126,6 +126,12 @@ export function emitFindings(
 ): ScraperEvidence[] {
   const sha = canonicalSha(permits);
   const sample = permits.slice(0, 5).map((p) => p.permit_number);
+  const distinctAddresses = new Set<string>();
+  for (const p of permits) {
+    const a = (p.address ?? '').trim().toUpperCase();
+    if (a) distinctAddresses.add(a);
+  }
+  const addressMatchCount = distinctAddresses.size;
   const out: ScraperEvidence[] = [];
 
   // Always — informational row with full counts in extracted_facts.
@@ -133,15 +139,16 @@ export function emitFindings(
     source_key: ctx.source_key,
     finding_type: 'permit_history_clean',
     confidence: 'verified_structured',
-    finding_summary: `${ctx.jurisdiction}: ${signals.permit_count_last_5yr} permits in last 5 years; most recent ${signals.most_recent_permit_date ?? 'none on record'}`,
+    finding_summary: `${ctx.jurisdiction}: ${signals.permits_5y} permits in last 5 years; most recent ${signals.most_recent_permit_date ?? 'none on record'}`,
     extracted_facts: {
       jurisdiction: ctx.jurisdiction,
       source_key: ctx.source_key,
       contractor_query: ctx.contractor_name,
-      permit_count_total: signals.permit_count_total,
+      total_permits: signals.total_permits,
       permit_count_last_12mo: signals.permit_count_last_12mo,
-      permit_count_last_5yr: signals.permit_count_last_5yr,
+      permits_5y: signals.permits_5y,
       most_recent_permit_date: signals.most_recent_permit_date,
+      address_match_count: addressMatchCount,
       work_class_distribution: signals.work_class_distribution,
       sample_permit_numbers: sample,
     },
@@ -160,16 +167,16 @@ export function emitFindings(
     : Infinity;
 
   // Robust: high volume + currently active (most recent within 6mo)
-  if (signals.permit_count_last_5yr >= 20 && recentMs <= ms6m) {
+  if (signals.permits_5y >= 20 && recentMs <= ms6m) {
     out.push({
       source_key: ctx.source_key,
       finding_type: 'permit_history_robust',
       confidence: 'verified_structured',
-      finding_summary: `${ctx.jurisdiction}: robust permit history — ${signals.permit_count_last_5yr} permits in 5yr, most recent within 6mo`,
+      finding_summary: `${ctx.jurisdiction}: robust permit history — ${signals.permits_5y} permits in 5yr, most recent within 6mo`,
       extracted_facts: {
         jurisdiction: ctx.jurisdiction,
-        threshold: 'permit_count_last_5yr>=20 AND most_recent<=6mo',
-        permit_count_last_5yr: signals.permit_count_last_5yr,
+        threshold: 'permits_5y>=20 AND most_recent<=6mo',
+        permits_5y: signals.permits_5y,
         most_recent_permit_date: signals.most_recent_permit_date,
       },
       query_sent: null,
@@ -178,17 +185,17 @@ export function emitFindings(
       duration_ms: 0,
       cost_cents: 0,
     });
-  } else if (signals.permit_count_last_5yr < 5) {
+  } else if (signals.permits_5y < 5) {
     // Low volume — only flag when robust gate isn't met
     out.push({
       source_key: ctx.source_key,
       finding_type: 'permit_history_low',
       confidence: 'verified_structured',
-      finding_summary: `${ctx.jurisdiction}: low permit volume — ${signals.permit_count_last_5yr} permits in 5 years (under 5-permit threshold)`,
+      finding_summary: `${ctx.jurisdiction}: low permit volume — ${signals.permits_5y} permits in 5 years (under 5-permit threshold)`,
       extracted_facts: {
         jurisdiction: ctx.jurisdiction,
-        threshold: 'permit_count_last_5yr<5',
-        permit_count_last_5yr: signals.permit_count_last_5yr,
+        threshold: 'permits_5y<5',
+        permits_5y: signals.permits_5y,
       },
       query_sent: null,
       response_sha256: sha256Hex(`low|${sha}`),
