@@ -13,11 +13,11 @@ const DEPTHS = [
 
 type TruckKey = 'small' | 'standard' | 'triaxle' | 'enddump' | ''
 
-const TRUCKS: { key: Exclude<TruckKey, ''>; label: string; tons: number; image: string }[] = [
-  { key: 'small',    label: 'Small · 5t',     tons: 5,  image: '/assets/trucks/dump-trailer.png' },
-  { key: 'standard', label: 'Standard · 12t', tons: 12, image: '/assets/trucks/tandem.png' },
-  { key: 'triaxle',  label: 'Tri-axle · 18t', tons: 18, image: '/assets/trucks/triaxle.png' },
-  { key: 'enddump',  label: 'End-dump · 24t', tons: 24, image: '/assets/trucks/end-dump.png' },
+const TRUCKS: { key: Exclude<TruckKey, ''>; label: string; tons: number; yards: number; image: string }[] = [
+  { key: 'small',    label: 'Small · 5t',     tons: 5,  yards: 3.5, image: '/assets/trucks/dump-trailer.png' },
+  { key: 'standard', label: 'Standard · 12t', tons: 12, yards: 10,  image: '/assets/trucks/tandem.png' },
+  { key: 'triaxle',  label: 'Tri-axle · 18t', tons: 18, yards: 15,  image: '/assets/trucks/triaxle.png' },
+  { key: 'enddump',  label: 'End-dump · 24t', tons: 24, yards: 20,  image: '/assets/trucks/end-dump.png' },
 ]
 
 function pickTruck(tons: number): { key: TruckKey; loads: number } {
