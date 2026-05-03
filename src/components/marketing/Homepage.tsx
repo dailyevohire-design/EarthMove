@@ -196,6 +196,79 @@ export async function Homepage() {
           </div>
         </section>
 
+        {/* ──────────────────────────────────────────────────────────
+             MOBILE-ONLY block (≤767px) — mockup-matching tight body:
+             markets/proof grid + "what you get" capability cards +
+             final CTA. Replaces the full desktop body on mobile.
+             ────────────────────────────────────────────────────────── */}
+        <div className="hp-mobile-only">
+          <section className="hp-m-stats">
+            <div className="hp-m-stat">
+              <div className="eyebrow">Launching</div>
+              <div className="value">Denver + Dallas–FW</div>
+              <div className="sub">Houston + Austin Q3</div>
+            </div>
+            <div className="hp-m-stat">
+              <div className="eyebrow">Materials</div>
+              <div className="value">16 stocked</div>
+              <div className="sub">5 outcome families</div>
+            </div>
+            <div className="hp-m-stat">
+              <div className="eyebrow">Verified yards</div>
+              <div className="value">13 across DFW</div>
+              <div className="sub">+ 9 Denver</div>
+            </div>
+            <div className="hp-m-stat">
+              <div className="eyebrow">Avg dispatch</div>
+              <div className="value">38 min</div>
+              <div className="sub">Same-day in radius</div>
+            </div>
+          </section>
+
+          <section className="hp-m-caps">
+            <div className="eyebrow">What you get</div>
+            <h2 className="hp-m-h2">Built for the way crews actually work.</h2>
+            <p className="hp-m-lede">What ships, what&apos;s earned. Each line maps to a real product capability — not a marketing claim.</p>
+            <div className="hp-m-cap-list">
+              <article className="hp-m-cap">
+                <div className="cap-eb">Photo-confirmed delivery</div>
+                <div className="cap-h">Every drop, on file.</div>
+                <div className="cap-s">Geotagged photo and signed ticket attached to every load, the moment the truck tips. No reconstructed timelines.</div>
+              </article>
+              <article className="hp-m-cap">
+                <div className="cap-eb">Net-30 for contractors</div>
+                <div className="cap-h">Pay on terms.</div>
+                <div className="cap-s">Available to qualified contractors after a short underwriting review. Statements + open POs in dashboard.</div>
+              </article>
+              <article className="hp-m-cap">
+                <div className="cap-eb">Closest-yard routing</div>
+                <div className="cap-h">Nearest pit wins.</div>
+                <div className="cap-s">We route from the verified yard with the lowest delivered cost. Not a queue, not a clearinghouse.</div>
+              </article>
+              <article className="hp-m-cap">
+                <div className="cap-eb">Live ETA</div>
+                <div className="cap-h">Arrival to the minute.</div>
+                <div className="cap-s">Driver assigned, route locked, ETA updates in dashboard + SMS. Never &ldquo;later today.&rdquo;</div>
+              </article>
+            </div>
+          </section>
+
+          <section className="hp-m-cta-section">
+            <a href="#zipForm" className="hp-m-cta">
+              Place an order
+              <span aria-hidden="true">→</span>
+            </a>
+          </section>
+        </div>
+
+        {/* ──────────────────────────────────────────────────────────
+             DESKTOP-ONLY body (≥768px) — full existing 565-LOC composition:
+             materials grid, MaterialSpec, HowItWorks, sizing, trust, FAQ,
+             final CTA. Hidden on mobile to keep mobile homepage focused
+             on hero → ZIP form → sample dispatch → proof grid → CTA.
+             ────────────────────────────────────────────────────────── */}
+        <div className="hp-desktop-only">
+
         {/* MATERIALS */}
         <section className="section" id="materials" style={{ background: 'var(--bg-2)', borderTop: '1px solid var(--line-strong)' }}>
           <div className="max">
@@ -521,6 +594,8 @@ export async function Homepage() {
             </div>
           </div>
         </section>
+
+        </div>{/* /hp-desktop-only */}
 
         {/* FOOTER */}
         <footer>

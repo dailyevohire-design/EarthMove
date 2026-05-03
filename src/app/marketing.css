@@ -1566,3 +1566,137 @@
     display: none !important;
   }
 }
+
+/* ============================================================
+   HOMEPAGE MOBILE-NATIVE BLOCK (≤767px) — replaces desktop body
+   on mobile with mockup-matching tight composition: hero (above
+   in HeroLeftColumn) → mobile dispatch (in HeroLeftColumn) →
+   markets/proof grid → "what you get" caps → final CTA → footer.
+   Desktop body (.hp-desktop-only) hidden on mobile.
+   ============================================================ */
+.marketing-v6 .hp-mobile-only { display: none; }
+.marketing-v6 .hp-desktop-only { display: block; }
+
+@media (max-width: 767px) {
+  .marketing-v6 .hp-mobile-only { display: block; padding: 0 18px; }
+  .marketing-v6 .hp-desktop-only { display: none !important; }
+
+  /* Markets / proof grid — 2x2 stat tiles */
+  .marketing-v6 .hp-m-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 28px;
+    font-variant-numeric: tabular-nums;
+  }
+  .marketing-v6 .hp-m-stat {
+    background: var(--em-chalk, #FFFFFF);
+    border: 1px solid var(--em-fog, #D8D5CC);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .marketing-v6 .hp-m-stat .eyebrow {
+    font-family: var(--em-mono, var(--font-mono), 'JetBrains Mono', monospace);
+    font-size: 10px;
+    color: var(--em-ash, #76786E);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .marketing-v6 .hp-m-stat .value {
+    font-family: var(--em-sans, var(--font-inter), system-ui, sans-serif);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-top: 4px;
+    color: var(--em-graphite, #1A1B17);
+  }
+  .marketing-v6 .hp-m-stat .sub {
+    font-family: var(--em-mono, var(--font-mono), monospace);
+    font-size: 11px;
+    color: var(--em-ash, #76786E);
+    margin-top: 1px;
+  }
+
+  /* "What you get" capability cards */
+  .marketing-v6 .hp-m-caps { padding: 32px 0 0; }
+  .marketing-v6 .hp-m-caps .eyebrow {
+    font-family: var(--em-mono, var(--font-mono), monospace);
+    font-size: 11px;
+    color: var(--em-ash, #76786E);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .marketing-v6 .hp-m-h2 {
+    font-family: var(--em-sans, var(--font-inter), system-ui, sans-serif);
+    font-size: 26px;
+    line-height: 30px;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    margin: 10px 0 0;
+    color: var(--em-graphite, #1A1B17);
+  }
+  .marketing-v6 .hp-m-lede {
+    font-family: var(--em-sans, var(--font-inter), system-ui, sans-serif);
+    font-size: 14px;
+    color: var(--em-ink, #42443D);
+    margin-top: 10px;
+    line-height: 20px;
+  }
+  .marketing-v6 .hp-m-cap-list {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .marketing-v6 .hp-m-cap {
+    background: var(--em-chalk, #FFFFFF);
+    border: 1px solid var(--em-fog, #D8D5CC);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .marketing-v6 .hp-m-cap .cap-eb {
+    font-family: var(--em-mono, var(--font-mono), monospace);
+    font-size: 11px;
+    color: var(--em-forest, #0F3B2E);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .marketing-v6 .hp-m-cap .cap-h {
+    font-family: var(--em-sans, var(--font-inter), system-ui, sans-serif);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin-top: 4px;
+    color: var(--em-graphite, #1A1B17);
+  }
+  .marketing-v6 .hp-m-cap .cap-s {
+    font-family: var(--em-sans, var(--font-inter), system-ui, sans-serif);
+    font-size: 13px;
+    color: var(--em-ink, #42443D);
+    line-height: 19px;
+    margin-top: 4px;
+  }
+
+  /* Final CTA */
+  .marketing-v6 .hp-m-cta-section { padding: 24px 0 32px; }
+  .marketing-v6 .hp-m-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 56px;
+    background: var(--em-safety, #FF6A1F);
+    color: #FFFFFF;
+    border-radius: 10px;
+    font-family: var(--em-sans, var(--font-inter), system-ui, sans-serif);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1.5px 0 rgba(0,0,0,0.18);
+  }
+  .marketing-v6 .hp-m-cta:hover { background: var(--em-safety-2, #E0531A); }
+}
