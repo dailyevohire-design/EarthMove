@@ -20,8 +20,8 @@ export function SiteFooter() {
           <Link href="/material-match" className="text-[17px] font-medium hover:underline">Material Match</Link>
           <Link href="/trust" className="text-[17px] font-medium hover:underline">Ground Check</Link>
           <Link href="/learn" className="text-[17px] font-medium hover:underline">Learn</Link>
-          <Link href="/signup?role=gc" className="text-[17px] font-medium hover:underline">Contractor Sign Up</Link>
-          <Link href="/signup?role=driver" className="text-[17px] font-medium hover:underline">Driver Sign Up</Link>
+          <Link href="/join?role=gc" className="text-[17px] font-medium hover:underline">Contractor Sign Up</Link>
+          <Link href="/join?role=driver" className="text-[17px] font-medium hover:underline">Driver Sign Up</Link>
         </nav>
 
         <div className="mt-12 h-px bg-[rgba(245,241,232,0.15)]" />

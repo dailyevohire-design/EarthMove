@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import { useState, type ReactNode } from 'react'
 
 const DEPTHS = [
@@ -171,9 +170,9 @@ export function CoverageCalculator() {
             <p style={{ fontSize: 15, color: 'var(--ink)', margin: 0 }}>
               This is a fleet job. We&apos;ll route it through dispatch — talk to us for volume rates.
             </p>
-            <Link href="/contact" className="btn btn-primary" style={{ marginTop: 14, height: 44, padding: '0 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center' }}>
+            <a href="#zipForm" className="btn btn-primary" style={{ marginTop: 14, height: 44, padding: '0 16px', fontSize: 14, display: 'inline-flex', alignItems: 'center' }}>
               Contact dispatch
-            </Link>
+            </a>
           </div>
         ) : (
           <div id="truckRec" className="calc-truck-grid">
