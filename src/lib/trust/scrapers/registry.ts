@@ -5,6 +5,8 @@ import { scrapeDallasPermits } from './dallas-open-data';
 import { scrapeDenverPermits } from './denver-pim';
 import { scrapeCoSosBiz } from './co-sos-biz';
 import { scrapeTxSosBiz } from './tx-sos-biz';
+import { scrapeCoDoraDiscipline } from './co-dora-discipline';
+import { scrapeTxTdlrOrders } from './tx-tdlr-orders';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -46,6 +48,12 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
 
     case 'tx_sos_biz':
       return scrapeTxSosBiz({ legalName: input.legalName });
+
+    case 'co_dora':
+      return scrapeCoDoraDiscipline({ legalName: input.legalName });
+
+    case 'tx_tdlr':
+      return scrapeTxTdlrOrders({ legalName: input.legalName });
 
     case 'mock_source':
       return mockScraperEvidence(input);

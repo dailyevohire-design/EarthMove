@@ -802,3 +802,89 @@ finding is invalid as written — the actual Rocky Mountain Construction
 Company is currently in Good Standing in CO SOS, and the scraper just
 picked the wrong sibling entity.
 
+
+### FOLLOWUP-TSBPE-DISCIPLINARY-NO-ENDPOINT
+
+TX State Board of Plumbing Examiners (TSBPE) — homepage and probed paths
+(`/disciplinary-actions/`, `/enforcement/`, `/final-orders/`) returned 301
+redirects with no machine-readable disciplinary list landing page. Likely
+the disciplinary content is PDF-only or buried in non-machine-readable
+sections.
+
+**Severity:** MEDIUM — TX plumber disciplinary verification has no clean
+public endpoint, leaving a coverage gap between TDLR (which excludes
+plumbers) and TSBPE (no machine-readable surface).
+
+**Action:** Manual probe of TSBPE for a quarterly PDF; if found, add a
+PDF-text-extract scraper. If not, communicate the limit explicitly in
+homeowner-facing report copy ("plumber-board disciplinary actions in TX
+not currently surfaced").
+
+### FOLLOWUP-DENVER-CPD-CLOUDFLARE
+
+Denver Community Planning & Development contractor licensing search at
+`https://www.denvergov.org/contractorlicensing` and the documented search
+sub-path returned `Empty reply from server` (Cloudflare-style block) when
+probed via `curl -L`. The actual `/Contractor-License-Search` URL does
+respond 200 to one variant but fails on follow-up. JS-rendered SPA likely.
+
+**Severity:** HIGH for Denver-market launch — most homeowner searches in
+Denver are GCs, and CO has no statewide GC license. Denver GC verification
+is the largest single CO coverage gap.
+
+**Action:** Either (a) implement a headless-browser scrape (Playwright)
+post-launch, (b) request a CSV export from Denver CPD via Open Data
+contact, or (c) explicitly disclose the gap on the homeowner-facing
+report when state=CO and city=Denver.
+
+### FOLLOWUP-OSHA-FORM-RECON
+
+OSHA Establishment Search (osha.gov/pls/imis/establishment.html) — form
+recon ambiguous. Static HTML grep returned no `<form action>` markup.
+DOL bulk enforcement data probes (`enforcedata.dol.gov`,
+`catalog.data.gov?q=osha+inspection`) returned empty result sets. Need
+deeper investigation: either the OSHA form uses JS-injected action URLs
+(JSP CGI hidden behind onclick handlers), or the bulk data lives on
+`enforcedata.dol.gov` under a different category path I missed.
+
+**Severity:** HIGH — OSHA willful citations are one of the strongest
+adverse signals available from public records.
+
+**Action:** Browser dev-tools probe of the OSHA form's actual network
+request; OR find the DOL enforcement bulk catalog the forms ultimately
+query.
+
+### FOLLOWUP-CO-DORA-INSURANCE-NO-SEPARATE-ENDPOINT
+
+CO DORA insurance lookup (Sub-Unit 6) — no public endpoint distinct from
+the per-license `LicenseLookup.aspx` page, which returns HTTP 405 even
+with browser UA. The 7s5z-vewr Socrata dataset (used by the new
+`co_dora` scraper) does not include insurance-policy fields.
+
+**Severity:** LOW — CO DORA does not appear to expose contractor
+insurance policy verification publicly. Workers' comp insurance can be
+verified through the CO Pinnacol Assurance public lookup, but that's a
+separate source not currently in the registry.
+
+**Action:** Either add a Pinnacol Assurance scraper (CO state-fund WC
+verification) or drop the "insurance verification" claim from CO-side
+homeowner copy.
+
+### FOLLOWUP-TX-TDI-CONTRACTOR-INSURANCE-PREMISE-WRONG
+
+Sub-Unit 7 spec premise was wrong. Texas Department of Insurance (TDI)
+publishes lookups for insurance CARRIERS and AGENTS — not for whether a
+specific contractor holds active GL/WC coverage. Searching tdi.texas.gov
+for a contractor name returns no contractor-side records.
+
+The closest alternative is `tdi.texas.gov/wc/employer/` — a workers' comp
+EMPLOYER REGISTRY that verifies whether an employer is registered to
+provide WC, but doesn't expose policy-level details (carrier, limit,
+expiration).
+
+**Severity:** MEDIUM — this affects pre-launch copy if any homeowner-facing
+material claims "we verify your TX contractor's insurance".
+
+**Action:** Re-aim at the TX WC employer registry as a yes/no signal, OR
+drop TX insurance verification from homeowner copy. **Decision needed
+from product side.**
