@@ -742,3 +742,63 @@ the `license_score` ORDER BY: `license_not_found` (priority 3) outranks
 Chunk 3. Apply the same priority swap pre-emptively before those scrapers
 ship — `license_active` should outrank `license_not_found`.
 
+### FOLLOWUP-DALLAS-DATASET-STALE
+
+`dallas_open_data` scraper queries the Dallas Open Data permits dataset
+`e7gq-4sah`, but the upstream dataset has not been updated since 2019. Every
+production `dallas_open_data` evidence row currently writes `permits_5y=0`
+because the 5-year window starts after the dataset's freeze date. Effect:
+every Dallas finding is `permit_history_low`/`clean=0` regardless of the
+contractor's actual recent activity. The synth handler (post-calibration-fix)
+correctly hedges this in narrative but the data is structurally absent.
+
+**Action:** locate Dallas's current permits dataset (post-2019 source —
+likely a different dataset ID or moved to a different city portal). Catalog
+candidates `24uj-dj8v`, `76t5-zqzr`, `mkbn-caye` show metadata `updated
+2026-05-03` but all return 404 on `/resource/{id}.json`; deeper recon needed.
+
+**Severity:** HIGH for Dallas market launch credibility, MEDIUM for tomorrow's
+wire because press piece pivots to Pool B = TX Comptroller signal instead.
+Reference: pre-Migration-127 PCL job
+`0671ff6c-355d-49d5-a784-89be8f67531f` returned 0 Dallas permits;
+investigation 2026-05-03 confirmed dataset frozen at end of 2019.
+
+### FOLLOWUP-AGGRO-NAME-RESOLUTION
+
+Substitute contractor name "Aggregate Industries Colorado" did not resolve
+to any CO SOS entity (parent Holcim entity exists as
+`HOLCIM SOLUTIONS & PRODUCTS LLC`). Surface area: production users typing
+brand names that don't match legal entity names will get a HIGH-risk false
+signal driven by `business_not_found` rather than any actual adverse
+finding.
+
+**Mitigation:** brand-to-legal-entity resolver (search business databases
+for "doing-business-as" mappings, or pull from CO SOS trade name registry).
+
+**Severity:** LOW — synth correctly explains "no CO SOS match found" in
+the red_flag prose, doesn't fabricate. Add to brand-resolution roadmap.
+
+### FOLLOWUP-PICKBESTMATCH-DISSOLVED-PREFERENCE
+
+For the `Rocky Mountain Construction Company` query in the Chunk 2.5 data
+piece run, the CO SOS scraper's `pickBestMatch` returned the
+`Rocky Mountain Construction Company L.L.C., Dissolved June 7, 2010`
+entity (Milliken, CO) over the actively-Good-Standing
+`Rocky Mountain Construction Company` (Englewood, CO) which was Row 2 in
+the same Socrata response. Root cause: when multiple rows normalize to the
+same string after entity-suffix + status-suffix stripping,
+`rows.find(...)` returns the first match in Socrata's default order, and
+Socrata returned the dissolved entity first.
+
+**Action:** `pickBestMatch` heuristic must prefer status precedence when
+multiple rows share a normalized-equal name. Order:
+`Good Standing > Delinquent > Voluntarily Dissolved > Forfeited`. When
+in doubt, prefer the most-recently-formed.
+
+**Severity:** MEDIUM — affects edge-case homeowner searches where multiple
+entities share a partial name. Schedule for Chunk 3 batch. **Press impact:**
+the proposed "1 of 50 contractors linked to a dissolved 2010 entity"
+finding is invalid as written — the actual Rocky Mountain Construction
+Company is currently in Good Standing in CO SOS, and the scraper just
+picked the wrong sibling entity.
+
