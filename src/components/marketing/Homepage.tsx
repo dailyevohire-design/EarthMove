@@ -345,66 +345,54 @@ export async function Homepage() {
             </div>
 
             <div className="truck-grid">
-              <div className="card" style={{ padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={{ fontSize: 13, color: 'var(--ink-2)' }}>Small dump</div>
-                  <div className="num" style={{ fontSize: 16 }}>5 ton</div>
+              <article className="truck-photo">
+                <div className="bay">
+                  <div className="stamp">DUMP TRAILER</div>
+                  <div className="tons"><div className="n">5 ton</div><div className="yd">~3 yd³</div></div>
+                  <Image src="/assets/trucks/dump-trailer.png" alt="Pickup with dump trailer" width={1280} height={258} sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 90vw" />
                 </div>
-                <div style={{ height: 110, display: 'flex', alignItems: 'flex-end' }}>
-                  <svg viewBox="0 0 240 90" style={{ width: '80%' }}>
-                    <path d="M70 40 L160 40 L170 65 L60 65 Z" fill="#0F1411" />
-                    <path d="M75 40 Q 115 22 155 40 Z" fill="#B8472A" />
-                    <path d="M160 40 L195 40 L195 65 L170 65 Z" fill="#0F1411" />
-                    <rect x="170" y="44" width="20" height="12" fill="#FAFAF7" />
-                    <circle cx="85" cy="68" r="9" fill="#0F1411" /><circle cx="85" cy="68" r="3" fill="#FAFAF7" />
-                    <circle cx="155" cy="68" r="9" fill="#0F1411" /><circle cx="155" cy="68" r="3" fill="#FAFAF7" />
-                    <circle cx="183" cy="68" r="9" fill="#0F1411" /><circle cx="183" cy="68" r="3" fill="#FAFAF7" />
-                  </svg>
+                <div className="meta">
+                  <h3>Single-driveway scale</h3>
+                  <p>Covers ~245 sq ft at 4″ deep. Pickup-pulled — fits tight access, narrow gates, one-car drives.</p>
+                  <div className="foot"><span>4-wheel · bumper-pull</span><span className="cta">SIZE FOR ME →</span></div>
                 </div>
-                <div className="display" style={{ fontSize: 20, marginTop: 12 }}>Single-driveway scale</div>
-                <p className="ink-2" style={{ fontSize: 14, marginTop: 4 }}>Covers ~50 sq ft at 4″ deep. Fits tight access — narrow gates, low branches, one-car drives.</p>
-              </div>
-              <div className="card" style={{ padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={{ fontSize: 13, color: 'var(--ink-2)' }}>Standard dump</div>
-                  <div className="num" style={{ fontSize: 16 }}>14 ton</div>
+              </article>
+              <article className="truck-photo">
+                <div className="bay">
+                  <div className="stamp">TANDEM DUMP</div>
+                  <div className="tons"><div className="n">12 ton</div><div className="yd">10 yd³</div></div>
+                  <Image src="/assets/trucks/tandem.png" alt="Tandem dump truck" width={1262} height={526} sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 90vw" />
                 </div>
-                <div style={{ height: 110, display: 'flex', alignItems: 'flex-end' }}>
-                  <svg viewBox="0 0 320 90" style={{ width: '90%' }}>
-                    <path d="M50 35 L220 35 L235 65 L40 65 Z" fill="#0F1411" />
-                    <path d="M58 35 Q 138 12 215 35 Z" fill="#B8472A" />
-                    <path d="M220 35 L275 35 L275 65 L235 65 Z" fill="#0F1411" />
-                    <rect x="232" y="40" width="32" height="14" fill="#FAFAF7" />
-                    <circle cx="70" cy="68" r="11" fill="#0F1411" /><circle cx="70" cy="68" r="4" fill="#FAFAF7" />
-                    <circle cx="160" cy="68" r="11" fill="#0F1411" /><circle cx="160" cy="68" r="4" fill="#FAFAF7" />
-                    <circle cx="190" cy="68" r="11" fill="#0F1411" /><circle cx="190" cy="68" r="4" fill="#FAFAF7" />
-                    <circle cx="255" cy="68" r="11" fill="#0F1411" /><circle cx="255" cy="68" r="4" fill="#FAFAF7" />
-                  </svg>
+                <div className="meta">
+                  <h3>Most common load</h3>
+                  <p>Covers ~810 sq ft at 4″ deep. The right load for most residential and small commercial jobs.</p>
+                  <div className="foot"><span>6-wheel · 2 rear axles</span><span className="cta">SIZE FOR ME →</span></div>
                 </div>
-                <div className="display" style={{ fontSize: 20, marginTop: 12 }}>Most common load</div>
-                <p className="ink-2" style={{ fontSize: 14, marginTop: 4 }}>Covers ~140 sq ft at 4″ deep. The right load for most residential and small commercial jobs.</p>
-              </div>
-              <div className="card" style={{ padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={{ fontSize: 13, color: 'var(--ink-2)' }}>Tri-axle</div>
-                  <div className="num" style={{ fontSize: 16 }}>25 ton</div>
+              </article>
+              <article className="truck-photo">
+                <div className="bay">
+                  <div className="stamp">TRI-AXLE DUMP</div>
+                  <div className="tons"><div className="n">18 ton</div><div className="yd">15 yd³</div></div>
+                  <Image src="/assets/trucks/triaxle.png" alt="Tri-axle dump truck" width={1235} height={494} sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 90vw" />
                 </div>
-                <div style={{ height: 110, display: 'flex', alignItems: 'flex-end' }}>
-                  <svg viewBox="0 0 400 90" style={{ width: '100%' }}>
-                    <path d="M40 28 L260 28 L280 65 L30 65 Z" fill="#0F1411" />
-                    <path d="M48 28 Q 150 4 255 28 Z" fill="#B8472A" />
-                    <path d="M260 28 L340 28 L340 65 L280 65 Z" fill="#0F1411" />
-                    <rect x="285" y="34" width="48" height="16" fill="#FAFAF7" />
-                    <circle cx="68" cy="68" r="13" fill="#0F1411" /><circle cx="68" cy="68" r="4" fill="#FAFAF7" />
-                    <circle cx="160" cy="68" r="13" fill="#0F1411" /><circle cx="160" cy="68" r="4" fill="#FAFAF7" />
-                    <circle cx="195" cy="68" r="13" fill="#0F1411" /><circle cx="195" cy="68" r="4" fill="#FAFAF7" />
-                    <circle cx="230" cy="68" r="13" fill="#0F1411" /><circle cx="230" cy="68" r="4" fill="#FAFAF7" />
-                    <circle cx="318" cy="68" r="13" fill="#0F1411" /><circle cx="318" cy="68" r="4" fill="#FAFAF7" />
-                  </svg>
+                <div className="meta">
+                  <h3>Contractor scale</h3>
+                  <p>Covers ~1,215 sq ft at 4″ deep. Sized for large fills, pad prep, and split deliveries.</p>
+                  <div className="foot"><span>10-wheel · 3 rear axles</span><span className="cta">SIZE FOR ME →</span></div>
                 </div>
-                <div className="display" style={{ fontSize: 20, marginTop: 12 }}>Contractor scale</div>
-                <p className="ink-2" style={{ fontSize: 14, marginTop: 4 }}>Covers ~250 sq ft at 4″ deep. Sized for large fills, pad prep, and split deliveries.</p>
-              </div>
+              </article>
+              <article className="truck-photo">
+                <div className="bay">
+                  <div className="stamp">END-DUMP 18</div>
+                  <div className="tons"><div className="n">24 ton</div><div className="yd">20 yd³</div></div>
+                  <Image src="/assets/trucks/end-dump.png" alt="End-dump 18-wheeler" width={1352} height={519} sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 90vw" />
+                </div>
+                <div className="meta">
+                  <h3>Full-yard fill</h3>
+                  <p>Covers ~1,620 sq ft at 4″ deep. Semi tractor + end-dump trailer. Wide-open access required.</p>
+                  <div className="foot"><span>18-wheel · semi + trailer</span><span className="cta">SIZE FOR ME →</span></div>
+                </div>
+              </article>
             </div>
 
             <CoverageCalculator />

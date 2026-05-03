@@ -293,9 +293,22 @@
 
 /* QUANTITY HELPER */
 .marketing-v6 .truck-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 48px; }
-@media (min-width: 768px) { .marketing-v6 .truck-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 640px) { .marketing-v6 .truck-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .marketing-v6 .truck-grid { grid-template-columns: repeat(4, 1fr); } }
 .marketing-v6 .truck-card { border: 1px solid var(--line); border-radius: 14px; padding: 20px; background: #fff; transition: all .2s ease; }
 .marketing-v6 .truck-card.on { border-color: var(--action); background: var(--action-soft); box-shadow: 0 1px 0 var(--action) inset; }
+.marketing-v6 .truck-photo { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.marketing-v6 .truck-photo .bay { position: relative; height: 220px; padding: 18px 18px 0; background: linear-gradient(180deg, #F5F4F0 0%, #ECEAE3 70%, #D8D5CC 100%); display: flex; align-items: center; justify-content: center; }
+.marketing-v6 .truck-photo .bay img { max-width: 100%; max-height: 168px; width: auto; height: auto; object-fit: contain; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.18)); }
+.marketing-v6 .truck-photo .stamp { position: absolute; top: 16px; left: 18px; font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--ink-3); font-weight: 700; }
+.marketing-v6 .truck-photo .tons { position: absolute; top: 14px; right: 18px; text-align: right; }
+.marketing-v6 .truck-photo .tons .n { font-size: 26px; font-weight: 600; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.marketing-v6 .truck-photo .tons .yd { font-size: 11px; color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+.marketing-v6 .truck-photo .meta { padding: 16px 18px 18px; }
+.marketing-v6 .truck-photo .meta h3 { font-size: 19px; margin: 0; letter-spacing: -0.015em; color: var(--ink); }
+.marketing-v6 .truck-photo .meta p { font-size: 13px; color: var(--ink-2); line-height: 1.45; margin: 6px 0 0; }
+.marketing-v6 .truck-photo .foot { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; gap: 8px; font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 11px; color: var(--ink-3); }
+.marketing-v6 .truck-photo .foot .cta { color: var(--action); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .marketing-v6 .canvas { background: linear-gradient(180deg, var(--commerce-cream), var(--commerce-cream-2)); border: 1px solid var(--line); border-radius: 14px; position: relative; overflow: hidden; }
 .marketing-v6 .calc-grid { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: stretch; }
 @media (min-width: 1024px) { .marketing-v6 .calc-grid { grid-template-columns: 5fr 7fr; } }
