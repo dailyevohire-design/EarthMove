@@ -50,7 +50,7 @@ export async function scrapeSamGovExclusions(input: SamGovInput): Promise<Scrape
   try {
     resp = await fetchFn(url.toString(), {
       method: 'GET',
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/hal+json' },
       signal: controller.signal,
     });
   } catch (err: any) {
