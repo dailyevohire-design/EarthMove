@@ -35,6 +35,7 @@ export default async function DriverHome() {
 
   return (
     <>
+      <div className="driver-desktop">
       <header className="mb-7">
         <span
           className="inline-flex items-center gap-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#2A332E]"
@@ -93,6 +94,61 @@ export default async function DriverHome() {
       <ProtectionPanel />
       <DocumentVault />
       <AccountPanels />
+      </div>
+
+      {/* Mobile-native parallel block — visible only ≤767px */}
+      <div className="driver-mobile">
+        <header className="dm-header">
+          <div className="dm-avatar">{(driver?.id ?? '—').toString().slice(0, 2).toUpperCase()}</div>
+          <div className="dm-driver-info">
+            <div className="dm-name">Driver dashboard</div>
+            <div className="dm-meta">{active ? `Active · ${active.material_type}` : 'Idle · waiting on dispatch'}</div>
+          </div>
+          <button className="dm-menu" aria-label="Menu">≡</button>
+        </header>
+
+        <div className="dm-tabs" role="tablist">
+          <button role="tab" aria-pressed={!active}>At yard</button>
+          <button role="tab" aria-pressed={!!active}>On route</button>
+          <button role="tab" aria-pressed={false}>Off duty</button>
+        </div>
+
+        {active && (
+          <>
+            <div className="dm-eyebrow">Current load · #{String(active.id).slice(-6).toUpperCase()}</div>
+            <div className="dm-load-card">
+              <div className="dm-load-line">
+                {Number(active.tons) || '—'} t · {active.material_type}
+                <span className="dm-on-time">On time</span>
+              </div>
+              <div className="dm-load-sub">{pickupYard} → {dropCity}</div>
+            </div>
+            <div className="dm-load-actions">
+              <button className="dm-msg-btn">Message</button>
+              <button className="dm-arrived-btn">Arrived on site</button>
+            </div>
+          </>
+        )}
+
+        <div className="dm-eyebrow">Today · at a glance</div>
+        <div className="dm-stats">
+          <div className="dm-stat">
+            <div className="eyebrow">Loads</div>
+            <div className="figure">4</div>
+            <div className="caption">today</div>
+          </div>
+          <div className="dm-stat">
+            <div className="eyebrow">Tons</div>
+            <div className="figure">53.2</div>
+            <div className="caption">hauled</div>
+          </div>
+          <div className="dm-stat">
+            <div className="eyebrow">Hours</div>
+            <div className="figure">6:12</div>
+            <div className="caption">on duty</div>
+          </div>
+        </div>
+      </div>
     </>
   )
 }

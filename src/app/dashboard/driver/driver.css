@@ -257,3 +257,113 @@
 .dark .em-trust-head        { background: linear-gradient(180deg, rgba(250,246,236,.04), var(--ink-700)); }
 .dark .em-trust-score__num  { color: var(--bone-50); }
 .dark .em-trust-row         { color: var(--bone-200); }
+
+/* ── Mobile-native parallel block (≤767px) — desktop hidden, mobile shown ── */
+.driver-mobile { display: none; }
+@media (max-width: 767px) {
+  .driver-desktop { display: none; }
+  .driver-mobile {
+    display: block;
+    background: #14191c;
+    color: white;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+  .driver-mobile .dm-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 16px 8px;
+  }
+  .driver-mobile .dm-avatar {
+    width: 40px; height: 40px; border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+  }
+  .driver-mobile .dm-driver-info { flex: 1; }
+  .driver-mobile .dm-name { font-size: 15px; font-weight: 500; }
+  .driver-mobile .dm-meta {
+    font-family: var(--font-mono); font-size: 11px;
+    color: rgba(255,255,255,0.6); margin-top: 2px;
+  }
+  .driver-mobile .dm-menu {
+    background: transparent; border: 1px solid rgba(255,255,255,0.2);
+    color: white; border-radius: 8px; width: 36px; height: 36px;
+  }
+  .driver-mobile .dm-tabs {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    margin: 8px 16px 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 999px; overflow: hidden;
+  }
+  .driver-mobile .dm-tabs button {
+    background: transparent; border: none; color: rgba(255,255,255,0.6);
+    padding: 10px 4px; font-family: var(--font-mono);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    cursor: pointer;
+  }
+  .driver-mobile .dm-tabs button[aria-pressed="true"] {
+    background: #c97a3c; color: white;
+  }
+  .driver-mobile .dm-eyebrow {
+    font-family: var(--font-mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.5);
+    padding: 16px 20px 8px;
+  }
+  .driver-mobile .dm-load-card {
+    background: rgba(255,255,255,0.04);
+    border-left: 3px solid #c97a3c;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 0 16px 12px;
+  }
+  .driver-mobile .dm-load-line {
+    font-size: 16px; font-weight: 500;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .driver-mobile .dm-on-time {
+    background: #5C7A2F; color: white; padding: 3px 8px;
+    border-radius: 999px; font-family: var(--font-mono);
+    font-size: 9px; text-transform: uppercase;
+  }
+  .driver-mobile .dm-load-sub {
+    color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 4px;
+  }
+  .driver-mobile .dm-load-actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    margin: 0 16px 24px;
+  }
+  .driver-mobile .dm-msg-btn {
+    background: rgba(255,255,255,0.08); color: white;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; padding: 12px; font-weight: 500;
+    cursor: pointer;
+  }
+  .driver-mobile .dm-arrived-btn {
+    background: #c97a3c; color: white; border: none;
+    border-radius: 10px; padding: 12px; font-weight: 500;
+    cursor: pointer;
+  }
+  .driver-mobile .dm-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 0 16px 16px; border-radius: 12px; overflow: hidden;
+  }
+  .driver-mobile .dm-stat {
+    background: #14191c; padding: 14px 12px;
+  }
+  .driver-mobile .dm-stat .eyebrow {
+    font-family: var(--font-mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.5);
+  }
+  .driver-mobile .dm-stat .figure {
+    font-family: var(--font-display); font-size: 26px;
+    font-weight: 500; margin-top: 4px;
+  }
+  .driver-mobile .dm-stat .caption {
+    font-family: var(--font-mono); font-size: 10px;
+    color: rgba(255,255,255,0.5); margin-top: 2px;
+  }
+}

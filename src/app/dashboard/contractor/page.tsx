@@ -74,6 +74,7 @@ export default async function CommandPage() {
 
   return (
     <>
+      <div className="contractor-desktop">
       <PageHead
         kicker="Contractor OS"
         title={<>Good morning, <em>{firstName}</em></>}
@@ -214,6 +215,72 @@ export default async function CommandPage() {
           </div>
         </div>
       </section>
+      </div>
+
+      {/* Mobile-native parallel block — visible only ≤767px */}
+      <div className="contractor-mobile">
+        <header className="cm-header">
+          <div className="cm-eyebrow">Today · contractor brief</div>
+          <button className="cm-chat" aria-label="Messages">⌕</button>
+        </header>
+        <h1 className="cm-greeting">Good morning, {firstName}</h1>
+
+        <section className="cm-section">
+          <div className="cm-section-head">
+            <span className="eyebrow">In flight · {stats.trucks_en_route_count} loads</span>
+            <Link href="/account/orders" className="see-all">See all</Link>
+          </div>
+          {stats.recent_orders.slice(0, 1).map(o => (
+            <div key={o.id} className="cm-live-card">
+              <span className="live-chip">LIVE</span>
+              <span className="load-id">#{o.id.slice(-6).toUpperCase()}</span>
+              <span className="load-eta">{o.status}</span>
+              <div className="load-line">{Number(o.quantity).toLocaleString()} {o.unit} · {o.material_name_snapshot}</div>
+              <div className="load-sub">{o.supplier_name_snapshot}</div>
+            </div>
+          ))}
+        </section>
+
+        <section className="cm-actions">
+          <Link className="cm-action cm-action-primary" href="/dashboard/contractor/orders/new">
+            <span>+ New order</span>
+            <span className="cm-action-sub">Place a load</span>
+          </Link>
+          <Link className="cm-action" href="/account/orders">
+            <span>Track all</span>
+            <span className="cm-action-sub">{stats.trucks_en_route_count} en route</span>
+          </Link>
+        </section>
+
+        <section className="cm-section">
+          <div className="cm-section-head">
+            <span className="eyebrow">Active jobs · {stats.active_projects.length}</span>
+            <Link href="/dashboard/contractor/projects" className="see-all">Manage</Link>
+          </div>
+          {stats.active_projects.slice(0, 4).map(p => (
+            <Link className="cm-job-row" key={p.id} href={`/dashboard/contractor/projects/${p.id}`}>
+              <span className="cm-job-avatar">{p.name.slice(0, 2).toUpperCase()}</span>
+              <span className="cm-job-info">
+                <span className="cm-job-name">{p.name}</span>
+                <span className="cm-job-meta">{fmtMoney(p.spend_cents)} spent</span>
+              </span>
+              <span className="cm-chev">→</span>
+            </Link>
+          ))}
+        </section>
+
+        <section className="cm-section">
+          <div className="eyebrow">This week · spend</div>
+          <div className="cm-week-spend">{fmtMoney(stats.this_week_spend_cents)}</div>
+        </section>
+
+        <nav className="bottom-tab-bar">
+          <Link href="/browse">Browse</Link>
+          <Link href="/account/orders">Orders</Link>
+          <Link href="/dashboard/contractor" aria-current="page">Track</Link>
+          <Link href="/account">Account</Link>
+        </nav>
+      </div>
     </>
   )
 }

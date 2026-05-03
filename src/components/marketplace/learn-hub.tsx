@@ -40,7 +40,7 @@ export function LearnHub() {
   const sideArticles = getSecondaryFeaturedArticles()
 
   return (
-    <div style={{ background: '#f8f9fa' }}>
+    <div style={{ background: 'var(--commerce-cream)' }}>
       {/* ═══ SECTION 1: HERO ═══ */}
       <section className="relative overflow-hidden min-h-[520px] flex flex-col justify-center">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d2a1a 50%, #0d1117 100%)' }} />
