@@ -244,3 +244,83 @@
 
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ============================================================
+   ORDER DETAIL — mobile dispatched-ticket layout (≤767px only)
+   ============================================================ */
+@media (max-width: 767px) {
+  .order-detail-page .order-top-strip {
+    background: var(--commerce-panel-bg);
+    color: white;
+    padding: 24px 20px;
+    border-radius: 14px;
+    margin: 16px 16px 0;
+    background-image: linear-gradient(
+      135deg,
+      transparent 0%,
+      transparent 49%,
+      rgba(255,255,255,0.04) 49%,
+      rgba(255,255,255,0.04) 51%,
+      transparent 51%
+    );
+    background-size: 24px 24px;
+  }
+  .order-detail-page .dispatched-pill {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    background: var(--commerce-trust);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .order-detail-page .order-footer-buttons {
+    position: sticky;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 8px;
+    padding: 12px 16px env(safe-area-inset-bottom, 12px);
+    background: var(--commerce-cream);
+    border-top: 1px solid var(--commerce-line);
+    z-index: 10;
+    margin-top: 16px;
+  }
+  .order-detail-page .order-footer-buttons .done-btn {
+    background: white;
+    border: 1px solid var(--commerce-line);
+    color: var(--commerce-ink);
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+  }
+  .order-detail-page .order-footer-buttons .track-btn {
+    background: var(--commerce-action);
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 500;
+    border: none;
+    text-align: center;
+    text-decoration: none;
+  }
+}
+
+/* ============================================================
+   BROWSE — filter-pill horizontal scroll (≤767px only)
+   ============================================================ */
+@media (max-width: 767px) {
+  .browse-page .filter-row {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .browse-page .filter-row::-webkit-scrollbar { display: none; }
+}

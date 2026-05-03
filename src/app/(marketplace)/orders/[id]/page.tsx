@@ -42,7 +42,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const addr = order.delivery_address_snapshot as any
 
   return (
-    <div className="container-main py-10 max-w-3xl">
+    <div className="container-main py-10 max-w-3xl order-detail-page">
       {/* Success banner */}
       {isNewOrder && (
         <div className="mb-8 p-5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-4 animate-fade-up">
@@ -167,8 +167,9 @@ export default async function OrderPage({ params, searchParams }: Props) {
         </div>
       </div>
 
-      <div className="mt-6">
-        <Link href="/account/orders" className="btn-secondary btn-md">← View all orders</Link>
+      <div className="mt-6 order-footer-buttons">
+        <Link href="/account/orders" className="btn-secondary btn-md done-btn">All orders</Link>
+        <Link href={`/dashboard/contractor`} className="btn-primary btn-md track-btn">Track delivery →</Link>
       </div>
     </div>
   )
