@@ -8,7 +8,7 @@ import {
   Menu, X, Package, User,
   LogOut, ShieldCheck, Building2, Zap, BookOpen, Search
 } from 'lucide-react'
-import { LogoMark } from './logo'
+import { Logo } from '@/components/logo'
 
 interface MobileNavProps {
   isLoggedIn: boolean
@@ -46,10 +46,7 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
           <div className="fixed top-0 right-0 bottom-0 w-72 bg-[var(--commerce-cream)] border-l border-[var(--commerce-line-strong)] z-50 flex flex-col shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between px-5 h-16 border-b border-[var(--commerce-line-strong)]">
-              <div className="flex items-center gap-2.5">
-                <LogoMark size={18} />
-                <span className="font-semibold text-[var(--commerce-ink)] text-[12px] uppercase tracking-[0.22em] leading-none">EARTHMOVE</span>
-              </div>
+              <Logo variant="wordmark" size={20} theme="positive" />
               <button
                 onClick={close}
                 className="p-1.5 rounded-lg text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] hover:bg-[var(--commerce-cream-2)] transition-colors"

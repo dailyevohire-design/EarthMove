@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Logo, LogoMark } from './logo'
+import { Logo } from '@/components/logo'
 
 function ArrowRight() {
   return (
@@ -23,7 +23,7 @@ export function SiteFooter() {
               <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-emerald-700/20 -translate-y-10 translate-x-10" />
               <div className="relative">
                 <div className="flex items-center gap-2 mb-4">
-                  <LogoMark size={20} color="#ffffff" />
+                  <Logo variant="mark" size={20} theme="reverse" />
                   <span className="text-xs font-bold tracking-widest uppercase text-emerald-400">For Drivers</span>
                 </div>
                 <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2 leading-tight">
@@ -48,7 +48,7 @@ export function SiteFooter() {
               <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-stone-600/20 -translate-y-10 translate-x-10" />
               <div className="relative">
                 <div className="flex items-center gap-2 mb-4">
-                  <LogoMark size={20} color="#ffffff" />
+                  <Logo variant="mark" size={20} theme="reverse" />
                   <span className="text-xs font-bold tracking-widest uppercase text-emerald-400">For Contractors</span>
                 </div>
                 <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2 leading-tight">
@@ -78,7 +78,7 @@ export function SiteFooter() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
             <div>
               <div className="mb-4">
-                <Logo />
+                <Link href="/" aria-label="Earthmove home"><Logo variant="wordmark" size={28} /></Link>
               </div>
               <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
                 Order bulk construction materials online. Same-day delivery in Dallas-Fort Worth and Denver.

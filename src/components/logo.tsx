@@ -26,8 +26,9 @@ export function Logo({
   className,
 }: LogoProps) {
   const fg = theme === "positive" ? EVERGREEN : CREAM;
-  const cascadeWidth = Math.round(size * 0.655);
-  const cascadeHeight = Math.round(size * 0.71);
+  const isMarkOnly = variant === "mark";
+  const cascadeWidth = isMarkOnly ? Math.round((size * 72) / 78) : Math.round(size * 0.655);
+  const cascadeHeight = isMarkOnly ? size : Math.round(size * 0.71);
   const taglineSize = +(size * 0.2).toFixed(1);
   const taglineGap = Math.round(size * 0.22);
   const rtRelief = Math.max(1, Math.round(size * 0.027));

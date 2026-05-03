@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Logo } from '@/components/layout/logo'
+import { Logo } from '@/components/logo'
 import { SignupForm } from '@/components/auth/signup-form'
 import { Zap, Truck, Gift, Bell, Bookmark, ShieldCheck } from 'lucide-react'
 
@@ -70,7 +70,7 @@ export default async function SignupPage({ searchParams }: Props) {
           {/* Left: Benefits panel */}
           <div className="order-2 lg:order-1">
             <div className="flex justify-center lg:justify-start mb-8">
-              <Logo />
+              <Link href="/" aria-label="Earthmove home"><Logo variant="mark" size={36} theme="reverse" /></Link>
             </div>
             <h1 className="text-3xl md:text-5xl font-black text-white leading-[1.05] mb-4 text-center lg:text-left">
               Join the <span className="text-emerald-400" style={{ textShadow: '0 0 32px rgba(16,185,129,0.5)' }}>insider list.</span>

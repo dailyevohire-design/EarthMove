@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Logo } from '@/components/layout/logo'
+import { Logo } from '@/components/logo'
 import { LoginForm } from '@/components/auth/login-form'
 
 export const metadata = { title: 'Sign In' }
@@ -12,7 +12,7 @@ export default async function LoginPage({ searchParams }: Props) {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16 bg-gray-50">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-10">
-          <Logo />
+          <Link href="/" aria-label="Earthmove home"><Logo variant="mark" size={36} /></Link>
         </div>
 
         <div className="card p-8">

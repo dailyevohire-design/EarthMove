@@ -962,7 +962,8 @@
     --em-ink:      #42443D;
     --em-ash:      #76786E;
     --em-silt:     #A6A89E;
-    --em-forest:   #0F3B2E;
+    --em-evergreen: #0E2A22;
+    --em-forest:   var(--em-evergreen); /* transitional alias — collapsed to single brand-green token */
     --em-forest-2: #16573F;
     --em-moss:     #2EA875;
     --em-safety:   #FF6A1F;
@@ -1274,7 +1275,8 @@
     --em-ink:      #42443D;
     --em-ash:      #76786E;
     --em-silt:     #A6A89E;
-    --em-forest:   #0F3B2E;
+    --em-evergreen: #0E2A22;
+    --em-forest:   var(--em-evergreen); /* transitional alias — collapsed to single brand-green token */
     --em-moss:     #2EA875;
     --em-safety:   #FF6A1F;
     --em-safety-2: #E0531A;

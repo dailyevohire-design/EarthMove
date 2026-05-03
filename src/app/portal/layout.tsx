@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Package, ShoppingCart, LogOut } from 'lucide-react'
-import { LogoMark } from '@/components/layout/logo'
+import { Logo } from '@/components/logo'
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -31,7 +31,7 @@ export default async function PortalLayout({ children }: { children: React.React
       <aside className="w-56 flex-shrink-0 border-r border-gray-200 flex flex-col bg-gray-50 sticky top-0 h-screen">
         <div className="h-16 flex items-center px-5 border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <LogoMark size={18} />
+            <Logo variant="mark" size={18} />
             <div>
               <div className="text-xs font-black text-gray-900 leading-tight truncate max-w-[130px]">
                 {supplier?.name ?? 'Supplier Portal'}

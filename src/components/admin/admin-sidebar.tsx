@@ -8,7 +8,7 @@ import {
   ChevronRight, Building2, Rocket
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { LogoMark } from '@/components/layout/logo'
+import { Logo } from '@/components/logo'
 
 const NAV = [
   { href: '/admin',                label: 'Dashboard',      icon: LayoutDashboard },
@@ -35,7 +35,7 @@ export function AdminSidebar() {
     <aside className="w-56 flex-shrink-0 border-r border-gray-200 flex flex-col bg-gray-50 sticky top-0 h-screen">
       <div className="h-16 flex items-center px-5 border-b border-gray-200">
         <Link href="/" className="flex items-center gap-2">
-          <LogoMark size={18} />
+          <Logo variant="mark" size={18} />
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-900 leading-tight">EARTHMOVE</div>
             <div className="text-[10px] text-emerald-600 tracking-wide">Admin</div>

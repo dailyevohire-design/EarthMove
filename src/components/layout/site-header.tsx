@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { UserMenu } from './user-menu'
 import { MobileNav } from './mobile-nav'
-import { Logo } from './logo'
+import { Logo as BrandLogo } from '@/components/logo'
 import { LocationIndicator } from '@/components/marketplace/location-modal'
 import { Zap, HelpCircle, Scale } from 'lucide-react'
 import { isCollectionsEnabled } from '@/lib/collections/feature-flag'
@@ -26,7 +26,7 @@ export async function SiteHeader() {
       <div className="container-main">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Logo />
+          <Link href="/" aria-label="Earthmove home" className="flex items-center"><BrandLogo variant="wordmark" size={22} /></Link>
 
           {/* Center: location + nav */}
           <div className="hidden md:flex items-center gap-4">

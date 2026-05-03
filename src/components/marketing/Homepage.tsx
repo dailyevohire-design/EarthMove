@@ -21,6 +21,7 @@ import { HowItWorksSection } from './HowItWorksSection'
 import { MarketStatusStrip } from './MarketStatusStrip'
 import { CoverageCalculator } from './CoverageCalculator'
 import { MobileNav } from '@/components/layout/mobile-nav'
+import { Logo } from '@/components/logo'
 import { getMaterialImage } from '@/lib/material-images'
 
 const ChevronDown = ({ size = 18 }: { size?: number }) => (
@@ -53,7 +54,7 @@ export async function Homepage() {
     <div className="marketing-v6">
       <NavScroll>
           <div className="max nav-inner">
-            <Link href="/" className="nav-logo">EarthMove<span className="dot">.</span></Link>
+            <Link href="/" className="nav-logo" aria-label="Earthmove home"><Logo variant="wordmark" size={28} /></Link>
             <nav className="nav-links">
               <Link href="/browse">Materials</Link>
               <Link href="/deals">Deals</Link>
