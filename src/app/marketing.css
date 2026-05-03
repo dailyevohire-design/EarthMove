@@ -1857,3 +1857,23 @@
 @media (min-width: 768px) {
   .marketing-v6 .hv-cta { height: 64px !important; }
 }
+
+/* === Sample dispatch card contrast — WCAG AA (Phase 5, commit 4) === */
+.marketing-v6 .hv-mobile-dispatch .hmd-eyebrow {
+  color: rgba(245, 241, 232, 0.75) !important;
+}
+.marketing-v6 .hv-mobile-dispatch .hmd-truck {
+  color: rgba(245, 241, 232, 0.85) !important;
+}
+.marketing-v6 .hv-mobile-dispatch .hmd-ttl {
+  color: rgba(245, 241, 232, 1.0) !important;
+}
+.marketing-v6 .hv-mobile-dispatch .hmd-step {
+  color: rgba(245, 241, 232, 0.7) !important;
+}
+.marketing-v6 .hv-mobile-dispatch .hmd-step.hmd-step-active {
+  color: #FFA76A !important;
+}
+.marketing-v6 .hv-mobile-dispatch .hmd-photo-chip {
+  color: rgba(245, 241, 232, 0.65) !important;
+}
