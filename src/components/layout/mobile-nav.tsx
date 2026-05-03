@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -18,7 +19,19 @@ interface MobileNavProps {
 export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const close = () => setOpen(false)
+
+  useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [open])
 
   const signOut = async () => {
     await createClient().auth.signOut()
@@ -27,77 +40,85 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
     router.refresh()
   }
 
+  const drawer = open ? (
+    <>
+      <div
+        onClick={close}
+        aria-hidden="true"
+        className="fixed inset-0 z-[90] bg-black/40 backdrop-blur-sm"
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Site navigation"
+        className="fixed inset-y-0 right-0 z-[100] w-[85vw] max-w-sm bg-[var(--em-cream)] border-l border-[var(--em-evergreen)]/15 shadow-2xl flex flex-col"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 h-16 border-b border-[var(--em-evergreen)]/15">
+          <Logo variant="wordmark" size={20} theme="positive" />
+          <button
+            onClick={close}
+            className="p-1.5 rounded-lg text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] hover:bg-[var(--commerce-cream-2)] transition-colors"
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
+          <NavLink href="/browse" icon={<Package size={15} />} onClick={close}>Materials</NavLink>
+          <NavLink href="/deals" icon={<Zap size={15} />} onClick={close} accent>Today's Deals</NavLink>
+          <NavLink href="/learn" icon={<BookOpen size={15} />} onClick={close}>Learn</NavLink>
+          <NavLink href="/material-match" icon={<Search size={15} />} onClick={close}>Material Match</NavLink>
+
+          {isLoggedIn && (
+            <>
+              <div className="h-px bg-[var(--commerce-line)] my-3" />
+              <NavLink href="/account" icon={<User size={15} />} onClick={close}>My Account</NavLink>
+              <NavLink href="/account/orders" icon={<Package size={15} />} onClick={close}>My Orders</NavLink>
+              {role === 'admin' && (
+                <NavLink href="/admin" icon={<ShieldCheck size={15} />} onClick={close}>Admin Dashboard</NavLink>
+              )}
+              {role === 'supplier' && (
+                <NavLink href="/portal" icon={<Building2 size={15} />} onClick={close}>Supplier Portal</NavLink>
+              )}
+            </>
+          )}
+        </nav>
+
+        {/* Footer */}
+        <div className="px-3 py-4 border-t border-[var(--em-evergreen)]/15">
+          {isLoggedIn ? (
+            <button
+              onClick={signOut}
+              className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm text-[var(--commerce-ink-3)] hover:bg-[var(--commerce-cream-2)] hover:text-red-600 transition-colors"
+            >
+              <LogOut size={15} />
+              Sign out
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <Link href="/login" onClick={close} className="btn-secondary btn-md w-full">Sign in</Link>
+              <Link href="/signup" onClick={close} className="btn-primary btn-md w-full">Get Started</Link>
+            </div>
+          )}
+        </div>
+      </aside>
+    </>
+  ) : null
+
   return (
-    <div className="md:hidden">
+    <>
       <button
         onClick={() => setOpen(true)}
-        className="p-2 rounded-lg text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] hover:bg-[var(--commerce-cream-2)] transition-colors"
+        className="md:hidden p-2 rounded-lg text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] hover:bg-[var(--commerce-cream-2)] transition-colors"
         aria-label="Open menu"
       >
         <Menu size={22} />
       </button>
-
-      {open && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm"
-            onClick={close}
-          />
-          <div className="fixed top-0 right-0 bottom-0 w-72 bg-[var(--commerce-cream)] border-l border-[var(--commerce-line-strong)] z-50 flex flex-col shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 h-16 border-b border-[var(--commerce-line-strong)]">
-              <Logo variant="wordmark" size={20} theme="positive" />
-              <button
-                onClick={close}
-                className="p-1.5 rounded-lg text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] hover:bg-[var(--commerce-cream-2)] transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Nav */}
-            <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
-              <NavLink href="/browse" icon={<Package size={15} />} onClick={close}>Materials</NavLink>
-              <NavLink href="/deals" icon={<Zap size={15} />} onClick={close} accent>Today's Deals</NavLink>
-              <NavLink href="/learn" icon={<BookOpen size={15} />} onClick={close}>Learn</NavLink>
-              <NavLink href="/material-match" icon={<Search size={15} />} onClick={close}>Material Match</NavLink>
-
-              {isLoggedIn && (
-                <>
-                  <div className="h-px bg-[var(--commerce-line)] my-3" />
-                  <NavLink href="/account" icon={<User size={15} />} onClick={close}>My Account</NavLink>
-                  <NavLink href="/account/orders" icon={<Package size={15} />} onClick={close}>My Orders</NavLink>
-                  {role === 'admin' && (
-                    <NavLink href="/admin" icon={<ShieldCheck size={15} />} onClick={close}>Admin Dashboard</NavLink>
-                  )}
-                  {role === 'supplier' && (
-                    <NavLink href="/portal" icon={<Building2 size={15} />} onClick={close}>Supplier Portal</NavLink>
-                  )}
-                </>
-              )}
-            </nav>
-
-            {/* Footer */}
-            <div className="px-3 py-4 border-t border-[var(--commerce-line-strong)]">
-              {isLoggedIn ? (
-                <button
-                  onClick={signOut}
-                  className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm text-[var(--commerce-ink-3)] hover:bg-[var(--commerce-cream-2)] hover:text-red-600 transition-colors"
-                >
-                  <LogOut size={15} />
-                  Sign out
-                </button>
-              ) : (
-                <div className="space-y-2">
-                  <Link href="/login" onClick={close} className="btn-secondary btn-md w-full">Sign in</Link>
-                  <Link href="/signup" onClick={close} className="btn-primary btn-md w-full">Get Started</Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+      {mounted && drawer && createPortal(drawer, document.body)}
+    </>
   )
 }
 
