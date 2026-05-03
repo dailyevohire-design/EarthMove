@@ -689,3 +689,56 @@ Unblock order: `npm audit fix` → merge trivial PR to observe first CI run → 
 ### Status
 Agent 10 complete. Release **BLOCKED** pending items in `audit.md`.
 
+---
+
+## 2026-05-03 — Followups (Chunk 1 B+C verification)
+
+### FOLLOWUP-CROSS-SOURCE-NAME-NORM
+
+Permit scrapers (`denver_pim`, `dallas_open_data`) must strip common entity
+suffixes (`, Inc.` / `Inc` / `LLC` / `, LLC` / `Corp` / `Corporation`) before
+querying permit DBs. Production users will type variant forms; current behavior
+returns 0 permits on suffix mismatches.
+
+**Severity:** HIGH for usability, MEDIUM for launch (stays Mon AM accept).
+
+**Reference:** PCL Construction Services returns 86 permits when queried as
+`PCL Construction Services`, 0 permits when queried as
+`PCL Construction Services, Inc.`
+
+### FOLLOWUP-INNGEST-BRANNAN
+
+`trust_jobs` row `c4e5d2de-75b0-44dd-97c2-dc2ed1bf64ce` and two re-enqueues
+all stuck `status=queued, started_at=null, error_message=null`. Pattern is
+contractor-scoped (`Brannan Sand & Gravel`, normalized `brannan sand & gravel`),
+reproducible across distinct event IDs. Other contractors in same batches
+ran fine. Suspect: Inngest event-fingerprint dedup against a stale event for
+this contractor_id, OR concurrency-key collision specific to this contractor's
+hash. Investigate via Inngest dashboard event lifecycle for events
+`01KQPYEPMHVCVVYT539WFGG927` + retries.
+
+**Severity:** MEDIUM — single contractor, not systemic.
+
+### FOLLOWUP-PERMITS-IN-SCORER
+
+`calculate_contractor_trust_score` does not include permit history
+(`denver_pim`, `dallas_open_data`) in the deterministic score. Contractors
+with active CO SOS but zero permits score 100 because no scoring component
+pulls them down. Synth narrative correctly flags in `red_flags` but homeowner
+sees "100/LOW" prominently.
+
+**Proposed fix:** add a new `permit_score` category with weight ~0.10 and
+rules: 5+ permits/5y in primary jurisdiction → 90-100, 1-4 → 60-75, 0 with
+active business → 50-65 (not lower, since legit DBA / sub / permit-exempt
+cases are the typical zero-permit explanation).
+
+**Severity:** MEDIUM — schedule Chunk 2.5 post-launch.
+
+### FOLLOWUP-CROSS-CATEGORY-PRIORITY
+
+Same cross-jurisdiction priority bug fixed in migration 127 also exists in
+the `license_score` ORDER BY: `license_not_found` (priority 3) outranks
+`license_active` (priority 4). Will bite when DORA + TDLR scrapers ship in
+Chunk 3. Apply the same priority swap pre-emptively before those scrapers
+ship — `license_active` should outrank `license_not_found`.
+
