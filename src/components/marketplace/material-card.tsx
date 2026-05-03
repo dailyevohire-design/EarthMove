@@ -4,25 +4,20 @@ import { formatCurrency, unitLabel } from '@/lib/pricing-engine'
 import { getMaterialImage } from '@/lib/material-images'
 import { Truck, Zap, Clock, Star, ArrowRight } from 'lucide-react'
 
-const CATEGORY_COLORS: Record<string, string> = {
-  'Fill': 'bg-amber-600', 'Sand': 'bg-yellow-600', 'Gravel': 'bg-gray-600',
-  'Aggregate': 'bg-orange-600', 'Rock': 'bg-slate-600', 'Recycled': 'bg-emerald-600',
-  'Specialty': 'bg-purple-600',
-}
+const KNOWN_CAT_SLUGS = new Set([
+  'fill', 'sand', 'gravel', 'aggregate', 'rock', 'recycled', 'specialty',
+])
 
-const FALLBACK_GRADIENTS: Record<string, string> = {
-  'Fill': 'linear-gradient(135deg, #8B6914, #C4A042)',
-  'Sand': 'linear-gradient(135deg, #C4A862, #E8D5A3)',
-  'Gravel': 'linear-gradient(135deg, #6B7280, #9CA3AF)',
-  'Rock': 'linear-gradient(135deg, #374151, #6B7280)',
-  'Aggregate': 'linear-gradient(135deg, #92400E, #D97706)',
-  'Recycled': 'linear-gradient(135deg, #065F46, #10B981)',
-  'Specialty': 'linear-gradient(135deg, #4C1D95, #7C3AED)',
+function catTokens(slug: string): { color: string; bg: string } {
+  const s = KNOWN_CAT_SLUGS.has(slug) ? slug : 'gravel'
+  return {
+    color: `var(--commerce-cat-${s})`,
+    bg:    `var(--commerce-cat-${s}-bg)`,
+  }
 }
 
 export function MaterialCard({ card }: { card: MarketMaterialCard }) {
-  const catColor = CATEGORY_COLORS[card.category_name] ?? 'bg-gray-600'
-  const fallbackGradient = FALLBACK_GRADIENTS[card.category_name] ?? 'linear-gradient(135deg, #374151, #6B7280)'
+  const { color: catColor, bg: fallbackBg } = catTokens(card.category_slug)
   const imageUrl = getMaterialImage(card.slug)
 
   return (
@@ -34,7 +29,7 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
         active:translate-y-0 active:scale-[0.985] active:duration-75
         active:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.06)]">
         {/* Image */}
-        <div className="relative overflow-hidden" style={{ height: 220, background: fallbackGradient }}>
+        <div className="relative overflow-hidden" style={{ height: 220, background: fallbackBg }}>
           <img
             src={imageUrl}
             alt={card.name}
@@ -47,7 +42,10 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
 
           {/* Category pill */}
           <div className="absolute top-3 left-3">
-            <span className={`px-2.5 py-1 rounded-lg ${catColor} text-white text-[10px] font-bold uppercase tracking-wide`}>
+            <span
+              className="px-2.5 py-1 rounded-lg text-white text-[10px] font-bold uppercase tracking-wide"
+              style={{ backgroundColor: catColor }}
+            >
               {card.category_name}
             </span>
           </div>
@@ -113,7 +111,7 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
 }
 
 export function DealCard({ card }: { card: MarketMaterialCard }) {
-  const fallbackGradient = FALLBACK_GRADIENTS[card.category_name] ?? 'linear-gradient(135deg, #374151, #6B7280)'
+  const { bg: fallbackBg } = catTokens(card.category_slug)
   const imageUrl = getMaterialImage(card.slug)
 
   return (
@@ -124,7 +122,7 @@ export function DealCard({ card }: { card: MarketMaterialCard }) {
         hover:border-red-200 hover:-translate-y-1
         active:translate-y-0 active:scale-[0.985] active:duration-75
         active:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.06)]">
-        <div className="relative overflow-hidden" style={{ height: 200, background: fallbackGradient }}>
+        <div className="relative overflow-hidden" style={{ height: 200, background: fallbackBg }}>
           <img
             src={imageUrl}
             alt={card.name}

@@ -117,6 +117,25 @@
   --commerce-mat-soil: #2E4A2A;
   --commerce-mat-struct: #7A7A6E;
 
+  /* CATEGORIES — marketplace card accent + fallback gradient.
+     Hex parity with prior CATEGORY_COLORS (Tailwind *-600 variants)
+     and FALLBACK_GRADIENTS to preserve zero visual delta. Keyed by
+     material_categories.slug (lowercased category name). */
+  --commerce-cat-fill: #d97706;
+  --commerce-cat-fill-bg: linear-gradient(135deg, #8B6914, #C4A042);
+  --commerce-cat-sand: #ca8a04;
+  --commerce-cat-sand-bg: linear-gradient(135deg, #C4A862, #E8D5A3);
+  --commerce-cat-gravel: #4b5563;
+  --commerce-cat-gravel-bg: linear-gradient(135deg, #6B7280, #9CA3AF);
+  --commerce-cat-aggregate: #ea580c;
+  --commerce-cat-aggregate-bg: linear-gradient(135deg, #92400E, #D97706);
+  --commerce-cat-rock: #475569;
+  --commerce-cat-rock-bg: linear-gradient(135deg, #374151, #6B7280);
+  --commerce-cat-recycled: #059669;
+  --commerce-cat-recycled-bg: linear-gradient(135deg, #065F46, #10B981);
+  --commerce-cat-specialty: #9333ea;
+  --commerce-cat-specialty-bg: linear-gradient(135deg, #4C1D95, #7C3AED);
+
   /* RADII */
   --commerce-r-sm: 6px;
   --commerce-r-md: 8px;
