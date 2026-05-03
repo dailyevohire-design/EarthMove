@@ -1956,3 +1956,51 @@
 }
 /* Override old .hiw-step-sub if it lingers anywhere */
 .marketing-v6 .hiw-step-sub { display: none !important; }
+
+/* === HIW differentiator caps — 4-up bare-icon rebuild (Phase 5, commit 7) === */
+.marketing-v6 .hiw-caps-head {
+  margin-top: 64px;
+  margin-bottom: 32px;
+}
+@media (min-width: 768px) {
+  .marketing-v6 .hiw-caps-head { margin-top: 96px; margin-bottom: 48px; }
+}
+.marketing-v6 .hiw-caps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .marketing-v6 .hiw-caps { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+}
+@media (min-width: 1024px) {
+  .marketing-v6 .hiw-caps { grid-template-columns: repeat(4, 1fr); }
+}
+.marketing-v6 .hiw-cap {
+  background: #ffffff;
+  border: 1px solid rgba(14, 42, 34, 0.08);
+  border-radius: 10px;
+  padding: 24px 22px;
+}
+.marketing-v6 .hiw-cap .hiw-cap-icon-bare {
+  color: var(--em-evergreen, #0E2A22);
+  display: block;
+  margin-bottom: 16px;
+}
+.marketing-v6 .hiw-cap-h {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 500;
+  font-size: 19px;
+  line-height: 1.25;
+  color: var(--em-evergreen, #0E2A22);
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+.marketing-v6 .hiw-cap-p {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--em-graphite, #1A1B17);
+  margin: 0;
+}
+/* Kill old icon container styling on cap */
+.marketing-v6 .hiw-cap-icon { display: none !important; }

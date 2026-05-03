@@ -1,3 +1,5 @@
+import { Target, Tag, Clock, Camera, type LucideIcon } from 'lucide-react'
+
 const STEPS = [
   {
     n: '01',
@@ -25,38 +27,28 @@ const STEPS = [
   },
 ] as const
 
-const CAPS = [
+const CAPS: { Icon: LucideIcon; head: string; body: string }[] = [
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M3 7l9-4 9 4-9 4-9-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-        <path d="M3 12l9 4 9-4M3 17l9 4 9-4" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-      </svg>
-    ),
-    head: 'Multi-supplier sourcing',
-    body: 'One order. We route to whoever has it cheapest delivered to your jobsite — not whoever picks up the phone first.',
+    Icon: Target,
+    head: 'Right material, no guesswork.',
+    body: "Tell us the job — driveway, drainage, fill, garden bed. We match the spec, the size, and the truck. You don't need to know the difference between #57 stone and road base.",
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="4" y="3" width="16" height="18" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-        <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    ),
-    head: 'Ticket + BOL on every load',
-    body: 'Scale ticket and bill of lading captured at pickup, attached to the order. Forensic-grade paperwork without the paperwork.',
+    Icon: Tag,
+    head: 'One delivered price. No surprises.',
+    body: 'Real quote at your ZIP in seconds — material, hauling, yard fee, tax. The number you see is the number on the invoice. No callbacks.',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M3 12h13M16 7l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M21 12H8M8 17l-5-5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
-      </svg>
-    ),
-    head: 'Backhaul-aware pricing',
-    body: 'Trucks earn on the way out and the way back, so per-ton rates land lower. Empty miles are the enemy. We hunt them.',
+    Icon: Clock,
+    head: 'Delivery on your window, not theirs.',
+    body: "Pick the day. Pick the time block. We dispatch when you're ready — not when the yard feels like sending a truck. Same-day in Denver and DFW.",
   },
-] as const
+  {
+    Icon: Camera,
+    head: 'Photo-confirmed at the drop.',
+    body: 'Truck arrives, we photograph the load on your site, attach it to your order. Proof for your records, your client, your insurance, or your HOA — whichever shows up first.',
+  },
+]
 
 export function HowItWorksSection() {
   return (
@@ -84,10 +76,15 @@ export function HowItWorksSection() {
           ))}
         </ol>
 
+        <div className="hiw-caps-head">
+          <p className="hiw-eyebrow">Why earthmove</p>
+          <h2 className="hiw-h2">Ordering aggregate shouldn&apos;t be a phone tag.</h2>
+        </div>
+
         <div className="hiw-caps" role="list">
           {CAPS.map((c) => (
             <article key={c.head} className="hiw-cap" role="listitem">
-              <span className="hiw-cap-icon" aria-hidden="true">{c.icon}</span>
+              <c.Icon size={32} strokeWidth={1.75} aria-hidden="true" className="hiw-cap-icon-bare" />
               <h3 className="hiw-cap-h">{c.head}</h3>
               <p className="hiw-cap-p">{c.body}</p>
             </article>
