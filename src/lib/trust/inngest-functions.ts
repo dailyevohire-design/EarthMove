@@ -185,8 +185,8 @@ export const runTrustJobV2 = inngest.createFunction(
       return data
     })
 
-    // 3. Determine sources for this tier
-    const sources = sourcesForTier(job.tier)
+    // 3. Determine sources for this tier (DB-driven via migration 200; cached after cold boot).
+    const sources = await sourcesForTier(job.tier)
 
     // 4. Mark running + plan counters
     await step.run('v2-mark-running', async () => {

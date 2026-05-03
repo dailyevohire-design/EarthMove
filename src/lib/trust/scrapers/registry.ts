@@ -100,18 +100,11 @@ function mockScraperEvidence(input: RunScraperInput): ScraperEvidence {
   };
 }
 
-// Tier -> source list. Hardcoded for C5; future commit moves this to a
-// trust_tier_sources table for runtime config. Permit + SOS sources are
-// dispatched for every paid tier; out-of-state queries return business_not_found
-// cleanly (each scraper queries one jurisdiction's dataset only).
-export const TIER_SOURCES: Record<string, string[]> = {
-  free: ['mock_source'],
-  standard: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
-  plus: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
-  deep_dive: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
-  forensic: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
-};
-
-export function sourcesForTier(tier: string): string[] {
-  return TIER_SOURCES[tier] ?? TIER_SOURCES.standard;
-}
+// Tier -> source list. DB-driven via trust_source_registry.applicable_tiers
+// (migration 200). The loader caches in module scope after first read and
+// falls back to a hardcoded set on DB error so the scraper chain still
+// functions during a Supabase outage.
+//
+// Async signature: this is invoked from Inngest function steps which are
+// already async, so the await cost is one DB round-trip per cold boot.
+export { sourcesForTierAsync as sourcesForTier } from './tier-sources-loader';
