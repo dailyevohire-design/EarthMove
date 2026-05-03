@@ -1796,3 +1796,11 @@
     padding-bottom: 40px !important;
   }
 }
+
+/* === Truck card access meta row (Phase 4 follow-up) === */
+.marketing-v6 .truck-photo p.text-xs {
+  font-size: 12px !important;
+  color: rgb(120 113 108) !important; /* stone-500 */
+  margin-top: 8px !important;
+  line-height: 1.4 !important;
+}
