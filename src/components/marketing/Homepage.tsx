@@ -187,7 +187,7 @@ export async function Homepage() {
                 </div>
                 <div className="op-caption">
                   <span className="l"><span className="op-mark" />Sample view · illustrates delivery flow</span>
-                  <a href="#how" className="link">How delivery works <span className="arr">→</span></a>
+                  <a href="#how-it-works" className="link">How delivery works <span className="arr">→</span></a>
                 </div>
               </div>
             </div>
@@ -409,33 +409,6 @@ export async function Homepage() {
           </div>
         </section>
 
-        {/* HOW IT WORKS */}
-        <section className="section trust-band" id="how">
-          <div className="max">
-            <div style={{ marginBottom: 48 }}>
-              <div className="eyebrow">How it works</div>
-              <h2 className="sec-title" style={{ maxWidth: 820 }}>From ZIP to drop-zone in three steps.</h2>
-              <p className="ink-2" style={{ marginTop: 16, fontSize: 17, maxWidth: 640 }}>No phone tag. No "we'll call you back." The full path, in your hands.</p>
-            </div>
-            <div className="steps-grid">
-              <div className="step">
-                <div className="step-num">01</div>
-                <h3 className="display" style={{ fontSize: 22, marginTop: 20 }}>Quote your ZIP.</h3>
-                <p className="ink-2" style={{ marginTop: 8, fontSize: 15 }}>Drop your ZIP to confirm we deliver. Pick the outcome — driveway base, drainage, fill, soil, or structural — and we match the spec from the closest yard.</p>
-              </div>
-              <div className="step">
-                <div className="step-num">02</div>
-                <h3 className="display" style={{ fontSize: 22, marginTop: 20 }}>Schedule the load.</h3>
-                <p className="ink-2" style={{ marginTop: 8, fontSize: 15 }}>Pick the date and window. Drop a pin for placement. Add the gate code, the slope, the low branch — your driver reads it before the truck rolls.</p>
-              </div>
-              <div className="step">
-                <div className="step-num">03</div>
-                <h3 className="display" style={{ fontSize: 22, marginTop: 20 }}>Dispatch and drop.</h3>
-                <p className="ink-2" style={{ marginTop: 8, fontSize: 15 }}>Driver assigned from the nearest yard. Live ETA. Photo and signed ticket attached the moment the truck tips. One-tap reorder for the next load.</p>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* TRUST / CAPABILITIES */}
         <section className="section trust-band" id="trust" style={{ borderTop: 0 }}>
