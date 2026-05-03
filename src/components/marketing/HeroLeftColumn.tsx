@@ -162,23 +162,23 @@ export function HeroLeftColumn() {
         <span className="mk"><CheckIcon /> Live ETA from dispatch</span>
       </div>
 
-      <div className="hv-sig">
-        <div className="sig-item">
-          <div className="sig-eb">Launching</div>
-          <div className="sig-ttl">Denver +<br />Dallas–Fort Worth</div>
-          <div className="sig-lbl">More markets in pipeline</div>
-        </div>
-        <div className="sig-item">
-          <div className="sig-eb">Materials</div>
-          <div className="sig-ttl">Base, fill,<br />stone, soil</div>
-          <div className="sig-lbl">Five outcome families</div>
-        </div>
-        <div className="sig-item">
-          <div className="sig-eb">Every order</div>
-          <div className="sig-ttl">Photo<br />+ ticket</div>
-          <div className="sig-lbl">Attached to invoice on tip</div>
-        </div>
-      </div>
+      <section className="trust-band-section">
+        <article className="trust-fact-card">
+          <div className="trust-fact-eyebrow">LAUNCHING</div>
+          <h3 className="trust-fact-title">Denver + Dallas–Fort Worth</h3>
+          <p className="trust-fact-supporting">Houston, Austin, Phoenix in 2026 pipeline.</p>
+        </article>
+        <article className="trust-fact-card">
+          <div className="trust-fact-eyebrow">MATERIALS</div>
+          <h3 className="trust-fact-title">Base, fill, stone, soil, decorative</h3>
+          <p className="trust-fact-supporting">Five families that match what crews actually build with.</p>
+        </article>
+        <article className="trust-fact-card">
+          <div className="trust-fact-eyebrow">EVERY ORDER</div>
+          <h3 className="trust-fact-title">Photo + scale ticket</h3>
+          <p className="trust-fact-supporting">Attached to your invoice on every load.</p>
+        </article>
+      </section>
     </div>
   )
 }

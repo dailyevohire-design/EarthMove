@@ -1877,3 +1877,54 @@
 .marketing-v6 .hv-mobile-dispatch .hmd-photo-chip {
   color: rgba(245, 241, 232, 0.65) !important;
 }
+
+/* === Trust band section — 3 stacked cards (Phase 5, commit 5) === */
+.marketing-v6 .trust-band-section {
+  background: var(--em-paper, #F5F4F0);
+  padding: 48px 16px;
+  margin: 32px -16px 0;
+}
+@media (min-width: 768px) {
+  .marketing-v6 .trust-band-section {
+    background: transparent;
+    padding: 0;
+    margin: 32px 0 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+.marketing-v6 .trust-fact-card {
+  background: #ffffff;
+  border: 1px solid rgba(14, 42, 34, 0.08);
+  border-radius: 10px;
+  padding: 24px 22px;
+  margin-bottom: 12px;
+}
+@media (min-width: 768px) {
+  .marketing-v6 .trust-fact-card { margin-bottom: 0; }
+}
+.marketing-v6 .trust-fact-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--em-graphite, #1A1B17);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+.marketing-v6 .trust-fact-title {
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: var(--em-evergreen, #0E2A22);
+  margin: 0 0 10px;
+  letter-spacing: -0.01em;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+.marketing-v6 .trust-fact-supporting {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--em-graphite, #1A1B17);
+  margin: 0;
+}
