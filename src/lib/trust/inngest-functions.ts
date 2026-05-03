@@ -11,6 +11,7 @@ import {
   buildFreeTierSynthesis,
   validateSynthesis,
   type EvidenceItem,
+  type PhoenixSignal,
   type ScoreContext,
   type SynthesisOutput,
   type SynthesisTier,
@@ -354,6 +355,23 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
       return (data ?? []) as EvidenceItem[];
     });
 
+    // Tier 3 #1 commit 3: surface phoenix relationships to the LLM. Best-effort —
+    // failures degrade to empty array, synthesis still runs with phoenix_score
+    // alone (the score itself already drives buildFreeTierSynthesis fallback +
+    // validator phoenix-mention requirement).
+    const phoenixSignals = await step.run('synth-load-phoenix-signals', async () => {
+      const { data, error } = await admin.rpc('detect_contractor_phoenix_signals_enriched', {
+        p_contractor_id: job.contractor_id,
+      });
+      if (error) {
+        console.warn('[synth-phoenix] detect_contractor_phoenix_signals_enriched failed', {
+          job_id, contractor_id: job.contractor_id, error: error.message,
+        });
+        return [] as PhoenixSignal[];
+      }
+      return (Array.isArray(data) ? data : []) as PhoenixSignal[];
+    });
+
     const synthesis: SynthesisOutput = await step.run('synth-generate', async () => {
       if (!tierCfg.useLLM) {
         return buildFreeTierSynthesis(score);
@@ -379,6 +397,7 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
               stateCode: String(job.state_code).trim(),
               score,
               evidence,
+              phoenixSignals,
             }),
           },
         ],

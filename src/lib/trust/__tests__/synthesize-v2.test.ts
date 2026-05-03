@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildFreeTierSynthesis,
+  buildUserPrompt,
   validateSynthesis,
   type EvidenceItem,
+  type PhoenixSignal,
   type ScoreContext,
 } from '../synthesize-v2-prompt';
 
@@ -230,5 +232,92 @@ describe('buildFreeTierSynthesis', () => {
     for (const word of ['fraud', 'scam', 'criminal', 'illegal', 'unsafe', 'dangerous', 'unreliable', 'dishonest']) {
       expect(blob).not.toMatch(new RegExp(`\\b${word}\\b`));
     }
+  });
+});
+
+describe('buildUserPrompt — PHOENIX_SIGNALS section (Tier 3 #1 commit 3)', () => {
+  const baseArgs = {
+    contractorName: 'Acme Construction LLC',
+    city: 'Denver',
+    stateCode: 'CO',
+    score: baseScore,
+    evidence: baseEvidence,
+  };
+
+  it('omits PHOENIX_SIGNALS section when phoenixSignals is undefined', () => {
+    const out = buildUserPrompt(baseArgs);
+    expect(out).not.toContain('PHOENIX_SIGNALS');
+  });
+
+  it('omits PHOENIX_SIGNALS section when phoenixSignals is empty', () => {
+    const out = buildUserPrompt({ ...baseArgs, phoenixSignals: [] });
+    expect(out).not.toContain('PHOENIX_SIGNALS');
+  });
+
+  it('officer signal with source_evidence_id renders as citable', () => {
+    const signals: PhoenixSignal[] = [{
+      signal: 'shared_officer_with_dissolved',
+      weight: 0.5,
+      evidence: {
+        officer_id: 'officer-uuid-1',
+        other_contractor_id: 'contractor-uuid-2',
+        edge_id: 'edge-uuid-1',
+        source_evidence_id: 'ev-uuid-99',
+      },
+    }];
+    const out = buildUserPrompt({ ...baseArgs, phoenixSignals: signals });
+    expect(out).toContain('PHOENIX_SIGNALS (1 signals)');
+    expect(out).toContain('shared_officer_with_dissolved');
+    expect(out).toContain('weight=0.5');
+    expect(out).toContain('cite via evidence_id [ev-uuid-99]');
+    expect(out).not.toContain('NARRATIVE ONLY');
+  });
+
+  it('officer signal without source_evidence_id renders as narrative-only', () => {
+    const signals: PhoenixSignal[] = [{
+      signal: 'shared_officer_with_active',
+      weight: 0.25,
+      evidence: {
+        officer_id: 'officer-uuid-1',
+        other_contractor_id: 'contractor-uuid-2',
+        edge_id: 'edge-uuid-1',
+        // no source_evidence_id (pre-migration-121 link, or NULL)
+      },
+    }];
+    const out = buildUserPrompt({ ...baseArgs, phoenixSignals: signals });
+    expect(out).toContain('shared_officer_with_active');
+    expect(out).toContain('NARRATIVE ONLY (no source_evidence_id available)');
+    expect(out).not.toContain('cite via evidence_id');
+  });
+
+  it('aggregate signals always render as narrative-only', () => {
+    const signals: PhoenixSignal[] = [
+      { signal: 'shared_phone', weight: 0.4, evidence: { match_count: 4 } },
+      { signal: 'shared_ein', weight: 0.6, evidence: {} },
+      { signal: 'address_shared_with_many', weight: 0.25, evidence: { other_contractor_count: 7 } },
+    ];
+    const out = buildUserPrompt({ ...baseArgs, phoenixSignals: signals });
+    expect(out).toContain('PHOENIX_SIGNALS (3 signals)');
+    expect(out).toContain('shared_phone');
+    expect(out).toContain('shared_ein');
+    expect(out).toContain('address_shared_with_many');
+    // Three lines, each marked narrative-only
+    const narrativeLines = (out.match(/NARRATIVE ONLY \(aggregate signal\)/g) ?? []);
+    expect(narrativeLines).toHaveLength(3);
+  });
+
+  it('mixed signals render correctly together', () => {
+    const signals: PhoenixSignal[] = [
+      {
+        signal: 'shared_officer_with_dissolved',
+        weight: 0.5,
+        evidence: { officer_id: 'o1', other_contractor_id: 'c2', edge_id: 'e1', source_evidence_id: 'ev1' },
+      },
+      { signal: 'shared_phone', weight: 0.4, evidence: { match_count: 3 } },
+    ];
+    const out = buildUserPrompt({ ...baseArgs, phoenixSignals: signals });
+    expect(out).toContain('PHOENIX_SIGNALS (2 signals)');
+    expect(out).toContain('cite via evidence_id [ev1]');
+    expect(out).toContain('NARRATIVE ONLY (aggregate signal)');
   });
 });

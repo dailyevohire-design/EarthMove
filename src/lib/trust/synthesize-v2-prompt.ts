@@ -100,6 +100,13 @@ export function buildSystemPrompt(): string {
     '5. Set confidence=LOW if evidence_count<3 OR structured_hit_rate<0.4.',
     '   Otherwise set HIGH or MEDIUM based on evidence quality.',
     '6. Output via the submit_synthesis tool only. No prose response.',
+    '7. PHOENIX_SIGNALS handling (when section is present in user message):',
+    '   - For each signal marked "cite via evidence_id [...]", emit a red_flag',
+    '     citing that evidence_id. The signal is a defensible, evidence-backed',
+    '     finding — surface it as a first-class red_flag.',
+    '   - For each signal marked "NARRATIVE ONLY", DO NOT emit a red_flag for',
+    '     it. Incorporate it into phoenix_pattern_assessment instead. These',
+    '     signals lack a citable per-row evidence chain by construction.',
   ].join('\n');
 }
 
@@ -109,13 +116,15 @@ export function buildUserPrompt(args: {
   stateCode: string;
   score: ScoreContext;
   evidence: EvidenceItem[];
+  phoenixSignals?: PhoenixSignal[];
 }): string {
-  const { contractorName, city, stateCode, score, evidence } = args;
+  const { contractorName, city, stateCode, score, evidence, phoenixSignals } = args;
   const evidenceLines = evidence.map((e) =>
     `[${e.id}] source=${e.source_key} type=${e.finding_type} ` +
     `confidence=${e.confidence}: ${e.finding_summary}`
   );
-  return [
+
+  const lines: string[] = [
     `Contractor: ${contractorName}`,
     `Location: ${city ?? '(unspecified)'}, ${stateCode}`,
     '',
@@ -131,9 +140,31 @@ export function buildUserPrompt(args: {
     '',
     `Evidence pool (${evidence.length} rows):`,
     ...evidenceLines,
-    '',
-    'Synthesize via submit_synthesis tool now.',
-  ].join('\n');
+  ];
+
+  if (phoenixSignals && phoenixSignals.length > 0) {
+    lines.push('');
+    lines.push(`PHOENIX_SIGNALS (${phoenixSignals.length} signals):`);
+    for (const sig of phoenixSignals) {
+      if (sig.signal === 'shared_officer_with_dissolved' || sig.signal === 'shared_officer_with_active') {
+        const ev = sig.evidence;
+        const cite = ev.source_evidence_id
+          ? `cite via evidence_id [${ev.source_evidence_id}]`
+          : 'NARRATIVE ONLY (no source_evidence_id available)';
+        lines.push(
+          `  [${sig.signal}] weight=${sig.weight} officer=${ev.officer_id} other_contractor=${ev.other_contractor_id} edge=${ev.edge_id} — ${cite}`,
+        );
+      } else {
+        lines.push(
+          `  [${sig.signal}] weight=${sig.weight} ${JSON.stringify(sig.evidence)} — NARRATIVE ONLY (aggregate signal)`,
+        );
+      }
+    }
+  }
+
+  lines.push('');
+  lines.push('Synthesize via submit_synthesis tool now.');
+  return lines.join('\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -163,6 +194,30 @@ export type EvidenceItem = {
   confidence: string;
   finding_summary: string;
 };
+
+/**
+ * Phoenix signal returned by detect_contractor_phoenix_signals_enriched (migration 122).
+ * shared_officer_* signals carry an optional source_evidence_id pulled from
+ * trust_officer_links (this contractor's own officer write — guaranteed in-pool).
+ * Aggregate signals (phone/address/ein/website/name) carry no per-row evidence.
+ */
+export type PhoenixSignal =
+  | { signal: 'shared_officer_with_dissolved'; weight: 0.5;
+      evidence: { officer_id: string; other_contractor_id: string; edge_id: string; source_evidence_id?: string } }
+  | { signal: 'shared_officer_with_active'; weight: 0.25;
+      evidence: { officer_id: string; other_contractor_id: string; edge_id: string; source_evidence_id?: string } }
+  | { signal: 'shared_phone'; weight: 0.4;
+      evidence: { match_count: number } }
+  | { signal: 'address_shared_with_many'; weight: 0.25;
+      evidence: { other_contractor_count: number } }
+  | { signal: 'address_shared'; weight: 0.10;
+      evidence: { other_contractor_count: number } }
+  | { signal: 'shared_ein'; weight: 0.6;
+      evidence: Record<string, never> }
+  | { signal: 'shared_website'; weight: 0.35;
+      evidence: Record<string, never> }
+  | { signal: 'similar_name_same_state'; weight: 0.3;
+      evidence: { sibling_count: number } };
 
 export type SynthesisOutput = {
   summary: string;
