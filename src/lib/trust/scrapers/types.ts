@@ -7,18 +7,40 @@
  * without HTTP mocks.
  */
 
-// Subset of trust_evidence.finding_type values scrapers emit. The DB column
-// itself is freeform text (no CHECK constraint) so new values ship without an
-// enum migration; this TS union exists to prevent typos at the scraper layer.
+// Subset of trust_evidence.finding_type values scrapers emit. The DB CHECK
+// constraint (migration 201) enforces these at write time; this TS union
+// mirrors it and prevents typos at the scraper layer.
 export type TrustFindingType =
+  // license-board (extended in migration 201)
   | 'license_active' | 'license_inactive' | 'license_expired'
-  | 'license_suspended' | 'license_not_found'
+  | 'license_suspended' | 'license_revoked' | 'license_not_found'
+  | 'license_disciplinary_action' | 'license_penalty_assessed'
+  | 'license_no_record' | 'license_revoked_but_operating'
+  // business entity
   | 'business_active' | 'business_inactive' | 'business_dissolved' | 'business_not_found'
+  // OSHA (legacy + finer-grained from migration 201)
   | 'osha_violation' | 'osha_serious_violation' | 'osha_no_violations'
+  | 'osha_violations_clean' | 'osha_serious_citation' | 'osha_willful_citation'
+  | 'osha_repeat_citation' | 'osha_fatality_finding' | 'osha_inspection_no_violation'
+  // legal / civil court
   | 'legal_action_found' | 'legal_judgment_against' | 'legal_no_actions'
+  | 'civil_judgment_against' | 'civil_settlement' | 'civil_no_judgments'
+  | 'mechanic_lien_filed' | 'mechanic_lien_resolved'
+  // federal sanctions / contractor
   | 'sanction_hit' | 'sanction_clear'
+  | 'federal_contractor_active' | 'federal_contractor_past_performance'
+  | 'federal_contractor_no_record'
+  // insurance (migration 201)
+  | 'insurance_active_gl' | 'insurance_active_wc' | 'insurance_lapsed'
+  | 'insurance_no_record' | 'insurance_below_minimum' | 'insurance_carrier_name'
+  // BBB
+  | 'bbb_accredited' | 'bbb_rating' | 'bbb_complaint' | 'bbb_not_profiled'
+  | 'bbb_rating_a_plus' | 'bbb_rating_a' | 'bbb_rating_b'
+  | 'bbb_rating_c_or_below' | 'bbb_complaints_high' | 'bbb_no_profile'
+  // permits
   | 'permit_history_robust' | 'permit_history_clean'
   | 'permit_history_low' | 'permit_history_stale' | 'permit_scope_violation'
+  // operational
   | 'source_error' | 'source_not_applicable';
 
 export type TrustConfidence =
