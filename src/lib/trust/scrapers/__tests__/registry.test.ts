@@ -5,7 +5,7 @@ import { runScraper, sourcesForTier, NotImplementedScraperError } from '../regis
 
 beforeAll(() => {
   // runScraper does not pass apiKey through; SAM scraper reads env at runtime.
-  if (!process.env.SAM_GOV_API) process.env.SAM_GOV_API = 'test-key';
+  if (!process.env.SAM_GOV_API_KEY) process.env.SAM_GOV_API_KEY = 'test-key';
 });
 
 describe('runScraper', () => {
