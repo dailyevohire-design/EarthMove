@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { scrapeCoSosBiz } from '../co-sos-biz';
+import { scrapeCoSosBiz, normalizeForSocrataQuery } from '../co-sos-biz';
 import { ScraperRateLimitError, ScraperUpstreamError, ScraperTimeoutError } from '../types';
 
 function mockResponse(body: unknown, init?: { status?: number; headers?: Record<string, string> }): Response {
@@ -135,5 +135,61 @@ describe('scrapeCoSosBiz', () => {
 
   it('throws on empty legalName', async () => {
     await expect(scrapeCoSosBiz({ legalName: '   ' })).rejects.toThrow('legalName required');
+  });
+
+  describe('normalizeForSocrataQuery', () => {
+    it('strips trailing >> with optional preceding space', () => {
+      expect(normalizeForSocrataQuery('DEKAN REMODELING AND CONSTRUCTION COMPANY, LLC >>'))
+        .toBe('DEKAN REMODELING AND CONSTRUCTION COMPANY, LLC');
+      expect(normalizeForSocrataQuery('ADATA CORPORATION>>'))
+        .toBe('ADATA CORPORATION');
+    });
+
+    it('strips trailing single > marker', () => {
+      expect(normalizeForSocrataQuery('Mile High Builders, LLC>'))
+        .toBe('Mile High Builders, LLC');
+    });
+
+    it('trims leading and trailing whitespace', () => {
+      expect(normalizeForSocrataQuery('  Trailing Whitespace LLC  '))
+        .toBe('Trailing Whitespace LLC');
+    });
+
+    it('collapses runs of internal whitespace', () => {
+      expect(normalizeForSocrataQuery('1006 13th  LLC'))
+        .toBe('1006 13th LLC');
+      expect(normalizeForSocrataQuery('$1.00 Scoop  Ice Cream Shop  LLC'))
+        .toBe('$1.00 Scoop Ice Cream Shop LLC');
+    });
+
+    it('strips trailing CO SOS status-comment suffixes baked into entityname', () => {
+      expect(normalizeForSocrataQuery('Aardvark Airport Shuttle, LLC, Delinquent February 1, 2015'))
+        .toBe('Aardvark Airport Shuttle, LLC');
+      expect(normalizeForSocrataQuery('1032 W 37th Ave LLC, Dissolved August 9, 2021'))
+        .toBe('1032 W 37th Ave LLC');
+      expect(normalizeForSocrataQuery('Acosta Investments, LLC, Voluntarily Dissolved February 27, 2008'))
+        .toBe('Acosta Investments, LLC');
+    });
+
+    it('combined cleanup: status-suffix + trailing >> + double space', () => {
+      expect(normalizeForSocrataQuery('  Foo  Bar LLC, Dissolved March 1, 2024 >>  '))
+        .toBe('Foo Bar LLC');
+    });
+
+    it('passes clean names through unchanged', () => {
+      expect(normalizeForSocrataQuery('PCL Construction Services, Inc.'))
+        .toBe('PCL Construction Services, Inc.');
+    });
+  });
+
+  it('SoQL URL uses normalized search term (strips >> from DEKAN)', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(mockResponse([]));
+    await scrapeCoSosBiz({
+      legalName: 'DEKAN REMODELING AND CONSTRUCTION COMPANY, LLC >>',
+      fetchFn,
+    });
+    const calledUrl = fetchFn.mock.calls[0][0] as string;
+    expect(calledUrl).toContain('DEKAN%20REMODELING%20AND%20CONSTRUCTION%20COMPANY%2C%20LLC');
+    expect(calledUrl).not.toContain('%3E%3E'); // no encoded >>
   });
 });

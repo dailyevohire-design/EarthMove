@@ -34,8 +34,11 @@ export async function scrapeSamGovExclusions(input: SamGovInput): Promise<Scrape
 
   const fetchFn = input.fetchFn ?? fetch;
   const url = new URL(ENDPOINT);
-  url.searchParams.set('q', input.legalName);
-  url.searchParams.set('exclusionStatus', 'Active');
+  // SAM.gov v4 exclusions API: entity-name search uses `exclusionName` (NOT `q`),
+  // and the active-only filter is `recordStatus=Active` (NOT `exclusionStatus`).
+  // Source: https://open.gsa.gov/api/exclusions-api/
+  url.searchParams.set('exclusionName', input.legalName);
+  url.searchParams.set('recordStatus', 'Active');
   url.searchParams.set('api_key', apiKey);
 
   const queryRedacted = url.toString().replace(/api_key=[^&]+/, 'api_key=REDACTED');

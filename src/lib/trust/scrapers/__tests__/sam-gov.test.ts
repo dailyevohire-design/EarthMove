@@ -74,4 +74,17 @@ describe('scrapeSamGovExclusions', () => {
     server.use(http.get(URL_PATTERN, () => new HttpResponse('<html>oops</html>', { status: 200 })));
     await expect(scrapeSamGovExclusions({ legalName: 'X', apiKey: 'k' })).rejects.toBeInstanceOf(ScraperUpstreamError);
   });
+
+  it('sends v4 entity-name search via exclusionName= and recordStatus=Active (not q= / exclusionStatus=)', async () => {
+    let captured: URL | undefined;
+    server.use(http.get(URL_PATTERN, ({ request }) => {
+      captured = new URL(request.url);
+      return HttpResponse.json({ totalRecords: 0, exclusionDetails: [] });
+    }));
+    await scrapeSamGovExclusions({ legalName: 'PCL Construction Services, Inc.', apiKey: 'test' });
+    expect(captured?.searchParams.get('exclusionName')).toBe('PCL Construction Services, Inc.');
+    expect(captured?.searchParams.get('recordStatus')).toBe('Active');
+    expect(captured?.searchParams.has('q')).toBe(false);
+    expect(captured?.searchParams.has('exclusionStatus')).toBe(false);
+  });
 });

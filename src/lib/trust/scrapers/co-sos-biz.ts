@@ -12,6 +12,26 @@ const ENDPOINT = 'https://data.colorado.gov/resource/4ykn-tg5h.json';
 const DEFAULT_TIMEOUT_MS = 15_000;
 const MAX_ROWS = 10;
 
+// CO SOS entityname rows carry denormalized junk that breaks substring LIKE
+// matching when present in the search term:
+//   - trailing ">" or ">>" (legacy-name marker; observed on hundreds of rows)
+//   - trailing status comments baked into entityname itself,
+//     e.g. ", Delinquent February 1, 2015" / ", Dissolved August 9, 2021"
+//   - runs of internal whitespace (real rows: "1006 13th  LLC")
+// Helper applies ONLY to the SoQL search term, not to any stored value.
+const TRAILING_LEGACY_MARKER = /\s*>>?\s*$/;
+const TRAILING_STATUS_SUFFIX =
+  /,\s*(Delinquent|Dissolved|Voluntarily Dissolved|Forfeited|Withdrawn|Merged|Converted|Noncompliant)\b.*$/i;
+
+export function normalizeForSocrataQuery(s: string): string {
+  return s
+    .trim()
+    .replace(TRAILING_LEGACY_MARKER, '')
+    .replace(TRAILING_STATUS_SUFFIX, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export interface CoSosBizInput {
   legalName: string;
   fetchFn?: typeof fetch;
@@ -111,8 +131,10 @@ function buildAgentOfficer(row: CoSosRawRow): OfficerEntry | null {
 }
 
 function pickBestMatch(rows: CoSosRawRow[], legalName: string): CoSosRawRow {
-  const target = legalName.trim().toLowerCase();
-  const exact = rows.find(r => (r.entityname ?? '').trim().toLowerCase() === target);
+  const target = normalizeForSocrataQuery(legalName).toLowerCase();
+  const exact = rows.find(
+    r => normalizeForSocrataQuery(r.entityname ?? '').toLowerCase() === target,
+  );
   return exact ?? rows[0];
 }
 
@@ -125,7 +147,8 @@ export async function scrapeCoSosBiz(input: CoSosBizInput): Promise<ScraperEvide
   const fetchFn = input.fetchFn ?? fetch;
   const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  const escaped = legalName.replace(/'/g, "''");
+  const searchTerm = normalizeForSocrataQuery(legalName);
+  const escaped = searchTerm.replace(/'/g, "''");
   const where = `upper(entityname) like upper('%${escaped}%')`;
   const url = `${ENDPOINT}?$where=${encodeURIComponent(where)}&$limit=${MAX_ROWS}`;
 
