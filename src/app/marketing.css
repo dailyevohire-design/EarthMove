@@ -921,3 +921,322 @@
     color: var(--commerce-ink-3);
   }
 }
+
+/* ============================================================
+   INDUSTRIAL MOBILE REDESIGN — earthmove.io v2 (≤767px only)
+   Source: Claude Design / mK2tTGEtDgV1OM86Z41K7Q
+   Direction: industrial trade tool, not editorial magazine.
+   Kill the cream serif italic — adopt Inter Tight neogrotesk,
+   tabular numerals on prices/ETAs, single safety-orange CTA.
+   All rules scoped to (max-width: 767px) — desktop preserved.
+   ============================================================ */
+@media (max-width: 767px) {
+  /* ── Mobile design tokens (em-* namespace, decoupled from --commerce-*) ── */
+  .marketing-v6,
+  .order-detail-page,
+  .browse-page,
+  .learn-page,
+  .contractor-mobile,
+  .driver-mobile {
+    --em-paper:    #F5F4F0;
+    --em-chalk:    #FFFFFF;
+    --em-bone:     #ECEAE3;
+    --em-fog:      #D8D5CC;
+    --em-graphite: #1A1B17;
+    --em-asphalt:  #0E0F0C;
+    --em-ink:      #42443D;
+    --em-ash:      #76786E;
+    --em-silt:     #A6A89E;
+    --em-forest:   #0F3B2E;
+    --em-forest-2: #16573F;
+    --em-moss:     #2EA875;
+    --em-safety:   #FF6A1F;
+    --em-safety-2: #E0531A;
+    --em-flag:     #FFC233;
+    --em-stop:     #D7382B;
+    --em-sans: var(--font-inter), 'Inter Tight', 'Inter', system-ui, sans-serif;
+    --em-mono: var(--font-jetbrains-mono), 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  /* ── Marketing surface — kill cream-warm + serif italic emphasis ── */
+  .marketing-v6 {
+    background: var(--em-paper) !important;
+    color: var(--em-graphite) !important;
+    font-family: var(--em-sans) !important;
+    font-feature-settings: 'tnum' 1, 'cv11' 1;
+  }
+  .marketing-v6 .hv-bg { background: var(--em-paper) !important; }
+  .marketing-v6 .hv-bg::before,
+  .marketing-v6 .hv-bg::after { display: none !important; }
+
+  /* Hero H1 — kill italic emphasis, kill orange underline, straight Inter 600 */
+  .marketing-v6 .hv-h1 {
+    font-family: var(--em-sans) !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.06 !important;
+    color: var(--em-graphite) !important;
+    font-size: clamp(30px, 8.5vw, 38px) !important;
+  }
+  .marketing-v6 .hv-h1 .em,
+  .marketing-v6 .hv-h1 em.em {
+    font-style: normal !important;
+    font-family: var(--em-sans) !important;
+    font-weight: 600 !important;
+    color: var(--em-graphite) !important;
+    white-space: normal !important;
+  }
+  .marketing-v6 .hv-h1 .em::after,
+  .marketing-v6 .hv-h1 em.em::after { display: none !important; }
+
+  .marketing-v6 .hv-sub {
+    font-family: var(--em-sans) !important;
+    color: var(--em-ink) !important;
+    font-size: 15px !important;
+    line-height: 22px !important;
+  }
+
+  /* ZIP form — flatter, mono prefix */
+  .marketing-v6 .hv-rq {
+    background: var(--em-chalk) !important;
+    border: 1px solid var(--em-fog) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 0 1px rgba(26,27,23,0.08) !important;
+  }
+  .marketing-v6 .hv-rq-hint {
+    font-family: var(--em-mono) !important;
+    color: var(--em-ash) !important;
+  }
+  .marketing-v6 .hv-zip-pill {
+    background: var(--em-bone) !important;
+    color: var(--em-graphite) !important;
+    font-family: var(--em-mono) !important;
+  }
+  .marketing-v6 .hv-zip-pill::before { background: var(--em-moss) !important; }
+  .marketing-v6 .hv-zip {
+    background: var(--em-paper) !important;
+    border: 1px solid var(--em-fog) !important;
+    border-radius: 8px !important;
+  }
+  .marketing-v6 .hv-zip-prefix {
+    font-family: var(--em-mono) !important;
+    color: var(--em-ash) !important;
+  }
+  .marketing-v6 .hv-zip input {
+    font-family: var(--em-mono) !important;
+    color: var(--em-graphite) !important;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* CTA — single safety-orange across the whole mobile surface */
+  .marketing-v6 .hv-cta,
+  .marketing-v6 .btn-primary {
+    background: var(--em-safety) !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+    font-family: var(--em-sans) !important;
+    font-weight: 600 !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1.5px 0 rgba(0,0,0,0.18) !important;
+  }
+  .marketing-v6 .hv-cta:hover,
+  .marketing-v6 .btn-primary:hover { background: var(--em-safety-2) !important; }
+  .marketing-v6 .hv-cta-arrow { background: rgba(255,255,255,0.18) !important; }
+
+  /* Trust marks row — mono caps, no green underline tics */
+  .marketing-v6 .hv-marks .mk {
+    font-family: var(--em-mono) !important;
+    font-size: 11px !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: var(--em-ash) !important;
+  }
+  .marketing-v6 .hv-marks .mk svg { color: var(--em-moss) !important; }
+  .marketing-v6 .hv-marks .mk b { color: var(--em-graphite) !important; }
+
+  /* MarketStatusStrip — graphite chrome, mono caps, moss pulse */
+  .marketing-v6 .mss {
+    background: var(--em-graphite) !important;
+    color: var(--em-paper) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    font-family: var(--em-mono) !important;
+  }
+  .marketing-v6 .mss-dot { background: var(--em-moss) !important; }
+  .marketing-v6 .mss-markets { color: var(--em-silt) !important; }
+  .marketing-v6 .mss-status { color: var(--em-paper) !important; }
+
+  /* Section headings — kill italic emphasis class globally on mobile */
+  .marketing-v6 .sec-title em,
+  .marketing-v6 h2 em,
+  .marketing-v6 h3 em,
+  .marketing-v6 .ms-h2-em,
+  .marketing-v6 .hiw-em {
+    font-style: normal !important;
+    font-family: var(--em-sans) !important;
+    font-weight: 600 !important;
+    color: inherit !important;
+  }
+  .marketing-v6 .sec-title {
+    font-family: var(--em-sans) !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.02em !important;
+    color: var(--em-graphite) !important;
+  }
+
+  /* Eyebrows — mono caps, ash, no orange dash prefix */
+  .marketing-v6 .eyebrow,
+  .marketing-v6 .ms-eyebrow,
+  .marketing-v6 .hiw-eyebrow {
+    font-family: var(--em-mono) !important;
+    font-size: 11px !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    color: var(--em-ash) !important;
+    font-weight: 600 !important;
+  }
+  .marketing-v6 .eyebrow::before { display: none !important; }
+
+  /* MaterialSpec / HowItWorks cards — flat chalk on bone */
+  .marketing-v6 .ms-section,
+  .marketing-v6 .hiw {
+    background: var(--em-paper) !important;
+  }
+  .marketing-v6 .ms-card,
+  .marketing-v6 .hiw-cap {
+    background: var(--em-chalk) !important;
+    border: 1px solid var(--em-fog) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 0 1px rgba(26,27,23,0.04);
+  }
+  .marketing-v6 .ms-card-name,
+  .marketing-v6 .hiw-step-h,
+  .marketing-v6 .hiw-cap-h {
+    font-family: var(--em-sans) !important;
+    font-weight: 600 !important;
+    color: var(--em-graphite) !important;
+  }
+  .marketing-v6 .ms-card-grade {
+    font-family: var(--em-mono) !important;
+    color: var(--em-forest) !important;
+  }
+  .marketing-v6 .ms-card-spec-l,
+  .marketing-v6 .hiw-step-sub {
+    font-family: var(--em-mono) !important;
+    color: var(--em-ash) !important;
+  }
+  .marketing-v6 .ms-card-spec-v {
+    font-family: var(--em-sans) !important;
+    color: var(--em-graphite) !important;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* HowItWorks — numbered rows, kill the outline-stroke ghost numbers */
+  .marketing-v6 .hiw-num {
+    -webkit-text-stroke: 0 !important;
+    color: var(--em-graphite) !important;
+    font-family: var(--em-sans) !important;
+    font-feature-settings: 'tnum' 1;
+  }
+  .marketing-v6 .hiw-step {
+    border-bottom-color: var(--em-fog) !important;
+  }
+
+  /* Materials grid (homepage inline) — flat cards */
+  .marketing-v6 #materials,
+  .marketing-v6 section.section[id="materials"] {
+    background: var(--em-paper) !important;
+  }
+
+  /* Footer CTA section, FAQ — kill cream-2 backdrops */
+  .marketing-v6 #faq { background: var(--em-paper) !important; }
+}
+
+/* ============================================================
+   MOBILE — non-marketing surfaces (browse, learn, order detail)
+   Industrial token application
+   ============================================================ */
+@media (max-width: 767px) {
+  /* Order detail dispatched strip — forest header, mono ticket numbers */
+  .order-detail-page .order-top-strip {
+    background: var(--em-graphite) !important;
+    border-radius: 10px !important;
+  }
+  .order-detail-page .dispatched-pill {
+    background: var(--em-moss) !important;
+    font-family: var(--em-mono) !important;
+  }
+  .order-detail-page .order-footer-buttons {
+    background: var(--em-paper) !important;
+    border-top-color: var(--em-fog) !important;
+  }
+  .order-detail-page .order-footer-buttons .track-btn {
+    background: var(--em-safety) !important;
+  }
+
+  /* Browse — graphite ink, mono numerics */
+  .browse-page {
+    background: var(--em-paper) !important;
+    color: var(--em-graphite) !important;
+    font-family: var(--em-sans) !important;
+  }
+  .browse-page .filter-pill.active {
+    background: var(--em-graphite) !important;
+    color: var(--em-paper) !important;
+    border-color: var(--em-graphite) !important;
+  }
+
+  /* Material card — neogrotesk + mono price + safety CTA */
+  .material-card .material-card-name {
+    font-family: var(--em-sans) !important;
+    color: var(--em-graphite) !important;
+    font-weight: 600 !important;
+  }
+  .material-card .material-card-price {
+    font-family: var(--em-mono) !important;
+    color: var(--em-graphite) !important;
+    font-feature-settings: 'tnum' 1 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em !important;
+  }
+  .material-card .material-card-category {
+    font-family: var(--em-mono) !important;
+    background: var(--em-bone) !important;
+    color: var(--em-graphite) !important;
+    border-color: var(--em-fog) !important;
+  }
+
+  /* Learn — graphite chrome, no emerald accents on mobile */
+  .learn-page .knowledge-hero { background: var(--em-asphalt) !important; }
+  .learn-page .tool-tile {
+    background: var(--em-chalk) !important;
+    border-color: var(--em-fog) !important;
+    border-radius: 10px !important;
+  }
+  .learn-page .tile-title {
+    font-family: var(--em-sans) !important;
+    color: var(--em-graphite) !important;
+    font-weight: 600 !important;
+  }
+  .learn-page .tile-sub {
+    font-family: var(--em-sans) !important;
+    color: var(--em-ash) !important;
+  }
+}
+
+/* ============================================================
+   PRICE / NUMERIC TABULAR — sitewide on mobile
+   Apply tabular numerals to anything that should align in a column
+   ============================================================ */
+@media (max-width: 767px) {
+  .price-display,
+  .material-card-price,
+  .ms-card-spec-v,
+  .hiw-num,
+  .arriving-time,
+  .cm-week-spend,
+  .dm-stat .figure,
+  .mss,
+  [data-tnum] {
+    font-feature-settings: 'tnum' 1 !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+}
