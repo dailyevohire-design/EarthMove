@@ -106,10 +106,10 @@ function mockScraperEvidence(input: RunScraperInput): ScraperEvidence {
 // cleanly (each scraper queries one jurisdiction's dataset only).
 export const TIER_SOURCES: Record<string, string[]> = {
   free: ['mock_source'],
-  standard: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim'],
-  plus: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim'],
-  deep_dive: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim'],
-  forensic: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim'],
+  standard: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
+  plus: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
+  deep_dive: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
+  forensic: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
 };
 
 export function sourcesForTier(tier: string): string[] {
