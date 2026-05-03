@@ -1427,3 +1427,125 @@
     font-feature-settings: 'tnum' 1 !important;
   }
 }
+
+/* ============================================================
+   MOBILE OVERFLOW RECOVERY (≤767px) — fix regressions from
+   commits 7fb03b2 + efbfa0c. Clamps that prevent any element
+   from escaping the 390px viewport.
+   ============================================================ */
+@media (max-width: 767px) {
+  /* Hard-cap every marketing/commerce surface child to viewport width */
+  .marketing-v6 *,
+  [data-surface="commerce"] *,
+  .order-detail-page *,
+  .browse-page *,
+  .learn-page *,
+  .contractor-mobile *,
+  .driver-mobile * {
+    max-width: 100%;
+  }
+
+  /* ZIP card "FREE QUOTE · NO CALL" pill — was nowrap + 0.10em letter
+     spacing, clipped on right edge of the row. Shrink + tighten so it
+     fits next to the "01 — Delivery ZIP" eyebrow at 358px content width. */
+  .marketing-v6 .hv-zip-pill {
+    font-size: 9px !important;
+    letter-spacing: 0.04em !important;
+    padding: 3px 8px !important;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+  .marketing-v6 .hv-rq-hint {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  /* Hero copy "Spec-grade base..." overflowing — sub copy gets max-width
+     clamp + word-break so long phrases break instead of pushing horizontally. */
+  .marketing-v6 .hv-sub,
+  .marketing-v6 .hv-h1 {
+    word-break: normal;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+
+  /* Hero status strip "How dispatch works · Denver · Sample view" was
+     overflowing — was on a single line with 0.18em letter-spacing. */
+  .marketing-v6 .op-eyebrow,
+  .marketing-v6 .op-eyebrow-lbl,
+  .marketing-v6 .op-region {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .marketing-v6 .op-head {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Mobile dispatch ".hmd-row" — "arriving 11:42" eta pill was clipping.
+     Force flex-wrap (already there) + ensure children can shrink. */
+  .marketing-v6 .hv-mobile-dispatch .hmd-row { flex-wrap: wrap !important; }
+  .marketing-v6 .hv-mobile-dispatch .hmd-id,
+  .marketing-v6 .hv-mobile-dispatch .hmd-truck,
+  .marketing-v6 .hv-mobile-dispatch .hmd-eta {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .marketing-v6 .hv-mobile-dispatch .hmd-eta {
+    font-size: 10px !important;
+    padding: 3px 8px !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap;
+  }
+  .marketing-v6 .hv-mobile-dispatch .hmd-status {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .marketing-v6 .hv-mobile-dispatch .hmd-step {
+    font-size: 11px !important;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+  /* "Loaded → In transit → Drop confirmed" — the ::before "→" arrow
+     adds width; tighten the gutter so all 3 fit on one line at 358px. */
+  .marketing-v6 .hv-mobile-dispatch .hmd-step + .hmd-step::before {
+    margin-right: 6px !important;
+  }
+
+  /* HowItWorks rows — clamp wide step paragraphs */
+  .marketing-v6 .hiw-step,
+  .marketing-v6 .hiw-step-body,
+  .marketing-v6 .hiw-step-p,
+  .marketing-v6 .hiw-step-h {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  /* MaterialSpec card spec-row — value side could push wide */
+  .marketing-v6 .ms-card,
+  .marketing-v6 .ms-card-spec-v {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  /* MarketStatusStrip — already nowrap+ellipsis from earlier round;
+     tighten gap so "Network online · DEN · DFW" fits at 350px. */
+  .marketing-v6 .mss-inner {
+    gap: 8px !important;
+    padding: 10px 16px !important;
+  }
+
+  /* Materials inline grid (Homepage.tsx 5 truck-class cards) — flex
+     items often have shadow-[...] arbitrary values that don't shrink. */
+  .marketing-v6 .mat-grid > * { max-width: 100%; }
+
+  /* Commerce-surface generic — anything containing inline tnum prices */
+  [data-surface="commerce"] {
+    max-width: 100vw;
+    overflow-x: clip;
+  }
+}
