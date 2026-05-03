@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 
 const DEPTHS = [
@@ -10,15 +11,23 @@ const DEPTHS = [
   { value: 12, label: '12″' },
 ] as const
 
-type TruckKey = 'small' | 'standard' | 'triaxle' | ''
+type TruckKey = 'small' | 'standard' | 'triaxle' | 'enddump' | ''
 
-function pickTruck(tons: number): { key: TruckKey; label: string; loads: number; note: string } {
-  if (tons === 0)      return { key: '',         label: '—',              loads: 0, note: 'Enter your area to see an estimate.' }
-  if (tons <= 5)       return { key: 'small',    label: 'small dump',     loads: 1, note: 'One load, same-day if ordered before 10 AM.' }
-  if (tons <= 14)      return { key: 'standard', label: 'standard dump',  loads: 1, note: 'One load, scheduled to your window.' }
-  if (tons <= 25)      return { key: 'triaxle',  label: 'tri-axle',       loads: 1, note: 'One load, scheduled to your window.' }
-  const loads = Math.ceil(tons / 25)
-  return { key: 'triaxle', label: 'tri-axle', loads, note: `Split across ${loads} tri-axle loads.` }
+const TRUCKS: { key: Exclude<TruckKey, ''>; label: string; tons: number; image: string }[] = [
+  { key: 'small',    label: 'Small · 5t',     tons: 5,  image: '/assets/trucks/dump-trailer.png' },
+  { key: 'standard', label: 'Standard · 12t', tons: 12, image: '/assets/trucks/tandem.png' },
+  { key: 'triaxle',  label: 'Tri-axle · 18t', tons: 18, image: '/assets/trucks/triaxle.png' },
+  { key: 'enddump',  label: 'End-dump · 24t', tons: 24, image: '/assets/trucks/end-dump.png' },
+]
+
+function pickTruck(tons: number): { key: TruckKey; loads: number; message: string } {
+  if (tons === 0)  return { key: '',         loads: 0, message: 'Enter your area to see an estimate.' }
+  if (tons <= 5)   return { key: 'small',    loads: 1, message: "That's a small dump. One load, same-day if ordered before 10 AM." }
+  if (tons <= 12)  return { key: 'standard', loads: 1, message: "That's a standard dump. One load, scheduled to your window." }
+  if (tons <= 18)  return { key: 'triaxle',  loads: 1, message: "That's a tri-axle. One load, scheduled to your window." }
+  if (tons <= 24)  return { key: 'enddump',  loads: 1, message: "That's an end-dump. Needs open site access — large pad or commercial lot." }
+  const loads = Math.ceil(tons / 24)
+  return { key: 'enddump', loads, message: `Split across ${loads} end-dump loads.` }
 }
 
 export function CoverageCalculator() {
@@ -91,11 +100,7 @@ export function CoverageCalculator() {
               <span className="ink-2" style={{ fontSize: 22 }}>tons</span>
             </div>
             <p id="calcMsg" className="ink-2" style={{ fontSize: 14.5, marginTop: 8, maxWidth: 420 }}>
-              {tons === 0 ? (
-                'Enter your area to see an estimate.'
-              ) : (
-                <>That's a <span className="ink" style={{ fontWeight: 500 }}>{truck.label}</span>. {truck.note}</>
-              )}
+              {truck.message}
             </p>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -104,43 +109,15 @@ export function CoverageCalculator() {
           </div>
         </div>
 
-        <div id="truckRec" style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-          <div data-truck="small" className={`truck-card${truck.key === 'small' && tons > 0 ? ' on' : ''}`}>
-            <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>Small · 5t</div>
-            <svg viewBox="0 0 200 60" style={{ marginTop: 8, width: '100%' }}>
-              <path d="M58 28 L130 28 L138 48 L48 48 Z" fill="#0F1411" />
-              <path d="M62 28 Q 95 14 128 28" fill="#B8472A" />
-              <path d="M130 28 L160 28 L160 48 L138 48 Z" fill="#0F1411" />
-              <circle cx={70} cy={50} r={6} fill="#0F1411" />
-              <circle cx={125} cy={50} r={6} fill="#0F1411" />
-              <circle cx={150} cy={50} r={6} fill="#0F1411" />
-            </svg>
-          </div>
-          <div data-truck="standard" className={`truck-card${truck.key === 'standard' && tons > 0 ? ' on' : ''}`}>
-            <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>Standard · 14t</div>
-            <svg viewBox="0 0 240 60" style={{ marginTop: 8, width: '100%' }}>
-              <path d="M40 22 L160 22 L172 48 L30 48 Z" fill="#0F1411" />
-              <path d="M48 22 Q 100 8 158 22" fill="#B8472A" />
-              <path d="M160 22 L200 22 L200 48 L172 48 Z" fill="#0F1411" />
-              <circle cx={55} cy={50} r={7} fill="#0F1411" />
-              <circle cx={115} cy={50} r={7} fill="#0F1411" />
-              <circle cx={140} cy={50} r={7} fill="#0F1411" />
-              <circle cx={190} cy={50} r={7} fill="#0F1411" />
-            </svg>
-          </div>
-          <div data-truck="triaxle" className={`truck-card${truck.key === 'triaxle' && tons > 0 ? ' on' : ''}`}>
-            <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>Tri-axle · 25t</div>
-            <svg viewBox="0 0 280 60" style={{ marginTop: 8, width: '100%' }}>
-              <path d="M28 18 L185 18 L200 48 L20 48 Z" fill="#0F1411" />
-              <path d="M36 18 Q 110 4 182 18" fill="#B8472A" />
-              <path d="M185 18 L240 18 L240 48 L200 48 Z" fill="#0F1411" />
-              <circle cx={48} cy={50} r={8} fill="#0F1411" />
-              <circle cx={115} cy={50} r={8} fill="#0F1411" />
-              <circle cx={140} cy={50} r={8} fill="#0F1411" />
-              <circle cx={165} cy={50} r={8} fill="#0F1411" />
-              <circle cx={225} cy={50} r={8} fill="#0F1411" />
-            </svg>
-          </div>
+        <div id="truckRec" className="calc-truck-grid">
+          {TRUCKS.map(t => (
+            <div key={t.key} data-truck={t.key} className={`truck-card${truck.key === t.key && tons > 0 ? ' on' : ''}`}>
+              <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{t.label}</div>
+              <div style={{ marginTop: 8, height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Image src={t.image} alt="" width={1280} height={520} sizes="(min-width: 768px) 160px, 45vw" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              </div>
+            </div>
+          ))}
         </div>
 
         <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, paddingTop: 20, borderTop: '1px solid var(--line)' }}>

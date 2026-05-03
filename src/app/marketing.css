@@ -312,6 +312,8 @@
 .marketing-v6 .canvas { background: linear-gradient(180deg, var(--commerce-cream), var(--commerce-cream-2)); border: 1px solid var(--line); border-radius: 14px; position: relative; overflow: hidden; }
 .marketing-v6 .calc-grid { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: stretch; }
 @media (min-width: 1024px) { .marketing-v6 .calc-grid { grid-template-columns: 5fr 7fr; } }
+.marketing-v6 .calc-truck-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 24px; }
+@media (min-width: 768px) { .marketing-v6 .calc-truck-grid { grid-template-columns: repeat(4, 1fr); } }
 
 /* TRUST / CAPABILITIES SECTION */
 .marketing-v6 .cap-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }

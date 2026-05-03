@@ -348,48 +348,48 @@ export async function Homepage() {
               <article className="truck-photo">
                 <div className="bay">
                   <div className="stamp">DUMP TRAILER</div>
-                  <div className="tons"><div className="n">5 ton</div><div className="yd">~3 yd³</div></div>
+                  <div className="tons"><div className="n">5 ton</div><div className="yd">3.5 yd³</div></div>
                   <Image src="/assets/trucks/dump-trailer.png" alt="Pickup with dump trailer" width={1280} height={258} sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 90vw" />
                 </div>
                 <div className="meta">
                   <h3>Single-driveway scale</h3>
-                  <p>Covers ~245 sq ft at 4″ deep. Pickup-pulled — fits tight access, narrow gates, one-car drives.</p>
+                  <p>Covers ~290 sq ft at 4″ deep. Pickup-pulled — fits tight access, narrow gates, one-car drives.</p>
                   <div className="foot"><span>4-wheel · bumper-pull</span><span className="cta">SIZE FOR ME →</span></div>
                 </div>
               </article>
               <article className="truck-photo">
                 <div className="bay">
                   <div className="stamp">TANDEM DUMP</div>
-                  <div className="tons"><div className="n">12 ton</div><div className="yd">10 yd³</div></div>
+                  <div className="tons"><div className="n">12 ton</div><div className="yd">8.5 yd³</div></div>
                   <Image src="/assets/trucks/tandem.png" alt="Tandem dump truck" width={1262} height={526} sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 90vw" />
                 </div>
                 <div className="meta">
                   <h3>Most common load</h3>
-                  <p>Covers ~810 sq ft at 4″ deep. The right load for most residential and small commercial jobs.</p>
+                  <p>Covers ~696 sq ft at 4″ deep. The right load for most residential and small commercial jobs.</p>
                   <div className="foot"><span>6-wheel · 2 rear axles</span><span className="cta">SIZE FOR ME →</span></div>
                 </div>
               </article>
               <article className="truck-photo">
                 <div className="bay">
                   <div className="stamp">TRI-AXLE DUMP</div>
-                  <div className="tons"><div className="n">18 ton</div><div className="yd">15 yd³</div></div>
+                  <div className="tons"><div className="n">18 ton</div><div className="yd">13 yd³</div></div>
                   <Image src="/assets/trucks/triaxle.png" alt="Tri-axle dump truck" width={1235} height={494} sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 90vw" />
                 </div>
                 <div className="meta">
                   <h3>Contractor scale</h3>
-                  <p>Covers ~1,215 sq ft at 4″ deep. Sized for large fills, pad prep, and split deliveries.</p>
+                  <p>Covers ~1,044 sq ft at 4″ deep. Sized for large fills, pad prep, and split deliveries.</p>
                   <div className="foot"><span>10-wheel · 3 rear axles</span><span className="cta">SIZE FOR ME →</span></div>
                 </div>
               </article>
               <article className="truck-photo">
                 <div className="bay">
                   <div className="stamp">END-DUMP 18</div>
-                  <div className="tons"><div className="n">24 ton</div><div className="yd">20 yd³</div></div>
+                  <div className="tons"><div className="n">24 ton</div><div className="yd">21 yd³</div></div>
                   <Image src="/assets/trucks/end-dump.png" alt="End-dump 18-wheeler" width={1352} height={519} sizes="(min-width: 1024px) 280px, (min-width: 640px) 45vw, 90vw" />
                 </div>
                 <div className="meta">
                   <h3>Full-yard fill</h3>
-                  <p>Covers ~1,620 sq ft at 4″ deep. Semi tractor + end-dump trailer. Wide-open access required.</p>
+                  <p>Covers ~1,392 sq ft at 4″ deep. Semi tractor + end-dump trailer. Wide-open access required.</p>
                   <div className="foot"><span>18-wheel · semi + trailer</span><span className="cta">SIZE FOR ME →</span></div>
                 </div>
               </article>
