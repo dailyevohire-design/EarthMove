@@ -2,26 +2,26 @@ const STEPS = [
   {
     n: '01',
     head: 'Order',
-    body: 'Enter your ZIP. See available materials with delivered prices for your market.',
-    sub: 'No call. No callback. No waiting on a fax.',
+    body: 'Enter your ZIP. Delivered prices for your market in seconds.',
+    tag: 'ZIP RESOLVED · ~3 SEC',
   },
   {
     n: '02',
     head: 'Match',
-    body: 'We route your load to the nearest verified pit with the cheapest delivered cost.',
-    sub: 'Multi-supplier sourcing across 13 yards in Denver and DFW.',
+    body: 'Routed to the nearest verified yard. Cheapest delivered cost wins.',
+    tag: '13 YARDS · DEN + DFW',
   },
   {
     n: '03',
     head: 'Dispatch',
-    body: 'A driver accepts. You get a live ETA the moment the truck is loaded at the scale.',
-    sub: 'GPS-tracked from pickup. Photo on delivery.',
+    body: 'A driver accepts. Live ETA the moment the truck loads at the scale.',
+    tag: 'GPS-TRACKED · PHOTO ON DROP',
   },
   {
     n: '04',
     head: 'Delivery',
-    body: 'Truck arrives in your window. Drop is photo-confirmed. BOL and ticket attached to your order.',
-    sub: 'Pay on delivery, on terms, or by card.',
+    body: 'Truck arrives in your window. Photo-confirmed drop. BOL + ticket on your invoice.',
+    tag: 'PAY ON DELIVERY · NET-30 · CARD',
   },
 ] as const
 
@@ -65,7 +65,7 @@ export function HowItWorksSection() {
         <div className="hiw-head">
           <p className="hiw-eyebrow">How it works</p>
           <h2 id="hiw-heading" className="hiw-h2">
-            From <span className="hiw-em">ZIP entered</span> to{' '}
+            <span className="hiw-em">ZIP entered</span> to{' '}
             <span className="hiw-em">drop confirmed</span>.
           </h2>
         </div>
@@ -77,7 +77,8 @@ export function HowItWorksSection() {
               <div className="hiw-step-body">
                 <h3 className="hiw-step-h">{s.head}</h3>
                 <p className="hiw-step-p">{s.body}</p>
-                <p className="hiw-step-sub">{s.sub}</p>
+                <div className="hiw-step-divider" aria-hidden="true" />
+                <p className="hiw-step-tag">{s.tag}</p>
               </div>
             </li>
           ))}

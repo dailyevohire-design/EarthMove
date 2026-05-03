@@ -1928,3 +1928,31 @@
   color: var(--em-graphite, #1A1B17);
   margin: 0;
 }
+
+/* === How it works section overhaul (Phase 5, commit 6) === */
+.marketing-v6 .hiw {
+  background: var(--em-paper, #F5F4F0);
+}
+@media (max-width: 767px) {
+  .marketing-v6 .hiw-h2 { font-size: 26px !important; line-height: 1.15 !important; }
+}
+.marketing-v6 .hiw-num {
+  min-width: 84px !important;
+}
+/* Industrial mono tag below hairline divider per step */
+.marketing-v6 .hiw-step-divider {
+  height: 1px;
+  background: rgba(14, 42, 34, 0.12);
+  margin: 14px 0 10px;
+}
+.marketing-v6 .hiw-step-tag {
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--em-ash, #76786E);
+  margin: 0;
+  font-weight: 600;
+}
+/* Override old .hiw-step-sub if it lingers anywhere */
+.marketing-v6 .hiw-step-sub { display: none !important; }
