@@ -9,18 +9,22 @@ beforeAll(() => {
 });
 
 describe('runScraper', () => {
-  it('mock_source returns inert evidence', async () => {
+  it('mock_source returns inert evidence (auto-wrapped to array)', async () => {
     const r = await runScraper('mock_source', { legalName: 'TEST CO', stateCode: 'TX' });
-    expect(r.source_key).toBe('mock_source');
-    expect(r.finding_type).toBe('source_not_applicable');
+    expect(Array.isArray(r)).toBe(true);
+    expect(r).toHaveLength(1);
+    expect(r[0].source_key).toBe('mock_source');
+    expect(r[0].finding_type).toBe('source_not_applicable');
   });
 
-  it('sam_gov_exclusions delegates to SAM.gov scraper', async () => {
+  it('sam_gov_exclusions delegates to SAM.gov scraper (auto-wrapped to array)', async () => {
     server.use(http.get('https://api.sam.gov/entity-information/v4/exclusions',
       () => HttpResponse.json({ totalRecords: 0, exclusionDetails: [] })));
     const r = await runScraper('sam_gov_exclusions', { legalName: 'CLEAN INC', stateCode: 'TX' });
-    expect(r.source_key).toBe('sam_gov_exclusions');
-    expect(r.finding_type).toBe('sanction_clear');
+    expect(Array.isArray(r)).toBe(true);
+    expect(r).toHaveLength(1);
+    expect(r[0].source_key).toBe('sam_gov_exclusions');
+    expect(r[0].finding_type).toBe('sanction_clear');
   });
 
   it('throws NotImplementedScraperError for known-but-unbuilt source', async () => {

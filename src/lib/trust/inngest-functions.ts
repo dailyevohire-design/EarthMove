@@ -208,18 +208,25 @@ export const runTrustJobV2 = inngest.createFunction(
     for (const sourceKey of sources) {
       const result = await step.run(`v2-scrape-${sourceKey}`, async () => {
         try {
-          const evidence = await runScraper(sourceKey, {
+          const findings = await runScraper(sourceKey, {
             legalName: job.contractor_name,
             stateCode: job.state_code,
             city: job.city,
           })
-          const persisted = await persistEvidence({
-            jobId: job_id,
-            contractorId: contractorRow?.id ?? null,
-            evidence,
-            supabase: admin as any,
-          })
-          return { ok: true, evidenceId: persisted.evidenceId, sourceKey }
+          // Multi-finding scrapers (e.g. permit history) emit several rows
+          // per source. Persist each finding via the same chain — sequence
+          // numbers are assigned atomically by append_trust_evidence RPC.
+          const evidenceIds: string[] = []
+          for (const f of findings) {
+            const persisted = await persistEvidence({
+              jobId: job_id,
+              contractorId: contractorRow?.id ?? null,
+              evidence: f,
+              supabase: admin as any,
+            })
+            evidenceIds.push(persisted.evidenceId)
+          }
+          return { ok: true, evidenceIds, sourceKey, findingCount: findings.length }
         } catch (err: any) {
           const errorEvidence = {
             source_key: sourceKey,

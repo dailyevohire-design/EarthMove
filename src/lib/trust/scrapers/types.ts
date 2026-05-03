@@ -7,8 +7,9 @@
  * without HTTP mocks.
  */
 
-// Subset of trust_evidence.finding_type CHECK enum we expect Tranche B to emit.
-// Full list in DB; restrict here to prevent typos.
+// Subset of trust_evidence.finding_type values scrapers emit. The DB column
+// itself is freeform text (no CHECK constraint) so new values ship without an
+// enum migration; this TS union exists to prevent typos at the scraper layer.
 export type TrustFindingType =
   | 'license_active' | 'license_inactive' | 'license_expired'
   | 'license_suspended' | 'license_not_found'
@@ -16,6 +17,8 @@ export type TrustFindingType =
   | 'osha_violation' | 'osha_serious_violation' | 'osha_no_violations'
   | 'legal_action_found' | 'legal_judgment_against' | 'legal_no_actions'
   | 'sanction_hit' | 'sanction_clear'
+  | 'permit_history_robust' | 'permit_history_clean'
+  | 'permit_history_low' | 'permit_history_stale' | 'permit_scope_violation'
   | 'source_error' | 'source_not_applicable';
 
 export type TrustConfidence =
@@ -23,7 +26,8 @@ export type TrustConfidence =
   | 'high_llm'
   | 'medium_llm'
   | 'low_inference'
-  | 'contradicted';
+  | 'contradicted'
+  | 'unverified';
 
 export interface ScraperEvidence {
   source_key: string;
@@ -37,6 +41,13 @@ export interface ScraperEvidence {
   duration_ms: number;
   cost_cents: number;
 }
+
+/**
+ * Multi-finding scrapers (e.g. permit history aggregating across layers)
+ * return an array; single-finding scrapers return one ScraperEvidence.
+ * runScraper normalizes both shapes to ScraperEvidence[].
+ */
+export type ScraperResult = ScraperEvidence | ScraperEvidence[];
 
 export class ScraperError extends Error {
   constructor(message: string, public readonly source_key: string) {

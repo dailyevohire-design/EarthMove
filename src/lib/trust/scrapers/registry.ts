@@ -1,13 +1,20 @@
-import type { ScraperEvidence, TrustFindingType, TrustConfidence } from './types';
+import type { ScraperEvidence, ScraperResult, TrustFindingType, TrustConfidence } from './types';
 import { ScraperError } from './types';
 import { scrapeSamGovExclusions } from './sam-gov';
+import { scrapeDallasPermits } from './dallas-open-data';
+import { scrapeDenverPermits } from './denver-pim';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
  *
- * Contract: every scraper takes (legalName, stateCode, optional contractor_id)
- * and returns a ScraperEvidence. Scrapers throw typed ScraperError subclasses
- * on failure; callers (Inngest fan-out) catch + record source_error evidence.
+ * Contract: every scraper takes (legalName, stateCode, optional city) and
+ * returns a ScraperResult (ScraperEvidence | ScraperEvidence[]). Scrapers
+ * throw typed ScraperError subclasses on infrastructure failure; permit-class
+ * scrapers prefer to return a single 'unverified' informational row over
+ * throwing so partial data still flows through the chain.
+ *
+ * runScraper normalizes single + array returns to ScraperEvidence[]. Existing
+ * single-evidence scrapers (sam-gov etc.) keep their original signature.
  *
  * Scrapers NOT YET BUILT throw NotImplementedError. The fan-out treats this
  * as a non-retryable failure so a misconfigured tier doesn't burn retries.
@@ -21,13 +28,16 @@ export interface RunScraperInput {
   city?: string | null;
 }
 
-export async function runScraper(
-  sourceKey: string,
-  input: RunScraperInput,
-): Promise<ScraperEvidence> {
+async function dispatch(sourceKey: string, input: RunScraperInput): Promise<ScraperResult> {
   switch (sourceKey) {
     case 'sam_gov_exclusions':
       return scrapeSamGovExclusions({ legalName: input.legalName });
+
+    case 'dallas_open_data':
+      return scrapeDallasPermits({ legalName: input.legalName });
+
+    case 'denver_pim':
+      return scrapeDenverPermits({ legalName: input.legalName });
 
     case 'mock_source':
       return mockScraperEvidence(input);
@@ -61,6 +71,14 @@ export async function runScraper(
   }
 }
 
+export async function runScraper(
+  sourceKey: string,
+  input: RunScraperInput,
+): Promise<ScraperEvidence[]> {
+  const r = await dispatch(sourceKey, input);
+  return Array.isArray(r) ? r : [r];
+}
+
 function mockScraperEvidence(input: RunScraperInput): ScraperEvidence {
   return {
     source_key: 'mock_source',
@@ -77,7 +95,9 @@ function mockScraperEvidence(input: RunScraperInput): ScraperEvidence {
 }
 
 // Tier -> source list. Hardcoded for C5; future commit moves this to a
-// trust_tier_sources table for runtime config.
+// trust_tier_sources table for runtime config. Permit sources fan out via
+// trust_source_registry.applicable_state_codes at the v2 fan-out layer, not
+// per-tier, so they don't appear here.
 export const TIER_SOURCES: Record<string, string[]> = {
   free: ['mock_source'],
   standard: ['sam_gov_exclusions'],
