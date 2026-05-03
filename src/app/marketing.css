@@ -1566,3 +1566,38 @@
     display: none !important;
   }
 }
+
+/* ============================================================
+   MOBILE VIEWPORT LOCKDOWN (≤767px) — force every container
+   inside .marketing-v6 to fit viewport width. Catches any rogue
+   child escaping the universal `* { max-width: 100% }` rule.
+   ============================================================ */
+@media (max-width: 767px) {
+  .marketing-v6 {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    width: 100vw !important;
+  }
+  .marketing-v6 .max,
+  .marketing-v6 section,
+  .marketing-v6 .hv-bg,
+  .marketing-v6 .hv-band {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  .marketing-v6 .hv-rq,
+  .marketing-v6 .hv-mobile-dispatch,
+  .marketing-v6 .hmd-card {
+    max-width: calc(100vw - 32px) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .marketing-v6 p,
+  .marketing-v6 .hv-sub {
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    hyphens: auto !important;
+  }
+}
