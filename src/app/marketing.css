@@ -963,6 +963,7 @@
     --em-ash:      #76786E;
     --em-silt:     #A6A89E;
     --em-evergreen: #0E2A22;
+    --em-cream: #F5F1E8;
     --em-forest:   var(--em-evergreen); /* transitional alias — collapsed to single brand-green token */
     --em-forest-2: #16573F;
     --em-moss:     #2EA875;
@@ -1276,6 +1277,7 @@
     --em-ash:      #76786E;
     --em-silt:     #A6A89E;
     --em-evergreen: #0E2A22;
+    --em-cream: #F5F1E8;
     --em-forest:   var(--em-evergreen); /* transitional alias — collapsed to single brand-green token */
     --em-moss:     #2EA875;
     --em-safety:   #FF6A1F;
@@ -1616,5 +1618,77 @@
     overflow-wrap: anywhere !important;
     word-break: normal !important;
     hyphens: auto !important;
+  }
+}
+
+/* === Homepage mobile polish (Phase 3, commit 4) === */
+@media (max-width: 767px) {
+  /* Tighter hero type scale on narrow viewports */
+  .marketing-v6 .hv-bg h1,
+  .marketing-v6 .hv-headline {
+    font-size: clamp(2rem, 8vw, 2.75rem) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+  }
+  .marketing-v6 .hv-bg .hv-sub,
+  .marketing-v6 .hv-bg p {
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Primary CTA: 48px tap target minimum */
+  .marketing-v6 .hv-rq button,
+  .marketing-v6 .hv-rq a[role="button"],
+  .marketing-v6 button.cta-primary,
+  .marketing-v6 a.cta-primary {
+    min-height: 48px !important;
+    padding: 12px 20px !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+  }
+
+  /* Section padding: tighter on mobile */
+  .marketing-v6 .section,
+  .marketing-v6 section {
+    padding-top: 48px !important;
+    padding-bottom: 48px !important;
+  }
+  .marketing-v6 .hv-bg {
+    padding-top: 32px !important;
+    padding-bottom: 56px !important;
+  }
+
+  /* Materials grid: single column under 480px, two-up 480-767 */
+  .marketing-v6 #materials .materials-grid,
+  .marketing-v6 #materials .grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  @media (min-width: 480px) {
+    .marketing-v6 #materials .materials-grid,
+    .marketing-v6 #materials .grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+  }
+
+  /* Truck cards: stack, full-width */
+  .marketing-v6 #sizing .truck-card,
+  .marketing-v6 .truck-cards > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* FAQ: tighter spacing, larger tap targets on summary */
+  .marketing-v6 #faq summary,
+  .marketing-v6 #faq details > :first-child {
+    min-height: 48px !important;
+    padding: 14px 0 !important;
+    font-size: 1rem !important;
+  }
+
+  /* Trust band: less aggressive on mobile */
+  .marketing-v6 #trust {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
   }
 }
