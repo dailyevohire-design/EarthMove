@@ -1240,3 +1240,190 @@
     font-variant-numeric: tabular-nums !important;
   }
 }
+
+/* ============================================================
+   COMMERCE SURFACE (marketplace main) — sitewide em-* on mobile
+   Covers /checkout, /checkout/start, /material-match, /account
+   via the [data-surface="commerce"] wrapper from
+   (marketplace)/layout.tsx — without per-page className edits.
+   ============================================================ */
+@media (max-width: 767px) {
+  /* Apply em-* tokens to the marketplace main wrapper */
+  [data-surface="commerce"] {
+    --em-paper:    #F5F4F0;
+    --em-chalk:    #FFFFFF;
+    --em-bone:     #ECEAE3;
+    --em-fog:      #D8D5CC;
+    --em-graphite: #1A1B17;
+    --em-asphalt:  #0E0F0C;
+    --em-ink:      #42443D;
+    --em-ash:      #76786E;
+    --em-silt:     #A6A89E;
+    --em-forest:   #0F3B2E;
+    --em-moss:     #2EA875;
+    --em-safety:   #FF6A1F;
+    --em-safety-2: #E0531A;
+    --em-flag:     #FFC233;
+    --em-stop:     #D7382B;
+    --em-sans: var(--font-inter), 'Inter Tight', 'Inter', system-ui, sans-serif;
+    --em-mono: var(--font-jetbrains-mono), 'JetBrains Mono', ui-monospace, monospace;
+
+    background: var(--em-paper) !important;
+    color: var(--em-graphite) !important;
+    font-family: var(--em-sans);
+    font-feature-settings: 'tnum' 1, 'cv11' 1;
+  }
+
+  /* Override commerce-* tokens for marketplace mobile surface so
+     surfaces using bg-[var(--commerce-cream)] etc. pick up em-paper. */
+  [data-surface="commerce"] {
+    --commerce-cream: var(--em-paper);
+    --commerce-cream-2: var(--em-bone);
+    --commerce-cream-3: var(--em-fog);
+    --commerce-ink: var(--em-graphite);
+    --commerce-ink-2: var(--em-ink);
+    --commerce-ink-3: var(--em-ash);
+    --commerce-line: var(--em-fog);
+    --commerce-line-strong: var(--em-bone);
+    --commerce-action: var(--em-safety);
+    --commerce-action-hover: var(--em-safety-2);
+    --commerce-trust: var(--em-forest);
+    --commerce-trust-mark: var(--em-moss);
+  }
+
+  /* /checkout/start specific — was hex-mapped to /checkout/start tokens */
+  [data-surface="commerce"] main.bg-\[\#faf7f2\] {
+    background: var(--em-paper) !important;
+  }
+
+  /* Card defaults on mobile — flatter, 10px radius, 1px hairline */
+  [data-surface="commerce"] .card {
+    border-radius: 10px !important;
+    border: 1px solid var(--em-fog) !important;
+    box-shadow: 0 0 0 1px rgba(26,27,23,0.04) !important;
+    background: var(--em-chalk) !important;
+  }
+
+  /* Button system — single safety-orange CTA per surface on mobile */
+  [data-surface="commerce"] .btn-primary {
+    background: var(--em-safety) !important;
+    border-radius: 8px !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1.5px 0 rgba(0,0,0,0.18) !important;
+  }
+  [data-surface="commerce"] .btn-primary:hover {
+    background: var(--em-safety-2) !important;
+  }
+  [data-surface="commerce"] .btn-secondary {
+    border-radius: 8px !important;
+    border: 1px solid var(--em-fog) !important;
+    background: var(--em-chalk) !important;
+    color: var(--em-graphite) !important;
+  }
+
+  /* Badges */
+  [data-surface="commerce"] .badge,
+  [data-surface="commerce"] .badge-stone,
+  [data-surface="commerce"] .badge-success,
+  [data-surface="commerce"] .badge-action {
+    font-family: var(--em-mono);
+    font-size: 11px !important;
+    letter-spacing: 0.06em !important;
+    border-radius: 4px !important;
+  }
+  [data-surface="commerce"] .badge-success {
+    background: rgba(46, 168, 117, 0.12) !important;
+    color: var(--em-forest) !important;
+    border-color: rgba(46, 168, 117, 0.24) !important;
+  }
+  [data-surface="commerce"] .badge-action {
+    background: var(--em-safety) !important;
+  }
+
+  /* Skeleton — bone shimmer on em-fog */
+  [data-surface="commerce"] .skeleton {
+    background: linear-gradient(90deg, var(--em-bone) 25%, var(--em-fog) 50%, var(--em-bone) 75%) !important;
+    background-size: 200% 100% !important;
+  }
+
+  /* Headings — kill italic emphasis everywhere on commerce mobile */
+  [data-surface="commerce"] h1 em,
+  [data-surface="commerce"] h2 em,
+  [data-surface="commerce"] h3 em,
+  [data-surface="commerce"] em.italic {
+    font-style: normal !important;
+    font-family: var(--em-sans) !important;
+    font-weight: 600 !important;
+    color: inherit !important;
+  }
+  [data-surface="commerce"] h1, [data-surface="commerce"] h2, [data-surface="commerce"] h3 {
+    font-family: var(--em-sans) !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.02em !important;
+    color: var(--em-graphite) !important;
+  }
+
+  /* Tabular numerals on price-display + any data-tnum hook */
+  [data-surface="commerce"] .price-display,
+  [data-surface="commerce"] [class*="font-mono"],
+  [data-surface="commerce"] [data-tnum] {
+    font-family: var(--em-mono) !important;
+    font-feature-settings: 'tnum' 1 !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+}
+
+/* ============================================================
+   DASHBOARDS — em-* token application on mobile parallel blocks
+   Existing .contractor-mobile / .driver-mobile keep their own
+   --earth/--bone/--clay tokens; this layer adds em-* fallbacks
+   so the same redesign palette ripples through.
+   ============================================================ */
+@media (max-width: 767px) {
+  .contractor-mobile {
+    background: var(--em-paper, #F5F4F0) !important;
+  }
+  .contractor-mobile .cm-greeting,
+  .contractor-mobile .cm-job-name {
+    font-family: var(--em-sans, 'Inter', system-ui, sans-serif) !important;
+    color: var(--em-graphite, #1A1B17) !important;
+  }
+  .contractor-mobile .cm-action-primary {
+    background: var(--em-safety, #FF6A1F) !important;
+  }
+  .contractor-mobile .cm-live-card {
+    background: var(--em-asphalt, #0E0F0C) !important;
+  }
+  .contractor-mobile .live-chip {
+    background: var(--em-moss, #2EA875) !important;
+  }
+  .contractor-mobile .eyebrow,
+  .contractor-mobile .cm-section-head .see-all {
+    font-family: var(--em-mono, 'JetBrains Mono', ui-monospace, monospace) !important;
+    color: var(--em-ash, #76786E) !important;
+  }
+  .contractor-mobile .cm-week-spend {
+    font-family: var(--em-mono, 'JetBrains Mono', ui-monospace, monospace) !important;
+    font-feature-settings: 'tnum' 1 !important;
+    color: var(--em-graphite, #1A1B17) !important;
+  }
+
+  .driver-mobile {
+    background: var(--em-asphalt, #0E0F0C) !important;
+  }
+  .driver-mobile .dm-tabs button[aria-pressed="true"] {
+    background: var(--em-safety, #FF6A1F) !important;
+  }
+  .driver-mobile .dm-load-card {
+    border-left-color: var(--em-safety, #FF6A1F) !important;
+  }
+  .driver-mobile .dm-arrived-btn {
+    background: var(--em-safety, #FF6A1F) !important;
+  }
+  .driver-mobile .dm-on-time {
+    background: var(--em-moss, #2EA875) !important;
+  }
+  .driver-mobile .dm-stat .figure {
+    font-family: var(--em-mono, 'JetBrains Mono', ui-monospace, monospace) !important;
+    font-feature-settings: 'tnum' 1 !important;
+  }
+}
