@@ -47,6 +47,9 @@ function makeFakeAdmin() {
   };
 }
 
+// TIER_SOURCES.standard now dispatches 5 sources per job — sam-gov + 2 SOS + 2 permits.
+const PAID_SOURCES = ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'];
+
 describe('runTrustJobV2 — fan-out smoke', () => {
   it('runs the standard-tier flow with mocked steps', async () => {
     const t = new InngestTestEngine({ function: runTrustJobV2 });
@@ -60,16 +63,18 @@ describe('runTrustJobV2 — fan-out smoke', () => {
         })},
         { id: 'v2-resolve-contractor', handler: () => ({ id: 'contractor-uuid' }) },
         { id: 'v2-mark-running', handler: () => null },
-        { id: 'v2-scrape-sam_gov_exclusions', handler: () => ({
-          ok: true, evidenceId: 'ev1', sourceKey: 'sam_gov_exclusions',
-        })},
+        ...PAID_SOURCES.map((sourceKey, i) => ({
+          id: `v2-scrape-${sourceKey}`,
+          handler: () => ({ ok: true, evidenceIds: [`ev${i}`], sourceKey, findingCount: 1 }),
+        })),
         { id: 'v2-update-counters', handler: () => null },
+        { id: 'trust-synthesize-emit', handler: () => null },
       ],
     });
     expect(result).toMatchObject({
       job_id: 'job-test',
-      sources_attempted: 1,
-      completed: 1,
+      sources_attempted: PAID_SOURCES.length,
+      completed: PAID_SOURCES.length,
       failed: 0,
     });
   });
@@ -86,16 +91,22 @@ describe('runTrustJobV2 — fan-out smoke', () => {
         })},
         { id: 'v2-resolve-contractor', handler: () => ({ id: 'contractor-uuid' }) },
         { id: 'v2-mark-running', handler: () => null },
+        // sam-gov fails; the other 4 succeed
         { id: 'v2-scrape-sam_gov_exclusions', handler: () => ({
           ok: false, sourceKey: 'sam_gov_exclusions', error: 'simulated upstream 502',
         })},
+        ...PAID_SOURCES.slice(1).map((sourceKey, i) => ({
+          id: `v2-scrape-${sourceKey}`,
+          handler: () => ({ ok: true, evidenceIds: [`ev${i}`], sourceKey, findingCount: 1 }),
+        })),
         { id: 'v2-update-counters', handler: () => null },
+        { id: 'trust-synthesize-emit', handler: () => null },
       ],
     });
     expect(result).toMatchObject({
       job_id: 'job-test',
-      sources_attempted: 1,
-      completed: 0,
+      sources_attempted: PAID_SOURCES.length,
+      completed: PAID_SOURCES.length - 1,
       failed: 1,
     });
   });

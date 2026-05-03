@@ -101,15 +101,15 @@ function mockScraperEvidence(input: RunScraperInput): ScraperEvidence {
 }
 
 // Tier -> source list. Hardcoded for C5; future commit moves this to a
-// trust_tier_sources table for runtime config. Permit sources fan out via
-// trust_source_registry.applicable_state_codes at the v2 fan-out layer, not
-// per-tier, so they don't appear here.
+// trust_tier_sources table for runtime config. Permit + SOS sources are
+// dispatched for every paid tier; out-of-state queries return business_not_found
+// cleanly (each scraper queries one jurisdiction's dataset only).
 export const TIER_SOURCES: Record<string, string[]> = {
   free: ['mock_source'],
-  standard: ['sam_gov_exclusions'],
-  plus: ['sam_gov_exclusions'],
-  deep_dive: ['sam_gov_exclusions'],
-  forensic: ['sam_gov_exclusions'],
+  standard: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
+  plus: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
+  deep_dive: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
+  forensic: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
 };
 
 export function sourcesForTier(tier: string): string[] {

@@ -39,14 +39,17 @@ describe('runScraper', () => {
 });
 
 describe('sourcesForTier', () => {
+  const PAID_TIER_SOURCES = ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'];
+
   it('returns expected source list per tier', () => {
     expect(sourcesForTier('free')).toEqual(['mock_source']);
-    expect(sourcesForTier('standard')).toEqual(['sam_gov_exclusions']);
-    expect(sourcesForTier('deep_dive')).toEqual(['sam_gov_exclusions']);
-    expect(sourcesForTier('forensic')).toEqual(['sam_gov_exclusions']);
+    expect(sourcesForTier('standard')).toEqual(PAID_TIER_SOURCES);
+    expect(sourcesForTier('plus')).toEqual(PAID_TIER_SOURCES);
+    expect(sourcesForTier('deep_dive')).toEqual(PAID_TIER_SOURCES);
+    expect(sourcesForTier('forensic')).toEqual(PAID_TIER_SOURCES);
   });
 
   it('falls back to standard for unknown tier', () => {
-    expect(sourcesForTier('made_up')).toEqual(['sam_gov_exclusions']);
+    expect(sourcesForTier('made_up')).toEqual(PAID_TIER_SOURCES);
   });
 });
