@@ -888,3 +888,36 @@ material claims "we verify your TX contractor's insurance".
 **Action:** Re-aim at the TX WC employer registry as a yes/no signal, OR
 drop TX insurance verification from homeowner copy. **Decision needed
 from product side.**
+
+## 2026-05-03 — PR #10 (SU-8 watch/alerts + TX TDLR Socrata pivot) followups
+
+### FOLLOWUP-TX-DISCIPLINARY-COVERAGE-GAP
+
+The TX TDLR Socrata pivot (PR #10, migration 212, scraper rewrite at
+`src/lib/trust/scrapers/tx-tdlr-orders.ts`) trades the broken HTML-scrape
+false positives for elimination of TX disciplinary action detection.
+`tx_tdlr` now verifies presence of an active TX license only — Socrata
+dataset `7358-krk7` has no `programaction` / `disciplineEffectiveDate`
+fields, so `license_revoked_but_operating` cross-reference enrichment
+will not fire on TX contractors.
+
+**Severity:** MEDIUM-HIGH — parity gap with CO DORA's disciplinary
+capability. Press copy must NOT claim TX disciplinary surfacing.
+
+**Action:** Schedule a real TX disciplinary source for Chunk 3+
+candidates: PDF DOL feed scrape, an alternative TDLR Final Orders
+endpoint with proper session-state replay (see
+FOLLOWUP-TX-TDLR-FINAL-ORDERS-SESSION-STATE), or a third-party
+aggregator. Scrub homeowner / press copy in the meantime.
+
+### FOLLOWUP-TDLR-PROGRAM-FILTERING
+
+Already specced. The new Socrata-based `tx_tdlr` scraper does not filter
+by TDLR license program (A/C contractor, electrician, refrigeration,
+etc.). A query for "Acme HVAC LLC" matches any TDLR program, not just
+HVAC-relevant programs. Future enhancement: pass an expected-program
+hint from the trust job (derived from contractor industry signals) and
+filter or weight matches by program.
+
+**Severity:** LOW — current behavior is broader-than-necessary but not
+incorrect; surfaces all licenses for the entity.
