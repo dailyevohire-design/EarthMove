@@ -204,7 +204,7 @@ export async function Homepage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24, justifyContent: 'space-between', marginBottom: 48 }}>
               <div style={{ maxWidth: 700 }}>
                 <div className="eyebrow">Materials</div>
-                <h2 className="sec-title">Pick by outcome. We handle the spec.</h2>
+                <h2 className="sec-title">Tell us what you&apos;re building. We bring what builds it.</h2>
                 <MaterialsSubcopy />
               </div>
             </div>
