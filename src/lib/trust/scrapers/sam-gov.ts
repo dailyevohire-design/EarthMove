@@ -6,10 +6,26 @@ import {
   ScraperUpstreamError,
   ScraperTimeoutError,
 } from './types';
+import { RateLimiter, TtlCache } from './scraper-throttle';
+import { normalizeBusinessName } from '../normalize/business-name';
 
 const SOURCE_KEY = 'sam_gov_exclusions';
 const ENDPOINT = 'https://api.sam.gov/entity-information/v4/exclusions';
 const DEFAULT_TIMEOUT_MS = 10_000;
+
+// SAM.gov public-key throttle: 6/min stays under the documented limit and
+// keeps a 100-job batch (Inngest concurrency 5) inside SAM.gov's quota.
+const limiter = new RateLimiter({ name: SOURCE_KEY, maxPerMinute: 6 });
+// 24h TTL — SAM.gov refreshes nightly; cache absorbs duplicate hits within
+// the same data window. Caches sanction_hit too: any debarment lift won't
+// surface for up to 24h, but that's tighter than SAM.gov's own refresh cadence.
+const cache = new TtlCache<ScraperEvidence>(1000, 24 * 60 * 60 * 1000);
+
+/** Test-only: reset module-scope throttle + cache to fresh. */
+export function _resetSamGovThrottle(): void {
+  cache.clear();
+  limiter.reset();
+}
 
 export interface SamGovInput {
   legalName: string;
@@ -27,6 +43,24 @@ export async function scrapeSamGovExclusions(input: SamGovInput): Promise<Scrape
   if (!input.legalName?.trim()) {
     throw new Error('scrapeSamGovExclusions: legalName required');
   }
+
+  // Cache check: same logical entity (per normalized_name) within 24h returns
+  // the prior result without burning a SAM.gov token. cache_hit flagged in
+  // extracted_facts so downstream metrics can distinguish.
+  const ck = normalizeBusinessName(input.legalName);
+  const cached = cache.get(ck);
+  if (cached) {
+    return {
+      ...cached,
+      extracted_facts: { ...cached.extracted_facts, cache_hit: true },
+      duration_ms: 0,
+    };
+  }
+
+  // Acquire rate-limit token before any other work — placed before the
+  // abort controller so the wait isn't counted against the call timeout.
+  await limiter.acquire();
+
   const apiKey = input.apiKey ?? process.env.SAM_GOV_API_KEY;
   if (!apiKey) {
     throw new ScraperAuthError('SAM_GOV_API_KEY not set', SOURCE_KEY);
@@ -92,7 +126,7 @@ export async function scrapeSamGovExclusions(input: SamGovInput): Promise<Scrape
   const snippet = rawText.slice(0, 1500);
 
   if (total === 0 || matches.length === 0) {
-    return {
+    const evidence: ScraperEvidence = {
       source_key: SOURCE_KEY,
       finding_type: 'sanction_clear',
       confidence: 'verified_structured',
@@ -104,6 +138,8 @@ export async function scrapeSamGovExclusions(input: SamGovInput): Promise<Scrape
       duration_ms,
       cost_cents: 0,
     };
+    cache.set(ck, evidence);
+    return evidence;
   }
 
   const top = matches[0];
@@ -116,7 +152,7 @@ export async function scrapeSamGovExclusions(input: SamGovInput): Promise<Scrape
     excludingAgency: top?.excludingAgency ?? null,
   };
 
-  return {
+  const evidence: ScraperEvidence = {
     source_key: SOURCE_KEY,
     finding_type: 'sanction_hit',
     confidence: 'verified_structured',
@@ -128,4 +164,6 @@ export async function scrapeSamGovExclusions(input: SamGovInput): Promise<Scrape
     duration_ms,
     cost_cents: 0,
   };
+  cache.set(ck, evidence);
+  return evidence;
 }

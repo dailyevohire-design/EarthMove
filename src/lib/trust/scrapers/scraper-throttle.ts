@@ -29,6 +29,11 @@ export class RateLimiter {
     this.nextAvailableMs += this.intervalMs
     await new Promise((resolve) => setTimeout(resolve, waitMs))
   }
+
+  /** Test-only: reset throttle state to fresh. */
+  reset(): void {
+    this.nextAvailableMs = 0
+  }
 }
 
 /**
@@ -63,5 +68,10 @@ export class TtlCache<V> {
       if (oldestKey !== undefined) this.map.delete(oldestKey)
     }
     this.map.set(key, { value, expiresAtMs: Date.now() + this.ttlMs })
+  }
+
+  /** Test-only: drop all entries. */
+  clear(): void {
+    this.map.clear()
   }
 }
