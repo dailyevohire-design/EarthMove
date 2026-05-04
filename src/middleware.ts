@@ -17,12 +17,18 @@ export async function middleware(request: NextRequest) {
   // Check access cookie
   if (request.cookies.get('site_access')?.value === 'granted') return passThrough()
 
-  // Handle password submission via POST (never via query string — Referer leaks)
+  // Handle admin login submission via POST (never via query string — Referer leaks).
+  // Both email AND password must match. Email is non-secret (cosmetic identity),
+  // password is the real secret in SITE_PASSWORD env.
+  const ADMIN_EMAIL = 'support@filldirtnearme.net'
   if (request.method === 'POST' && request.nextUrl.pathname === '/__gate') {
     const form = await request.formData().catch(() => null)
+    const submittedEmail = (form?.get('email') as string | null)?.toLowerCase().trim() ?? ''
     const submittedPw = form?.get('pw')
     const next = (form?.get('next') as string) || '/'
-    if (typeof submittedPw === 'string' && timingSafeEqual(submittedPw, password)) {
+    const emailOk = timingSafeEqual(submittedEmail, ADMIN_EMAIL)
+    const pwOk = typeof submittedPw === 'string' && timingSafeEqual(submittedPw, password)
+    if (emailOk && pwOk) {
       const url = new URL(next.startsWith('/') ? next : '/', request.url)
       const response = NextResponse.redirect(url, 303)
       response.cookies.set('site_access', 'granted', {
@@ -194,16 +200,18 @@ body::after{
 .foot a{color:var(--ink-3);text-decoration:none}
 .foot a:hover{color:var(--evergreen)}
 .foot details{position:relative}
-.foot summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.foot summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:lowercase;color:rgba(92,100,95,.55);font-weight:500;user-select:none}
+.foot summary:hover{color:var(--ink-3)}
 .foot summary::-webkit-details-marker{display:none}
-.foot summary::after{content:"→";transition:transform .2s}
-.foot details[open] summary::after{transform:rotate(90deg)}
-.foot-pwbox{position:absolute;bottom:calc(100% + 12px);right:0;background:#fff;border:1px solid var(--hair-strong);border-radius:11px;padding:14px;box-shadow:0 24px 48px -16px rgba(14,42,34,.22);width:280px;z-index:5}
-.foot-pwbox .err{font-size:12px;color:#A6391E;margin-bottom:8px}
-.foot-pwbox form{display:flex;gap:6px}
-.foot-pwbox input{flex:1;min-width:0;height:40px;padding:0 12px;border:1px solid var(--hair);border-radius:8px;font-family:var(--sans);font-size:14px;outline:none}
-.foot-pwbox input:focus{border-color:var(--evergreen)}
-.foot-pwbox button{height:40px;padding:0 14px;background:var(--evergreen);color:#fff;border:0;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer}
+.foot details[open] summary{color:var(--ink-3)}
+.foot-pwbox{position:absolute;bottom:calc(100% + 12px);right:0;background:#fff;border:1px solid var(--hair-strong);border-radius:12px;padding:18px;box-shadow:0 24px 48px -16px rgba(14,42,34,.22);width:300px;z-index:5}
+.foot-pwbox-h{font-family:var(--serif);font-style:italic;font-weight:500;font-size:16px;color:var(--evergreen);letter-spacing:-.01em;margin-bottom:12px}
+.foot-pwbox .err{font-size:12px;color:#A6391E;margin-bottom:10px}
+.foot-pwbox form{display:flex;flex-direction:column;gap:8px}
+.foot-pwbox input{width:100%;height:40px;padding:0 12px;border:1px solid var(--hair);border-radius:8px;font-family:var(--sans);font-size:14px;color:var(--ink);outline:none;background:#fff}
+.foot-pwbox input:focus{border-color:var(--evergreen);box-shadow:0 0 0 3px rgba(31,61,46,.10)}
+.foot-pwbox input::placeholder{color:var(--ink-3)}
+.foot-pwbox button{height:40px;padding:0 14px;background:var(--evergreen);color:#fff;border:0;border-radius:8px;font-weight:600;font-size:13.5px;cursor:pointer;letter-spacing:.005em;transition:background .15s}
 .foot-pwbox button:hover{background:var(--evergreen-2)}
 </style></head><body>
 <div class="wrap">
@@ -312,13 +320,15 @@ body::after{
   <footer class="foot">
     <span>&copy; 2026 Earth Pro Connect LLC · Earthmove™</span>
     <details>
-      <summary>Internal access</summary>
+      <summary>· admin</summary>
       <div class="foot-pwbox">
-        ${failed ? '<div class="err">Incorrect password.</div>' : ''}
+        <div class="foot-pwbox-h">Admin sign in</div>
+        ${failed ? '<div class="err">Incorrect email or password.</div>' : ''}
         <form method="POST" action="/__gate" autocomplete="off">
           <input type="hidden" name="next" value="${safeNext}">
-          <input type="password" name="pw" placeholder="Password" autocomplete="off" autofocus>
-          <button type="submit">Enter</button>
+          <input type="email" name="email" placeholder="Email" autocomplete="email" inputmode="email" required autofocus>
+          <input type="password" name="pw" placeholder="Password" autocomplete="current-password" required>
+          <button type="submit">Sign in</button>
         </form>
       </div>
     </details>
