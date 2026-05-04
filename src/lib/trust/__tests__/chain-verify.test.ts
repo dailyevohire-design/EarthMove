@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeChainHash } from '../chain-verify';
+import { computeChainHash, verifyChain, type EvidenceChainNode } from '../chain-verify';
 
 /**
  * Test vectors locked via MCP against production SQL function
@@ -50,5 +50,93 @@ describe('computeChainHash', () => {
       finding_type: 'osha_no_violations',
     };
     expect(computeChainHash(args)).toBe(computeChainHash(args));
+  });
+});
+
+describe('verifyChain', () => {
+  // Build a clean 3-row synthetic chain. Each chain_hash field is computed from
+  // the row's actual inputs, so verifyChain should return verified:true.
+  function buildCleanChain(): EvidenceChainNode[] {
+    const jobId = '22222222-3333-4444-5555-666666666666';
+    const row1Hash = computeChainHash({
+      prev_hash: null,
+      response_sha256: 'a'.repeat(64),
+      sequence_number: 1,
+      job_id: jobId,
+      finding_type: 'business_active',
+    });
+    const row2Hash = computeChainHash({
+      prev_hash: row1Hash,
+      response_sha256: 'b'.repeat(64),
+      sequence_number: 2,
+      job_id: jobId,
+      finding_type: 'license_active',
+    });
+    const row3Hash = computeChainHash({
+      prev_hash: row2Hash,
+      response_sha256: 'c'.repeat(64),
+      sequence_number: 3,
+      job_id: jobId,
+      finding_type: 'osha_no_violations',
+    });
+    return [
+      { id: 'row-1-uuid', job_id: jobId, sequence_number: 1, finding_type: 'business_active',    response_sha256: 'a'.repeat(64), prev_hash: null,     chain_hash: row1Hash },
+      { id: 'row-2-uuid', job_id: jobId, sequence_number: 2, finding_type: 'license_active',     response_sha256: 'b'.repeat(64), prev_hash: row1Hash, chain_hash: row2Hash },
+      { id: 'row-3-uuid', job_id: jobId, sequence_number: 3, finding_type: 'osha_no_violations', response_sha256: 'c'.repeat(64), prev_hash: row2Hash, chain_hash: row3Hash },
+    ];
+  }
+
+  it('returns verified=true on a clean chain', () => {
+    const result = verifyChain(buildCleanChain());
+    expect(result.verified).toBe(true);
+    expect(result.evidence_count).toBe(3);
+    expect(result.mismatches).toEqual([]);
+  });
+
+  it('detects tampered chain_hash on a single row', () => {
+    const chain = buildCleanChain();
+    // Tamper row 2's stored chain_hash by flipping one hex char
+    const original = chain[1].chain_hash;
+    chain[1].chain_hash = (original[0] === 'f' ? '0' : 'f') + original.slice(1);
+
+    const result = verifyChain(chain);
+    expect(result.verified).toBe(false);
+    expect(result.evidence_count).toBe(3);
+    expect(result.mismatches).toHaveLength(1);
+    expect(result.mismatches[0].evidence_id).toBe('row-2-uuid');
+    expect(result.mismatches[0].sequence_number).toBe(2);
+    expect(result.mismatches[0].finding_type).toBe('license_active');
+    expect(result.mismatches[0].actual_chain_hash).toBe(chain[1].chain_hash);
+    expect(result.mismatches[0].expected_chain_hash).toBe(original);
+  });
+
+  it('detects tampered finding_type on a single row', () => {
+    const chain = buildCleanChain();
+    // Tamper row 1's finding_type — chain_hash should now mismatch the recompute
+    chain[0].finding_type = 'business_dissolved';
+
+    const result = verifyChain(chain);
+    expect(result.verified).toBe(false);
+    expect(result.mismatches).toHaveLength(1);
+    expect(result.mismatches[0].evidence_id).toBe('row-1-uuid');
+  });
+
+  it('reports all mismatches when multiple rows are tampered', () => {
+    const chain = buildCleanChain();
+    chain[0].chain_hash = '0'.repeat(64);
+    chain[2].response_sha256 = 'X'.repeat(64);
+
+    const result = verifyChain(chain);
+    expect(result.verified).toBe(false);
+    expect(result.mismatches).toHaveLength(2);
+    const mismatchedIds = result.mismatches.map(m => m.evidence_id).sort();
+    expect(mismatchedIds).toEqual(['row-1-uuid', 'row-3-uuid']);
+  });
+
+  it('returns verified=true for empty chain', () => {
+    const result = verifyChain([]);
+    expect(result.verified).toBe(true);
+    expect(result.evidence_count).toBe(0);
+    expect(result.mismatches).toEqual([]);
   });
 });
