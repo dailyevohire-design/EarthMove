@@ -51,7 +51,7 @@ export function HeroLeftColumn() {
       </h1>
 
       <p className="hv-sub" id="subhead">
-        The smartest dispatch in the industry. Lower delivered cost than any broker, platform, or phone call — and a truck that actually shows up.
+        Intelligence behind every load — that&apos;s why our delivered cost is lower than any broker, any platform, any phone call you&apos;ve ever made, and finally a truck that shows up.
       </p>
 
       <form id="zipForm" className="hv-rq" onSubmit={handleZipSubmit} noValidate>
