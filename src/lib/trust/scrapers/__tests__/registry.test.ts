@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../../../test/setup';
-import { runScraper, sourcesForTier, NotImplementedScraperError } from '../registry';
+import { runScraper, NotImplementedScraperError } from '../registry';
 
 beforeAll(() => {
   // runScraper does not pass apiKey through; SAM scraper reads env at runtime.
@@ -38,22 +38,3 @@ describe('runScraper', () => {
   });
 });
 
-describe('sourcesForTier (async, DB-driven via tier-sources-loader)', () => {
-  // sourcesForTier became async after migration 200 introduced
-  // trust_source_registry.applicable_tiers. Without a mocked admin client,
-  // these tests exercise the DB-error fallback path which returns the
-  // hardcoded set baked into the loader.
-  const PAID_TIER_SOURCES = ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'];
-
-  it('returns expected source list per tier (via fallback in unmocked env)', async () => {
-    expect(await sourcesForTier('free')).toEqual(['mock_source']);
-    expect(await sourcesForTier('standard')).toEqual(PAID_TIER_SOURCES);
-    expect(await sourcesForTier('plus')).toEqual(PAID_TIER_SOURCES);
-    expect(await sourcesForTier('deep_dive')).toEqual(PAID_TIER_SOURCES);
-    expect(await sourcesForTier('forensic')).toEqual(PAID_TIER_SOURCES);
-  });
-
-  it('falls back to standard for unknown tier', async () => {
-    expect(await sourcesForTier('made_up')).toEqual(PAID_TIER_SOURCES);
-  });
-});

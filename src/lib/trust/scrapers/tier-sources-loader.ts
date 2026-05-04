@@ -1,77 +1,54 @@
 /**
- * DB-driven tier → source resolver.
+ * Loads active source keys for a given trust-job tier from trust_source_registry,
+ * gated by the entity's state_code.
  *
- * Replaces the hardcoded TIER_SOURCES const in registry.ts with a runtime
- * query against trust_source_registry.applicable_tiers (added in migration
- * 200). Cached in module scope after first resolve to avoid re-querying on
- * every job. On DB read error, falls back to the original hardcoded set so
- * the scraper chain still functions during a Supabase outage.
- *
- * Public API stays compatible with sourcesForTier() callers.
+ * Filter rules:
+ *   - is_active = true
+ *   - tier ∈ applicable_tiers
+ *   - applicable_state_codes IS NULL  (federal sources, fire on all states)
+ *     OR state_code = ANY(applicable_state_codes)
  */
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server'
 
-type Tier = 'free' | 'standard' | 'plus' | 'deep_dive' | 'forensic';
-
-const HARDCODED_FALLBACK: Record<Tier, string[]> = {
-  free: ['mock_source'],
-  standard:  ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
-  plus:      ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
-  deep_dive: ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
-  forensic:  ['sam_gov_exclusions', 'co_sos_biz', 'tx_sos_biz', 'denver_pim', 'dallas_open_data'],
-};
-
-let cache: Record<string, string[]> | null = null;
-
-interface RegistryRow {
-  source_key: string;
-  applicable_tiers: string[] | null;
-  is_active: boolean;
+const FALLBACK_BY_STATE: Record<string, string[]> = {
+  CO: ['co_sos_biz', 'co_dora', 'denver_pim', 'sam_gov_exclusions'],
+  TX: ['tx_sos_biz', 'tx_tdlr', 'dallas_open_data', 'sam_gov_exclusions'],
 }
 
-async function loadFromDb(): Promise<Record<string, string[]>> {
-  const admin = createAdminClient();
-  const { data, error } = await admin
+const cache = new Map<string, { sources: string[]; cachedAt: number }>()
+const CACHE_TTL_MS = 5 * 60 * 1000
+
+export async function sourcesForTier(tier: string, stateCode: string | null): Promise<string[]> {
+  const cacheKey = `${tier}::${stateCode ?? 'NULL'}`
+  const cached = cache.get(cacheKey)
+  if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) return cached.sources
+
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
     .from('trust_source_registry')
-    .select('source_key, applicable_tiers, is_active');
-  if (error) throw new Error(`tier-sources-loader: ${error.message}`);
+    .select('source_key, applicable_state_codes')
+    .eq('is_active', true)
+    .contains('applicable_tiers', [tier])
 
-  const rows = (data ?? []) as RegistryRow[];
-  const grouped: Record<string, string[]> = { free: [], standard: [], plus: [], deep_dive: [], forensic: [] };
-  for (const r of rows) {
-    if (!r.is_active) continue;
-    const tiers = r.applicable_tiers ?? [];
-    for (const t of tiers) {
-      if (t in grouped) grouped[t].push(r.source_key);
-    }
+  if (error || !data) {
+    console.error('[sourcesForTier] DB read failed, using fallback:', error?.message)
+    if (stateCode && FALLBACK_BY_STATE[stateCode]) return FALLBACK_BY_STATE[stateCode]
+    return FALLBACK_BY_STATE.CO || []
   }
-  for (const t of Object.keys(grouped)) grouped[t].sort();
-  return grouped;
+
+  const filtered = data
+    .filter((row: { source_key: string; applicable_state_codes: string[] | null }) => {
+      if (!row.applicable_state_codes || row.applicable_state_codes.length === 0) return true
+      if (!stateCode) return false
+      return row.applicable_state_codes.includes(stateCode)
+    })
+    .map((row: { source_key: string }) => row.source_key)
+
+  cache.set(cacheKey, { sources: filtered, cachedAt: Date.now() })
+  return filtered
 }
 
-export async function loadTierSources(): Promise<Record<string, string[]>> {
-  if (cache) return cache;
-  try {
-    cache = await loadFromDb();
-    return cache;
-  } catch (err) {
-    console.error('[tier-sources-loader] DB read failed; falling back to hardcoded set', err);
-    return HARDCODED_FALLBACK as Record<string, string[]>;
-  }
-}
-
-export async function sourcesForTierAsync(tier: string): Promise<string[]> {
-  const map = await loadTierSources();
-  return map[tier] ?? map['standard'] ?? HARDCODED_FALLBACK.standard;
-}
-
-// Test-only: reset cache so unit tests can exercise the load path.
-export function _resetTierSourcesCache(): void {
-  cache = null;
-}
-
-// Test-only: get the hardcoded fallback set (asserted in tests).
-export function _getHardcodedFallback(): Record<Tier, string[]> {
-  return HARDCODED_FALLBACK;
+export function clearSourcesForTierCache(): void {
+  cache.clear()
 }
