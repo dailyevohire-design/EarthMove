@@ -3,7 +3,7 @@ import { Logo } from '@/components/logo'
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center bg-gray-50">
+    <div className="em-surface min-h-screen flex flex-col items-center justify-center px-4 text-center">
       <div className="mb-8 opacity-40">
         <Logo variant="mark" size={36} />
       </div>

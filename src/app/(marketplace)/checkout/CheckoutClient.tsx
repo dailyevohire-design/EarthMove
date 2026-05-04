@@ -112,7 +112,7 @@ export function CheckoutClient(props: Props) {
   }
 
   return (
-    <main className="bg-[var(--commerce-cream)] min-h-screen">
+    <main className="em-surface min-h-screen">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-8 py-10 lg:py-14">
         {/* Header */}
         <div className="max-w-[760px] mb-8">

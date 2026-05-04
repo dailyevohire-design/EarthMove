@@ -2357,3 +2357,113 @@
   border-top: 1px solid var(--em-hair) !important;
 }
 
+
+/* ============================================================
+   /TRUST DESIGN SYSTEM — universal surface wrapper
+   For raw-Tailwind pages without an existing surface class
+   (checkout, account, login, signup, not-found). Add
+   className="em-surface" to the outermost wrapper of any page
+   that should pick up the gc-page visual language.
+   ============================================================ */
+.em-surface {
+  background: var(--em-paper) !important;
+  color: var(--em-ink) !important;
+  font-family: var(--em-sans) !important;
+}
+.em-surface h1,
+.em-surface h2,
+.em-surface h3 {
+  font-family: var(--em-display) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--em-ink) !important;
+}
+.em-surface em,
+.em-surface .em {
+  font-style: italic !important;
+  font-weight: 500 !important;
+}
+.em-surface .card,
+.em-surface [class*="card"]:not([class*="card-"]) {
+  background: var(--em-card) !important;
+  border: 1px solid var(--em-hair) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+.em-surface .btn-primary,
+.em-surface button[type="submit"].btn-primary,
+.em-surface a.btn-primary,
+.em-surface .bg-emerald-600,
+.em-surface .bg-emerald-700,
+.em-surface button[class*="primary"]:not([class*="ghost"]):not([class*="secondary"]):not([class*="outline"]) {
+  background: var(--em-safety) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  border: 0 !important;
+}
+.em-surface .btn-primary:hover,
+.em-surface button[type="submit"].btn-primary:hover,
+.em-surface .bg-emerald-600:hover,
+.em-surface .bg-emerald-700:hover {
+  background: var(--em-safety-2) !important;
+}
+.em-surface .btn-secondary,
+.em-surface .btn-ghost {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+}
+.em-surface input,
+.em-surface select,
+.em-surface textarea {
+  font-family: var(--em-sans) !important;
+}
+.em-surface input[type="text"],
+.em-surface input[type="email"],
+.em-surface input[type="tel"],
+.em-surface input[type="number"],
+.em-surface input[type="password"],
+.em-surface select,
+.em-surface textarea {
+  border: 1px solid var(--em-hair) !important;
+  border-radius: 10px !important;
+  background: var(--em-card) !important;
+}
+.em-surface input:focus,
+.em-surface select:focus,
+.em-surface textarea:focus {
+  border-color: var(--em-evergreen) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 4px rgba(20, 50, 42, 0.08) !important;
+}
+.em-surface .text-gray-900 { color: var(--em-ink) !important; }
+.em-surface .text-gray-700 { color: var(--em-ink-2) !important; }
+.em-surface .text-gray-600 { color: var(--em-ink-2) !important; }
+.em-surface .text-gray-500 { color: var(--em-ink-3) !important; }
+.em-surface .border-gray-200,
+.em-surface .border-gray-300 {
+  border-color: var(--em-hair) !important;
+}
+.em-surface .bg-white {
+  background: var(--em-card) !important;
+}
+.em-surface .bg-gray-50,
+.em-surface .bg-gray-100 {
+  background: var(--em-paper-2) !important;
+}
+.em-surface .bg-emerald-50,
+.em-surface .bg-emerald-100 {
+  background: var(--em-emerald-pale) !important;
+}
+.em-surface .text-emerald-600,
+.em-surface .text-emerald-700,
+.em-surface .text-emerald-800,
+.em-surface .text-emerald-900 {
+  color: var(--em-emerald-soft) !important;
+}
+.em-surface a {
+  color: var(--em-ink-2);
+}
+.em-surface a:hover {
+  color: var(--em-ink);
+}

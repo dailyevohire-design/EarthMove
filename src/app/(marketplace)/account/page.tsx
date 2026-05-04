@@ -17,6 +17,7 @@ export default async function AccountPage() {
     .single()
 
   return (
+    <div className="em-surface min-h-screen">
     <div className="container-main py-10 max-w-3xl">
       <div className="flex items-start justify-between mb-8">
         <div>
@@ -51,6 +52,7 @@ export default async function AccountPage() {
           <ChevronRight size={15} className="text-gray-400" />
         </Link>
       </div>
+    </div>
     </div>
   )
 }

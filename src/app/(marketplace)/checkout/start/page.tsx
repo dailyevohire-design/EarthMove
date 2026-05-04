@@ -52,7 +52,7 @@ export default async function CheckoutStartPage({
   const deliveryWindow = params.delivery_window?.replace(/_/g, ' ') ?? 'flexible'
 
   return (
-    <main className="bg-[#faf7f2] min-h-screen">
+    <main className="em-surface min-h-screen">
       <div className="max-w-[1200px] mx-auto px-8 py-12 md:py-16">
 
         {/* Page header */}

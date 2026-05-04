@@ -57,7 +57,7 @@ export default async function SignupPage({ searchParams }: Props) {
   const isClaimingGuest = !!from_order
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0a1628] via-[#0d2137] to-[#091a0e]">
+    <div className="min-h-screen flex flex-col bg-[#14322A]">
       {/* Subtle grid */}
       <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{
         backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
@@ -73,7 +73,7 @@ export default async function SignupPage({ searchParams }: Props) {
               <Link href="/" aria-label="Earthmove home"><Logo variant="mark" size={36} theme="reverse" /></Link>
             </div>
             <h1 className="text-3xl md:text-5xl font-black text-white leading-[1.05] mb-4 text-center lg:text-left">
-              Join the <span className="text-emerald-400" style={{ textShadow: '0 0 32px rgba(16,185,129,0.5)' }}>insider list.</span>
+              Join the <em className="text-[#E5701B] not-italic font-black">insider list.</em>
             </h1>
             <p className="text-white/60 text-base md:text-lg mb-10 text-center lg:text-left max-w-xl">
               Free to join. No credit card. Members get prices and perks that don&apos;t exist on the public site.

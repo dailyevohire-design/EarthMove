@@ -9,7 +9,7 @@ interface Props { searchParams: Promise<{ redirectTo?: string }> }
 export default async function LoginPage({ searchParams }: Props) {
   const { redirectTo } = await searchParams
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16 bg-gray-50">
+    <div className="em-surface min-h-screen flex flex-col items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-10">
           <Link href="/" aria-label="Earthmove home"><Logo variant="mark" size={36} /></Link>
