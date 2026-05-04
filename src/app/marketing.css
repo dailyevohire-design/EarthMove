@@ -12,14 +12,33 @@
    net-new tokens introduced at :root.
    ============================================================ */
 :root {
-  --em-evergreen: #0E2A22;
+  /* === Canonical brand tokens — aligned to /trust (gc-page) design system === */
+  --em-paper: #F1ECE2;       /* warm sand surface (was #F5F4F0) */
+  --em-paper-2: #E9E3D5;     /* secondary surface */
+  --em-card: #FFFFFF;
+  --em-card-muted: #F6F2E8;
+  --em-evergreen: #14322A;   /* panel green (was #0E2A22) */
+  --em-evergreen-2: #0F2920;
   --em-cream: #F5F1E8;
-  --em-paper: #F5F4F0;
   --em-bone: #ECEAE3;
-  --em-graphite: #1A1B17;
+  --em-graphite: #15201B;    /* aligned to gc ink (was #1A1B17) */
+  --em-ink: #15201B;
+  --em-ink-2: #2A332E;
+  --em-ink-3: #5C645F;
   --em-stone: #8E8E89;
-  --em-hairline: rgba(14, 42, 34, 0.08);
-  --em-safety: #FF6A1F;
+  --em-hair: #D8D2C4;
+  --em-hair-strong: #C8C0AC;
+  --em-hairline: rgba(20, 50, 42, 0.08);
+  --em-safety: #E5701B;      /* amber orange (was #FF6A1F) */
+  --em-safety-2: #C95F12;    /* press */
+  --em-emerald: #2DB37A;
+  --em-emerald-soft: #1F8A5C;
+  --em-emerald-pale: #E6F1E9;
+  --em-amber: #E0A52A;
+  --em-red: #C24A2A;
+  --em-display: var(--font-fraunces), 'Fraunces', Georgia, 'Times New Roman', serif;
+  --em-sans: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --em-mono: var(--font-jetbrains-mono), 'JetBrains Mono', ui-monospace, monospace;
 }
 
 /* ============================================================
@@ -1006,22 +1025,22 @@
   .learn-page,
   .contractor-mobile,
   .driver-mobile {
-    --em-paper:    #F5F4F0;
+    --em-paper:    #F1ECE2;
     --em-chalk:    #FFFFFF;
     --em-bone:     #ECEAE3;
     --em-fog:      #D8D5CC;
-    --em-graphite: #1A1B17;
+    --em-graphite: #15201B;
     --em-asphalt:  #0E0F0C;
     --em-ink:      #42443D;
     --em-ash:      #76786E;
     --em-silt:     #A6A89E;
-    --em-evergreen: #0E2A22;
+    --em-evergreen: #14322A;
     --em-cream: #F5F1E8;
     --em-forest:   var(--em-evergreen); /* transitional alias — collapsed to single brand-green token */
     --em-forest-2: #16573F;
     --em-moss:     #2EA875;
-    --em-safety:   #FF6A1F;
-    --em-safety-2: #E0531A;
+    --em-safety:   #E5701B;
+    --em-safety-2: #C95F12;
     --em-flag:     #FFC233;
     --em-stop:     #D7382B;
     --em-sans: var(--font-inter), 'Inter Tight', 'Inter', system-ui, sans-serif;
@@ -1316,21 +1335,21 @@
 @media (max-width: 767px) {
   /* Apply em-* tokens to the marketplace main wrapper */
   [data-surface="commerce"] {
-    --em-paper:    #F5F4F0;
+    --em-paper:    #F1ECE2;
     --em-chalk:    #FFFFFF;
     --em-bone:     #ECEAE3;
     --em-fog:      #D8D5CC;
-    --em-graphite: #1A1B17;
+    --em-graphite: #15201B;
     --em-asphalt:  #0E0F0C;
     --em-ink:      #42443D;
     --em-ash:      #76786E;
     --em-silt:     #A6A89E;
-    --em-evergreen: #0E2A22;
+    --em-evergreen: #14322A;
     --em-cream: #F5F1E8;
     --em-forest:   var(--em-evergreen); /* transitional alias — collapsed to single brand-green token */
     --em-moss:     #2EA875;
-    --em-safety:   #FF6A1F;
-    --em-safety-2: #E0531A;
+    --em-safety:   #E5701B;
+    --em-safety-2: #C95F12;
     --em-flag:     #FFC233;
     --em-stop:     #D7382B;
     --em-sans: var(--font-inter), 'Inter Tight', 'Inter', system-ui, sans-serif;
@@ -2063,3 +2082,136 @@
   background: rgba(14, 42, 34, 0.04) !important;
   box-shadow: inset 0 0 0 2px var(--em-evergreen, #0E2A22) !important;
 }
+
+/* ============================================================
+   /TRUST DESIGN SYSTEM — applied site-wide
+   Aligns marketing-v6 to the /trust (gc-page) visual language:
+   - Fraunces serif display
+   - Warm sand paper surface
+   - Panel-green dark sections (#14322A)
+   - Amber-orange primary CTAs (#E5701B)
+   - White cards, 16-18px radius, hair border
+   - Mono labels with leading hairline dash
+   ============================================================ */
+
+/* Surface bg uses the new warm paper */
+.marketing-v6 {
+  background: var(--em-paper) !important;
+  color: var(--em-ink) !important;
+  font-family: var(--em-sans) !important;
+}
+.marketing-v6 .hv-bg { background: var(--em-paper) !important; }
+
+/* Display headlines — Fraunces serif, italic em emphasis */
+.marketing-v6 .hv-h1,
+.marketing-v6 .sec-title,
+.marketing-v6 h1.hv-h1,
+.marketing-v6 h2.sec-title {
+  font-family: var(--em-display) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.05 !important;
+  color: var(--em-ink) !important;
+}
+.marketing-v6 .hv-h1 em,
+.marketing-v6 .sec-title em,
+.marketing-v6 .hiw-h2 em,
+.marketing-v6 .hv-h1 .em {
+  font-style: italic !important;
+  font-weight: 500 !important;
+  background: none !important;
+  color: inherit !important;
+}
+.marketing-v6 .hv-h1 .em::after,
+.marketing-v6 .hv-h1 em.em::after { display: none !important; }
+
+/* Eyebrow / mono labels with leading hairline dash (signature gc-page pattern) */
+.marketing-v6 .eyebrow,
+.marketing-v6 .hiw-eyebrow,
+.marketing-v6 .cap-eb,
+.marketing-v6 .trust-fact-eyebrow {
+  font-family: var(--em-mono) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--em-ink-2) !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+.marketing-v6 .eyebrow::before,
+.marketing-v6 .hiw-eyebrow::before,
+.marketing-v6 .cap-eb::before,
+.marketing-v6 .trust-fact-eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 1.5px;
+  background: var(--em-ink-2);
+  flex-shrink: 0;
+}
+
+/* Cards — white, hair border, 16-18px radius (matches gc-page) */
+.marketing-v6 .card,
+.marketing-v6 .truck-photo,
+.marketing-v6 .cap,
+.marketing-v6 .trust-fact-card,
+.marketing-v6 .hiw-cap,
+.marketing-v6 .hiw-step {
+  background: var(--em-card) !important;
+  border: 1px solid var(--em-hair) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+.marketing-v6 .truck-photo .bay {
+  background: linear-gradient(180deg, var(--em-card-muted) 0%, var(--em-paper-2) 100%) !important;
+}
+
+/* Headlines inside cards — Fraunces */
+.marketing-v6 .truck-photo .meta h3,
+.marketing-v6 .cap-ttl,
+.marketing-v6 .trust-fact-title,
+.marketing-v6 .hiw-cap-h,
+.marketing-v6 .hiw-step-h {
+  font-family: var(--em-display) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--em-ink) !important;
+}
+
+/* Primary CTA — amber orange (matches gc-page Run Free Search) */
+.marketing-v6 .btn-primary,
+.marketing-v6 .hv-cta,
+.marketing-v6 button.btn-primary,
+.marketing-v6 a.btn-primary,
+.marketing-v6 .truck-photo .foot .cta,
+.marketing-v6 .mat-cta {
+  background: var(--em-safety) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.005em !important;
+  border: 0 !important;
+  transition: background 0.15s ease, transform 0.08s ease !important;
+}
+.marketing-v6 .btn-primary:hover,
+.marketing-v6 .hv-cta:hover,
+.marketing-v6 button.btn-primary:hover,
+.marketing-v6 a.btn-primary:hover {
+  background: var(--em-safety-2) !important;
+}
+.marketing-v6 .btn-primary:active,
+.marketing-v6 .hv-cta:active {
+  transform: translateY(1px);
+}
+
+/* Reverse-surface dark bands (footer, dispatch demo) — panel green */
+.marketing-v6 .trust-band,
+.marketing-v6 footer {
+  background: var(--em-evergreen) !important;
+  color: var(--em-cream) !important;
+}
+
+/* Hairline divider tokens used throughout */
+.marketing-v6 .section { border-top-color: var(--em-hair) !important; }
+

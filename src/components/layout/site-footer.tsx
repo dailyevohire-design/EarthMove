@@ -4,7 +4,7 @@ import { Logo } from '@/components/logo'
 export function SiteFooter() {
   const year = new Date().getFullYear()
   return (
-    <footer className="bg-[#0E2A22] text-[#F5F1E8]">
+    <footer className="bg-[#14322A] text-[#F1ECE2]">
       <div className="container-main py-16 md:py-24">
         <Link href="/" aria-label="Earthmove home" className="inline-block">
           <Logo variant="wordmark" size={28} theme="reverse" />
