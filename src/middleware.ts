@@ -116,11 +116,6 @@ body::after{
 
 /* Header */
 .hdr{display:flex;align-items:center;justify-content:space-between;gap:16px}
-/* Earthmove wordmark — exact match to <Logo variant="wordmark" size={28}> */
-.brand{display:inline-flex;align-items:center;gap:2px;color:#1F3D2E;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:500;font-size:28px;letter-spacing:-.05em;line-height:1}
-.brand svg{display:block;flex-shrink:0}
-.brand .ar{margin-left:-1px}
-.brand .rt{margin-left:1px}
 .status{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--evergreen);font-weight:600}
 .pip{width:7px;height:7px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 0 rgba(45,179,122,.5);animation:pulse 1.8s ease-in-out infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(45,179,122,.5)}50%{box-shadow:0 0 0 6px rgba(45,179,122,0)}}
@@ -213,14 +208,7 @@ body::after{
 </style></head><body>
 <div class="wrap">
   <header class="hdr">
-    <span class="brand" role="img" aria-label="Earthmove">
-      <svg width="18" height="20" viewBox="0 0 72 78" aria-hidden="true">
-        <path d="M0 0 L64 0 L72 6 L64 12 L0 12 Z" fill="currentColor"/>
-        <path d="M0 33 L46 33 L54 39 L46 45 L0 45 Z" fill="currentColor"/>
-        <path d="M0 66 L64 66 L72 72 L64 78 L0 78 Z" fill="currentColor"/>
-      </svg>
-      <span class="ar">ar</span><span class="rt">thmove</span>
-    </span>
+    <span role="img" aria-label="Earthmove" style="display:inline-flex"><span style="display:inline-flex;align-items:center;gap:2px"><svg width="18" height="20" viewBox="0 0 72 78" style="display:block;flex-shrink:0" aria-hidden="true"><path d="M0 0 L64 0 L72 6 L64 12 L0 12 Z" fill="#1F3D2E"></path><path d="M0 33 L46 33 L54 39 L46 45 L0 45 Z" fill="#1F3D2E"></path><path d="M0 66 L64 66 L72 72 L64 78 L0 78 Z" fill="#1F3D2E"></path></svg><span style="font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:28px;font-weight:500;color:#1F3D2E;letter-spacing:-0.05em;line-height:1;margin-left:-1px">ar</span><span style="font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:28px;font-weight:500;color:#1F3D2E;letter-spacing:-0.05em;line-height:1;margin-left:1px">thmove</span></span></span>
     <span class="status"><span class="pip"></span>Network · standby</span>
   </header>
 
