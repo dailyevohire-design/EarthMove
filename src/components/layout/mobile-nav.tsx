@@ -55,7 +55,7 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-b-[#0E2A22]/15">
-          <Logo variant="wordmark" size={20} theme="positive" />
+          <Logo variant="wordmark" size={20} theme="positive" color="#1F3D2E" />
           <button
             onClick={close}
             className="p-1.5 rounded-lg text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] hover:bg-[var(--commerce-cream-2)] transition-colors"
@@ -112,7 +112,7 @@ export function MobileNav({ isLoggedIn, role }: MobileNavProps) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="md:hidden p-2 rounded-lg text-[var(--commerce-ink-3)] hover:text-[var(--commerce-ink)] hover:bg-[var(--commerce-cream-2)] transition-colors"
+        className="md:hidden p-2 rounded-lg text-[#1F3D2E] hover:text-[var(--commerce-ink)] hover:bg-[var(--commerce-cream-2)] transition-colors"
         aria-label="Open menu"
       >
         <Menu size={22} />
@@ -135,7 +135,7 @@ function NavLink({
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
         accent
           ? 'text-[var(--commerce-trust)] hover:bg-[var(--commerce-cream-2)]'
-          : 'text-[var(--commerce-ink-2)] hover:bg-[var(--commerce-cream-2)] hover:text-[var(--commerce-ink)]'
+          : 'text-[#1F3D2E] hover:bg-[var(--commerce-cream-2)] hover:text-[var(--commerce-ink)]'
       }`}
     >
       {icon && <span className="text-[var(--commerce-ink-3)]">{icon}</span>}

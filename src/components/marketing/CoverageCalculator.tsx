@@ -164,7 +164,31 @@ export function CoverageCalculator() {
           </div>
         </div>
 
-        {isLargeJob ? (
+        {cu >= 10000 ? (
+          <div className="mt-6 rounded-2xl border border-[#1F3D2E]/20 bg-[#1F3D2E] p-6 md:p-8">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-300">
+                Enterprise scale
+              </span>
+            </div>
+            <h4 className="mt-3 font-serif text-2xl font-medium text-[#F5F1E8] md:text-3xl">
+              Contact sales team
+            </h4>
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-[#F5F1E8]/75">
+              Loads above 10,000 cubic yards are sourced across multiple yards. Our sales team will scope, price, and schedule the job directly.
+            </p>
+            <a
+              href="tel:+12797890350"
+              className="mt-5 inline-flex items-center gap-2 rounded-md bg-emerald-500 px-5 py-3 text-sm font-medium text-[#0E2A22] transition hover:bg-emerald-400"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+              Call (279) 789-0350
+            </a>
+          </div>
+        ) : isLargeJob ? (
           <div className="calc-large-job" style={{ marginTop: 24, padding: 20, border: '1px solid var(--em-evergreen, #0E2A22)', borderRadius: 12, background: 'rgba(14,42,34,0.04)' }}>
             <div style={{ fontSize: 13, color: 'var(--em-evergreen, #0E2A22)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Large Job</div>
             <p style={{ fontSize: 15, color: 'var(--ink)', margin: 0 }}>

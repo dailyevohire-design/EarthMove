@@ -109,15 +109,16 @@
 .marketing-v6 .nav { position: sticky; top: 0; z-index: 50; background: rgba(250,250,247,.78); backdrop-filter: saturate(180%) blur(10px); border-bottom: 1px solid transparent; transition: border-color .2s ease; }
 .marketing-v6 .nav.scrolled { border-color: var(--line); }
 .marketing-v6 .nav-inner { height: 68px; display: flex; align-items: center; justify-content: space-between; }
-.marketing-v6 .nav-logo { font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; letter-spacing: -0.035em; font-weight: 700; font-size: 22px; color: var(--ink); }
+.marketing-v6 .nav-logo { font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; letter-spacing: -0.035em; font-weight: 700; font-size: 22px; color: #1F3D2E; }
 .marketing-v6 .nav-logo .dot { color: var(--action); }
-.marketing-v6 .nav-links { display: none; align-items: center; gap: 32px; font-size: 14px; color: var(--ink-2); }
+.marketing-v6 .nav-links { display: none; align-items: center; gap: 32px; font-size: 14px; color: #1F3D2E; }
+.marketing-v6 .nav-links a { color: #1F3D2E; }
 .marketing-v6 .nav-links a:hover { color: var(--ink); }
 @media (min-width: 768px) { .marketing-v6 .nav-links { display: flex; } }
 
-/* SECTIONS */
-.marketing-v6 .section { padding: 96px 0; }
-@media (min-width: 768px) { .marketing-v6 .section { padding: 120px 0; } }
+/* SECTIONS — capped at py-20 / md:py-24 (was 96/120) per launch-polish spacing audit */
+.marketing-v6 .section { padding: 80px 0; }
+@media (min-width: 768px) { .marketing-v6 .section { padding: 96px 0; } }
 .marketing-v6 .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .10em; text-transform: uppercase; color: var(--brand); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .marketing-v6 .eyebrow::before { content: ""; width: 18px; height: 1.5px; background: var(--brand); display: inline-block; }
 .marketing-v6 .sec-title { font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; font-size: clamp(24px, 7vw, 40px); }

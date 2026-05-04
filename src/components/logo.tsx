@@ -12,6 +12,8 @@ interface LogoProps {
   theme?: LogoTheme;
   /** Override the tagline text. Default: "intelligence behind every load." */
   tagline?: string;
+  /** Optional explicit foreground color. When set, overrides the theme default. */
+  color?: string;
   className?: string;
 }
 
@@ -23,9 +25,10 @@ export function Logo({
   variant = "lockup",
   theme = "positive",
   tagline = "intelligence behind every load.",
+  color,
   className,
 }: LogoProps) {
-  const fg = theme === "positive" ? EVERGREEN : CREAM;
+  const fg = color ?? (theme === "positive" ? EVERGREEN : CREAM);
   const isMarkOnly = variant === "mark";
   const cascadeWidth = isMarkOnly ? Math.round((size * 72) / 78) : Math.round(size * 0.655);
   const cascadeHeight = isMarkOnly ? size : Math.round(size * 0.71);

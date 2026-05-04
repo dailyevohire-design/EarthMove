@@ -55,7 +55,7 @@ export async function Homepage() {
     <div className="marketing-v6">
       <NavScroll>
           <div className="max nav-inner">
-            <Link href="/" className="nav-logo" aria-label="Earthmove home"><Logo variant="wordmark" size={28} /></Link>
+            <Link href="/" className="nav-logo" aria-label="Earthmove home"><Logo variant="wordmark" size={28} color="#1F3D2E" /></Link>
             <nav className="nav-links">
               <Link href="/browse">Materials</Link>
               <Link href="/deals">Deals</Link>
@@ -76,8 +76,8 @@ export async function Homepage() {
               <HeroLeftColumn />
 
               {/* RIGHT — Operations panel (feature-illustrative, demo-labeled) */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <div className="op" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignSelf: 'flex-start' }}>
+                <div className="op" style={{ display: 'flex', flexDirection: 'column' }}>
                   <div className="op-head">
                     <div className="op-eyebrow">
                       <span className="op-mark" />

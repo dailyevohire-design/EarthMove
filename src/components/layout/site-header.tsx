@@ -26,23 +26,23 @@ export async function SiteHeader() {
       <div className="container-main">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" aria-label="Earthmove home" className="flex items-center"><BrandLogo variant="wordmark" size={22} /></Link>
+          <Link href="/" aria-label="Earthmove home" className="flex items-center"><BrandLogo variant="wordmark" size={22} color="#1F3D2E" /></Link>
 
           {/* Center: location + nav */}
           <div className="hidden md:flex items-center gap-4">
             <LocationIndicator />
             <div className="w-px h-6 bg-gray-200" />
             <nav className="flex items-center gap-1">
-              <Link href="/browse" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium">
+              <Link href="/browse" className="px-4 py-2 rounded-xl text-sm text-[#1F3D2E] hover:text-gray-900 hover:bg-gray-100 transition-all font-medium">
                 Materials
               </Link>
               <Link href="/deals" className="px-4 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-all font-semibold flex items-center gap-1.5">
                 <Zap size={13} className="fill-current" /> Deals
               </Link>
-              <Link href="/learn" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium">
+              <Link href="/learn" className="px-4 py-2 rounded-xl text-sm text-[#1F3D2E] hover:text-gray-900 hover:bg-gray-100 transition-all font-medium">
                 Learn
               </Link>
-              <Link href="/material-match" className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium flex items-center gap-1.5">
+              <Link href="/material-match" className="px-4 py-2 rounded-xl text-sm text-[#1F3D2E] hover:text-gray-900 hover:bg-gray-100 transition-all font-medium flex items-center gap-1.5">
                 <HelpCircle size={13} /> Material Match
               </Link>
               {isCollectionsEnabled() && profile && ['gc','supplier','driver','admin'].includes(profile.role) && (
