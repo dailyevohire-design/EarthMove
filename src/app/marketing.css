@@ -2242,6 +2242,16 @@
   line-height: 1.05 !important;
   color: var(--em-ink) !important;
 }
+
+/* Trust band ("Built for the way crews actually work") — explicit white
+   text on the evergreen surface. Higher specificity than the global
+   .sec-title rule above so it wins without relying on inline style. */
+.marketing-v6 .trust-band .sec-title,
+.marketing-v6 .trust-band h2.sec-title,
+.marketing-v6 .trust-band > .max > div > .sec-title,
+.marketing-v6 #trust > .max > div > p {
+  color: #FFFFFF !important;
+}
 .marketing-v6 .hv-h1 em,
 .marketing-v6 .sec-title em,
 .marketing-v6 .hiw-h2 em,
