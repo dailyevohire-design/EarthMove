@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../../../test/setup';
-import { scrapeSamGovExclusions } from '../sam-gov';
+import { scrapeSamGovExclusions, _resetSamGovThrottle } from '../sam-gov';
 import {
   ScraperAuthError, ScraperRateLimitError,
   ScraperUpstreamError,
@@ -10,6 +10,12 @@ import {
 const URL_PATTERN = 'https://api.sam.gov/entity-information/v4/exclusions';
 
 describe('scrapeSamGovExclusions', () => {
+  // Module-scope rate limiter + cache leak across tests; reset both so each
+  // test starts with a fresh quota window and empty cache.
+  beforeEach(() => {
+    _resetSamGovThrottle();
+  });
+
   it('returns sanction_clear when totalRecords=0', async () => {
     server.use(http.get(URL_PATTERN, () => HttpResponse.json({ totalRecords: 0, exclusionDetails: [] })));
     const r = await scrapeSamGovExclusions({ legalName: 'ACME PLUMBING LLC', apiKey: 'test' });

@@ -1,7 +1,8 @@
 import { inngest } from '@/lib/inngest'
 import { createAdminClient } from '@/lib/supabase/server'
 import { persistEvidence } from './scrapers/persist-evidence'
-import { runScraper, sourcesForTier } from './scrapers/registry'
+import { runScraper } from './scrapers/registry'
+import { sourcesForTier } from './scrapers/tier-sources-loader'
 import Anthropic from '@anthropic-ai/sdk';
 import {
   TIER_CONFIG,
@@ -186,7 +187,7 @@ export const runTrustJobV2 = inngest.createFunction(
     })
 
     // 3. Determine sources for this tier (DB-driven via migration 200; cached after cold boot).
-    const sources = await sourcesForTier(job.tier)
+    const sources = await sourcesForTier(job.tier, job.state_code)
 
     // 4. Mark running + plan counters
     await step.run('v2-mark-running', async () => {

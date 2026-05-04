@@ -1,93 +1,82 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { sourcesForTier, clearSourcesForTierCache } from '../tier-sources-loader'
 
-const fromMock = vi.fn();
 vi.mock('@/lib/supabase/server', () => ({
-  createAdminClient: () => ({ from: fromMock }),
-}));
+  createAdminClient: vi.fn(),
+}))
 
-import {
-  loadTierSources,
-  sourcesForTierAsync,
-  _resetTierSourcesCache,
-  _getHardcodedFallback,
-} from '../tier-sources-loader';
+import { createAdminClient } from '@/lib/supabase/server'
 
-function mockRegistryReturn(data: any | null, error: any | null = null) {
-  fromMock.mockReturnValueOnce({
-    select: vi.fn().mockResolvedValue({ data, error }),
-  });
+const ALL_ROWS = [
+  { source_key: 'co_sos_biz', applicable_state_codes: ['CO'] },
+  { source_key: 'co_dora', applicable_state_codes: ['CO'] },
+  { source_key: 'denver_pim', applicable_state_codes: ['CO'] },
+  { source_key: 'tx_sos_biz', applicable_state_codes: ['TX'] },
+  { source_key: 'tx_tdlr', applicable_state_codes: ['TX'] },
+  { source_key: 'dallas_open_data', applicable_state_codes: ['TX'] },
+  { source_key: 'sam_gov_exclusions', applicable_state_codes: null },
+]
+
+function makeMockClient(rows: typeof ALL_ROWS, error: Error | null = null) {
+  return {
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          contains: () => Promise.resolve({ data: error ? null : rows, error }),
+        }),
+      }),
+    }),
+  } as unknown as ReturnType<typeof createAdminClient>
 }
 
-beforeEach(() => {
-  _resetTierSourcesCache();
-  fromMock.mockReset();
-});
+describe('sourcesForTier — state-code gating', () => {
+  beforeEach(() => {
+    clearSourcesForTierCache()
+    vi.mocked(createAdminClient).mockReset()
+  })
 
-describe('tier-sources-loader', () => {
-  it('standard tier returns the 5 implemented source_keys (alphabetical)', async () => {
-    mockRegistryReturn([
-      { source_key: 'sam_gov_exclusions', applicable_tiers: ['standard','plus','deep_dive','forensic'], is_active: true },
-      { source_key: 'co_sos_biz',         applicable_tiers: ['standard','plus','deep_dive','forensic'], is_active: true },
-      { source_key: 'tx_sos_biz',         applicable_tiers: ['standard','plus','deep_dive','forensic'], is_active: true },
-      { source_key: 'denver_pim',         applicable_tiers: ['standard','plus','deep_dive','forensic'], is_active: true },
-      { source_key: 'dallas_open_data',   applicable_tiers: ['standard','plus','deep_dive','forensic'], is_active: true },
-      { source_key: 'mock_source',        applicable_tiers: ['free'], is_active: false }, // inactive — skipped
-    ]);
-    const sources = await sourcesForTierAsync('standard');
-    expect(sources).toEqual([
-      'co_sos_biz', 'dallas_open_data', 'denver_pim', 'sam_gov_exclusions', 'tx_sos_biz',
-    ]);
-  });
+  it('returns CO sources + federal for stateCode=CO', async () => {
+    vi.mocked(createAdminClient).mockReturnValue(makeMockClient(ALL_ROWS))
+    const result = await sourcesForTier('standard', 'CO')
+    expect(result).toContain('co_sos_biz')
+    expect(result).toContain('co_dora')
+    expect(result).toContain('denver_pim')
+    expect(result).toContain('sam_gov_exclusions')
+    expect(result).not.toContain('tx_sos_biz')
+    expect(result).not.toContain('tx_tdlr')
+    expect(result).not.toContain('dallas_open_data')
+  })
 
-  it('free tier returns mock_source only (when active)', async () => {
-    mockRegistryReturn([
-      { source_key: 'mock_source', applicable_tiers: ['free'], is_active: true },
-      { source_key: 'co_sos_biz',  applicable_tiers: ['standard','plus','deep_dive','forensic'], is_active: true },
-    ]);
-    const sources = await sourcesForTierAsync('free');
-    expect(sources).toEqual(['mock_source']);
-  });
+  it('returns TX sources + federal for stateCode=TX', async () => {
+    vi.mocked(createAdminClient).mockReturnValue(makeMockClient(ALL_ROWS))
+    const result = await sourcesForTier('standard', 'TX')
+    expect(result).toContain('tx_sos_biz')
+    expect(result).toContain('tx_tdlr')
+    expect(result).toContain('dallas_open_data')
+    expect(result).toContain('sam_gov_exclusions')
+    expect(result).not.toContain('co_sos_biz')
+    expect(result).not.toContain('co_dora')
+    expect(result).not.toContain('denver_pim')
+  })
 
-  it('skips sources with is_active=false even when tier matches', async () => {
-    mockRegistryReturn([
-      { source_key: 'mock_source', applicable_tiers: ['free'], is_active: false },
-      { source_key: 'opencorporates', applicable_tiers: ['standard'], is_active: false },
-    ]);
-    const map = await loadTierSources();
-    expect(map.free).toEqual([]);
-    expect(map.standard).toEqual([]);
-  });
+  it('treats null applicable_state_codes as all-states (federal)', async () => {
+    vi.mocked(createAdminClient).mockReturnValue(makeMockClient(ALL_ROWS))
+    const co = await sourcesForTier('standard', 'CO')
+    const tx = await sourcesForTier('standard', 'TX')
+    expect(co).toContain('sam_gov_exclusions')
+    expect(tx).toContain('sam_gov_exclusions')
+  })
 
-  it('skips sources with empty applicable_tiers (declared-but-not-built)', async () => {
-    mockRegistryReturn([
-      { source_key: 'co_sos_biz',  applicable_tiers: ['standard'], is_active: true },
-      { source_key: 'ny_sos_biz',  applicable_tiers: [],           is_active: true },
-      { source_key: 'cslb_ca',     applicable_tiers: null,         is_active: true },
-    ]);
-    const sources = await sourcesForTierAsync('standard');
-    expect(sources).toEqual(['co_sos_biz']);
-  });
+  it('returns only federal sources when stateCode is null', async () => {
+    vi.mocked(createAdminClient).mockReturnValue(makeMockClient(ALL_ROWS))
+    const result = await sourcesForTier('standard', null)
+    expect(result).toEqual(['sam_gov_exclusions'])
+  })
 
-  it('falls back to hardcoded set on DB read error', async () => {
-    mockRegistryReturn(null, { message: 'connection refused' });
-    const sources = await sourcesForTierAsync('standard');
-    expect(sources).toEqual(_getHardcodedFallback().standard);
-  });
-
-  it('caches first successful load (does not re-query on second call)', async () => {
-    mockRegistryReturn([
-      { source_key: 'co_sos_biz', applicable_tiers: ['standard'], is_active: true },
-    ]);
-    await sourcesForTierAsync('standard');
-    await sourcesForTierAsync('standard'); // second call
-    expect(fromMock).toHaveBeenCalledTimes(1); // only the first triggered a DB call
-  });
-
-  it('unknown tier falls back to standard', async () => {
-    mockRegistryReturn([
-      { source_key: 'co_sos_biz', applicable_tiers: ['standard'], is_active: true },
-    ]);
-    const sources = await sourcesForTierAsync('nonexistent_tier');
-    expect(sources).toEqual(['co_sos_biz']); // = standard's set
-  });
-});
+  it('falls back to FALLBACK_BY_STATE when DB errors', async () => {
+    vi.mocked(createAdminClient).mockReturnValue(makeMockClient(ALL_ROWS, new Error('db down')))
+    const result = await sourcesForTier('standard', 'CO')
+    expect(result).toContain('co_sos_biz')
+    expect(result).toContain('co_dora')
+  })
+})

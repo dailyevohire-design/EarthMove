@@ -115,4 +115,3 @@ function mockScraperEvidence(input: RunScraperInput): ScraperEvidence {
 //
 // Async signature: this is invoked from Inngest function steps which are
 // already async, so the await cost is one DB round-trip per cold boot.
-export { sourcesForTierAsync as sourcesForTier } from './tier-sources-loader';
