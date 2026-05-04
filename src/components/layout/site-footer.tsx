@@ -28,7 +28,6 @@ export function SiteFooter() {
 
         <div className="mt-6 text-[12px] text-[rgba(245,241,232,0.6)] space-y-1">
           <p>&copy; {year} Earth Pro Connect LLC</p>
-          <p>Patent-pending · U.S. Provisional Application No. 64/053,971</p>
           <p>
             <Link href="/privacy" className="hover:underline">Privacy</Link>
             {' · '}
