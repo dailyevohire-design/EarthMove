@@ -2215,3 +2215,145 @@
 /* Hairline divider tokens used throughout */
 .marketing-v6 .section { border-top-color: var(--em-hair) !important; }
 
+
+/* ============================================================
+   /TRUST DESIGN SYSTEM — extended to ALL surface wrappers
+   marketing-v6 already covered above; this block adds the same
+   visual language to browse-page, learn-page, order-detail-page,
+   pdp-page so every surface flows together.
+   ============================================================ */
+
+/* Display headlines — Fraunces serif on every surface */
+.browse-page h1,
+.browse-page h2,
+.browse-page h3,
+.learn-page h1,
+.learn-page h2,
+.learn-page h3,
+.order-detail-page h1,
+.order-detail-page h2,
+.order-detail-page h3,
+.pdp-page h1,
+.pdp-page h2,
+.pdp-page h3 {
+  font-family: var(--em-display) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--em-ink) !important;
+}
+.browse-page em,
+.learn-page em,
+.order-detail-page em,
+.pdp-page em {
+  font-style: italic !important;
+  font-weight: 500 !important;
+}
+
+/* Surface backgrounds — warm sand paper */
+.browse-page,
+.learn-page,
+.order-detail-page {
+  background: var(--em-paper) !important;
+  color: var(--em-ink) !important;
+  font-family: var(--em-sans) !important;
+}
+
+/* Material cards on browse page — white card / hair border / 16px radius */
+.browse-page .material-card,
+.browse-page [class*="MaterialTile"],
+.browse-page article[class*="card"],
+.browse-page .listing-card {
+  background: var(--em-card) !important;
+  border: 1px solid var(--em-hair) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+/* Hero band copy on browse */
+.browse-page .hero-band h1,
+.browse-page [class*="HeroBand"] h1 {
+  font-family: var(--em-display) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Filter chips on browse — match gc-page mono pill */
+.browse-page .filter-pill,
+.browse-page .filter-chip {
+  font-family: var(--em-mono) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--em-hair) !important;
+  background: var(--em-card) !important;
+}
+.browse-page .filter-pill.active,
+.browse-page .filter-chip.active,
+.browse-page .filter-pill[data-state="active"] {
+  background: var(--em-evergreen) !important;
+  color: #ffffff !important;
+  border-color: var(--em-evergreen) !important;
+}
+
+/* Primary CTAs across all surfaces — amber orange */
+.browse-page .btn-primary,
+.browse-page button.btn-primary,
+.browse-page a.btn-primary,
+.learn-page .btn-primary,
+.order-detail-page .btn-primary,
+.pdp-page .btn-primary,
+.pdp-page .pdp-cta {
+  background: var(--em-safety) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  border: 0 !important;
+  font-family: var(--em-sans) !important;
+}
+.browse-page .btn-primary:hover,
+.learn-page .btn-primary:hover,
+.order-detail-page .btn-primary:hover,
+.pdp-page .pdp-cta:hover {
+  background: var(--em-safety-2) !important;
+}
+
+/* Mono eyebrows with leading hairline dash (the gc-page tell) */
+.browse-page .eyebrow,
+.learn-page .eyebrow,
+.order-detail-page .eyebrow,
+.pdp-page .eyebrow,
+.browse-page [class*="-eyebrow"],
+.learn-page [class*="-eyebrow"] {
+  font-family: var(--em-mono) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--em-ink-2) !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+.browse-page .eyebrow::before,
+.learn-page .eyebrow::before,
+.order-detail-page .eyebrow::before,
+.pdp-page .eyebrow::before,
+.browse-page [class*="-eyebrow"]::before,
+.learn-page [class*="-eyebrow"]::before {
+  content: "";
+  width: 18px;
+  height: 1.5px;
+  background: var(--em-ink-2);
+  flex-shrink: 0;
+}
+
+/* Hairlines */
+.browse-page hr,
+.learn-page hr,
+.order-detail-page hr {
+  border: 0 !important;
+  border-top: 1px solid var(--em-hair) !important;
+}
+
