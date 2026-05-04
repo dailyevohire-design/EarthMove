@@ -167,10 +167,18 @@
 .marketing-v6 .hv-sub b { color: var(--ink); font-weight: 600; }
 
 .marketing-v6 .hv-rq {
-  margin-top: 36px; background: #fff; border: 1px solid var(--line-strong); border-radius: 16px; padding: 14px;
-  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 0 0 1px rgba(15,20,17,.012),
-              0 30px 60px -32px rgba(15,20,17,.22), 0 6px 16px -8px rgba(15,20,17,.06);
+  margin-top: 36px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FBF8F1 100%);
+  border: 1px solid var(--em-hair-strong, #C8C0AC);
+  border-radius: 18px;
+  padding: 22px 22px 18px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.9) inset,
+    0 0 0 1px rgba(20,50,42,.04),
+    0 30px 60px -28px rgba(14,42,34,.18),
+    0 8px 20px -10px rgba(14,42,34,.08);
   max-width: 600px;
+  position: relative;
 }
 .marketing-v6 .hv-rq-top { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 14px 4px; border-bottom: 1px solid var(--line); gap: 12px; flex-wrap: wrap; }
 .marketing-v6 .toggle { display: inline-flex; padding: 4px; background: #fff; border: 1px solid var(--line); border-radius: 999px; }
@@ -180,24 +188,25 @@
 .marketing-v6 .hv-rq-step { font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; color: var(--ink-2); font-weight: 700; letter-spacing: .04em; }
 .marketing-v6 .hv-rq-step-sep { width: 14px; height: 1px; background: var(--line-strong); }
 
-.marketing-v6 .hv-rq-form { display: flex; gap: 8px; margin-top: 14px; align-items: stretch; }
-.marketing-v6 .hv-zip { flex: 1; display: flex; align-items: center; height: 56px; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 11px; transition: all .18s ease; overflow: hidden; }
-.marketing-v6 .hv-zip:focus-within { border-color: var(--ink); background: #fff; box-shadow: 0 0 0 4px rgba(15,20,17,.05); }
-.marketing-v6 .hv-zip input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; height: 100%; padding: 0 16px; font-size: 19px; color: var(--ink); font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; letter-spacing: .04em; font-weight: 500; }
-.marketing-v6 .hv-zip input::placeholder { color: var(--ink-3); font-weight: 400; }
+.marketing-v6 .hv-rq-form { display: flex; gap: 8px; margin-top: 4px; align-items: stretch; }
+.marketing-v6 .hv-zip { flex: 1; display: flex; align-items: center; height: 56px; background: #fff; border: 1px solid var(--em-hair-strong, #C8C0AC); border-radius: 11px; transition: border-color .18s ease, box-shadow .18s ease; overflow: hidden; }
+.marketing-v6 .hv-zip:focus-within { border-color: var(--brand); box-shadow: 0 0 0 4px rgba(20,50,42,.10); }
+.marketing-v6 .hv-zip input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; height: 100%; padding: 0 16px; font-size: 20px; color: var(--ink); font-family: var(--font-bricolage), 'Bricolage Grotesque', serif; letter-spacing: .06em; font-weight: 600; }
+.marketing-v6 .hv-zip input::placeholder { color: var(--ink-3); font-weight: 500; letter-spacing: .04em; }
 
 .marketing-v6 .hv-cta {
-  position: relative; display: inline-flex; align-items: center; gap: 14px; height: 56px;
-  padding: 0 14px 0 22px; background: var(--action); color: #fff; border-radius: 11px;
-  font-weight: 600; font-size: 14.5px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1.5px 0 rgba(0,0,0,.18),
-              0 8px 18px -8px rgba(217,122,31,.55), 0 2px 4px -2px rgba(217,122,31,.30);
-  transition: all .15s ease;
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  gap: 10px; height: 56px;
+  padding: 0 22px; background: var(--action); color: #fff; border-radius: 11px;
+  font-weight: 600; font-size: 14.5px; letter-spacing: .005em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1.5px 0 rgba(0,0,0,.22),
+              0 10px 22px -10px rgba(14,42,34,.45), 0 2px 4px -2px rgba(14,42,34,.20);
+  transition: transform .12s ease, background .15s ease, box-shadow .15s ease;
 }
 .marketing-v6 .hv-cta:hover { background: var(--action-hover); }
 .marketing-v6 .hv-cta:active { transform: translateY(1px); }
-.marketing-v6 .hv-cta-arrow { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: rgba(255,255,255,.16); transition: transform .2s ease; }
-.marketing-v6 .hv-cta:hover .hv-cta-arrow { transform: translateX(2px); background: rgba(255,255,255,.22); }
+.marketing-v6 .hv-cta svg { transition: transform .2s ease; }
+.marketing-v6 .hv-cta:hover svg { transform: translateX(3px); }
 
 .marketing-v6 .hv-marks { display: flex; align-items: center; gap: 0; margin-top: 22px; flex-wrap: wrap; row-gap: 8px; }
 .marketing-v6 .hv-marks .mk { display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; font-size: 12.5px; color: var(--ink-2); font-weight: 500; }
@@ -1873,23 +1882,142 @@
   line-height: 1.4 !important;
 }
 
-/* === Hero centered text (Phase 5, commit 2) === */
+/* === Hero typography — left-aligned editorial (was centered Phase 5) === */
 .marketing-v6 .hv-h1,
 .marketing-v6 .hv-sub {
-  text-align: center !important;
+  text-align: left;
 }
 
-/* === ZIP card overhaul (Phase 5, commit 3) === */
-.marketing-v6 .hv-rq-title {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+/* Two-beat headline: a confident lead and a quieter coda. */
+.marketing-v6 .hv-h1-lead {
+  display: block;
+  font-family: var(--font-bricolage), 'Bricolage Grotesque', serif;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: .95;
+  font-size: clamp(40px, 7.2vw, 92px);
+  color: var(--ink);
+  text-wrap: balance;
+}
+.marketing-v6 .hv-h1-lead em {
+  font-family: var(--em-display, var(--font-fraunces), 'Fraunces', Georgia, serif);
+  font-style: italic;
   font-weight: 500;
-  font-size: 22px;
-  letter-spacing: -0.01em;
-  color: var(--em-evergreen, #0E2A22);
-  margin: 0 0 16px;
+  color: var(--brand);
+  position: relative;
+  white-space: nowrap;
+  padding: 0 .04em;
+}
+.marketing-v6 .hv-h1-lead em::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: .06em;
+  height: .14em;
+  background: var(--action);
+  opacity: .85;
+  border-radius: 2px;
+  z-index: -1;
+}
+.marketing-v6 .hv-h1-coda {
+  display: block;
+  margin-top: 4px;
+  margin-left: clamp(2px, 1.1vw, 14px);
+  font-family: var(--em-display, var(--font-fraunces), 'Fraunces', Georgia, serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-size: clamp(22px, 3vw, 38px);
+  color: var(--ink-3);
+}
+
+/* === Instant-quote card overhaul — premium, brand-voice === */
+.marketing-v6 .hv-rq-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-family: var(--font-mono), 'DM Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+.marketing-v6 .hv-rq-pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--commerce-panel-active, #2DB37A);
+  box-shadow: 0 0 0 0 rgba(45,179,122,.45);
+  animation: marketing-lp 1.8s ease-in-out infinite;
+}
+.marketing-v6 .hv-rq-eyebrow-lbl { color: var(--brand); }
+
+.marketing-v6 .hv-rq-title {
+  font-family: var(--font-bricolage), 'Bricolage Grotesque', serif;
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--ink);
+  margin: 0 0 6px;
+  text-wrap: balance;
 }
 @media (min-width: 768px) {
-  .marketing-v6 .hv-rq-title { font-size: 24px; }
+  .marketing-v6 .hv-rq-title { font-size: 30px; }
+}
+.marketing-v6 .hv-rq-sub {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin: 0 0 18px;
+  max-width: 460px;
+}
+
+/* In-card trust marks (replaces external .hv-marks bar) */
+.marketing-v6 .hv-rq-marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.marketing-v6 .hv-rq-mk {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--ink-2);
+  font-weight: 500;
+  letter-spacing: .005em;
+}
+.marketing-v6 .hv-rq-mk svg {
+  color: var(--trust-mark);
+  width: 13px;
+  height: 13px;
+}
+
+/* Composite ZIP input — "Deliver to" prefix label sits inside the field */
+.marketing-v6 .hv-zip-prefix {
+  flex-shrink: 0;
+  padding: 0 12px 0 18px;
+  font-family: var(--font-mono), 'DM Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  border-right: 1px solid var(--line);
+  white-space: nowrap;
+  align-self: center;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* ZIP input — taller, more padding */

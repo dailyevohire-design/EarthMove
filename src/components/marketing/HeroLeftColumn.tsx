@@ -46,19 +46,25 @@ export function HeroLeftColumn() {
   return (
     <div>
       <h1 className="hv-h1" id="headline">
-        We move earth. All of it.
+        <span className="hv-h1-lead">We move <em>earth</em>.</span>
+        <span className="hv-h1-coda">All of it.</span>
       </h1>
 
       <p className="hv-sub" id="subhead">
-        Intelligence behind every load — <em>that&apos;s why our delivered cost is lower than any broker, any platform, any phone call you&apos;ve ever made.</em> And finally, a truck that shows up.
+        The smartest dispatch in the industry. Lower delivered cost than any broker, platform, or phone call — and a truck that actually shows up.
       </p>
 
       <form id="zipForm" className="hv-rq" onSubmit={handleZipSubmit} noValidate>
-        <div className="hv-rq-top">
-          <h2 className="hv-rq-title">Instant Quote</h2>
+        <div className="hv-rq-eyebrow">
+          <span className="hv-rq-pip" aria-hidden="true" />
+          <span className="hv-rq-eyebrow-lbl">Instant quote · Free · No signup</span>
         </div>
+        <h2 className="hv-rq-title">See your delivered price in 3 seconds.</h2>
+        <p className="hv-rq-sub">Drop a ZIP. We quote a real load from the closest verified yard — same-day if before 10 AM.</p>
+
         <div className="hv-rq-form">
           <label className="hv-zip">
+            <span className="hv-zip-prefix">Deliver to</span>
             <input
               id="zip"
               name="zip"
@@ -66,15 +72,21 @@ export function HeroLeftColumn() {
               maxLength={5}
               pattern="\d{5}"
               autoComplete="postal-code"
-              placeholder="Delivery ZIP"
+              placeholder="ZIP"
               value={zip}
               onChange={e => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))}
             />
           </label>
           <button type="submit" className="hv-cta" id="ctaBtn">
-            <span id="ctaLbl">Quote my ZIP</span>
-            <span className="hv-cta-arrow"><ArrowRightIcon /></span>
+            <span id="ctaLbl">Get my price</span>
+            <ArrowRightIcon />
           </button>
+        </div>
+
+        <div className="hv-rq-marks">
+          <span className="hv-rq-mk"><CheckIcon /> Real yard pricing</span>
+          <span className="hv-rq-mk"><CheckIcon /> Photo-confirmed drop</span>
+          <span className="hv-rq-mk"><CheckIcon /> Net-30 for contractors</span>
         </div>
 
         <div id="zipResult" style={result ? { marginTop: 14 } : { marginTop: 14, display: 'none' }}>
@@ -152,13 +164,6 @@ export function HeroLeftColumn() {
         <Link href="/material-match">find my material</Link>
         {' · '}
         <Link href="/learn">read project guides</Link>
-      </div>
-
-      <div className="hv-marks">
-        <span className="mk"><CheckIcon /> Photo-confirmed at drop</span>
-        <span className="mk"><CheckIcon /> Net-30 for qualified contractors</span>
-        <span className="mk"><CheckIcon /> <b>Yard-verified</b> network</span>
-        <span className="mk"><CheckIcon /> Live ETA from dispatch</span>
       </div>
 
       <section className="trust-band-section">
