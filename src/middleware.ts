@@ -245,7 +245,6 @@ body::after{
           <span class="chip">Mason sand</span>
         </div>
       </div>
-      <p class="market-suppliers"><b>Brannan Sand &amp; Gravel</b> · <b>Colorado Aggregate Recycling</b></p>
     </article>
 
     <article class="market">
@@ -271,7 +270,6 @@ body::after{
           <span class="chip">Pea gravel</span>
         </div>
       </div>
-      <p class="market-suppliers"><b>North Texas Natural Materials</b> · <b>Silver Creek Materials</b> · <b>Verdego Materials</b></p>
     </article>
   </section>
 
