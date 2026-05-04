@@ -418,8 +418,8 @@ export async function Homepage() {
           <div className="max">
             <div style={{ marginBottom: 48 }}>
               <div className="eyebrow">What you get</div>
-              <h2 className="sec-title" style={{ maxWidth: 820 }}>Built for the way crews actually work.</h2>
-              <p className="ink-2" style={{ marginTop: 16, fontSize: 17, maxWidth: 640 }}>What ships, what's earned. Each line below maps to a real product capability — not a marketing claim.</p>
+              <h2 className="sec-title" style={{ maxWidth: 820, color: '#FFFFFF' }}>Built for the way crews actually work.</h2>
+              <p style={{ marginTop: 16, fontSize: 17, maxWidth: 640, color: '#FFFFFF' }}>What ships, what's earned. Each line below maps to a real product capability — not a marketing claim.</p>
             </div>
 
             <div className="cap-grid">
