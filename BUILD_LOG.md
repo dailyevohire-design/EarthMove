@@ -1008,3 +1008,67 @@ central array/switch/registry. Schema migrations + RLS on the same
 table are already paired by convention; Inngest functions are now
 paired by test; scraper registry is already paired by failing tests
 on missing dispatch.
+
+---
+
+## 2026-05-04 02:02 UTC — Session: permits-in-scorer + share-grants + officer-graph bulk seed
+
+### Closures
+
+- **CLOSED FOLLOWUP-PERMITS-IN-SCORER** (HIGH → 0): migration 218 applied to prod via MCP, committed to repo as aa24095. `calculate_contractor_trust_score` now scores 1,165 existing permit_history_* evidence rows that the scorer was ignoring. Synth-validate batch confirmed: PCL 100→99.29, Bemas 100→97.14, Pinnacle 46→47.77 — all within ±5 tolerance, no grade or risk_level shifts.
+- **CLOSED FOLLOWUP-SAM-GOV-QUOTA-RESET**: probe at 2026-05-04 ~01:00 UTC confirmed 200 OK + valid JSON. Scraper will produce sanction_clear / sanction_hit on next trust_job dispatch.
+
+### Shipped
+
+- **PR-3 — Shareable Groundcheck URLs** (commit de169bf, rebased to b52d201). Wired existing trust_share_grants DB layer (3 RPCs + view + RLS, all pre-existing) with 4 Next.js routes + ShareReportButton + /share/[token] anonymous redemption page. Smoke: unauth POST returns 401 ✓. Browser e2e pending.
+- **Bulk seed officer graph** (commit b52d201). scripts/bulk-seed-co-officer-graph.ts running against CO SOS Socrata. Direct-RPC bulk seed bypassing the live trust pipeline. Target: ~26K CO contractors, ~22K natural-person officer links, ~1K shared-officer edges. Final tally to follow when run completes.
+
+### New followups discovered
+
+- **FOLLOWUP-WATCHTOGGLE-ORPHANED-COMPONENT** (LOW): src/components/trust/WatchToggle.tsx is defined but never imported anywhere in src/. Watch/alerts feature shipped in PR #10 — schema + API + component — but never wired into the report page. Acceptable for Tue launch (not promoted in any launch copy). When wiring later, pair with FOLLOWUP-RESEND-NOT-CONFIGURED-IN-PROD or users will subscribe and receive zero emails.
+- **FOLLOWUP-SAM-GOV-FUZZY-MATCH-FALSE-POSITIVE-RISK** (LOW): SAM.gov q= param does fuzzy/keyword matching, not exact legalBusinessName. Searching "PCL Construction Services" returns "PCL Lumber and Landscaping LLC" as a hit. Harmless for sanction_clear outputs (any clean match → clean), but a false-positive risk on sanction_hit if any fuzzy match anywhere in the country shows on SDN. Mitigation options: post-filter response by normalize_contractor_name match before declaring sanction_hit; cross-reference SAM UEI; probe legalBusinessName= filter availability. Severity LOW because we currently have ~0 production sanction_hit rows. Revisit when first hit lands.
+- **FOLLOWUP-TX-OFFICER-GRAPH-SEED-NEEDS-NAICS-DATASET** (MEDIUM): TX Comptroller dataset 9cir-efmm cannot be NAICS-filtered server-side — naics_code field is null on every response despite being in TxRawRow interface. Bulk seed dropped TX entirely tonight. Real fix requires either a different TX dataset (probe data.texas.gov for one with industry classification), or pull-everything + local filter on a different signal, or paid TX SOS API access. Until shipped, phoenix detection is CO-only and the "we surface phoenix LLCs at population scale" claim is CO-specific.
+- **FOLLOWUP-SHARE-FEATURE-INTERNAL-LINKS** (NONE — already done): converted /share/[token]/page.tsx <a> tags to next/link <Link> per ESLint config. No followup needed; tracked here for the audit trail.
+
+
+---
+
+## 2026-05-04 02:55 UTC — Bulk seed completion + chain-verify test vectors locked
+
+### Bulk seed final tally (commit b52d201)
+
+Run completed cleanly. Final delta from 2026-05-04 00:44 UTC baseline:
+
+| Metric | Baseline | Final | Delta |
+|---|---|---|---|
+| contractors | 307 | 26,332 | +26,025 |
+| trust_officers | 74 | 22,399 | +22,325 |
+| trust_officer_links | 76 | 22,399 | +22,323 |
+| trust_entity_edges (shared_officer) | 2 | TBD-final | many hundreds |
+
+99.5% landing rate. 132 errors (0.5%) all at the resolve_or_create_contractor step
+— slug-collision unique-constraint violations from contractor_slug() collapsing
+'G & G PAINTING LLC' and 'G&G PAINTING LLC' to the same slug.
+
+### New followup discovered
+
+- **FOLLOWUP-CONTRACTOR-SLUG-COLLISION-132-DROPS** (LOW): The slugify path in
+  contractor_slug() is more aggressive than normalize_contractor_name() — it
+  collapses spacing differences that the normalized_name UNIQUE constraint
+  preserves. This produced 132 unique-constraint failures during the bulk seed
+  (slug already in use, but the row's normalized_name+state_code was novel).
+  Severity LOW because:
+  - Affected entities are all dropped, not silently merged into wrong rows
+  - 132 / 26,464 = 0.5% — well within statistical noise for population-scale seed
+  - Live trust pipeline has the same behavior; no production data is at risk
+  Mitigation options: (a) make contractor_slug() preserve more of normalized_name's
+  variance (longer collision suffix), (b) add ON CONFLICT (slug) DO UPDATE in
+  resolve_or_create_contractor with a slug-bump retry. Revisit when first user
+  hits the collision in the live pipeline (probably never).
+
+### PR-4 — PDF + chain-hash QR + public verify API
+
+Test vectors for chain-verify locked via MCP against compute_trust_evidence_chain_hash
+production SQL function. 4 test cases, 3 with real expected bytes, 1 determinism check.
+Future drift between TS port and SQL recipe will fail the test immediately.
+
