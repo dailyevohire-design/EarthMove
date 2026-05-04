@@ -32,3 +32,6 @@ supabase/.temp/
 .env.vercel
 .env.vercel-*
 .gstack/
+
+# Reporter dossier candidates contain entity names from quarantined runs — never commit
+data_piece/dossier_candidates*.json
