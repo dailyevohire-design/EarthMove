@@ -2,9 +2,9 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentMarket } from '@/lib/market'
-import { deriveDisplayPrice, getDeliveredPerUnitPrice } from '@/lib/pricing-engine'
+import { deriveDisplayPrice } from '@/lib/pricing-engine'
 import { resolveOffering } from '@/lib/fulfillment-resolver'
-import { resolveDriveMinutes } from '@/lib/eta'
+import { pickBestOffering, type BestOfferingInput } from '@/lib/best-offering'
 import { getMaterialImage } from '@/lib/material-images'
 import { productSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 import { BrowseDetailClient, type RelatedMaterial } from './BrowseDetailClient'
@@ -107,31 +107,56 @@ export default async function MaterialDetailPage({ params }: Props) {
   const supplierName: string | null = resolvedOffering?.supply_yard?.supplier?.name ?? null
   const yardName: string | null = resolvedOffering?.supply_yard?.name ?? null
 
-  // Customer zip → recompute delivered ($/unit) so the headline price matches checkout.
+  // Customer zip → fetch all qualifying offerings for this material in this
+  // market and let pickBestOffering choose the best yard for THIS customer
+  // (cheapest delivered, $0.50/unit margin tie-break). The pool resolver's
+  // composite-score pick is a market-wide default; this overrides it with a
+  // customer-aware pick so the headline price matches checkout.
   const cookieStore = await cookies()
   const customerZip = cookieStore.get('customer_zip')?.value ?? null
   let displayPrice: number | null = baseDisplayPrice
   if (customerZip && /^\d{5}$/.test(customerZip) && resolvedOffering && baseDisplayPrice != null) {
-    const yardId = (resolvedOffering as { supply_yard?: { id?: string | null } }).supply_yard?.id
-    const yardLat = (resolvedOffering as { supply_yard?: { lat?: number | null } }).supply_yard?.lat
-    const yardLng = (resolvedOffering as { supply_yard?: { lng?: number | null } }).supply_yard?.lng
-    if (typeof yardId === 'string' && typeof yardLat === 'number' && typeof yardLng === 'number') {
-      const dt = await resolveDriveMinutes(customerZip, { yard_id: yardId, lat: yardLat, lng: yardLng })
-      if (dt) {
-        const delivered = getDeliveredPerUnitPrice(
-          {
-            price_per_unit: resolvedOffering.price_per_unit,
-            delivery_fee_base: resolvedOffering.delivery_fee_base ?? null,
-            delivery_fee_per_mile: resolvedOffering.delivery_fee_per_mile ?? null,
-            max_delivery_miles: resolvedOffering.max_delivery_miles ?? null,
-            typical_load_size: resolvedOffering.typical_load_size ?? null,
-          },
-          dt.miles,
-          { driveMinutes: dt.minutes },
-        )
-        if (delivered != null) displayPrice = delivered
-      }
+    const supabase = await createClient()
+    const { data: alts } = await supabase
+      .from('supplier_offerings')
+      .select(`
+        id,
+        price_per_unit,
+        delivery_fee_base,
+        delivery_fee_per_mile,
+        max_delivery_miles,
+        typical_load_size,
+        supply_yard:supply_yards!inner(id, market_id, is_active, lat, lng)
+      `)
+      .eq('material_catalog_id', material.id)
+      .eq('is_public', true)
+      .eq('is_available', true)
+      .eq('supply_yard.is_active', true)
+      .eq('supply_yard.market_id', market.id)
+
+    type AltRow = {
+      id: string
+      price_per_unit: number
+      delivery_fee_base: number | null
+      delivery_fee_per_mile: number | null
+      max_delivery_miles: number | null
+      typical_load_size: number | null
+      supply_yard: { id: string; market_id: string; is_active: boolean; lat: number | null; lng: number | null }
     }
+    const altRows = (alts ?? []) as unknown as AltRow[]
+    const inputs: BestOfferingInput[] = altRows.map((a) => ({
+      id: a.id,
+      yardId: a.supply_yard.id,
+      yardLat: a.supply_yard.lat,
+      yardLng: a.supply_yard.lng,
+      pricePerUnit: a.price_per_unit,
+      deliveryFeeBase: a.delivery_fee_base,
+      deliveryFeePerMile: a.delivery_fee_per_mile,
+      maxDeliveryMiles: a.max_delivery_miles,
+      typicalLoadSize: a.typical_load_size,
+    }))
+    const best = await pickBestOffering(inputs, customerZip)
+    if (best) displayPrice = best.deliveredPerUnit
   }
 
   const isStateA = !!resolvedOffering && displayPrice != null

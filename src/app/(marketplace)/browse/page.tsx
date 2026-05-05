@@ -3,8 +3,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentMarket } from '@/lib/market'
-import { getDeliveredPerUnitPrice } from '@/lib/pricing-engine'
-import { resolveDriveMinutes } from '@/lib/eta'
+import { pickBestOffering, type BestOfferingInput } from '@/lib/best-offering'
 import { collectionPageSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 import { BrowseListingClient, type CategoryGroup, type BrowseListItem } from './BrowseListingClient'
 
@@ -86,81 +85,79 @@ export default async function BrowsePage({ searchParams }: Props) {
   }
   const offerRows = (offers ?? []) as unknown as OfferRow[]
 
-  // Pre-resolve drive time once per unique yard (not per offering — many
-  // offerings share yards). resolveDriveMinutes hits the cache table first
-  // and the heuristic last, so this is cheap when the cache is warm.
-  type DriveResult = { miles: number; minutes: number } | null
-  const yardDriveTime = new Map<string, DriveResult>()
-  if (hasCustomerZip && customerZip) {
-    const seen = new Set<string>()
-    const yards: { id: string; lat: number; lng: number }[] = []
-    for (const o of offerRows) {
-      const y = o.supply_yard
-      if (seen.has(y.id) || y.lat == null || y.lng == null) continue
-      seen.add(y.id)
-      yards.push({ id: y.id, lat: y.lat, lng: y.lng })
-    }
-    const resolved = await Promise.all(
-      yards.map((y) =>
-        resolveDriveMinutes(customerZip, { yard_id: y.id, lat: y.lat, lng: y.lng })
-          .then((r) => (r ? { id: y.id, miles: r.miles, minutes: r.minutes } : { id: y.id, miles: null, minutes: null }))
-          .catch(() => ({ id: y.id, miles: null, minutes: null }))
-      )
-    )
-    for (const r of resolved) {
-      yardDriveTime.set(r.id, r.miles != null && r.minutes != null ? { miles: r.miles, minutes: r.minutes } : null)
-    }
+  // Group offerings by material and pick the best yard per material via
+  // pickBestOffering (cheapest delivered, with $0.50/unit margin tie-break).
+  const byMaterialOffers = new Map<string, OfferRow[]>()
+  for (const o of offerRows) {
+    const arr = byMaterialOffers.get(o.material_catalog_id) ?? []
+    arr.push(o)
+    byMaterialOffers.set(o.material_catalog_id, arr)
   }
 
-  for (const o of offerRows) {
-    // Compute delivered ($/unit) when we have a customer zip and yard coords;
-    // otherwise fall back to the legacy denormalized base price columns.
-    let priceTon: number | null = o.unit === 'ton' ? o.price_per_ton : null
-    let priceCuyd: number | null = o.unit === 'cubic_yard' ? o.price_per_cuyd : null
+  const zipForPicker = hasCustomerZip ? customerZip : null
+  const picks = await Promise.all(
+    Array.from(byMaterialOffers.entries()).map(async ([matId, rows]) => {
+      const inputs: BestOfferingInput[] = rows.map((o) => ({
+        id: matId, // not used — we re-key by matId below
+        yardId: o.supply_yard.id,
+        yardLat: o.supply_yard.lat,
+        yardLng: o.supply_yard.lng,
+        pricePerUnit: o.price_per_unit,
+        deliveryFeeBase: o.delivery_fee_base,
+        deliveryFeePerMile: o.delivery_fee_per_mile,
+        maxDeliveryMiles: o.max_delivery_miles,
+        typicalLoadSize: o.typical_load_size,
+      }))
+      const best = await pickBestOffering(inputs, zipForPicker)
+      return { matId, rows, best }
+    })
+  )
 
-    if (hasCustomerZip) {
-      const dt = yardDriveTime.get(o.supply_yard.id)
-      if (dt) {
-        const delivered = getDeliveredPerUnitPrice(
-          {
-            price_per_unit: o.price_per_unit,
-            delivery_fee_base: o.delivery_fee_base,
-            delivery_fee_per_mile: o.delivery_fee_per_mile,
-            max_delivery_miles: o.max_delivery_miles,
-            typical_load_size: o.typical_load_size,
-          },
-          dt.miles,
-          { driveMinutes: dt.minutes },
-        )
-        // Outside service area → skip this offering for this customer.
-        if (delivered == null) continue
-        if (o.unit === 'ton') priceTon = delivered
-        if (o.unit === 'cubic_yard') priceCuyd = delivered
-      }
+  for (const { matId, rows, best } of picks) {
+    // No qualifying yard for this customer (all out of range) → skip card entirely.
+    if (zipForPicker && !best) continue
+
+    // Determine the row that "won" (or fall back to first row when no zip).
+    const winningRow = best
+      ? rows.find((r) => r.supply_yard.id === best.offering.yardId) ?? rows[0]
+      : rows[0]
+
+    const deliveredOrBase = best ? best.deliveredPerUnit : winningRow.price_per_unit
+    let priceTon: number | null = null
+    let priceCuyd: number | null = null
+    if (winningRow.unit === 'ton') priceTon = deliveredOrBase
+    else if (winningRow.unit === 'cubic_yard') priceCuyd = deliveredOrBase
+
+    // Fallback: if we couldn't compute a delivered price (no zip and no
+    // best.deliveredPerUnit), use the legacy denormalized columns.
+    if (!hasCustomerZip) {
+      priceTon ??= winningRow.price_per_ton
+      priceCuyd ??= winningRow.price_per_cuyd
     }
 
-    const cur: OfferAgg = byMaterial.get(o.material_catalog_id) ?? {
+    // Aggregate min order qty + image across all rows for this material.
+    let minOrderQty: number | null = null
+    let imageUrl: string | null = null
+    for (const o of rows) {
+      if (o.minimum_order_quantity != null) {
+        minOrderQty = minOrderQty == null ? o.minimum_order_quantity : Math.min(minOrderQty, o.minimum_order_quantity)
+      }
+      if (imageUrl == null && o.image_url) imageUrl = o.image_url
+    }
+
+    const cur: OfferAgg = byMaterial.get(matId) ?? {
       min_pton: null,
       min_pcuyd: null,
       min_order_qty: null,
       image_url: null,
       offering_count: 0,
     }
-    if (priceTon != null) {
-      cur.min_pton = cur.min_pton == null ? priceTon : Math.min(cur.min_pton, priceTon)
-    }
-    if (priceCuyd != null) {
-      cur.min_pcuyd = cur.min_pcuyd == null ? priceCuyd : Math.min(cur.min_pcuyd, priceCuyd)
-    }
-    if (o.minimum_order_quantity != null) {
-      cur.min_order_qty =
-        cur.min_order_qty == null
-          ? o.minimum_order_quantity
-          : Math.min(cur.min_order_qty, o.minimum_order_quantity)
-    }
-    if (cur.image_url == null && o.image_url) cur.image_url = o.image_url
-    cur.offering_count += 1
-    byMaterial.set(o.material_catalog_id, cur)
+    if (priceTon != null) cur.min_pton = priceTon
+    if (priceCuyd != null) cur.min_pcuyd = priceCuyd
+    cur.min_order_qty = minOrderQty
+    cur.image_url = imageUrl
+    cur.offering_count = rows.length
+    byMaterial.set(matId, cur)
   }
 
   const ids = Array.from(byMaterial.keys())
