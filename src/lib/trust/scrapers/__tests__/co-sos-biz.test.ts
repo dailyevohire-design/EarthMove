@@ -38,6 +38,24 @@ describe('scrapeCoSosBiz', () => {
     expect(ev.extracted_facts.registered_agent_organization).toBeNull();
   });
 
+  it('parses ISO 8601 entityformdate (Socrata default format)', async () => {
+    // Live Socrata returns entityformdate as "2003-06-02T00:00:00.000",
+    // not "06/02/2003". Pre-fix: parseCoDate returned null and formation_date
+    // landed null in extracted_facts, killing age_score downstream.
+    const fetchFn = vi.fn().mockResolvedValue(mockResponse([{
+      entityid: '20031177981',
+      entityname: 'BEMAS CONSTRUCTION, INC.',
+      entitystatus: 'Good Standing',
+      entitytype: 'DPC',
+      entityformdate: '2003-06-02T00:00:00.000',
+      jurisdictonofformation: 'CO',
+      agentfirstname: 'RONALD',
+      agentlastname: 'KELLISH',
+    }]));
+    const ev = await scrapeCoSosBiz({ legalName: 'Bemas Construction', fetchFn });
+    expect(ev.extracted_facts.formation_date).toBe('2003-06-02');
+  });
+
   it('emits business_dissolved for Voluntarily Dissolved entity', async () => {
     const fetchFn = vi.fn().mockResolvedValue(mockResponse([{
       entityid: '19871342214',

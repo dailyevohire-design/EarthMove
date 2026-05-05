@@ -58,11 +58,13 @@ function sha256Hex(s: string): string {
 function parseCoDate(s: string | undefined | null): string | null {
   if (!s) return null;
   const trimmed = s.trim().split(/\s+/)[0];
-  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(trimmed);
-  if (!m) return null;
-  const month = m[1].padStart(2, '0');
-  const day = m[2].padStart(2, '0');
-  return `${m[3]}-${month}-${day}`;
+  // ISO 8601 (Socrata default: "2003-06-02T00:00:00.000" or "2003-06-02")
+  const iso = /^(\d{4})-(\d{2})-(\d{2})(T|$)/.exec(trimmed);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  // MM/DD/YYYY (legacy CO SOS export format, retained for backward compatibility)
+  const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(trimmed);
+  if (!us) return null;
+  return `${us[3]}-${us[1].padStart(2, '0')}-${us[2].padStart(2, '0')}`;
 }
 
 function mapStatus(status: string | undefined | null): TrustFindingType {
