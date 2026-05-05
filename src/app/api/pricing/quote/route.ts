@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { resolveOffering, FulfillmentError } from '@/lib/fulfillment-resolver'
 import { buildPriceQuote, PricingError } from '@/lib/pricing-engine'
 import { resolveDistanceMiles } from '@/lib/distance-resolver'
+import { resolveDriveMinutes } from '@/lib/eta'
 
 const Schema = z.object({
   market_id:           z.string().uuid(),
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
     const platformFeeRate = feeRule?.config?.value ? feeRule.config.value / 100 : 0.09
 
     let distanceMiles: number | undefined = input.distance_miles
+    let driveMinutes: number | null = null
     if (input.fulfillment_method === 'delivery') {
       const { data: market } = await supabase
         .from('markets')
@@ -75,6 +77,24 @@ export async function POST(req: NextRequest) {
         marketCenterLng: market?.center_lng ?? null,
       })
       distanceMiles = resolvedDistance.miles
+
+      // Real drive time when zip + yard coords are available — keeps the
+      // time-based delivery rule honest. Falls through silently otherwise.
+      if (
+        input.customer_zip &&
+        typeof resolved.supply_yard.lat === 'number' &&
+        typeof resolved.supply_yard.lng === 'number'
+      ) {
+        const dt = await resolveDriveMinutes(input.customer_zip, {
+          yard_id: resolved.supply_yard.id,
+          lat:     resolved.supply_yard.lat,
+          lng:     resolved.supply_yard.lng,
+        })
+        if (dt) {
+          distanceMiles = dt.miles
+          driveMinutes  = dt.minutes
+        }
+      }
     }
 
     const quote = buildPriceQuote({
@@ -84,6 +104,7 @@ export async function POST(req: NextRequest) {
       delivery_type:      input.delivery_type,
       market_material_id: resolved.market_material.id,
       distance_miles:     distanceMiles,
+      drive_minutes:      driveMinutes,
       promotion:          promo ?? null,
       platform_fee_rate:  platformFeeRate,
     })

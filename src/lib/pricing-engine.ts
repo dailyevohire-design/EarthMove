@@ -43,6 +43,9 @@ export interface PricingContext {
   delivery_type: DeliveryType
   market_material_id: string
   distance_miles?: number
+  /** Real drive time in minutes (e.g. from Mapbox). Preferred over miles for
+   *  time-based delivery rules; falls back to miles × heuristic when null. */
+  drive_minutes?: number | null
   promotion?: Promotion | null
   platform_fee_rate?: number
   free_delivery_miles?: number
@@ -63,6 +66,7 @@ export function buildPriceQuote(ctx: PricingContext): PriceQuoteWithFlags {
     delivery_type,
     market_material_id,
     distance_miles,
+    drive_minutes = null,
     promotion = null,
     platform_fee_rate = DEFAULT_PLATFORM_FEE_RATE,
     free_delivery_miles = DEFAULT_FREE_DELIVERY_MILES,
@@ -103,7 +107,7 @@ export function buildPriceQuote(ctx: PricingContext): PriceQuoteWithFlags {
   // Delivery fee
   let deliveryFee = 0
   if (fulfillment_method === 'delivery' && distance_miles != null) {
-    deliveryFee = computeDeliveryFee(offering, distance_miles, free_delivery_miles)
+    deliveryFee = computeDeliveryFee(offering, distance_miles, free_delivery_miles, drive_minutes)
   }
 
   // Promotion discount (percentage or flat — applied to subtotal)
@@ -202,8 +206,18 @@ function isTimeBasedDelivery(offering: Pick<SupplierOffering, 'delivery_fee_base
   return (offering.delivery_fee_base ?? 0) > 0 && (offering.delivery_fee_per_mile ?? 0) === 0
 }
 
-function computeTimeBasedDeliveryFee(distanceMiles: number, baseFee: number): number {
-  const minutes = distanceMiles * TIME_BASED_DRIVE_MIN_PER_MILE
+/**
+ * Time-based delivery fee. Prefer real `driveMinutes` (resolved via Mapbox
+ * elsewhere); when unknown, derive from miles via the metro circuity factor.
+ */
+function computeTimeBasedDeliveryFee(
+  baseFee: number,
+  args: { driveMinutes?: number | null; distanceMiles?: number | null },
+): number {
+  const minutes =
+    args.driveMinutes != null
+      ? args.driveMinutes
+      : (args.distanceMiles ?? 0) * TIME_BASED_DRIVE_MIN_PER_MILE
   if (minutes <= TIME_BASED_BASE_FREE_MINUTES) return round(baseFee)
   const overMinutes = minutes - TIME_BASED_BASE_FREE_MINUTES
   const steps = Math.ceil(overMinutes / TIME_BASED_STEP_MINUTES)
@@ -213,7 +227,8 @@ function computeTimeBasedDeliveryFee(distanceMiles: number, baseFee: number): nu
 function computeDeliveryFee(
   offering: SupplierOffering,
   distanceMiles: number,
-  freeDeliveryMiles: number
+  freeDeliveryMiles: number,
+  driveMinutes?: number | null,
 ): number {
   if (!offering.delivery_fee_base) return 0
 
@@ -225,7 +240,7 @@ function computeDeliveryFee(
   }
 
   if (isTimeBasedDelivery(offering)) {
-    return computeTimeBasedDeliveryFee(distanceMiles, offering.delivery_fee_base)
+    return computeTimeBasedDeliveryFee(offering.delivery_fee_base, { driveMinutes, distanceMiles })
   }
 
   const billableMiles = Math.max(0, distanceMiles - freeDeliveryMiles)
@@ -310,7 +325,7 @@ export type DeliveredPriceInput = Pick<
 export function getDeliveredPerUnitPrice(
   offering: DeliveredPriceInput,
   distanceMiles: number | null,
-  options?: { freeDeliveryMiles?: number }
+  options?: { freeDeliveryMiles?: number; driveMinutes?: number | null }
 ): number | null {
   const base = offering.price_per_unit
   if (distanceMiles == null) return base
@@ -323,7 +338,10 @@ export function getDeliveredPerUnitPrice(
 
   let deliveryFee: number
   if (isTimeBasedDelivery(offering)) {
-    deliveryFee = computeTimeBasedDeliveryFee(distanceMiles, baseFee)
+    deliveryFee = computeTimeBasedDeliveryFee(baseFee, {
+      driveMinutes: options?.driveMinutes ?? null,
+      distanceMiles,
+    })
   } else {
     const free = options?.freeDeliveryMiles ?? DEFAULT_FREE_DELIVERY_MILES
     const billableMiles = Math.max(0, distanceMiles - free)

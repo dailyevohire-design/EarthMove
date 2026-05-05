@@ -4,18 +4,9 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentMarket } from '@/lib/market'
 import { getDeliveredPerUnitPrice } from '@/lib/pricing-engine'
+import { resolveDriveMinutes } from '@/lib/eta'
 import { collectionPageSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 import { BrowseListingClient, type CategoryGroup, type BrowseListItem } from './BrowseListingClient'
-
-function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 3958.7613
-  const dLat = ((lat2 - lat1) * Math.PI) / 180
-  const dLng = ((lng2 - lng1) * Math.PI) / 180
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
 
 export const metadata: Metadata = {
   title: 'Materials',
@@ -40,21 +31,12 @@ export default async function BrowsePage({ searchParams }: Props) {
 
   const supabase = await createClient()
 
-  // Customer zip → lat/lng so we can compute all-in delivered prices per yard.
-  // When zip is missing, we fall back to base product prices on the cards.
+  // Customer zip from cookie → drives the all-in delivered price calculation
+  // per (zip, yard) via real Mapbox drive time when MAPBOX_TOKEN is set,
+  // heuristic otherwise. Without a zip we render base product prices.
   const cookieStore = await cookies()
   const customerZip = cookieStore.get('customer_zip')?.value ?? null
-  let customer: { zip: string; lat: number; lng: number } | null = null
-  if (customerZip && /^\d{5}$/.test(customerZip)) {
-    const { data: zc } = await supabase
-      .from('zip_centroids')
-      .select('lat, lng')
-      .eq('zip', customerZip)
-      .maybeSingle()
-    if (zc && typeof zc.lat === 'number' && typeof zc.lng === 'number') {
-      customer = { zip: customerZip, lat: zc.lat, lng: zc.lng }
-    }
-  }
+  const hasCustomerZip = !!customerZip && /^\d{5}$/.test(customerZip)
 
   // 1. Active public+available offerings in this market.
   //    Embedded supply_yards filter via !inner so the WHERE clauses on the joined
@@ -73,7 +55,7 @@ export default async function BrowsePage({ searchParams }: Props) {
       typical_load_size,
       minimum_order_quantity,
       image_url,
-      supply_yard:supply_yards!inner(market_id, is_active, lat, lng)
+      supply_yard:supply_yards!inner(id, market_id, is_active, lat, lng)
     `)
     .eq('is_public', true)
     .eq('is_available', true)
@@ -100,30 +82,61 @@ export default async function BrowsePage({ searchParams }: Props) {
     typical_load_size: number | null
     minimum_order_quantity: number | null
     image_url: string | null
-    supply_yard: { market_id: string; is_active: boolean; lat: number | null; lng: number | null }
+    supply_yard: { id: string; market_id: string; is_active: boolean; lat: number | null; lng: number | null }
   }
-  for (const o of (offers ?? []) as unknown as OfferRow[]) {
+  const offerRows = (offers ?? []) as unknown as OfferRow[]
+
+  // Pre-resolve drive time once per unique yard (not per offering — many
+  // offerings share yards). resolveDriveMinutes hits the cache table first
+  // and the heuristic last, so this is cheap when the cache is warm.
+  type DriveResult = { miles: number; minutes: number } | null
+  const yardDriveTime = new Map<string, DriveResult>()
+  if (hasCustomerZip && customerZip) {
+    const seen = new Set<string>()
+    const yards: { id: string; lat: number; lng: number }[] = []
+    for (const o of offerRows) {
+      const y = o.supply_yard
+      if (seen.has(y.id) || y.lat == null || y.lng == null) continue
+      seen.add(y.id)
+      yards.push({ id: y.id, lat: y.lat, lng: y.lng })
+    }
+    const resolved = await Promise.all(
+      yards.map((y) =>
+        resolveDriveMinutes(customerZip, { yard_id: y.id, lat: y.lat, lng: y.lng })
+          .then((r) => (r ? { id: y.id, miles: r.miles, minutes: r.minutes } : { id: y.id, miles: null, minutes: null }))
+          .catch(() => ({ id: y.id, miles: null, minutes: null }))
+      )
+    )
+    for (const r of resolved) {
+      yardDriveTime.set(r.id, r.miles != null && r.minutes != null ? { miles: r.miles, minutes: r.minutes } : null)
+    }
+  }
+
+  for (const o of offerRows) {
     // Compute delivered ($/unit) when we have a customer zip and yard coords;
     // otherwise fall back to the legacy denormalized base price columns.
     let priceTon: number | null = o.unit === 'ton' ? o.price_per_ton : null
     let priceCuyd: number | null = o.unit === 'cubic_yard' ? o.price_per_cuyd : null
 
-    if (customer && o.supply_yard.lat != null && o.supply_yard.lng != null) {
-      const miles = haversineMiles(customer.lat, customer.lng, o.supply_yard.lat, o.supply_yard.lng)
-      const delivered = getDeliveredPerUnitPrice(
-        {
-          price_per_unit: o.price_per_unit,
-          delivery_fee_base: o.delivery_fee_base,
-          delivery_fee_per_mile: o.delivery_fee_per_mile,
-          max_delivery_miles: o.max_delivery_miles,
-          typical_load_size: o.typical_load_size,
-        },
-        miles,
-      )
-      // Outside service area → skip this offering for this customer.
-      if (delivered == null) continue
-      if (o.unit === 'ton') priceTon = delivered
-      if (o.unit === 'cubic_yard') priceCuyd = delivered
+    if (hasCustomerZip) {
+      const dt = yardDriveTime.get(o.supply_yard.id)
+      if (dt) {
+        const delivered = getDeliveredPerUnitPrice(
+          {
+            price_per_unit: o.price_per_unit,
+            delivery_fee_base: o.delivery_fee_base,
+            delivery_fee_per_mile: o.delivery_fee_per_mile,
+            max_delivery_miles: o.max_delivery_miles,
+            typical_load_size: o.typical_load_size,
+          },
+          dt.miles,
+          { driveMinutes: dt.minutes },
+        )
+        // Outside service area → skip this offering for this customer.
+        if (delivered == null) continue
+        if (o.unit === 'ton') priceTon = delivered
+        if (o.unit === 'cubic_yard') priceCuyd = delivered
+      }
     }
 
     const cur: OfferAgg = byMaterial.get(o.material_catalog_id) ?? {
@@ -152,7 +165,7 @@ export default async function BrowsePage({ searchParams }: Props) {
 
   const ids = Array.from(byMaterial.keys())
   if (ids.length === 0) {
-    return <BrowseListingClient market={{ name: market.name, state: market.state }} categoryGroups={[]} totalMaterials={0} customerZip={customer?.zip ?? null} />
+    return <BrowseListingClient market={{ name: market.name, state: market.state }} categoryGroups={[]} totalMaterials={0} customerZip={hasCustomerZip ? customerZip : null} />
   }
 
   // 2. Materials + categories for the offer-bearing IDs.
@@ -254,7 +267,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         market={{ name: market.name, state: market.state }}
         categoryGroups={categoryGroups}
         totalMaterials={items.length}
-        customerZip={customer?.zip ?? null}
+        customerZip={hasCustomerZip ? customerZip : null}
       />
     </>
   )

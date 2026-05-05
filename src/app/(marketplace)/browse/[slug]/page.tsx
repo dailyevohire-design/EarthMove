@@ -4,19 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentMarket } from '@/lib/market'
 import { deriveDisplayPrice, getDeliveredPerUnitPrice } from '@/lib/pricing-engine'
 import { resolveOffering } from '@/lib/fulfillment-resolver'
+import { resolveDriveMinutes } from '@/lib/eta'
 import { getMaterialImage } from '@/lib/material-images'
 import { productSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 import { BrowseDetailClient, type RelatedMaterial } from './BrowseDetailClient'
-
-function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 3958.7613
-  const dLat = ((lat2 - lat1) * Math.PI) / 180
-  const dLng = ((lng2 - lng1) * Math.PI) / 180
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -121,28 +112,25 @@ export default async function MaterialDetailPage({ params }: Props) {
   const customerZip = cookieStore.get('customer_zip')?.value ?? null
   let displayPrice: number | null = baseDisplayPrice
   if (customerZip && /^\d{5}$/.test(customerZip) && resolvedOffering && baseDisplayPrice != null) {
-    const supabase = await createClient()
-    const { data: zc } = await supabase
-      .from('zip_centroids')
-      .select('lat, lng')
-      .eq('zip', customerZip)
-      .maybeSingle()
+    const yardId = (resolvedOffering as { supply_yard?: { id?: string | null } }).supply_yard?.id
     const yardLat = (resolvedOffering as { supply_yard?: { lat?: number | null } }).supply_yard?.lat
     const yardLng = (resolvedOffering as { supply_yard?: { lng?: number | null } }).supply_yard?.lng
-    if (zc && typeof zc.lat === 'number' && typeof zc.lng === 'number' &&
-        typeof yardLat === 'number' && typeof yardLng === 'number') {
-      const miles = haversineMiles(zc.lat, zc.lng, yardLat, yardLng)
-      const delivered = getDeliveredPerUnitPrice(
-        {
-          price_per_unit: resolvedOffering.price_per_unit,
-          delivery_fee_base: resolvedOffering.delivery_fee_base ?? null,
-          delivery_fee_per_mile: resolvedOffering.delivery_fee_per_mile ?? null,
-          max_delivery_miles: resolvedOffering.max_delivery_miles ?? null,
-          typical_load_size: resolvedOffering.typical_load_size ?? null,
-        },
-        miles,
-      )
-      if (delivered != null) displayPrice = delivered
+    if (typeof yardId === 'string' && typeof yardLat === 'number' && typeof yardLng === 'number') {
+      const dt = await resolveDriveMinutes(customerZip, { yard_id: yardId, lat: yardLat, lng: yardLng })
+      if (dt) {
+        const delivered = getDeliveredPerUnitPrice(
+          {
+            price_per_unit: resolvedOffering.price_per_unit,
+            delivery_fee_base: resolvedOffering.delivery_fee_base ?? null,
+            delivery_fee_per_mile: resolvedOffering.delivery_fee_per_mile ?? null,
+            max_delivery_miles: resolvedOffering.max_delivery_miles ?? null,
+            typical_load_size: resolvedOffering.typical_load_size ?? null,
+          },
+          dt.miles,
+          { driveMinutes: dt.minutes },
+        )
+        if (delivered != null) displayPrice = delivered
+      }
     }
   }
 
