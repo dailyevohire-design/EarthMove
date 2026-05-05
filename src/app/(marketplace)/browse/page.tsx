@@ -1,9 +1,21 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentMarket } from '@/lib/market'
+import { getDeliveredPerUnitPrice } from '@/lib/pricing-engine'
 import { collectionPageSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 import { BrowseListingClient, type CategoryGroup, type BrowseListItem } from './BrowseListingClient'
+
+function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3958.7613
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
 
 export const metadata: Metadata = {
   title: 'Materials',
@@ -28,6 +40,22 @@ export default async function BrowsePage({ searchParams }: Props) {
 
   const supabase = await createClient()
 
+  // Customer zip → lat/lng so we can compute all-in delivered prices per yard.
+  // When zip is missing, we fall back to base product prices on the cards.
+  const cookieStore = await cookies()
+  const customerZip = cookieStore.get('customer_zip')?.value ?? null
+  let customer: { zip: string; lat: number; lng: number } | null = null
+  if (customerZip && /^\d{5}$/.test(customerZip)) {
+    const { data: zc } = await supabase
+      .from('zip_centroids')
+      .select('lat, lng')
+      .eq('zip', customerZip)
+      .maybeSingle()
+    if (zc && typeof zc.lat === 'number' && typeof zc.lng === 'number') {
+      customer = { zip: customerZip, lat: zc.lat, lng: zc.lng }
+    }
+  }
+
   // 1. Active public+available offerings in this market.
   //    Embedded supply_yards filter via !inner so the WHERE clauses on the joined
   //    table run in SQL, not as post-filter in JS.
@@ -35,11 +63,17 @@ export default async function BrowsePage({ searchParams }: Props) {
     .from('supplier_offerings')
     .select(`
       material_catalog_id,
+      unit,
+      price_per_unit,
       price_per_ton,
       price_per_cuyd,
+      delivery_fee_base,
+      delivery_fee_per_mile,
+      max_delivery_miles,
+      typical_load_size,
       minimum_order_quantity,
       image_url,
-      supply_yard:supply_yards!inner(market_id, is_active)
+      supply_yard:supply_yards!inner(market_id, is_active, lat, lng)
     `)
     .eq('is_public', true)
     .eq('is_available', true)
@@ -54,13 +88,44 @@ export default async function BrowsePage({ searchParams }: Props) {
     offering_count: number
   }
   const byMaterial = new Map<string, OfferAgg>()
-  for (const o of (offers ?? []) as Array<{
+  type OfferRow = {
     material_catalog_id: string
+    unit: 'ton' | 'cubic_yard' | 'load' | 'each'
+    price_per_unit: number
     price_per_ton: number | null
     price_per_cuyd: number | null
+    delivery_fee_base: number | null
+    delivery_fee_per_mile: number | null
+    max_delivery_miles: number | null
+    typical_load_size: number | null
     minimum_order_quantity: number | null
     image_url: string | null
-  }>) {
+    supply_yard: { market_id: string; is_active: boolean; lat: number | null; lng: number | null }
+  }
+  for (const o of (offers ?? []) as unknown as OfferRow[]) {
+    // Compute delivered ($/unit) when we have a customer zip and yard coords;
+    // otherwise fall back to the legacy denormalized base price columns.
+    let priceTon: number | null = o.unit === 'ton' ? o.price_per_ton : null
+    let priceCuyd: number | null = o.unit === 'cubic_yard' ? o.price_per_cuyd : null
+
+    if (customer && o.supply_yard.lat != null && o.supply_yard.lng != null) {
+      const miles = haversineMiles(customer.lat, customer.lng, o.supply_yard.lat, o.supply_yard.lng)
+      const delivered = getDeliveredPerUnitPrice(
+        {
+          price_per_unit: o.price_per_unit,
+          delivery_fee_base: o.delivery_fee_base,
+          delivery_fee_per_mile: o.delivery_fee_per_mile,
+          max_delivery_miles: o.max_delivery_miles,
+          typical_load_size: o.typical_load_size,
+        },
+        miles,
+      )
+      // Outside service area → skip this offering for this customer.
+      if (delivered == null) continue
+      if (o.unit === 'ton') priceTon = delivered
+      if (o.unit === 'cubic_yard') priceCuyd = delivered
+    }
+
     const cur: OfferAgg = byMaterial.get(o.material_catalog_id) ?? {
       min_pton: null,
       min_pcuyd: null,
@@ -68,11 +133,11 @@ export default async function BrowsePage({ searchParams }: Props) {
       image_url: null,
       offering_count: 0,
     }
-    if (o.price_per_ton != null) {
-      cur.min_pton = cur.min_pton == null ? o.price_per_ton : Math.min(cur.min_pton, o.price_per_ton)
+    if (priceTon != null) {
+      cur.min_pton = cur.min_pton == null ? priceTon : Math.min(cur.min_pton, priceTon)
     }
-    if (o.price_per_cuyd != null) {
-      cur.min_pcuyd = cur.min_pcuyd == null ? o.price_per_cuyd : Math.min(cur.min_pcuyd, o.price_per_cuyd)
+    if (priceCuyd != null) {
+      cur.min_pcuyd = cur.min_pcuyd == null ? priceCuyd : Math.min(cur.min_pcuyd, priceCuyd)
     }
     if (o.minimum_order_quantity != null) {
       cur.min_order_qty =
@@ -87,7 +152,7 @@ export default async function BrowsePage({ searchParams }: Props) {
 
   const ids = Array.from(byMaterial.keys())
   if (ids.length === 0) {
-    return <BrowseListingClient market={{ name: market.name, state: market.state }} categoryGroups={[]} totalMaterials={0} />
+    return <BrowseListingClient market={{ name: market.name, state: market.state }} categoryGroups={[]} totalMaterials={0} customerZip={customer?.zip ?? null} />
   }
 
   // 2. Materials + categories for the offer-bearing IDs.
@@ -189,6 +254,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         market={{ name: market.name, state: market.state }}
         categoryGroups={categoryGroups}
         totalMaterials={items.length}
+        customerZip={customer?.zip ?? null}
       />
     </>
   )

@@ -1,11 +1,22 @@
+import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentMarket } from '@/lib/market'
-import { deriveDisplayPrice } from '@/lib/pricing-engine'
+import { deriveDisplayPrice, getDeliveredPerUnitPrice } from '@/lib/pricing-engine'
 import { resolveOffering } from '@/lib/fulfillment-resolver'
 import { getMaterialImage } from '@/lib/material-images'
 import { productSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 import { BrowseDetailClient, type RelatedMaterial } from './BrowseDetailClient'
+
+function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3958.7613
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -100,10 +111,41 @@ export default async function MaterialDetailPage({ params }: Props) {
   if (!data) notFound()
 
   const { material, market, mm, resolvedOffering, promo, related } = data
-  const displayPrice = deriveDisplayPrice(mm.price_display_mode, mm.custom_display_price, resolvedOffering)
+  const baseDisplayPrice = deriveDisplayPrice(mm.price_display_mode, mm.custom_display_price, resolvedOffering)
   const unit = (resolvedOffering?.unit ?? material.default_unit) as 'ton' | 'cubic_yard'
   const supplierName: string | null = resolvedOffering?.supply_yard?.supplier?.name ?? null
   const yardName: string | null = resolvedOffering?.supply_yard?.name ?? null
+
+  // Customer zip → recompute delivered ($/unit) so the headline price matches checkout.
+  const cookieStore = await cookies()
+  const customerZip = cookieStore.get('customer_zip')?.value ?? null
+  let displayPrice: number | null = baseDisplayPrice
+  if (customerZip && /^\d{5}$/.test(customerZip) && resolvedOffering && baseDisplayPrice != null) {
+    const supabase = await createClient()
+    const { data: zc } = await supabase
+      .from('zip_centroids')
+      .select('lat, lng')
+      .eq('zip', customerZip)
+      .maybeSingle()
+    const yardLat = (resolvedOffering as { supply_yard?: { lat?: number | null } }).supply_yard?.lat
+    const yardLng = (resolvedOffering as { supply_yard?: { lng?: number | null } }).supply_yard?.lng
+    if (zc && typeof zc.lat === 'number' && typeof zc.lng === 'number' &&
+        typeof yardLat === 'number' && typeof yardLng === 'number') {
+      const miles = haversineMiles(zc.lat, zc.lng, yardLat, yardLng)
+      const delivered = getDeliveredPerUnitPrice(
+        {
+          price_per_unit: resolvedOffering.price_per_unit,
+          delivery_fee_base: resolvedOffering.delivery_fee_base ?? null,
+          delivery_fee_per_mile: resolvedOffering.delivery_fee_per_mile ?? null,
+          max_delivery_miles: resolvedOffering.max_delivery_miles ?? null,
+          typical_load_size: resolvedOffering.typical_load_size ?? null,
+        },
+        miles,
+      )
+      if (delivered != null) displayPrice = delivered
+    }
+  }
+
   const isStateA = !!resolvedOffering && displayPrice != null
   const aliases: string[] = Array.isArray(material.aliases) ? material.aliases : []
   const imageUrl = getMaterialImage(material.slug)

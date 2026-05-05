@@ -17,6 +17,14 @@ const DEFAULT_PLATFORM_FEE_RATE = 0.09
 const DEFAULT_FREE_DELIVERY_MILES = 10
 const REVIEW_THRESHOLD_DOLLARS = 2500  // auto-flag orders above this amount
 
+// Time-based delivery (used when delivery_fee_per_mile is null/0 and base > 0).
+// Models truck dispatch cost: flat fee covers a baseline trip, then steps up by
+// drive time. Drive time estimated from straight-line miles via a circuity factor.
+const TIME_BASED_DRIVE_MIN_PER_MILE = 1.5  // DFW metro: highway+grid mix, traffic-buffered
+const TIME_BASED_BASE_FREE_MINUTES = 60
+const TIME_BASED_STEP_MINUTES = 30
+const TIME_BASED_STEP_FEE = 75
+
 // ── Error ─────────────────────────────────────────────────────
 
 export class PricingError extends Error {
@@ -101,8 +109,12 @@ export function buildPriceQuote(ctx: PricingContext): PriceQuoteWithFlags {
   // Promotion discount (percentage or flat — applied to subtotal)
   const promotionDiscount = computePromotionDiscount(promotion, subtotal)
 
-  // Platform fee: applied to (subtotal + delivery), before discount
-  const platformFee = round((subtotal + deliveryFee) * platform_fee_rate)
+  // Platform fee: applied to (subtotal + delivery), before discount.
+  // Time-based offerings already bake the platform's take into price_per_unit
+  // (the supplier-quoted price has been marked up before storage), so no separate
+  // service fee — honors the "what you see is what you pay" promise.
+  const effectivePlatformFeeRate = isTimeBasedDelivery(offering) ? 0 : platform_fee_rate
+  const platformFee = round((subtotal + deliveryFee) * effectivePlatformFeeRate)
 
   // Tax: TX construction aggregates are sales-tax exempt. Zero for now.
   // TODO: make market-configurable when expanding to other states.
@@ -186,6 +198,18 @@ function getEffectivePricePerUnit(
   return offering.price_per_unit
 }
 
+function isTimeBasedDelivery(offering: Pick<SupplierOffering, 'delivery_fee_base' | 'delivery_fee_per_mile'>): boolean {
+  return (offering.delivery_fee_base ?? 0) > 0 && (offering.delivery_fee_per_mile ?? 0) === 0
+}
+
+function computeTimeBasedDeliveryFee(distanceMiles: number, baseFee: number): number {
+  const minutes = distanceMiles * TIME_BASED_DRIVE_MIN_PER_MILE
+  if (minutes <= TIME_BASED_BASE_FREE_MINUTES) return round(baseFee)
+  const overMinutes = minutes - TIME_BASED_BASE_FREE_MINUTES
+  const steps = Math.ceil(overMinutes / TIME_BASED_STEP_MINUTES)
+  return round(baseFee + steps * TIME_BASED_STEP_FEE)
+}
+
 function computeDeliveryFee(
   offering: SupplierOffering,
   distanceMiles: number,
@@ -198,6 +222,10 @@ function computeDeliveryFee(
     throw new PricingError(
       `Delivery address is outside the ${maxMiles}-mile service area for this material.`
     )
+  }
+
+  if (isTimeBasedDelivery(offering)) {
+    return computeTimeBasedDeliveryFee(distanceMiles, offering.delivery_fee_base)
   }
 
   const billableMiles = Math.max(0, distanceMiles - freeDeliveryMiles)
@@ -261,4 +289,48 @@ export function deriveDisplayPrice(
   if (mode === 'custom' && customPrice != null) return customPrice
   if (mode === 'exact' && preferredOffering) return preferredOffering.price_per_unit
   return null
+}
+
+// ── Delivered ($/unit) display ─────────────────────────────────
+
+export type DeliveredPriceInput = Pick<
+  SupplierOffering,
+  'price_per_unit' | 'delivery_fee_base' | 'delivery_fee_per_mile' |
+  'max_delivery_miles' | 'typical_load_size'
+>
+
+/**
+ * Returns the all-in delivered price per unit ($/ton or $/cy) for a customer
+ * at `distanceMiles` from the yard. This is the number to show on /browse cards
+ * and detail pages so "what you see is what you pay" matches the order quote.
+ *
+ * Returns null when the customer is outside the offering's service area.
+ * When `distanceMiles` is null, returns the base product price (no delivery).
+ */
+export function getDeliveredPerUnitPrice(
+  offering: DeliveredPriceInput,
+  distanceMiles: number | null,
+  options?: { freeDeliveryMiles?: number }
+): number | null {
+  const base = offering.price_per_unit
+  if (distanceMiles == null) return base
+
+  const maxMiles = offering.max_delivery_miles ?? 60
+  if (distanceMiles > maxMiles) return null
+
+  const baseFee = offering.delivery_fee_base ?? 0
+  if (baseFee === 0) return round(base)
+
+  let deliveryFee: number
+  if (isTimeBasedDelivery(offering)) {
+    deliveryFee = computeTimeBasedDeliveryFee(distanceMiles, baseFee)
+  } else {
+    const free = options?.freeDeliveryMiles ?? DEFAULT_FREE_DELIVERY_MILES
+    const billableMiles = Math.max(0, distanceMiles - free)
+    deliveryFee = round(baseFee + billableMiles * (offering.delivery_fee_per_mile ?? 0))
+  }
+
+  const loadSize = offering.typical_load_size ?? 22
+  if (loadSize <= 0) return round(base)
+  return round(base + deliveryFee / loadSize)
 }

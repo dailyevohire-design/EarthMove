@@ -33,6 +33,7 @@ interface Props {
   market: { name: string; state: string }
   categoryGroups: CategoryGroup[]
   totalMaterials: number
+  customerZip: string | null
 }
 
 const BROWSE_PAGE_CSS = `
@@ -300,7 +301,7 @@ const BROWSE_PAGE_CSS = `
 }
 `
 
-export function BrowseListingClient({ market, categoryGroups, totalMaterials }: Props) {
+export function BrowseListingClient({ market, categoryGroups, totalMaterials, customerZip }: Props) {
   const [activeCat, setActiveCat] = useState<string>('all')
 
   const isEmpty = totalMaterials === 0
@@ -315,6 +316,7 @@ export function BrowseListingClient({ market, categoryGroups, totalMaterials }: 
             marketName={market.name}
             totalMaterials={totalMaterials}
             categoryCount={categoryGroups.length}
+            customerZip={customerZip}
           />
 
           {/* Deals carousel intentionally omitted in C-Browse-1 — no deal-flag
@@ -353,10 +355,12 @@ function HeroBand({
   marketName,
   totalMaterials,
   categoryCount,
+  customerZip,
 }: {
   marketName: string
   totalMaterials: number
   categoryCount: number
+  customerZip: string | null
 }) {
   return (
     <section className="hero-band">
@@ -372,7 +376,13 @@ function HeroBand({
         <div className="lozenge-row">
           <span className="br-lozenge">{totalMaterials} MATERIALS</span>
           <span className="br-lozenge">{categoryCount} CATEGORIES</span>
-          <span className="br-lozenge solid-emerald"><span className="d" />SAME-DAY DELIVERY</span>
+          {customerZip ? (
+            <span className="br-lozenge solid-emerald" title="Prices include delivery to your zip">
+              <span className="d" />ALL-IN PRICED · {customerZip}
+            </span>
+          ) : (
+            <span className="br-lozenge solid-emerald"><span className="d" />SAME-DAY DELIVERY</span>
+          )}
         </div>
       </div>
 

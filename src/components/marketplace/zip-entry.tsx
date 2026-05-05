@@ -41,8 +41,10 @@ export function ZipEntry() {
       .single()
 
     if (market) {
-      // Set market_id cookie (expires in 1 year)
+      // Persist both the resolved market and the customer's zip — the zip is
+      // what /browse needs to compute all-in delivered prices per yard.
       document.cookie = `market_id=${market.id}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
+      document.cookie = `customer_zip=${zip}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
       setState('success')
       startTransition(() => {
         router.push('/browse')
