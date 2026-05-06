@@ -484,9 +484,12 @@
   /* Pair: kill the trust-band's bottom-padding too — its background-block
      sits directly against the Materials section, giving a clean handoff. */
   .marketing-v6 .trust-band-section { padding-bottom: 0; }
-  /* Last trust-fact-card has a 12px margin-bottom that becomes dead space
-     once the trust-band is the last thing in the hero column. Drop it. */
-  .marketing-v6 .trust-band-section .trust-fact-card:last-child { margin-bottom: 0; }
+  /* Trust-fact-cards: collapse the 12px margin-bottom on ALL cards on
+     mobile so (a) every card looks identical (no asymmetric last-child)
+     and (b) the gap between cards 1↔2↔3 plus the trailing card-to-
+     materials gap all collapse together. Cards stack flush via their
+     own borders. */
+  .marketing-v6 .trust-fact-card { margin-bottom: 0; }
   /* Materials section: collapse top padding completely; the borderTop
      provides the visual seam. */
   .marketing-v6 #materials.section { padding-top: 0; }
