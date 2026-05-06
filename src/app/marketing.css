@@ -1768,7 +1768,7 @@
      in the overlap zone — card visuals stay identical, only the band's
      trailing beige strip shrinks. */
   .marketing-v6 .trust-fact-card { position: relative; z-index: 2; }
-  .marketing-v6 #materials.section { margin-top: -16px !important; position: relative; z-index: 1; }
+  .marketing-v6 #materials.section { margin-top: -24px !important; position: relative; z-index: 1; }
 
   /* Materials grid: single column under 480px, two-up 480-767 */
   .marketing-v6 #materials .materials-grid,
