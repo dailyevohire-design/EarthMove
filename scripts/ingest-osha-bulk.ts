@@ -105,15 +105,20 @@ async function fetchPage<T>(
     url.searchParams.set('sort', 'desc');
   }
 
-  for (let attempt = 0; attempt < 5; attempt++) {
+  // DOL apiprod.dol.gov rate-limits aggressively past ~15 req/min.
+  // Per-call floor of 4s paces sustained throughput at ~15/min.
+  await sleep(4000);
+
+  for (let attempt = 0; attempt < 8; attempt++) {
     const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
     if (resp.ok) {
       const env = await resp.json() as DolEnvelope<T>;
       return env.data ?? [];
     }
     if (resp.status === 429 || resp.status >= 500) {
-      const backoff = 2000 * (attempt + 1);
-      console.warn(`[osha] ${endpoint} ${resp.status} at offset=${offset}, sleeping ${backoff}ms`);
+      // 2s, 4s, 8s, 16s, 32s, 60s, 60s, 60s (cumulative ~242s before giving up)
+      const backoff = Math.min(60000, 2000 * Math.pow(2, attempt));
+      console.warn(`[osha] ${endpoint} ${resp.status} at offset=${offset}, sleeping ${backoff}ms (attempt ${attempt + 1}/8)`);
       await sleep(backoff);
       continue;
     }
