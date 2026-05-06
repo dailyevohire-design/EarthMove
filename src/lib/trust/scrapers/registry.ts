@@ -7,6 +7,8 @@ import { scrapeCoSosBiz } from './co-sos-biz';
 import { scrapeTxSosBiz } from './tx-sos-biz';
 import { scrapeCoDoraDiscipline } from './co-dora-discipline';
 import { scrapeTxTdlrOrders } from './tx-tdlr-orders';
+import { scrapeCourtListenerFed } from './courtlistener-fed';
+import { scrapeStateAgEnforcement } from './state-ag-enforcement';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -55,11 +57,16 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
     case 'tx_tdlr':
       return scrapeTxTdlrOrders({ legalName: input.legalName });
 
+    case 'courtlistener_fed':
+      return scrapeCourtListenerFed({ legalName: input.legalName });
+
+    case 'state_ag_enforcement':
+      return scrapeStateAgEnforcement({ legalName: input.legalName, stateCode: input.stateCode });
+
     case 'mock_source':
       return mockScraperEvidence(input);
 
     case 'osha_est_search':
-    case 'courtlistener_fed':
     case 'denver_cpd':
     case 'cslb_ca':
     case 'roc_az':
