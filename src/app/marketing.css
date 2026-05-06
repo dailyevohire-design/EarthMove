@@ -487,8 +487,6 @@
   /* Last trust-fact-card has a 12px margin-bottom that becomes dead space
      once the trust-band is the last thing in the hero column. Drop it. */
   .marketing-v6 .trust-band-section .trust-fact-card:last-child { margin-bottom: 0; }
-  /* Trim the trust-fact-card vertical padding too. */
-  .marketing-v6 .trust-fact-card { padding: 18px 22px; }
   /* Materials section: collapse top padding completely; the borderTop
      provides the visual seam. */
   .marketing-v6 #materials.section { padding-top: 0; }
@@ -2096,7 +2094,7 @@
 /* === Trust band section — 3 stacked cards (Phase 5, commit 5) === */
 .marketing-v6 .trust-band-section {
   background: var(--em-paper, #F5F4F0);
-  padding: 40px 16px 28px;
+  padding: 48px 16px;
   margin: 32px -16px 0;
 }
 @media (min-width: 768px) {
