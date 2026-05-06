@@ -157,6 +157,35 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString()
 }
 
+// State-code → full state name. Drives the explicit "Not registered in
+// {STATE} Secretary of State" copy when biz_status is null/Not Found, so
+// users see a concrete absence-of-record claim rather than a blank "Unknown".
+const STATE_NAMES: Record<string, string> = {
+  CO: 'Colorado',
+  TX: 'Texas',
+}
+
+function formatBizStatus(report: TrustReport): React.ReactNode {
+  const s = report.biz_status
+  if (s && s !== 'Not Found' && s !== 'Unknown') return s
+  const stateName = STATE_NAMES[report.state_code]
+  if (!stateName) return s
+  return `Not registered in ${stateName} Secretary of State`
+}
+
+function formatOshaStatus(report: TrustReport): React.ReactNode {
+  const s = report.osha_status
+  if (s === 'ERROR') return 'Unknown — lookup error'
+  if (s == null) return 'No OSHA inspection records found'
+  return s
+}
+
+function formatOshaViolations(report: TrustReport): React.ReactNode {
+  const n = report.osha_violation_count
+  if (n === 0) return 'No safety violations on record'
+  return n
+}
+
 // ---------- main view ----------
 
 export default function TrustReportView({ report }: { report: TrustReport }) {
@@ -165,6 +194,11 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
     : []
   const isAmbiguous = report.risk_level === 'AMBIGUOUS' && rawCandidates.length > 0
   const provisional = isAmbiguous
+
+  const showBbbPanel =
+    report.bbb_rating !== null ||
+    report.bbb_accredited !== null ||
+    report.bbb_complaint_count !== null
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -224,7 +258,7 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
           {/* Data panels */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <Panel title="Business Registration" icon="🏛">
-              <Row k="Status"    v={report.biz_status} />
+              <Row k="Status"    v={formatBizStatus(report)} />
               <Row k="Entity"    v={report.biz_entity_type} />
               <Row k="Formed"    v={report.biz_formation_date} />
             </Panel>
@@ -234,11 +268,13 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
               <Row k="License #" v={report.lic_license_number} />
             </Panel>
 
-            <Panel title="BBB Profile" icon="🛡">
-              <Row k="Rating"      v={report.bbb_rating} />
-              <Row k="Accredited"  v={report.bbb_accredited == null ? null : (report.bbb_accredited ? 'Yes' : 'No')} />
-              <Row k="Complaints"  v={report.bbb_complaint_count} />
-            </Panel>
+            {showBbbPanel && (
+              <Panel title="BBB Profile" icon="🛡">
+                <Row k="Rating"      v={report.bbb_rating} />
+                <Row k="Accredited"  v={report.bbb_accredited == null ? null : (report.bbb_accredited ? 'Yes' : 'No')} />
+                <Row k="Complaints"  v={report.bbb_complaint_count} />
+              </Panel>
+            )}
 
             <Panel title="Reviews" icon="⭐">
               <Row k="Avg rating" v={report.review_avg_rating == null ? null : `${report.review_avg_rating}/5.0`} />
@@ -257,8 +293,8 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
             </Panel>
 
             <Panel title="OSHA Safety" icon="🔶">
-              <Row k="Status"      v={report.osha_status} />
-              <Row k="Violations"  v={report.osha_violation_count} />
+              <Row k="Status"      v={formatOshaStatus(report)} />
+              <Row k="Violations"  v={formatOshaViolations(report)} />
               <Row k="Serious"     v={report.osha_serious_count} />
             </Panel>
 
