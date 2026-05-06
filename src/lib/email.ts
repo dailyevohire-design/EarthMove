@@ -171,3 +171,79 @@ export async function sendGuestClaimAccount(data: GuestClaimAccountData) {
     console.error('[email] Failed to send guest claim email:', err)
   }
 }
+
+// ── Join the network (driver + contractor) ─────────────────────────────────
+
+export interface JoinLeadData {
+  role: 'driver' | 'contractor'
+  fullName: string
+  companyName: string | null
+  email: string
+  phone: string
+  primaryLocation: string | null
+  yearsInBusiness: number | null
+  /** Drivers: truck types. Contractors: equipment types. Multi-select. */
+  primaryTypes: string[]
+  /** Drivers: how many trucks. Contractors: how many pieces of equipment. */
+  count: number | null
+  availability: string[]
+}
+
+const JOIN_NOTIFICATION_RECIPIENTS = [
+  'support@filldirtnearme.net',
+  'john@filldirtnearme.net',
+] as const
+
+/**
+ * Notify internal team when someone fills out the /join page.
+ * Best-effort — Resend missing or transient failures don't block the API
+ * response (the lead is still persisted via audit_events).
+ */
+export async function sendJoinLeadNotification(data: JoinLeadData) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[email] RESEND_API_KEY not set, skipping join lead notification')
+    return
+  }
+  const from = process.env.RESEND_FROM_EMAIL ?? 'orders@earthmove.io'
+  const roleLabel = data.role === 'driver' ? 'Driver / Hauler' : 'Contractor / Earthwork Pro'
+  const typeLabel = data.role === 'driver' ? 'Truck types' : 'Equipment types'
+  const countLabel = data.role === 'driver' ? 'How many trucks' : 'How many pieces'
+  const subject = `New ${roleLabel} signup — ${data.fullName}${data.companyName ? ` (${data.companyName})` : ''}`
+
+  const row = (k: string, v: string) => `
+    <tr>
+      <td style="padding:8px 12px;background:#f9fafb;font-weight:600;font-size:13px;color:#374151;border:1px solid #e5e7eb;width:38%;vertical-align:top">${esc(k)}</td>
+      <td style="padding:8px 12px;font-size:14px;color:#111827;border:1px solid #e5e7eb;vertical-align:top">${v}</td>
+    </tr>`
+
+  try {
+    await getResend().emails.send({
+      from,
+      to: [...JOIN_NOTIFICATION_RECIPIENTS],
+      replyTo: data.email,
+      subject,
+      html: `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:640px;margin:0 auto;padding:24px 16px">
+          <div style="margin-bottom:20px">
+            <span style="display:inline-block;background:#f0fdf4;color:#059669;border:1px solid #bbf7d0;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:600">${esc(roleLabel)}</span>
+          </div>
+          <h2 style="color:#111827;font-size:20px;margin:0 0 4px">${esc(data.fullName)}${data.companyName ? ` <span style="color:#6b7280;font-weight:500">· ${esc(data.companyName)}</span>` : ''}</h2>
+          <p style="color:#6b7280;font-size:13px;margin:0 0 20px">Submitted via /join</p>
+          <table style="width:100%;border-collapse:collapse;font-family:inherit">
+            ${row('Email', `<a href="mailto:${esc(data.email)}" style="color:#059669;text-decoration:none">${esc(data.email)}</a>`)}
+            ${row('Phone', `<a href="tel:${esc(data.phone)}" style="color:#059669;text-decoration:none">${esc(data.phone)}</a>`)}
+            ${data.primaryLocation ? row('Primary location', esc(data.primaryLocation)) : ''}
+            ${data.yearsInBusiness != null ? row('Years in business', esc(data.yearsInBusiness)) : ''}
+            ${data.primaryTypes.length > 0 ? row(typeLabel, data.primaryTypes.map(t => `<span style="display:inline-block;background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:4px;margin:2px 4px 2px 0;font-size:13px">${esc(t)}</span>`).join('')) : ''}
+            ${data.count != null ? row(countLabel, esc(data.count)) : ''}
+            ${data.availability.length > 0 ? row('Availability', data.availability.map(a => `<span style="display:inline-block;background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:4px;margin:2px 4px 2px 0;font-size:13px">${esc(a)}</span>`).join('')) : ''}
+          </table>
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px">Reply to this email to contact ${esc(data.fullName)} directly.</p>
+        </div>
+      `,
+    })
+    console.log(`[email] Join lead notification sent for ${data.email} (${data.role})`)
+  } catch (err) {
+    console.error('[email] Failed to send join lead notification:', err)
+  }
+}
