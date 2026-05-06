@@ -25,7 +25,7 @@ export const opsPagerOnOrderConfirmed = inngest.createFunction(
         .from('orders')
         .select(`
           id, total_amount, status, market_id, customer_id,
-          delivery_address_line1, delivery_zip,
+          delivery_address, delivery_address_snapshot,
           markets:market_id ( name ),
           material_catalog:material_catalog_id ( name )
         `)
@@ -37,15 +37,22 @@ export const opsPagerOnOrderConfirmed = inngest.createFunction(
 
     if (!order) return { skipped: 'order_not_found', orderId }
 
+    type AddrSnap = { city?: string; state?: string; zip?: string; line1?: string }
     type Joined = typeof order & {
-      markets?:          { name?: string } | null
-      material_catalog?: { name?: string } | null
+      markets?:                   { name?: string } | null
+      material_catalog?:          { name?: string } | null
+      delivery_address?:          string | null
+      delivery_address_snapshot?: AddrSnap | null
     }
     const o = order as Joined
     const market   = o.markets?.name          ?? '?'
     const material = o.material_catalog?.name ?? 'material'
     const total    = o.total_amount != null ? `$${Number(o.total_amount).toFixed(0)}` : '$?'
-    const dest     = o.delivery_zip ?? o.delivery_address_line1 ?? '?'
+    const addr     = o.delivery_address_snapshot ?? null
+    const dest     = addr?.zip
+                  ?? addr?.city
+                  ?? o.delivery_address
+                  ?? '?'
     const shortId  = orderId.slice(0, 8)
     const appUrl   = process.env.NEXT_PUBLIC_APP_URL ?? 'https://earthmove.io'
 
