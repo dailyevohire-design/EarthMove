@@ -74,7 +74,7 @@ function gatePage(nextPath: string, failed: boolean) {
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
-<title>Earthmove · Launching May 5, 2026 — Denver + Dallas-Fort Worth</title>
+<title>Earthmove · Launching May 7, 2026 — Denver + Dallas-Fort Worth</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -221,10 +221,10 @@ body::after{
   </header>
 
   <section class="hero">
-    <div class="eyebrow"><span class="dash"></span>Launching Monday · May 5, 2026</div>
+    <div class="eyebrow"><span class="dash"></span>Launching Thursday · May 7, 2026</div>
     <h1 class="h1-lead">We move <em>earth</em>.<span class="h1-coda">All of it.</span></h1>
     <p class="lede">
-      Earthmove launches <b>May 5</b> in <b>Denver</b> and <b>Dallas–Fort Worth</b> with five verified
+      Earthmove launches <b>May 7</b> in <b>Denver</b> and <b>Dallas–Fort Worth</b> with five verified
       suppliers across thirteen yards. The smartest dispatch in the industry — real load matching from
       the closest yard, lower delivered cost than any broker, and a truck that actually shows up.
     </p>
@@ -236,7 +236,7 @@ body::after{
         <div>
           <div class="market-name">Denver<span class="tld">Colorado · Front Range</span></div>
         </div>
-        <div class="market-status"><span class="pip"></span>Live May 5</div>
+        <div class="market-status"><span class="pip"></span>Live May 7</div>
       </div>
       <div class="market-stats">
         <div><div class="stat-num">6</div><div class="stat-lbl">Verified yards</div></div>
@@ -260,7 +260,7 @@ body::after{
         <div>
           <div class="market-name">Dallas–Fort Worth<span class="tld">Texas · Metroplex</span></div>
         </div>
-        <div class="market-status"><span class="pip"></span>Live May 5</div>
+        <div class="market-status"><span class="pip"></span>Live May 7</div>
       </div>
       <div class="market-stats">
         <div><div class="stat-num">7</div><div class="stat-lbl">Verified yards</div></div>
@@ -352,7 +352,7 @@ body::after{
     }).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
       .then(function(res){
         if(res.ok){
-          m.textContent = "You're on the list. We'll be in touch on May 5.";
+          m.textContent = "You're on the list. We'll be in touch on May 7.";
           m.className = 'email-msg ok';
           e.value = '';
         } else {
