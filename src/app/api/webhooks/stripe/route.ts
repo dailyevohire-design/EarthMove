@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { enqueueOrder } from '@/lib/dispatch'
 import { sendOrderConfirmation, sendGuestClaimAccount } from '@/lib/email'
 import { generateAndStoreCase } from '@/lib/collections/generator'
+import { inngest } from '@/lib/inngest'
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
@@ -111,6 +112,18 @@ export async function POST(req: NextRequest) {
           .single()
 
         if (!order) break  // already processed
+
+        // Fan out to the ops pager via Inngest. Wrapped in try/catch so a
+        // pager outage cannot bubble up to a 5xx and force Stripe to retry
+        // the whole webhook.
+        try {
+          await inngest.send({
+            name: 'app/order.confirmed',
+            data: { order_id: order.id },
+          })
+        } catch (pagerErr) {
+          console.error('[stripe-webhook] inngest.send(app/order.confirmed) failed:', pagerErr)
+        }
 
         // Enqueue for dispatch. If this fails we MUST NOT let Stripe retry the
         // whole webhook — the idempotency guard above would skip re-processing

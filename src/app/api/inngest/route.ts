@@ -7,6 +7,7 @@ import {
   onTrustEvidenceAppended,
   onTrustReportCreated,
 } from '@/lib/trust/inngest-functions'
+import { opsPagerOnOrderConfirmed } from '@/inngest/functions/ops-pager'
 
 export const runtime = 'nodejs'
 
@@ -16,6 +17,7 @@ export const inngestFunctions = [
   runTrustSynthesizeV2,
   onTrustEvidenceAppended,
   onTrustReportCreated,
+  opsPagerOnOrderConfirmed,
 ]
 
 export const { GET, POST, PUT } = serve({
