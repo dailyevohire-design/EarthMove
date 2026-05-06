@@ -484,9 +484,14 @@
   /* Pair: kill the trust-band's bottom-padding too — its background-block
      sits directly against the Materials section, giving a clean handoff. */
   .marketing-v6 .trust-band-section { padding-bottom: 0; }
-  /* And tighten Materials' top padding so the section title sits close to
-     the handoff (border still gives a clean visual seam). */
-  .marketing-v6 #materials.section { padding-top: 16px; }
+  /* Last trust-fact-card has a 12px margin-bottom that becomes dead space
+     once the trust-band is the last thing in the hero column. Drop it. */
+  .marketing-v6 .trust-band-section .trust-fact-card:last-child { margin-bottom: 0; }
+  /* Trim the trust-fact-card vertical padding too. */
+  .marketing-v6 .trust-fact-card { padding: 18px 22px; }
+  /* Materials section: collapse top padding completely; the borderTop
+     provides the visual seam. */
+  .marketing-v6 #materials.section { padding-top: 0; }
 
   /* footer call-to-action padding */
   .marketing-v6 .fcta { padding: 28px 24px; border-radius: 18px; }
