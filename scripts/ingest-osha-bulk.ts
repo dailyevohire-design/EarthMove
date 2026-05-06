@@ -2,9 +2,16 @@
 /**
  * scripts/ingest-osha-bulk.ts
  *
- * Mirrors OSHA inspection + violation records from data.dol.gov into
- * osha_establishments / osha_inspections / osha_violations. Filters NAICS 23%
- * (construction) server-side. Writes osha_ingestion_runs row per invocation.
+ * Mirrors OSHA inspection + violation records from apiprod.dol.gov/v4 into
+ * osha_establishments / osha_inspections / osha_violations.
+ *
+ * Architecture: two-pass ingest with single-condition server-side filter only.
+ *   Pass 1 — inspections, filter case_mod_date > since, JS post-filter NAICS 23%.
+ *   Pass 2 — violations,  filter issuance_date > since, JS-filter to activity_nrs
+ *            we just ingested in pass 1.
+ *
+ * No `in`/`like`/`op:'and'` operators used — only the single-condition
+ * {field,operator:'gt',value} shape verified working via curl probes.
  *
  * Run modes:
  *   pnpm tsx scripts/ingest-osha-bulk.ts                         # incremental from last hwm
@@ -17,9 +24,9 @@ import { createClient } from '@supabase/supabase-js';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 
-const DOL_BASE = 'https://data.dol.gov/get';
+const DOL_BASE = 'https://apiprod.dol.gov/v4/get/OSHA';
 const PAGE_LIMIT = 10000;
-const NAICS_FILTER = '23%';
+const NAICS_PREFIX = '23';
 
 type Inspection = {
   activity_nr: string; reporting_id?: string; state_flag?: string;
@@ -28,9 +35,9 @@ type Inspection = {
   mail_street?: string; mail_city?: string; mail_state?: string; mail_zip?: string;
   open_date?: string; close_case_date?: string; case_mod_date?: string;
   insp_scope?: string; insp_type?: string; adv_notice?: string;
-  open_conf?: string; close_conf?: string; union_status?: string;
+  open_conf?: string; close_conf_date?: string; union_status?: string;
   safety_hlth?: string; migrant?: string;
-  naics_code?: string; sic_code?: string; ownership?: string;
+  naics_code?: string; sic_code?: string; owner_type?: string;
 };
 
 type Violation = {
@@ -44,11 +51,13 @@ type Violation = {
   emphasis?: string; hazcat?: string; fta_insp_nr?: string; viol_type?: string;
 };
 
+type DolEnvelope<T> = { data: T[]; meta?: Record<string, unknown> };
+
 const { values: argv } = parseArgs({
   options: {
     backfill: { type: 'boolean', default: false },
-    years: { type: 'string', default: '5' },
-    since: { type: 'string' },
+    years:    { type: 'string',  default: '5' },
+    since:    { type: 'string' },
   },
 });
 
@@ -75,27 +84,40 @@ function estabId(name: string, state?: string, zip?: string): string {
   return `${n}|${s}|${z}`;
 }
 
-async function fetchPage<T>(table: 'inspection'|'violation', filter: unknown, offset: number): Promise<T[]> {
-  const url = new URL(`${DOL_BASE}/${table}`);
-  url.searchParams.set('api_key', DOL_API_KEY!);
+async function fetchPage<T>(
+  endpoint: 'inspection' | 'violation',
+  filterField: string,
+  filterValue: string,
+  offset: number,
+): Promise<T[]> {
+  const url = new URL(`${DOL_BASE}/${endpoint}/json`);
+  url.searchParams.set('X-API-KEY', DOL_API_KEY!);
   url.searchParams.set('limit', String(PAGE_LIMIT));
   url.searchParams.set('offset', String(offset));
-  if (filter) url.searchParams.set('filter_object', JSON.stringify(filter));
-  if (table === 'inspection') {
-    url.searchParams.set('sort_by', 'case_mod_date');
+  url.searchParams.set('filter_object', JSON.stringify({
+    field: filterField, operator: 'gt', value: filterValue,
+  }));
+  if (endpoint === 'inspection') {
+    url.searchParams.set('sort_by', 'open_date');
     url.searchParams.set('sort', 'desc');
   }
+
   for (let attempt = 0; attempt < 5; attempt++) {
     const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
-    if (resp.ok) return await resp.json() as T[];
+    if (resp.ok) {
+      const env = await resp.json() as DolEnvelope<T>;
+      return env.data ?? [];
+    }
     if (resp.status === 429 || resp.status >= 500) {
-      await sleep(2000 * (attempt + 1));
+      const backoff = 2000 * (attempt + 1);
+      console.warn(`[osha] ${endpoint} ${resp.status} at offset=${offset}, sleeping ${backoff}ms`);
+      await sleep(backoff);
       continue;
     }
     const body = await resp.text().catch(() => '');
-    throw new Error(`DOL ${table} ${resp.status} at offset ${offset}: ${body.slice(0, 500)}`);
+    throw new Error(`DOL ${endpoint} ${resp.status} at offset ${offset}: ${body.slice(0, 500)}`);
   }
-  throw new Error(`DOL ${table} retries exhausted at offset ${offset}`);
+  throw new Error(`DOL ${endpoint} retries exhausted at offset ${offset}`);
 }
 
 async function getHighWaterMark(): Promise<string|null> {
@@ -115,156 +137,173 @@ async function chunkUpsert<T extends Record<string, unknown>>(table: string, row
   }
 }
 
+async function ingestInspections(since: string): Promise<{
+  totalSeen: number; totalInserted: number; totalEstabs: number;
+  maxModDate: string; activityNrs: Set<string>;
+}> {
+  console.log(`[osha] PASS 1 inspections — case_mod_date > ${since}`);
+  let offset = 0, seen = 0, totalInsp = 0, totalEstabs = 0;
+  let maxModDate = since;
+  const activityNrs = new Set<string>();
+  const seenEstabs = new Set<string>();
+
+  while (true) {
+    const page = await fetchPage<Inspection>('inspection', 'case_mod_date', since, offset);
+    if (page.length === 0) break;
+    seen += page.length;
+
+    const constructionRows = page.filter(p => (p.naics_code ?? '').startsWith(NAICS_PREFIX));
+
+    const estabRows: Record<string, unknown>[] = [];
+    const inspRows: Record<string, unknown>[] = [];
+
+    for (const ins of constructionRows) {
+      if (!ins.activity_nr || !ins.estab_name) continue;
+      const eid = estabId(ins.estab_name, ins.site_state, ins.site_zip);
+      if (!seenEstabs.has(eid)) {
+        seenEstabs.add(eid);
+        estabRows.push({
+          estab_id: eid,
+          name_raw: ins.estab_name,
+          name_norm: normalizeName(ins.estab_name),
+          street: ins.site_address ?? null,
+          city: ins.site_city ?? null,
+          state: ins.site_state ?? null,
+          zip: (ins.site_zip ?? '').slice(0, 10) || null,
+          naics: ins.naics_code ?? null,
+          sic: ins.sic_code ?? null,
+          ownership: ins.owner_type ?? null,
+        });
+      }
+      inspRows.push({
+        activity_nr: ins.activity_nr,
+        estab_id: eid,
+        reporting_id: ins.reporting_id ?? null,
+        state_flag: ins.state_flag ?? null,
+        open_date: ins.open_date ?? null,
+        close_case_date: ins.close_case_date ?? null,
+        case_mod_date: ins.case_mod_date ?? null,
+        insp_scope: ins.insp_scope ?? null,
+        insp_type: ins.insp_type ?? null,
+        adv_notice: ins.adv_notice ?? null,
+        open_conf: ins.open_conf ?? null,
+        close_conf: ins.close_conf_date ?? null,
+        union_status: ins.union_status ?? null,
+        safety_hlth: ins.safety_hlth ?? null,
+        migrant: ins.migrant ?? null,
+        mail_street: ins.mail_street ?? null,
+        mail_city: ins.mail_city ?? null,
+        mail_state: ins.mail_state ?? null,
+        mail_zip: (ins.mail_zip ?? '').slice(0, 10) || null,
+      });
+      activityNrs.add(ins.activity_nr);
+      if (ins.case_mod_date && ins.case_mod_date > maxModDate) maxModDate = ins.case_mod_date;
+    }
+
+    if (estabRows.length) await chunkUpsert('osha_establishments', estabRows, 'estab_id');
+    if (inspRows.length)  await chunkUpsert('osha_inspections',    inspRows,  'activity_nr');
+    totalEstabs += estabRows.length;
+    totalInsp   += inspRows.length;
+
+    console.log(`[osha] insp page offset=${offset} seen=${page.length} construction=${constructionRows.length} estabs+=${estabRows.length} hwm<=${maxModDate}`);
+    if (page.length < PAGE_LIMIT) break;
+    offset += page.length;
+  }
+
+  return { totalSeen: seen, totalInserted: totalInsp, totalEstabs, maxModDate, activityNrs };
+}
+
+async function ingestViolations(since: string, knownActivityNrs: Set<string>): Promise<number> {
+  console.log(`[osha] PASS 2 violations — issuance_date > ${since}, filtering to ${knownActivityNrs.size} known activity_nrs`);
+  let offset = 0, seen = 0, total = 0;
+
+  while (true) {
+    const page = await fetchPage<Violation>('violation', 'issuance_date', since, offset);
+    if (page.length === 0) break;
+    seen += page.length;
+
+    const rows = page
+      .filter(v => v.delete_flag !== 'X')
+      .filter(v => knownActivityNrs.has(v.activity_nr))
+      .map(v => ({
+        activity_nr: v.activity_nr,
+        citation_id: v.citation_id,
+        std_alpha: v.std_alpha ?? null,
+        std_lookup: v.std_lookup ?? null,
+        issuance_date: v.issuance_date ?? null,
+        abate_date: v.abate_date ?? null,
+        current_penalty: v.current_penalty != null ? Number(v.current_penalty) : null,
+        initial_penalty: v.initial_penalty != null ? Number(v.initial_penalty) : null,
+        contest_date: v.contest_date ?? null,
+        final_order_date: v.final_order_date ?? null,
+        nr_instances: v.nr_instances != null ? Number(v.nr_instances) : null,
+        nr_exposed: v.nr_exposed != null ? Number(v.nr_exposed) : null,
+        rec: v.rec ?? null,
+        gravity: v.gravity != null ? Number(v.gravity) : null,
+        emphasis: v.emphasis ?? null,
+        hazcat: v.hazcat ?? null,
+        fta_insp_nr: v.fta_insp_nr ?? null,
+        viol_type: v.viol_type ?? null,
+      }));
+
+    if (rows.length) {
+      await chunkUpsert('osha_violations', rows, 'activity_nr,citation_id');
+      total += rows.length;
+    }
+
+    console.log(`[osha] viol page offset=${offset} seen=${page.length} matched=${rows.length}`);
+    if (page.length < PAGE_LIMIT) break;
+    offset += page.length;
+  }
+
+  return total;
+}
+
 async function ingest() {
   const since = argv.since
     ?? (argv.backfill
         ? new Date(Date.now() - parseInt(argv.years as string, 10) * 365 * 86_400_000).toISOString().slice(0,10)
         : (await getHighWaterMark()) ?? new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0,10));
 
-  console.log(`[osha] start since=${since} naics=${NAICS_FILTER} mode=${argv.backfill ? 'backfill' : 'incremental'}`);
+  console.log(`[osha] start since=${since} naics=${NAICS_PREFIX}* mode=${argv.backfill ? 'backfill' : 'incremental'}`);
 
   const { data: run, error: runErr } = await sb.from('osha_ingestion_runs')
     .insert({
       status: 'running',
-      source_url: `${DOL_BASE}/inspection`,
-      notes: `since=${since}, naics=${NAICS_FILTER}, mode=${argv.backfill ? 'backfill' : 'incremental'}`,
+      source_url: `${DOL_BASE}/inspection/json`,
+      notes: `since=${since}, naics=${NAICS_PREFIX}*, mode=${argv.backfill ? 'backfill' : 'incremental'}, host=apiprod.dol.gov`,
     })
     .select('id').single();
   if (runErr || !run) throw new Error(`failed to record ingestion run: ${runErr?.message}`);
 
-  const filter = {
-    op: 'and',
-    conditions: [
-      { field: 'naics_code', operator: 'like', value: NAICS_FILTER },
-      { field: 'case_mod_date', operator: 'gt', value: since },
-    ],
-  };
-
-  let offset = 0;
-  let totalInsp = 0, totalEstabs = 0, totalViol = 0;
-  let maxModDate = since;
-  const seenEstabs = new Set<string>();
+  let inspResult = { totalSeen: 0, totalInserted: 0, totalEstabs: 0, maxModDate: since, activityNrs: new Set<string>() };
+  let violTotal = 0;
 
   try {
-    while (true) {
-      const page = await fetchPage<Inspection>('inspection', filter, offset);
-      if (page.length === 0) break;
-
-      const estabRows: Record<string, unknown>[] = [];
-      const inspRows: Record<string, unknown>[] = [];
-      const inspIds: string[] = [];
-
-      for (const ins of page) {
-        if (!ins.activity_nr || !ins.estab_name) continue;
-        const eid = estabId(ins.estab_name, ins.site_state, ins.site_zip);
-        if (!seenEstabs.has(eid)) {
-          seenEstabs.add(eid);
-          estabRows.push({
-            estab_id: eid,
-            name_raw: ins.estab_name,
-            name_norm: normalizeName(ins.estab_name),
-            street: ins.site_address ?? null,
-            city: ins.site_city ?? null,
-            state: ins.site_state ?? null,
-            zip: (ins.site_zip ?? '').slice(0, 10) || null,
-            naics: ins.naics_code ?? null,
-            sic: ins.sic_code ?? null,
-            ownership: ins.ownership ?? null,
-          });
-        }
-        inspRows.push({
-          activity_nr: ins.activity_nr,
-          estab_id: eid,
-          reporting_id: ins.reporting_id ?? null,
-          state_flag: ins.state_flag ?? null,
-          open_date: ins.open_date ?? null,
-          close_case_date: ins.close_case_date ?? null,
-          case_mod_date: ins.case_mod_date ?? null,
-          insp_scope: ins.insp_scope ?? null,
-          insp_type: ins.insp_type ?? null,
-          adv_notice: ins.adv_notice ?? null,
-          open_conf: ins.open_conf ?? null,
-          close_conf: ins.close_conf ?? null,
-          union_status: ins.union_status ?? null,
-          safety_hlth: ins.safety_hlth ?? null,
-          migrant: ins.migrant ?? null,
-          mail_street: ins.mail_street ?? null,
-          mail_city: ins.mail_city ?? null,
-          mail_state: ins.mail_state ?? null,
-          mail_zip: (ins.mail_zip ?? '').slice(0, 10) || null,
-        });
-        inspIds.push(ins.activity_nr);
-        if (ins.case_mod_date && ins.case_mod_date > maxModDate) maxModDate = ins.case_mod_date;
-      }
-
-      if (estabRows.length) await chunkUpsert('osha_establishments', estabRows, 'estab_id');
-      if (inspRows.length)  await chunkUpsert('osha_inspections',    inspRows,  'activity_nr');
-      totalEstabs += estabRows.length;
-      totalInsp   += inspRows.length;
-
-      let pageViol = 0;
-      for (let i = 0; i < inspIds.length; i += 50) {
-        const idChunk = inspIds.slice(i, i + 50);
-        const violFilter = { field: 'activity_nr', operator: 'in', value: idChunk };
-        let vOffset = 0;
-        while (true) {
-          const vPage = await fetchPage<Violation>('violation', violFilter, vOffset);
-          if (vPage.length === 0) break;
-          const vRows = vPage.filter(v => v.delete_flag !== 'X').map(v => ({
-            activity_nr: v.activity_nr,
-            citation_id: v.citation_id,
-            std_alpha: v.std_alpha ?? null,
-            std_lookup: v.std_lookup ?? null,
-            issuance_date: v.issuance_date ?? null,
-            abate_date: v.abate_date ?? null,
-            current_penalty: v.current_penalty != null ? Number(v.current_penalty) : null,
-            initial_penalty: v.initial_penalty != null ? Number(v.initial_penalty) : null,
-            contest_date: v.contest_date ?? null,
-            final_order_date: v.final_order_date ?? null,
-            nr_instances: v.nr_instances != null ? Number(v.nr_instances) : null,
-            nr_exposed: v.nr_exposed != null ? Number(v.nr_exposed) : null,
-            rec: v.rec ?? null,
-            gravity: v.gravity != null ? Number(v.gravity) : null,
-            emphasis: v.emphasis ?? null,
-            hazcat: v.hazcat ?? null,
-            fta_insp_nr: v.fta_insp_nr ?? null,
-            viol_type: v.viol_type ?? null,
-          }));
-          if (vRows.length) {
-            await chunkUpsert('osha_violations', vRows, 'activity_nr,citation_id');
-            pageViol += vRows.length;
-          }
-          if (vPage.length < PAGE_LIMIT) break;
-          vOffset += PAGE_LIMIT;
-        }
-      }
-      totalViol += pageViol;
-      console.log(`[osha] offset=${offset} insp=${inspRows.length} estabs+=${estabRows.length} viol=${pageViol} hwm<=${maxModDate}`);
-
-      if (page.length < PAGE_LIMIT) break;
-      offset += PAGE_LIMIT;
-    }
+    inspResult = await ingestInspections(since);
+    violTotal = await ingestViolations(since, inspResult.activityNrs);
 
     const { error: updErr } = await sb.from('osha_ingestion_runs').update({
       status: 'success',
       completed_at: new Date().toISOString(),
-      rows_inspections: totalInsp,
-      rows_violations: totalViol,
-      rows_establishments: totalEstabs,
-      high_water_mark: maxModDate,
+      rows_inspections: inspResult.totalInserted,
+      rows_violations: violTotal,
+      rows_establishments: inspResult.totalEstabs,
+      high_water_mark: inspResult.maxModDate,
+      notes: `since=${since}, seen_total=${inspResult.totalSeen}, naics23=${inspResult.totalInserted}, run_id=${run.id}`,
     }).eq('id', run.id);
     if (updErr) throw updErr;
 
-    console.log(`[osha] DONE inspections=${totalInsp} establishments=${totalEstabs} violations=${totalViol} hwm=${maxModDate} run_id=${run.id}`);
+    console.log(`[osha] DONE inspections=${inspResult.totalInserted}/${inspResult.totalSeen} establishments=${inspResult.totalEstabs} violations=${violTotal} hwm=${inspResult.maxModDate} run_id=${run.id}`);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     await sb.from('osha_ingestion_runs').update({
       status: 'error',
       completed_at: new Date().toISOString(),
       error_message: msg,
-      rows_inspections: totalInsp,
-      rows_violations: totalViol,
-      rows_establishments: totalEstabs,
+      rows_inspections: inspResult.totalInserted,
+      rows_violations: violTotal,
+      rows_establishments: inspResult.totalEstabs,
     }).eq('id', run.id);
     throw e;
   }
