@@ -1754,6 +1754,14 @@
     padding-top: 32px !important;
     padding-bottom: 56px !important;
   }
+  /* Override the section/hv-bg !important block above for the specific
+     trust-band → materials handoff. The hv-bg's 56px padding-bottom and
+     materials' 48px padding-top together produced ~104px of dead space
+     between the last trust-fact-card and the Materials title. Both
+     collapse here. The trust-band's beige background already provides
+     the visual section break. */
+  .marketing-v6 .hv-bg { padding-bottom: 0 !important; }
+  .marketing-v6 #materials.section { padding-top: 0 !important; }
 
   /* Materials grid: single column under 480px, two-up 480-767 */
   .marketing-v6 #materials .materials-grid,
