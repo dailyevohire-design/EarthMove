@@ -476,8 +476,10 @@
   .marketing-v6 .hv-rq { padding: 12px; }
   .marketing-v6 .hv-rq-top { padding-bottom: 10px; gap: 8px; }
 
-  /* section padding breathing room */
-  .marketing-v6 .hv-wrap { padding: 48px 0 56px; }
+  /* Section padding breathing room. On mobile the hero stack ends in the
+     trust-band cards (which already have their own internal padding); a big
+     bottom-padding here just stacks dead space before the Materials section. */
+  .marketing-v6 .hv-wrap { padding: 48px 0 16px; }
 
   /* footer call-to-action padding */
   .marketing-v6 .fcta { padding: 28px 24px; border-radius: 18px; }
@@ -2082,7 +2084,7 @@
 /* === Trust band section — 3 stacked cards (Phase 5, commit 5) === */
 .marketing-v6 .trust-band-section {
   background: var(--em-paper, #F5F4F0);
-  padding: 48px 16px;
+  padding: 40px 16px 28px;
   margin: 32px -16px 0;
 }
 @media (min-width: 768px) {
