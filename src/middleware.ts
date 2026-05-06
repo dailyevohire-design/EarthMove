@@ -199,7 +199,7 @@ body::after{
 .foot{margin-top:48px;padding-top:28px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink-3)}
 .foot a{color:var(--ink-3);text-decoration:none}
 .foot a:hover{color:var(--evergreen)}
-.foot details{position:relative}
+.foot details{position:fixed;right:14px;bottom:12px;z-index:9;padding:4px 10px;border-radius:6px;background:rgba(241,236,226,.78);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .foot summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:lowercase;color:rgba(92,100,95,.55);font-weight:500;user-select:none}
 .foot summary:hover{color:var(--ink-3)}
 .foot summary::-webkit-details-marker{display:none}
