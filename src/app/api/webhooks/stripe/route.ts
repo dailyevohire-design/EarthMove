@@ -20,6 +20,30 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient()
 
+  // Idempotency guard — claims the event before any side effects.
+  // Stripe retries on any 5xx or timeout. Without this, a retry that arrives
+  // while the first call is still in-flight can double-enqueue. Subsequent
+  // retries (after first call completes) are already covered by the
+  // status='pending_payment' UPDATE filter, but in-flight collisions weren't.
+  const { error: claimError } = await supabase
+    .from('webhook_events')
+    .insert({ event_id: event.id, source: 'stripe' })
+
+  if (claimError?.code === '23505') {
+    // Duplicate — another invocation already claimed this event. Return 200
+    // so Stripe stops retrying.
+    return NextResponse.json({ received: true, duplicate: true })
+  }
+  if (claimError) {
+    // DB unreachable — let Stripe retry.
+    console.error('[stripe-webhook] webhook_events insert failed', {
+      event_id: event.id,
+      code:     claimError.code,
+      message:  claimError.message,
+    })
+    return NextResponse.json({ error: 'db error' }, { status: 500 })
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
