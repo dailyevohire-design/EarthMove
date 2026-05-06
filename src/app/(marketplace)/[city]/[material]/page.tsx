@@ -5,7 +5,6 @@ import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { QuantityCalculator } from '@/components/marketplace/quantity-calculator'
 import Link from 'next/link'
-import { getMaterialImage } from '@/lib/material-images'
 import { productSchema, breadcrumbSchema, faqSchema, getMaterialFAQs, jsonLd } from '@/lib/structured-data'
 import { MapPin, CheckCircle2 } from 'lucide-react'
 
@@ -132,7 +131,7 @@ export default async function LocationMaterialPage({ params }: Props) {
         productSchema({
           name: `${material.name} in ${cityDisplay}`, slug: material.slug,
           description: material.description, category: material.category?.name,
-          price: displayPrice, unit, image: getMaterialImage(material.slug),
+          price: displayPrice, unit, image: material.image_url ?? '',
         })
       ) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(
@@ -147,7 +146,10 @@ export default async function LocationMaterialPage({ params }: Props) {
         {/* Hero */}
         <section className="relative overflow-hidden bg-gray-900 py-16 md:py-20">
           <div className="absolute inset-0">
-              <img src={getMaterialImage(material.slug)} alt={material.name} className="absolute inset-0 w-full h-full object-cover opacity-30" />
+              {material.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={material.image_url} alt={material.name} className="absolute inset-0 w-full h-full object-cover opacity-30" />
+              )}
               <div className="absolute inset-0 bg-gradient-to-r from-gray-900/90 to-gray-900/60" />
           </div>
           <div className="container-main relative z-10">

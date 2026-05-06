@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { formatCurrency, unitLabel } from '@/lib/pricing-engine'
 
@@ -10,7 +10,7 @@ export interface RelatedMaterial {
   description: string | null
   default_unit: 'ton' | 'cubic_yard'
   categoryName: string | null
-  imageUrl: string
+  imageUrl: string | null
 }
 
 interface Material {
@@ -30,7 +30,7 @@ interface Props {
   displayName: string
   displayDescription: string | null
   unit: 'ton' | 'cubic_yard'
-  imageUrl: string
+  gallery: ReactNode
   // State A
   displayPrice: number | null
   overridePrice: number | null
@@ -443,8 +443,7 @@ export function BrowseDetailClient(props: Props) {
           <section className="pdp-grid">
             <div className="content-col">
               <HeroImage
-                imageUrl={props.imageUrl}
-                materialName={props.displayName}
+                gallery={props.gallery}
                 categoryName={props.material.category?.name ?? null}
               />
 
@@ -550,26 +549,15 @@ function PdpBreadcrumb({ material }: { material: Material }) {
 }
 
 function HeroImage({
-  imageUrl,
-  materialName,
+  gallery,
   categoryName,
 }: {
-  imageUrl: string
-  materialName: string
+  gallery: ReactNode
   categoryName: string | null
 }) {
-  const [loadError, setLoadError] = useState(false)
   return (
     <div className="hero-image-wrap">
-      {!loadError && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={imageUrl}
-          alt={`${materialName} — bulk aggregate material available for delivery`}
-          className="hero-photo"
-          onError={() => setLoadError(true)}
-        />
-      )}
+      {gallery}
       {categoryName && (
         <div className="lozenge-row">
           <span className="pdp-lozenge">{categoryName}</span>
@@ -791,8 +779,19 @@ function RelatedSection({
         {materials.map((m) => (
           <Link key={m.slug} className="pdp-tile" href={`/browse/${m.slug}`}>
             <div className="pdp-tile-img">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={m.imageUrl} alt={`${m.name} — bulk aggregate material`} />
+              {m.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={m.imageUrl} alt={`${m.name} — bulk aggregate material`} />
+              ) : (
+                <div style={{
+                  position: 'absolute', inset: 0, display: 'grid', placeItems: 'center',
+                  background: 'var(--card-muted)', color: 'var(--ink-3)',
+                  fontFamily: 'var(--pdp-mono)', fontSize: 11, letterSpacing: '0.08em',
+                  textTransform: 'uppercase', fontWeight: 600,
+                }}>
+                  {m.name}
+                </div>
+              )}
               {m.categoryName && (
                 <div className="lozenge-row">
                   <span className="pdp-lozenge">{m.categoryName}</span>

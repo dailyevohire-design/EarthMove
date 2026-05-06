@@ -1,5 +1,5 @@
 // src/components/marketing/MaterialSpecSection.tsx
-import { getMaterialImage } from '@/lib/material-images'
+import { createClient } from '@/lib/supabase/server'
 
 const SPEC_CARDS = [
   {
@@ -37,7 +37,17 @@ const SPEC_CARDS = [
   },
 ]
 
-export function MaterialSpecSection() {
+export async function MaterialSpecSection() {
+  const supabase = await createClient()
+  const { data: rows } = await supabase
+    .from('material_catalog')
+    .select('slug, image_url')
+    .in('slug', SPEC_CARDS.map((c) => c.slug))
+  const imgBySlug = new Map<string, string>()
+  for (const r of (rows ?? []) as { slug: string; image_url: string | null }[]) {
+    if (r.image_url) imgBySlug.set(r.slug, r.image_url)
+  }
+
   return (
     <section id="spec" className="ms-section">
       <div className="ms-container">
@@ -47,31 +57,45 @@ export function MaterialSpecSection() {
           <span className="ms-h2-em">actually needs.</span>
         </h2>
         <div className="ms-grid">
-          {SPEC_CARDS.map((card) => (
-            <article key={card.slug} className="ms-card">
-              <div
-                className="ms-card-image"
-                style={{ backgroundImage: `url(${getMaterialImage(card.slug)})` }}
-                role="img"
-                aria-label={card.name}
-              />
-              <div className="ms-card-body">
-                <div className="ms-card-name">{card.name}</div>
-                <div className="ms-card-grade">{card.grade}</div>
-                <dl className="ms-card-specs">
-                  {card.specs.map((s) => (
-                    <div key={s.label} className="ms-card-spec">
-                      <dt className="ms-card-spec-l">{s.label}</dt>
-                      <dd className="ms-card-spec-v">
-                        {s.value}
-                        {s.unit && <small> {s.unit}</small>}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            </article>
-          ))}
+          {SPEC_CARDS.map((card) => {
+            const url = imgBySlug.get(card.slug)
+            return (
+              <article key={card.slug} className="ms-card">
+                {url ? (
+                  <div
+                    className="ms-card-image"
+                    style={{ backgroundImage: `url(${url})` }}
+                    role="img"
+                    aria-label={card.name}
+                  />
+                ) : (
+                  <div
+                    className="ms-card-image"
+                    role="img"
+                    aria-label={card.name}
+                    style={{ display: 'grid', placeItems: 'center', background: '#e7e5e4', color: '#78716c', fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase', fontSize: 12 }}
+                  >
+                    {card.name}
+                  </div>
+                )}
+                <div className="ms-card-body">
+                  <div className="ms-card-name">{card.name}</div>
+                  <div className="ms-card-grade">{card.grade}</div>
+                  <dl className="ms-card-specs">
+                    {card.specs.map((s) => (
+                      <div key={s.label} className="ms-card-spec">
+                        <dt className="ms-card-spec-l">{s.label}</dt>
+                        <dd className="ms-card-spec-v">
+                          {s.value}
+                          {s.unit && <small> {s.unit}</small>}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              </article>
+            )
+          })}
         </div>
       </div>
     </section>

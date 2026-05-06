@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import type { MarketMaterialCard } from '@/types'
 import { formatCurrency, unitLabel } from '@/lib/pricing-engine'
-import { getMaterialImage } from '@/lib/material-images'
 import { Truck, Zap, Clock, Star, ArrowRight } from 'lucide-react'
 
 const KNOWN_CAT_SLUGS = new Set([
@@ -18,7 +17,6 @@ function catTokens(slug: string): { color: string; bg: string } {
 
 export function MaterialCard({ card }: { card: MarketMaterialCard }) {
   const { color: catColor, bg: fallbackBg } = catTokens(card.category_slug)
-  const imageUrl = getMaterialImage(card.slug)
 
   return (
     <Link href={`/browse/${card.slug}`} className="material-card group block touch-manipulation select-none">
@@ -30,12 +28,19 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
         active:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.06)]">
         {/* Image */}
         <div className="material-card-photo relative overflow-hidden" style={{ height: 220, background: fallbackBg }}>
-          <img
-            src={imageUrl}
-            alt={card.name}
-            loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-          />
+          {card.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={card.image_url}
+              alt={card.name}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            />
+          ) : (
+            <div className="absolute inset-0 grid place-items-center bg-stone-200 text-stone-500 text-sm font-semibold uppercase tracking-wide">
+              {card.name}
+            </div>
+          )}
 
           {/* Bottom gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
@@ -112,7 +117,6 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
 
 export function DealCard({ card }: { card: MarketMaterialCard }) {
   const { bg: fallbackBg } = catTokens(card.category_slug)
-  const imageUrl = getMaterialImage(card.slug)
 
   return (
     <Link href={`/browse/${card.slug}`} className="group block flex-shrink-0 w-full max-w-[360px] sm:w-[360px] touch-manipulation select-none">
@@ -123,12 +127,19 @@ export function DealCard({ card }: { card: MarketMaterialCard }) {
         active:translate-y-0 active:scale-[0.985] active:duration-75
         active:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_1px_2px_rgba(15,23,42,0.06)]">
         <div className="relative overflow-hidden" style={{ height: 200, background: fallbackBg }}>
-          <img
-            src={imageUrl}
-            alt={card.name}
-            loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-          />
+          {card.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={card.image_url}
+              alt={card.name}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            />
+          ) : (
+            <div className="absolute inset-0 grid place-items-center bg-stone-200 text-stone-500 text-sm font-semibold uppercase tracking-wide">
+              {card.name}
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
           <div className="absolute top-3 left-3">

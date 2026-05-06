@@ -5,7 +5,7 @@ import { getCurrentMarket } from '@/lib/market'
 import { deriveDisplayPrice } from '@/lib/pricing-engine'
 import { resolveOffering } from '@/lib/fulfillment-resolver'
 import { pickBestOffering, type BestOfferingInput } from '@/lib/best-offering'
-import { getMaterialImage } from '@/lib/material-images'
+import { MaterialGallery } from '@/components/material/material-gallery'
 import { productSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 import { BrowseDetailClient, type RelatedMaterial } from './BrowseDetailClient'
 
@@ -60,7 +60,7 @@ async function getPageData(slug: string) {
   if (material.category_id) {
     const { data: rel } = await supabase
       .from('material_catalog')
-      .select('slug, name, description, default_unit, category:material_categories(name)')
+      .select('slug, name, description, default_unit, image_url, category:material_categories(name)')
       .eq('category_id', material.category_id)
       .eq('is_active', true)
       .neq('id', material.id)
@@ -73,7 +73,7 @@ async function getPageData(slug: string) {
       description: r.description,
       default_unit: r.default_unit,
       categoryName: r.category?.name ?? null,
-      imageUrl: getMaterialImage(r.slug),
+      imageUrl: r.image_url ?? null,
     }))
   }
 
@@ -161,7 +161,19 @@ export default async function MaterialDetailPage({ params }: Props) {
 
   const isStateA = !!resolvedOffering && displayPrice != null
   const aliases: string[] = Array.isArray(material.aliases) ? material.aliases : []
-  const imageUrl = getMaterialImage(material.slug)
+  const offeringImageUrl: string | null = resolvedOffering?.image_url ?? null
+  const offeringImageAlt: string | null = resolvedOffering?.supplier_material_name ?? null
+  const heroImageForSchema: string = offeringImageUrl ?? material.image_url ?? ''
+
+  const gallery = (
+    <MaterialGallery
+      slug={material.slug}
+      size="detail"
+      priorityFirst
+      priorityImageUrl={offeringImageUrl}
+      priorityImageAlt={offeringImageAlt}
+    />
+  )
 
   return (
     <>
@@ -169,7 +181,7 @@ export default async function MaterialDetailPage({ params }: Props) {
         productSchema({
           name: material.name, slug: material.slug, description: material.description,
           category: material.category?.name, price: displayPrice,
-          unit, image: imageUrl,
+          unit, image: heroImageForSchema,
         })
       ) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(
@@ -197,7 +209,7 @@ export default async function MaterialDetailPage({ params }: Props) {
         displayName={mm.display_name ?? material.name}
         displayDescription={mm.display_description ?? material.description ?? null}
         unit={unit}
-        imageUrl={imageUrl}
+        gallery={gallery}
         displayPrice={displayPrice}
         overridePrice={promo?.override_price ?? null}
         minQty={resolvedOffering?.minimum_order_quantity ?? null}

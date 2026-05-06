@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { getArticleImage } from '@/lib/material-images'
+import { getArticleImage } from '@/lib/article-images'
 import { ArrowRight, Clock } from 'lucide-react'
 import {
   type Article,

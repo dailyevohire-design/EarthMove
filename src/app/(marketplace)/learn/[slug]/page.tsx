@@ -1,7 +1,7 @@
 import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
 import { QuantityCalculator } from '@/components/marketplace/quantity-calculator'
-import { getArticleImage } from '@/lib/material-images'
+import { getArticleImage } from '@/lib/article-images'
 import { ArrowRight, CheckCircle2, AlertTriangle, Clock, ChevronRight } from 'lucide-react'
 import { articleSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 import {

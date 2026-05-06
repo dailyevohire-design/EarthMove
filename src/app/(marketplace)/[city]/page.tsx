@@ -42,7 +42,7 @@ async function getCityData(citySlug: string) {
     .from('market_materials')
     .select(`
       id, price_display_mode, custom_display_price, is_featured,
-      material:material_catalog(id, name, slug, description, default_unit, category:material_categories(name, slug)),
+      material:material_catalog(id, name, slug, description, default_unit, image_url, category:material_categories(name, slug)),
       pool:market_supply_pool(is_preferred, offering:supplier_offerings(price_per_unit, unit, delivery_fee_base, minimum_order_quantity, image_url))
     `)
     .eq('market_id', market.id).eq('is_visible', true).eq('is_available', true)
@@ -59,7 +59,7 @@ async function getCityData(citySlug: string) {
     cards.push({
       market_material_id: row.id, material_catalog_id: material.id,
       slug: material.slug, name: material.name, description: material.description,
-      image_url: offering?.image_url ?? null, category_name: material.category?.name ?? '',
+      image_url: material.image_url ?? null, category_name: material.category?.name ?? '',
       category_slug: material.category?.slug ?? '', unit: offering?.unit ?? material.default_unit,
       display_price: displayPrice, price_display_mode: row.price_display_mode,
       minimum_order_quantity: offering?.minimum_order_quantity ?? 1,

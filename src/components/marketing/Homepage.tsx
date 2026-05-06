@@ -23,7 +23,6 @@ import { CoverageCalculator } from './CoverageCalculator'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { Logo } from '@/components/logo'
-import { getMaterialImage } from '@/lib/material-images'
 
 const ChevronDown = ({ size = 18 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -38,6 +37,8 @@ const ArrowRight = ({ size = 16, weight = 2 }: { size?: number; weight?: number 
   </svg>
 )
 
+const MARKETING_MATERIAL_SLUGS = ['flex-base', 'base-gravel-57', 'fill-dirt', 'topsoil', 'concrete-sand'] as const
+
 export async function Homepage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -50,6 +51,16 @@ export async function Homepage() {
       .single()
     profileRole = data?.role ?? null
   }
+
+  const { data: marketingImageRows } = await supabase
+    .from('material_catalog')
+    .select('slug, image_url')
+    .in('slug', MARKETING_MATERIAL_SLUGS as unknown as string[])
+  const marketingImage = new Map<string, string>()
+  for (const r of (marketingImageRows ?? []) as { slug: string; image_url: string | null }[]) {
+    if (r.image_url) marketingImage.set(r.slug, r.image_url)
+  }
+  const matImg = (slug: string) => marketingImage.get(slug) ?? null
 
   return (
     <div className="marketing-v6">
@@ -213,13 +224,7 @@ export async function Homepage() {
               {/* 1: Driveway base */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-base)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <Image
-                    src={getMaterialImage('flex-base')}
-                    alt="Compacted crushed stone driveway base"
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{ objectFit: 'cover' }}
-                  />
+                  <MatImage src={matImg('flex-base')} alt="Compacted crushed stone driveway base" />
                   <span className="mat-tag">ABC · ¾″ minus</span>
                 </div>
                 <div className="mat-body">
@@ -236,13 +241,7 @@ export async function Homepage() {
               {/* 2: Drainage */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-drain)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <Image
-                    src={getMaterialImage('base-gravel-57')}
-                    alt="¾-inch washed drainage stone close-up"
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{ objectFit: 'cover' }}
-                  />
+                  <MatImage src={matImg('base-gravel-57')} alt="¾-inch washed drainage stone close-up" />
                   <span className="mat-tag">¾″ washed stone</span>
                 </div>
                 <div className="mat-body">
@@ -259,13 +258,7 @@ export async function Homepage() {
               {/* 3: Backfill / leveling */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-fill)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <Image
-                    src={getMaterialImage('fill-dirt')}
-                    alt="Clean fill dirt — cracked tan earth surface"
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{ objectFit: 'cover' }}
-                  />
+                  <MatImage src={matImg('fill-dirt')} alt="Clean fill dirt — cracked tan earth surface" />
                   <span className="mat-tag">Clean fill dirt</span>
                 </div>
                 <div className="mat-body">
@@ -282,13 +275,7 @@ export async function Homepage() {
               {/* 4: Garden / landscaping */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-soil)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <Image
-                    src={getMaterialImage('topsoil')}
-                    alt="Screened topsoil — rich dark loam"
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{ objectFit: 'cover' }}
-                  />
+                  <MatImage src={matImg('topsoil')} alt="Screened topsoil — rich dark loam" />
                   <span className="mat-tag">Screened topsoil</span>
                 </div>
                 <div className="mat-body">
@@ -305,13 +292,7 @@ export async function Homepage() {
               {/* 5: Concrete / structural */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-struct)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <Image
-                    src={getMaterialImage('concrete-sand')}
-                    alt="Concrete sand — coarse sandy texture with small stones"
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{ objectFit: 'cover' }}
-                  />
+                  <MatImage src={matImg('concrete-sand')} alt="Concrete sand — coarse sandy texture with small stones" />
                   <span className="mat-tag">Concrete sand · pea gravel</span>
                 </div>
                 <div className="mat-body">
@@ -526,5 +507,32 @@ export async function Homepage() {
         {/* FOOTER — em-evergreen reverse surface, brand sign-off */}
         <SiteFooter />
     </div>
+  )
+}
+
+function MatImage({ src, alt }: { src: string | null; alt: string }) {
+  if (!src) {
+    return (
+      <div
+        aria-label={alt}
+        role="img"
+        style={{
+          position: 'absolute', inset: 0, display: 'grid', placeItems: 'center',
+          background: 'var(--m-stone-200, #e7e5e4)', color: 'var(--m-stone-500, #78716c)',
+          fontSize: 12, fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase',
+        }}
+      >
+        {alt}
+      </div>
+    )
+  }
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      style={{ objectFit: 'cover' }}
+    />
   )
 }
