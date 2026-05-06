@@ -312,6 +312,10 @@
   .marketing-v6 .op-pillar { border-right: 0; }
   .marketing-v6 .op-row { flex-direction: column; align-items: flex-start; gap: 12px; }
   .marketing-v6 .op-row-r { text-align: left; }
+  /* Hide the "Sample view · illustrates delivery flow / How delivery works →"
+     caption on mobile — it added vertical chrome between the photo-confirmed
+     proof card and the Materials section without paying for the space. */
+  .marketing-v6 .op-caption { display: none; }
 }
 
 /* MATERIALS */
