@@ -1762,6 +1762,13 @@
      the visual section break. */
   .marketing-v6 .hv-bg { padding-bottom: 0 !important; }
   .marketing-v6 #materials.section { padding-top: 0 !important; }
+  /* Pull the materials section UP by 16px to overlap the bottom of the
+     trust-band, tightening the visual gap further. Cards get
+     position:relative + z-index so they paint on top of materials' bg
+     in the overlap zone — card visuals stay identical, only the band's
+     trailing beige strip shrinks. */
+  .marketing-v6 .trust-fact-card { position: relative; z-index: 2; }
+  .marketing-v6 #materials.section { margin-top: -16px !important; position: relative; z-index: 1; }
 
   /* Materials grid: single column under 480px, two-up 480-767 */
   .marketing-v6 #materials .materials-grid,
