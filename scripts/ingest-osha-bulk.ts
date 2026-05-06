@@ -25,7 +25,10 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 
 const DOL_BASE = 'https://apiprod.dol.gov/v4/get/OSHA';
-const PAGE_LIMIT = 10000;
+// DOL caps response body at 6 MB; inspections measured at ~915 bytes/row in
+// 2026-05-06 probes, so 10000 limit returns ~9.15 MB and 413s. 5000 leaves
+// headroom even if some rows run larger.
+const PAGE_LIMIT = 5000;
 const NAICS_PREFIX = '23';
 
 type Inspection = {
