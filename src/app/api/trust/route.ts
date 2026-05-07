@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { validateInput } from '@/lib/trust/prompt-guards'
 import { getRateLimiter, checkDailyCostCap, checkAnonDailyCap } from '@/lib/trust/rate-limiter'
 import { runFreeTier } from '@/lib/trust/trust-engine'
+import { findPlaceAndReviews } from '@/lib/trust/google-places'
 import { inngest } from '@/lib/inngest'
 
 export const runtime = 'nodejs'
@@ -343,6 +344,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message ?? 'Verification failed' }, { status: 500 })
   }
 
+  // Free-tier review enrichment: replace LLM-synthesized review fields (which
+  // are unreliable on the free path) with deterministic Google Places data.
+  // Null-safe — see google-places.ts. If the call returns null (missing key,
+  // Places API not enabled, no match, network failure), the existing
+  // LLM-synthesized values stay in report.reviews unchanged, so behavior is
+  // strictly additive.
+  try {
+    const places = await findPlaceAndReviews({
+      contractor_name: name,
+      city: sCity,
+      state_code: state,
+    })
+    if (places) {
+      report.reviews = {
+        ...(report.reviews ?? {}),
+        average_rating: places.rating,
+        total_reviews: places.total,
+        sentiment: places.sentiment,
+        sources: ['google_places'],
+        place_id: places.place_id,
+        matched_name: places.matched_name,
+        matched_address: places.matched_address,
+      }
+    }
+  } catch (placesErr) {
+    console.error('[TrustAPI] google places enrichment threw (non-fatal):', placesErr)
+  }
+
   const processingMs = Date.now() - start
 
   let savedReportId: string | null = null
@@ -360,6 +389,7 @@ export async function POST(req: NextRequest) {
       lic_status: report.licensing?.status,
       bbb_rating: report.bbb_profile?.rating,
       review_avg_rating: report.reviews?.average_rating,
+      review_total: report.reviews?.total_reviews,
       review_sentiment: report.reviews?.sentiment,
       legal_status: report.legal_records?.status,
       osha_status: report.osha_violations?.status,
