@@ -10,7 +10,12 @@ import { inngest } from '@/lib/inngest'
 export const runtime = 'nodejs'
 export const maxDuration = 180
 
-const ENTITY_SUFFIX_RE = /\b(LLC|L\.L\.C\.?|INC|INCORPORATED|CORP|CORPORATION|LTD|LIMITED|CO\.?|COMPANY|GROUP|HOLDINGS|ENTERPRISES|LP|LLP|PLLC|PC|P\.C\.|ASSOCIATES|PARTNERS|SOLUTIONS|SERVICES|CONSTRUCTION|CONTRACTING|BUILDERS|EXCAVATION|GRADING|HAULING|MATERIALS|AGGREGATES)\b/i
+// TODO: Individual lookups belong on a separate /api/checkr-screen route.
+// This contractor route is business-only by definition. The previous
+// ENTITY_SUFFIX_RE heuristic gate (deleted in this hotfix) was rejecting
+// legitimate contractor names ending in non-suffix words (e.g. "Bedrock
+// Excavating") as "possible individual lookups" and routing them to the
+// FCRA Checkr partner — which broke the most common business-search shape.
 
 // Resolve the user's trust tier server-side from v_trust_entitlement. The
 // request body's tier is a *requested* tier (used for credit-redemption
@@ -115,29 +120,7 @@ export async function POST(req: NextRequest) {
     req.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ??
     null
 
-  const nameForClassification = name.replace(/[.,]/g, ' ')
-  const looksLikeEntity = ENTITY_SUFFIX_RE.test(nameForClassification)
-  if (!looksLikeEntity) {
-    try {
-      await admin.from('trust_audit_log').insert({
-        actor_user_id: user?.id ?? null,
-        actor_role:    user ? 'authenticated' : 'anon',
-        action:        'individual_lookup_rejected',
-        target_type:   'trust_query',
-        target_id:     null,
-        after_state:   { contractor_name: name, city: sCity, state, tier },
-        reason:        'no_entity_suffix_detected',
-        ip_address:    ip,
-      })
-    } catch (auditErr) {
-      console.error('[TrustAPI] audit log write failed (non-fatal)', auditErr)
-    }
-    return NextResponse.json({
-      error:      'individual_lookup_requires_checkr',
-      message:    'Background checks on individuals are handled through our verified partner. Entity lookups (LLC, Corp, etc.) are supported here.',
-      checkr_url: process.env.CHECKR_PARTNER_URL ?? null,
-    }, { status: 422 })
-  }
+  // Individual-classifier gate removed in hotfix (see TODO at top of file).
 
   // Resolve tier server-side from v_trust_entitlement. Drives both rate-limit
   // bucket selection and the daily cost cap; body `tier` is a *requested* tier
