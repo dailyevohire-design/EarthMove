@@ -23,7 +23,7 @@ import { CoverageCalculator } from './CoverageCalculator'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { Logo } from '@/components/logo'
-import { MaterialImagePlaceholder } from '@/components/material/MaterialImagePlaceholder'
+import { PROJECTS } from '@/lib/projects'
 
 const ChevronDown = ({ size = 18 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -38,7 +38,13 @@ const ArrowRight = ({ size = 16, weight = 2 }: { size?: number; weight?: number 
   </svg>
 )
 
-const MARKETING_MATERIAL_SLUGS = ['flex-base', 'base-gravel-57', 'fill-dirt', 'topsoil', 'concrete-sand'] as const
+const PROJECT_ACCENT: Record<string, string> = {
+  driveway: 'var(--m-base)',
+  drainage: 'var(--m-drain)',
+  backfill: 'var(--m-fill)',
+  garden: 'var(--m-soil)',
+  concrete: 'var(--m-struct)',
+}
 
 export async function Homepage() {
   const supabase = await createClient()
@@ -52,16 +58,6 @@ export async function Homepage() {
       .single()
     profileRole = data?.role ?? null
   }
-
-  const { data: marketingImageRows } = await supabase
-    .from('material_catalog')
-    .select('slug, image_url')
-    .in('slug', MARKETING_MATERIAL_SLUGS as unknown as string[])
-  const marketingImage = new Map<string, string>()
-  for (const r of (marketingImageRows ?? []) as { slug: string; image_url: string | null }[]) {
-    if (r.image_url) marketingImage.set(r.slug, r.image_url)
-  }
-  const matImg = (slug: string) => marketingImage.get(slug) ?? null
 
   return (
     <div className="marketing-v6">
@@ -222,90 +218,55 @@ export async function Homepage() {
             </div>
 
             <div className="mat-grid">
-              {/* 1: Driveway base */}
-              <article className="mat" style={{ ['--mc' as string]: 'var(--m-base)' } as React.CSSProperties}>
-                <div className="mat-img">
-                  <MatImage src={matImg('flex-base')} alt="Compacted crushed stone driveway base" />
-                  <span className="mat-tag">ABC · ¾″ minus</span>
-                </div>
-                <div className="mat-body">
-                  <div className="mat-title">Driveway base</div>
-                  <div className="mat-spec">Best for new driveways, parking pads, and base under concrete or pavers. Compacts hard, holds under load.</div>
-                  <div className="mat-meta"><span className="mat-chip">Class 5</span><span className="mat-chip">¾″ minus</span><span className="mat-chip">Crushed</span></div>
-                  <div className="mat-foot">
-                    <div className="mat-trucks">Fits <b>standard / tri-axle</b></div>
-                    <a className="mat-cta" href="#zipForm">Get a quote <ArrowRight size={14} weight={2.2} /></a>
+              {PROJECTS.map((p, i) => (
+                <Link
+                  key={p.slug}
+                  href={`/projects/${p.slug}`}
+                  className="mat group"
+                  style={{ ['--mc' as string]: PROJECT_ACCENT[p.slug] } as React.CSSProperties}
+                >
+                  <div className="mat-body" style={{ paddingTop: 28 }}>
+                    <div
+                      aria-hidden
+                      style={{
+                        fontFamily: 'var(--font-bricolage), "Bricolage Grotesque", serif',
+                        fontVariantNumeric: 'tabular-nums',
+                        letterSpacing: '-0.04em',
+                        fontWeight: 600,
+                        fontSize: 44,
+                        lineHeight: 1,
+                        color: 'var(--mc, var(--brand))',
+                        marginBottom: 14,
+                      }}
+                    >
+                      {String(i + 1).padStart(2, '0')}
+                    </div>
+                    <div className="mat-title">{p.name}</div>
+                    <div className="mat-spec">{p.description}</div>
+                    <div className="mat-meta">
+                      {p.tagChips.map((c) => (
+                        <span key={c} className="mat-chip">{c}</span>
+                      ))}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 12,
+                        fontSize: 11.5,
+                        fontWeight: 600,
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        color: 'var(--ink-3)',
+                      }}
+                    >
+                      Typical {p.typicalTons.min}–{p.typicalTons.max} tons
+                    </div>
+                    <div className="mat-foot">
+                      <div className="mat-trucks">Fits <b>{p.truckClasses.join(' / ')}</b></div>
+                      <span className="mat-cta">See materials <ArrowRight size={14} weight={2.2} /></span>
+                    </div>
                   </div>
-                </div>
-              </article>
-
-              {/* 2: Drainage */}
-              <article className="mat" style={{ ['--mc' as string]: 'var(--m-drain)' } as React.CSSProperties}>
-                <div className="mat-img">
-                  <MatImage src={matImg('base-gravel-57')} alt="¾-inch washed drainage stone close-up" />
-                  <span className="mat-tag">¾″ washed stone</span>
-                </div>
-                <div className="mat-body">
-                  <div className="mat-title">Drainage</div>
-                  <div className="mat-spec">Used for French drains, foundation perimeter, and gravel beds. Clean, washed, free-draining — water moves through, soil doesn't.</div>
-                  <div className="mat-meta"><span className="mat-chip">¾″ washed</span><span className="mat-chip">Drain rock</span><span className="mat-chip">Round</span></div>
-                  <div className="mat-foot">
-                    <div className="mat-trucks">Fits <b>small / standard</b></div>
-                    <a className="mat-cta" href="#zipForm">Get a quote <ArrowRight size={14} weight={2.2} /></a>
-                  </div>
-                </div>
-              </article>
-
-              {/* 3: Backfill / leveling */}
-              <article className="mat" style={{ ['--mc' as string]: 'var(--m-fill)' } as React.CSSProperties}>
-                <div className="mat-img">
-                  <MatImage src={matImg('fill-dirt')} alt="Clean fill dirt — cracked tan earth surface" />
-                  <span className="mat-tag">Clean fill dirt</span>
-                </div>
-                <div className="mat-body">
-                  <div className="mat-title">Backfill &amp; leveling</div>
-                  <div className="mat-spec">Used to raise grade, backfill foundations, and close out holes. Screened, no debris, no clay clods.</div>
-                  <div className="mat-meta"><span className="mat-chip">Screened</span><span className="mat-chip">Clean fill</span><span className="mat-chip">No debris</span></div>
-                  <div className="mat-foot">
-                    <div className="mat-trucks">Fits <b>standard / tri-axle</b></div>
-                    <a className="mat-cta" href="#zipForm">Get a quote <ArrowRight size={14} weight={2.2} /></a>
-                  </div>
-                </div>
-              </article>
-
-              {/* 4: Garden / landscaping */}
-              <article className="mat" style={{ ['--mc' as string]: 'var(--m-soil)' } as React.CSSProperties}>
-                <div className="mat-img">
-                  <MatImage src={matImg('topsoil')} alt="Screened topsoil — rich dark loam" />
-                  <span className="mat-tag">Screened topsoil</span>
-                </div>
-                <div className="mat-body">
-                  <div className="mat-title">Garden &amp; landscaping</div>
-                  <div className="mat-spec">Used for lawns, garden beds, and planting beds. Dark loam, screened to ½″ — what plants want.</div>
-                  <div className="mat-meta"><span className="mat-chip">Screened</span><span className="mat-chip">High organic</span><span className="mat-chip">Planting mix</span></div>
-                  <div className="mat-foot">
-                    <div className="mat-trucks">Fits <b>small / standard</b></div>
-                    <a className="mat-cta" href="#zipForm">Get a quote <ArrowRight size={14} weight={2.2} /></a>
-                  </div>
-                </div>
-              </article>
-
-              {/* 5: Concrete / structural */}
-              <article className="mat" style={{ ['--mc' as string]: 'var(--m-struct)' } as React.CSSProperties}>
-                <div className="mat-img">
-                  <MatImage src={matImg('concrete-sand')} alt="Concrete sand — coarse sandy texture with small stones" />
-                  <span className="mat-tag">Concrete sand · pea gravel</span>
-                </div>
-                <div className="mat-body">
-                  <div className="mat-title">Concrete &amp; structural</div>
-                  <div className="mat-spec">Used for concrete mix, paver base, and structural fill. Rounded, washed, ⅜″ aggregate that meets concrete spec.</div>
-                  <div className="mat-meta"><span className="mat-chip">⅜″ rounded</span><span className="mat-chip">Concrete sand</span><span className="mat-chip">Pea gravel</span></div>
-                  <div className="mat-foot">
-                    <div className="mat-trucks">Fits <b>standard / tri-axle</b></div>
-                    <a className="mat-cta" href="#zipForm">Get a quote <ArrowRight size={14} weight={2.2} /></a>
-                  </div>
-                </div>
-              </article>
+                </Link>
+              ))}
 
               {/* 6: Audience-aware brand CTA */}
               <MaterialsCard6 />
@@ -511,17 +472,3 @@ export async function Homepage() {
   )
 }
 
-function MatImage({ src, alt }: { src: string | null; alt: string }) {
-  if (!src) {
-    return <MaterialImagePlaceholder label="Product image coming soon" />
-  }
-  return (
-    <Image
-      src={src}
-      alt={alt}
-      fill
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-      style={{ objectFit: 'cover' }}
-    />
-  )
-}
