@@ -102,10 +102,12 @@ export async function Homepage() {
           <h2 className="v3-sec-h">The trucks are<br />already <em>moving.</em></h2>
           <p className="v3-sec-sub">Real loads, real ETAs, real dispatch from the network you&apos;re about to join.</p>
         </div>
-        <Dispatch />
-        <ActivityFeed />
+        <div className="v3-dispatch-grid">
+          <Dispatch />
+          <ActivityFeed />
+        </div>
 
-        <FootCTA />
+        <FootCTA yardsCount={yardsCount} liveMarkets={liveMarkets} />
 
         <div className="v3-legal">
           <span>DEN · DFW launching today · Portland next</span>

@@ -44,20 +44,29 @@ export function Hero({ projects }: { projects: Project[] }) {
 
   return (
     <section className="v3-hero">
-      <div className="v3-hero-eyebrow">
-        <span className="dot" />
-        Live routing · DEN · DFW · Launching today
+      <div className="v3-hero-l">
+        <div className="v3-hero-eyebrow">
+          <span className="dot" />
+          Live routing · DEN · DFW · Launching today
+        </div>
+
+        <h1 className="v3-hero-h">
+          Delivered price.<br />
+          <em>In seconds.</em>
+        </h1>
+        <p className="v3-hero-sub">
+          Aggregate routing infrastructure. ZIP, project, or takeoff in — verified yard, truck class, and dispatch sequence out.
+        </p>
+        <div className="v3-hero-credentials">
+          <span className="ck">DOT verified</span>
+          <span className="ck">$2M insured</span>
+          <span className="ck">Same-day · 10AM cutoff</span>
+          <span className="ck">NET-30 · MSA on request</span>
+        </div>
       </div>
 
-      <h1 className="v3-hero-h">
-        Delivered price.<br />
-        <em>In seconds.</em>
-      </h1>
-      <p className="v3-hero-sub">
-        Aggregate routing infrastructure. ZIP, project, or takeoff in — verified yard, truck class, and dispatch sequence out.
-      </p>
-
-      <div className="v3-path-toggle">
+      <div className="v3-hero-r">
+        <div className="v3-path-toggle">
         <button
           type="button"
           aria-pressed={path === 'homeowner'}
@@ -155,6 +164,7 @@ export function Hero({ projects }: { projects: Project[] }) {
           </div>
         </div>
       )}
+      </div>
     </section>
   )
 }
