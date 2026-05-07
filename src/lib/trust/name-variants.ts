@@ -17,7 +17,11 @@
  * total miss without inventing a variant.
  */
 
-export function expandContractorNameVariants(input: string, limit = 5): string[] {
+export function expandContractorNameVariants(input: string | null | undefined, limit = 5): string[] {
+  // Defensive: callers reading off `any`-typed API responses may pass undefined
+  // (e.g. dashboard's report.contractor_name when the route handler drops the
+  // field). Return [] rather than throwing — caller's UI can render empty.
+  if (input == null) return []
   const out = new Set<string>()
   const cleaned = input.trim().replace(/\s+/g, ' ')
   if (!cleaned) return [input]

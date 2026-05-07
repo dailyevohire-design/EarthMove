@@ -60,6 +60,13 @@ export async function runFreeTier(
 
   const r = result.report
   const wrappedReport = {
+    // Identity fields — REQUIRED for client-side renderers that read these
+    // off the response (e.g. ContractorCheckClient.tsx renders the H2 from
+    // report.contractor_name; the entity_not_found branch passes it to
+    // expandContractorNameVariants which throws on undefined.trim()).
+    contractor_name:    r.contractor_name,
+    city:               r.city,
+    state_code:         r.state_code,
     // Flat fields the new orchestrator returns
     trust_score:        r.trust_score,
     risk_level:         r.risk_level,
