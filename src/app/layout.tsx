@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { DM_Sans, DM_Mono, Bricolage_Grotesque, Geist, Fraunces, Inter, JetBrains_Mono } from 'next/font/google'
+import { DM_Sans, DM_Mono, Bricolage_Grotesque, Geist, Fraunces, Inter, JetBrains_Mono, Instrument_Serif } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { organizationSchema, websiteSchema, jsonLd } from '@/lib/structured-data'
@@ -57,6 +57,14 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 })
 
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  variable: '--font-instrument',
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+})
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -101,7 +109,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmMono.variable} ${bricolage.variable} ${geist.variable} ${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${dmMono.variable} ${bricolage.variable} ${geist.variable} ${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable}`}>
       <head>
         {/* Preconnect hints — saves ~100-300ms on TTFB for cross-origin fetches */}
         <link rel="preconnect" href="https://gaawvpzzmotimblyesfp.supabase.co" crossOrigin="" />
