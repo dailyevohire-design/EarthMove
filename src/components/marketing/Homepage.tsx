@@ -23,6 +23,7 @@ import { CoverageCalculator } from './CoverageCalculator'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { Logo } from '@/components/logo'
+import { MaterialImagePlaceholder } from '@/components/material/MaterialImagePlaceholder'
 
 const ChevronDown = ({ size = 18 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -512,19 +513,7 @@ export async function Homepage() {
 
 function MatImage({ src, alt }: { src: string | null; alt: string }) {
   if (!src) {
-    return (
-      <div
-        aria-label={alt}
-        role="img"
-        style={{
-          position: 'absolute', inset: 0, display: 'grid', placeItems: 'center',
-          background: 'var(--m-stone-200, #e7e5e4)', color: 'var(--m-stone-500, #78716c)',
-          fontSize: 12, fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase',
-        }}
-      >
-        {alt}
-      </div>
-    )
+    return <MaterialImagePlaceholder label="Product image coming soon" />
   }
   return (
     <Image

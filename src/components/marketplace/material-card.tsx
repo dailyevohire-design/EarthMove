@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { MarketMaterialCard } from '@/types'
 import { formatCurrency, unitLabel } from '@/lib/pricing-engine'
 import { Truck, Zap, Clock, Star, ArrowRight } from 'lucide-react'
+import { MaterialImagePlaceholder } from '@/components/material/MaterialImagePlaceholder'
 
 const KNOWN_CAT_SLUGS = new Set([
   'fill', 'sand', 'gravel', 'aggregate', 'rock', 'recycled', 'specialty',
@@ -37,9 +38,7 @@ export function MaterialCard({ card }: { card: MarketMaterialCard }) {
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
           ) : (
-            <div className="absolute inset-0 grid place-items-center bg-stone-200 text-stone-500 text-sm font-semibold uppercase tracking-wide">
-              {card.name}
-            </div>
+            <MaterialImagePlaceholder label="Product image coming soon" />
           )}
 
           {/* Bottom gradient */}
@@ -136,9 +135,7 @@ export function DealCard({ card }: { card: MarketMaterialCard }) {
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
           ) : (
-            <div className="absolute inset-0 grid place-items-center bg-stone-200 text-stone-500 text-sm font-semibold uppercase tracking-wide">
-              {card.name}
-            </div>
+            <MaterialImagePlaceholder label="Product image coming soon" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 

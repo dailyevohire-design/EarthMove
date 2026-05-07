@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { MaterialGalleryCarousel } from './material-gallery-carousel'
+import { MaterialImagePlaceholder } from './MaterialImagePlaceholder'
 
 export type MaterialGallerySize = 'card' | 'detail'
 
@@ -54,7 +55,13 @@ export async function MaterialGallery({
       ]
     : gallerySlides
 
-  if (slides.length === 0) return null
+  if (slides.length === 0) {
+    return (
+      <div className={`relative w-full aspect-square overflow-hidden rounded-xl bg-stone-100 ${className ?? ''}`}>
+        <MaterialImagePlaceholder label="Product image coming soon" markSize={64} />
+      </div>
+    )
+  }
 
   return (
     <MaterialGalleryCarousel
