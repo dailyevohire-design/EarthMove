@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import QRCode from 'qrcode';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
@@ -54,14 +56,20 @@ export async function GET(
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 
-  // Evidence count for the integrity footer
-  const { count: evidenceCount } = await admin
-    .from('trust_evidence').select('id', { count: 'exact', head: true }).eq('job_id', report.job_id);
-
-  // QR encodes the public verify URL — anyone scanning can hit our anonymous endpoint
-  // and confirm the chain hashes match the evidence rows in our DB.
-  const verifyUrl = `${req.nextUrl.origin}/api/trust/verify/${reportId}`;
-  const qrPngBytes = await QRCode.toBuffer(verifyUrl, { width: 240, margin: 1, errorCorrectionLevel: 'M' });
+  // Free-tier sync reports never enter the Inngest job pipeline, so there is
+  // no trust_evidence chain to verify. Skip QR + integrity footer in that case
+  // — see Fix 5b (PR for Judge DFW polish). For paid (job-backed) reports, QR
+  // points at the public verify page, not the raw JSON API route.
+  const hasChain = !!report.job_id;
+  let evidenceCount: number | null = null;
+  let qrPngBytes: Buffer | null = null;
+  if (hasChain) {
+    const { count } = await admin
+      .from('trust_evidence').select('id', { count: 'exact', head: true }).eq('job_id', report.job_id);
+    evidenceCount = count ?? 0;
+    const verifyUrl = `${req.nextUrl.origin}/trust/verify/${reportId}`;
+    qrPngBytes = await QRCode.toBuffer(verifyUrl, { width: 240, margin: 1, errorCorrectionLevel: 'M' });
+  }
 
   // Build PDF
   const pdf = await PDFDocument.create();
@@ -76,10 +84,18 @@ export async function GET(
   const helv = await pdf.embedFont(StandardFonts.Helvetica);
   const helvBold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
-  // Header band
+  // EarthMove parent-brand lockup, embedded once per request. PNG is rasterized
+  // from public/brand/earthmove-lockup.svg at build/dev time — pdf-lib has no
+  // SVG support, so the PNG is the source of truth for the PDF surface.
+  const logoBytes = await fs.readFile(path.join(process.cwd(), 'public/brand/earthmove-lockup.png'));
+  const logoImg = await pdf.embedPng(logoBytes);
+
+  // Header band: Groundcheck wordmark on the left (product brand),
+  // EarthMove lockup on the right (parent brand).
   page.drawRectangle({ x: 0, y: 740, width: 612, height: 52, color: CREAM });
   page.drawText('Groundcheck', { x: 40, y: 758, size: 22, font: helvBold, color: EVERGREEN });
   page.drawText('dig before you sign.', { x: 40, y: 745, size: 9, font: helv, color: STONE_700 });
+  page.drawImage(logoImg, { x: 472, y: 746, width: 100, height: 40 });
 
   // Subject block
   let y = 700;
@@ -132,12 +148,19 @@ export async function GET(
     y -= 10;
   }
 
-  // QR + verify footer
-  const qrImage = await pdf.embedPng(qrPngBytes);
-  page.drawImage(qrImage, { x: 432, y: 60, width: 120, height: 120 });
-  page.drawText('Verify this report', { x: 432, y: 192, size: 9, font: helvBold, color: EVERGREEN });
-  page.drawText('Scan to verify chain integrity', { x: 432, y: 50, size: 7, font: helv, color: STONE_500 });
-  page.drawText(`evidence rows: ${evidenceCount ?? 0}`, { x: 432, y: 40, size: 7, font: helv, color: STONE_500 });
+  // QR + verify footer — paid (job-backed) reports only. Free-tier sync
+  // reports skip this block entirely (no trust_evidence chain exists).
+  if (hasChain && qrPngBytes) {
+    const qrImage = await pdf.embedPng(qrPngBytes);
+    page.drawImage(qrImage, { x: 432, y: 60, width: 120, height: 120 });
+    page.drawText('Verify this report', { x: 432, y: 192, size: 9, font: helvBold, color: EVERGREEN });
+    page.drawText('Scan to verify chain integrity', { x: 432, y: 50, size: 7, font: helv, color: STONE_500 });
+    page.drawText(`evidence rows: ${evidenceCount ?? 0}`, { x: 432, y: 40, size: 7, font: helv, color: STONE_500 });
+  } else {
+    page.drawText('Free-tier report — chain verification available on paid plans', {
+      x: 432, y: 70, size: 7, font: helv, color: STONE_500,
+    });
+  }
 
   // Compliance footer
   const disclaimer = 'This report compiles publicly available business records. It is not a consumer report under the Fair Credit Reporting Act, 15 U.S.C. § 1681 et seq. Findings are point-in-time observations and should be independently verified.';
