@@ -33,6 +33,17 @@ const CORRIDORS: Corridor[] = [
   { from: 1, to: 4, intensity: 0.3 },
 ]
 
+// Local "trucks" — each lit city spawns these as small green dots that
+// drift out from the pin and return, simulating live deliveries within
+// the city's coverage area. Different angles/radii/phase offsets so
+// they don't move in lockstep.
+const LOCAL_TRUCKS = [
+  { angle: 0.5, radius: 12, phaseOff: 0.0 },
+  { angle: 2.3, radius: 9, phaseOff: 0.27 },
+  { angle: 4.0, radius: 13, phaseOff: 0.54 },
+  { angle: 5.7, radius: 10, phaseOff: 0.81 },
+]
+
 export function MarketDensity({ denverYards, dfwYards }: { denverYards: number; dfwYards: number }) {
   const [t, setT] = useState(0)
 
@@ -84,26 +95,33 @@ export function MarketDensity({ denverYards, dfwYards }: { denverYards: number; 
           {CORRIDORS.map((c, i) => {
             const a = metros[c.from]
             const b = metros[c.to]
-            const phase = ((t * 0.012) + i * 0.4) % 1
             return (
-              <g key={i}>
-                <line
-                  x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                  stroke={c.intensity > 0.7 ? 'rgba(228,115,74,0.25)' : 'rgba(255,255,255,0.10)'}
-                  strokeWidth={c.intensity > 0.7 ? 1.2 : 0.8}
-                  strokeDasharray={c.intensity > 0.7 ? '' : '2 4'}
-                />
-                {c.intensity > 0.5 && (
-                  <circle
-                    cx={a.x + (b.x - a.x) * phase}
-                    cy={a.y + (b.y - a.y) * phase}
-                    r={c.intensity > 0.7 ? 2 : 1.5}
-                    fill={c.intensity > 0.7 ? '#E4734A' : 'rgba(255,255,255,0.6)'}
-                  />
-                )}
-              </g>
+              <line
+                key={i}
+                x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                stroke={c.intensity > 0.7 ? 'rgba(228,115,74,0.25)' : 'rgba(255,255,255,0.10)'}
+                strokeWidth={c.intensity > 0.7 ? 1.2 : 0.8}
+                strokeDasharray={c.intensity > 0.7 ? '' : '2 4'}
+              />
             )
           })}
+
+          {/* Local trucks — drift out from each lit city and back, like live deliveries */}
+          {metros.filter((m) => m.core).flatMap((m) =>
+            LOCAL_TRUCKS.map((tk, i) => {
+              const cityOffset = m.id === 'DEN' ? 0 : 0.13
+              const p = ((t * 0.008) + tk.phaseOff + cityOffset) % 1
+              const f = Math.sin(p * Math.PI) // 0 -> 1 -> 0 over phase 0..1
+              const cx = m.x + Math.cos(tk.angle) * tk.radius * f
+              const cy = m.y + Math.sin(tk.angle) * tk.radius * f
+              return (
+                <g key={`${m.id}-tk-${i}`}>
+                  <circle cx={cx} cy={cy} r={3} fill="#6BBF85" opacity={0.18} />
+                  <circle cx={cx} cy={cy} r={1.4} fill="#6BBF85" />
+                </g>
+              )
+            })
+          )}
 
           {metros.map((m) => (
             <g key={m.id}>
