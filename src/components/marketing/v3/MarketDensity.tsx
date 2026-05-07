@@ -22,8 +22,8 @@ const METROS: Metro[] = [
   { id: 'DEN', name: 'DENVER', x: 130, y: 96, yards: 0, status: 'live', core: 1 },
   { id: 'DFW', name: 'DFW', x: 198, y: 154, yards: 0, status: 'live', core: 1 },
   { id: 'PDX', name: 'PORTLAND', x: 60, y: 50, yards: 0, status: 'staging', core: 0 },
-  { id: 'HOU', name: 'HOUSTON', x: 232, y: 168, yards: 0, status: 'queued', core: 0 },
-  { id: 'AUS', name: 'AUSTIN', x: 188, y: 188, yards: 0, status: 'queued', core: 0 },
+  { id: 'HOU', name: 'HOUSTON', x: 268, y: 178, yards: 0, status: 'queued', core: 0 },
+  { id: 'AUS', name: 'AUSTIN', x: 158, y: 188, yards: 0, status: 'queued', core: 0 },
 ]
 
 const CORRIDORS: Corridor[] = [
