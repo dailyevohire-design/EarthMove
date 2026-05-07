@@ -115,13 +115,25 @@ export function MarketDensity({ denverYards, dfwYards }: { denverYards: number; 
                 </circle>
               ) : null}
               <circle cx={m.x} cy={m.y} r={m.core ? 4 : 2.5} fill={m.core ? '#E4734A' : 'rgba(255,255,255,0.5)'} />
-              <text className="md-lbl" x={m.x} y={m.y + (m.core ? -10 : -7)} textAnchor="middle">{m.name}</text>
-              {m.core && m.yards > 0 ? (
-                <text className="md-yd" x={m.x} y={m.y + 16} textAnchor="middle">{m.yards} YARDS</text>
-              ) : null}
             </g>
           ))}
         </svg>
+        {/* HTML overlay so labels render crisp regardless of SVG preserveAspectRatio="none" */}
+        <div className="md-labels">
+          {metros.map((m) => {
+            const left = (m.x / 320) * 100
+            const labelTop = ((m.y + (m.core ? -10 : -7)) / 200) * 100
+            const yardsTop = ((m.y + 16) / 200) * 100
+            return (
+              <div key={m.id}>
+                <div className="md-lbl" style={{ left: `${left}%`, top: `${labelTop}%` }}>{m.name}</div>
+                {m.core && m.yards > 0 ? (
+                  <div className="md-yd" style={{ left: `${left}%`, top: `${yardsTop}%` }}>{m.yards} YARDS</div>
+                ) : null}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       <div className="v3-md-legend">

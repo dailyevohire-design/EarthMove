@@ -451,13 +451,28 @@
   position: relative;
 }
 .marketing-v3 .v3-md-map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.marketing-v3 .v3-md-map .md-labels {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.marketing-v3 .v3-md-map .md-lbl,
+.marketing-v3 .v3-md-map .md-yd {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-family: var(--mono-v3);
+  line-height: 1;
+}
 .marketing-v3 .v3-md-map .md-lbl {
-  font-family: var(--mono-v3); font-size: 8.5px; letter-spacing: 0.10em;
-  fill: rgba(255,255,255,0.88); font-weight: 600;
+  font-size: 9px;
+  letter-spacing: 0.10em;
+  color: rgba(255,255,255,0.88);
+  font-weight: 600;
 }
 .marketing-v3 .v3-md-map .md-yd {
-  font-family: var(--mono-v3); font-size: 7.5px; letter-spacing: 0.12em;
-  fill: var(--orange-2);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--orange-2);
+  font-weight: 500;
 }
 .marketing-v3 .v3-md-legend { padding: 4px 0 6px; border-top: 1px solid rgba(255,255,255,0.06); }
 .marketing-v3 .v3-md-row {
@@ -928,19 +943,8 @@
     max-width: none;
     margin: 0;
   }
-  .marketing-v3 .v3-md-map .md-lbl {
-    font-size: 7px;
-    letter-spacing: 0.04em;
-    text-rendering: geometricPrecision;
-    paint-order: stroke fill;
-    font-weight: 500;
-  }
-  .marketing-v3 .v3-md-map .md-yd {
-    font-size: 6.5px;
-    letter-spacing: 0.04em;
-    text-rendering: geometricPrecision;
-    font-weight: 500;
-  }
+  .marketing-v3 .v3-md-map .md-lbl { font-size: 11px; letter-spacing: 0.08em; }
+  .marketing-v3 .v3-md-map .md-yd { font-size: 9.5px; letter-spacing: 0.10em; }
   .marketing-v3 .v3-md-legend {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
