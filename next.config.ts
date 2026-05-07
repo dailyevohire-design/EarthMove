@@ -16,6 +16,18 @@ const nextConfig: NextConfig = {
       allowedOrigins: ['localhost:3000', 'earthmove.io', 'www.earthmove.io'],
     },
   },
+  // The trust PDF route reads brand PNGs and TTF fonts via
+  // fs.readFileSync(path.join(process.cwd(), ...)). Next's tracer only
+  // follows JS imports, so these binary assets don't make it into the
+  // serverless bundle by default — surfaces as "React error #31" inside
+  // @react-pdf/renderer when the buffers come back empty/missing.
+  outputFileTracingIncludes: {
+    '/api/trust/report/[reportId]/pdf': [
+      './public/brand/groundcheck-wordmark.png',
+      './public/brand/groundcheck-stamp.png',
+      './src/lib/trust/pdf/fonts/**/*.ttf',
+    ],
+  },
   async headers() {
     return [
       {
