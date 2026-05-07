@@ -763,11 +763,11 @@
   .marketing-v3 .v3-hdr-nav { display: flex; gap: 14px; align-items: center; }
   .marketing-v3 .v3-hdr-nav .pill { padding: 7px 14px; font-size: 10px; }
   .marketing-v3 .v3-hdr-open-dispatch { display: inline-flex; }
-  .marketing-v3 .v3-hdr-signin {
+  .marketing-v3 .v3-hdr-nav .pill.v3-hdr-signin {
     background: var(--orange); color: #fff;
     transition: background 0.15s;
   }
-  .marketing-v3 .v3-hdr-signin:hover { background: var(--orange-2); }
+  .marketing-v3 .v3-hdr-nav .pill.v3-hdr-signin:hover { background: var(--orange-2); }
 
   /* RAIL */
   .marketing-v3 .v3-rail { height: 34px; font-size: 10.5px; }
