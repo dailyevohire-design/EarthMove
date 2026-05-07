@@ -41,22 +41,22 @@ export function FootCTA() {
 
       <section className="v3-mission">
         <div className="v3-mission-inner">
-          <div className="e">— MISSION</div>
-          <h3>
+          <div className="v3-mission-eyebrow">— MISSION</div>
+          <h2 className="v3-mission-h">
             1.5 million <em>meals.</em>
-          </h3>
-          <p>
+          </h2>
+          <p className="v3-mission-lede">
             EarthMove is committed to providing 1.5 million meals through our
-            partnership with Feeding America®. Our commitment helps support
+            partnership with Feeding America&reg;. Our commitment helps support
             neighbors facing food insecurity.
           </p>
+          <div className="v3-mission-actions">
+            <Link href="/about" className="v3-mission-cta">About the partnership →</Link>
+          </div>
           <p className="v3-mission-foot">
-            *$1 helps provide at least 10 meals secured by Feeding America®
+            *$1 helps provide at least 10 meals secured by Feeding America&reg;
             on behalf of local partner food banks.
           </p>
-          <div className="actions">
-            <Link href="/about" className="v3-cta ghost">About the partnership</Link>
-          </div>
         </div>
       </section>
     </>
