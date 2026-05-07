@@ -928,8 +928,19 @@
     max-width: none;
     margin: 0;
   }
-  .marketing-v3 .v3-md-map .md-lbl { font-size: 9px; letter-spacing: 0.06em; }
-  .marketing-v3 .v3-md-map .md-yd { font-size: 8px; letter-spacing: 0.06em; }
+  .marketing-v3 .v3-md-map .md-lbl {
+    font-size: 7px;
+    letter-spacing: 0.04em;
+    text-rendering: geometricPrecision;
+    paint-order: stroke fill;
+    font-weight: 500;
+  }
+  .marketing-v3 .v3-md-map .md-yd {
+    font-size: 6.5px;
+    letter-spacing: 0.04em;
+    text-rendering: geometricPrecision;
+    font-weight: 500;
+  }
   .marketing-v3 .v3-md-legend {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
