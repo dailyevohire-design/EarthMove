@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
 
   // Credit-backed tiers: redeem one ledger entry up front. 'standard' falls
   // through to the sync Sonar+Anthropic path below; JOB_TIERS enqueue an
-  // async trust_jobs row and emit a trust/job.enqueued Inngest event,
+  // async trust_jobs row and emit a trust/job.requested.v2 Inngest event,
   // returning 202 + a poll URL.
   let redeemedCreditId:        string | null = null
   let redeemedAlreadyRedeemed: boolean       = false
@@ -275,10 +275,8 @@ export async function POST(req: NextRequest) {
       // Best-effort dispatch. The job row is durable; if Inngest is
       // unavailable, a fallback dispatcher (Tranche B) can re-emit the event.
       try {
-        const trustJobVersion = process.env.TRUST_JOB_VERSION === 'v2' ? 'v2' : 'v1'
-        const trustEventName = trustJobVersion === 'v2' ? 'trust/job.requested.v2' : 'trust/job.enqueued'
         await inngest.send({
-          name: trustEventName,
+          name: 'trust/job.requested.v2',
           data: { job_id: jobRow.id },
         })
       } catch (sendErr) {

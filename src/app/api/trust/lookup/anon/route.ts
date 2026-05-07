@@ -18,10 +18,9 @@ import { toPublicAnonReport, type TrustReportRow } from '@/lib/trust/anon-respon
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Event name + payload shape match the existing /api/trust route's JOB_TIERS branch
-// (src/app/api/trust/route.ts ~line 278). Fan-out reads event.data.job_id.
-const FANOUT_EVENT_V1 = 'trust/job.enqueued';
-const FANOUT_EVENT_V2 = 'trust/job.requested.v2';
+// Event name + payload shape match the existing /api/trust route's JOB_TIERS branch.
+// Fan-out reads event.data.job_id.
+const FANOUT_EVENT = 'trust/job.requested.v2';
 
 const MAX_NAME_LEN = 200;
 const MIN_NAME_LEN = 2;
@@ -167,10 +166,8 @@ export async function POST(req: NextRequest) {
     // Best-effort dispatch. Job row is durable; if Inngest unavailable a
     // fallback dispatcher (existing pattern) can re-emit the event.
     try {
-      const trustJobVersion = process.env.TRUST_JOB_VERSION === 'v2' ? 'v2' : 'v1';
-      const trustEventName = trustJobVersion === 'v2' ? FANOUT_EVENT_V2 : FANOUT_EVENT_V1;
       await inngest.send({
-        name: trustEventName,
+        name: FANOUT_EVENT,
         data: { job_id: jobRow.id },
       });
     } catch (err) {
