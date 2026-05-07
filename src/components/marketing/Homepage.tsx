@@ -14,8 +14,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { NavScroll } from './NavScroll'
 import { HeroLeftColumn } from './HeroLeftColumn'
-import { MaterialsSubcopy } from './MaterialsSubcopy'
-import { MaterialsCard6 } from './MaterialsCard6'
+import { MaterialsSection } from './MaterialsSection'
 import { MaterialSpecSection } from './MaterialSpecSection'
 import { HowItWorksSection } from './HowItWorksSection'
 import { MarketStatusStrip } from './MarketStatusStrip'
@@ -23,7 +22,6 @@ import { CoverageCalculator } from './CoverageCalculator'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { Logo } from '@/components/logo'
-import { PROJECTS } from '@/lib/projects'
 
 const ChevronDown = ({ size = 18 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -37,14 +35,6 @@ const ArrowRight = ({ size = 16, weight = 2 }: { size?: number; weight?: number 
     <path d="M5 12h14" /><path d="m13 5 7 7-7 7" />
   </svg>
 )
-
-const PROJECT_ACCENT: Record<string, string> = {
-  driveway: 'var(--m-base)',
-  drainage: 'var(--m-drain)',
-  backfill: 'var(--m-fill)',
-  garden: 'var(--m-soil)',
-  concrete: 'var(--m-struct)',
-}
 
 export async function Homepage() {
   const supabase = await createClient()
@@ -207,72 +197,7 @@ export async function Homepage() {
         </section>
 
         {/* MATERIALS */}
-        <section className="section" id="materials" style={{ background: 'var(--bg-2)', borderTop: '1px solid var(--line-strong)' }}>
-          <div className="max">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24, justifyContent: 'space-between', marginBottom: 48 }}>
-              <div style={{ maxWidth: 700 }}>
-                <div className="eyebrow">Materials</div>
-                <h2 className="sec-title">Tell us what you&apos;re building. We bring what builds it.</h2>
-                <MaterialsSubcopy />
-              </div>
-            </div>
-
-            <div className="mat-grid">
-              {PROJECTS.map((p, i) => (
-                <Link
-                  key={p.slug}
-                  href={`/projects/${p.slug}`}
-                  className="mat group"
-                  style={{ ['--mc' as string]: PROJECT_ACCENT[p.slug] } as React.CSSProperties}
-                >
-                  <div className="mat-body" style={{ paddingTop: 28 }}>
-                    <div
-                      aria-hidden
-                      style={{
-                        fontFamily: 'var(--font-bricolage), "Bricolage Grotesque", serif',
-                        fontVariantNumeric: 'tabular-nums',
-                        letterSpacing: '-0.04em',
-                        fontWeight: 600,
-                        fontSize: 44,
-                        lineHeight: 1,
-                        color: 'var(--mc, var(--brand))',
-                        marginBottom: 14,
-                      }}
-                    >
-                      {String(i + 1).padStart(2, '0')}
-                    </div>
-                    <div className="mat-title">{p.name}</div>
-                    <div className="mat-spec">{p.description}</div>
-                    <div className="mat-meta">
-                      {p.tagChips.map((c) => (
-                        <span key={c} className="mat-chip">{c}</span>
-                      ))}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 12,
-                        fontSize: 11.5,
-                        fontWeight: 600,
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
-                        color: 'var(--ink-3)',
-                      }}
-                    >
-                      Typical {p.typicalTons.min}–{p.typicalTons.max} tons
-                    </div>
-                    <div className="mat-foot">
-                      <div className="mat-trucks">Fits <b>{p.truckClasses.join(' / ')}</b></div>
-                      <span className="mat-cta">See materials <ArrowRight size={14} weight={2.2} /></span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-
-              {/* 6: Audience-aware brand CTA */}
-              <MaterialsCard6 />
-            </div>
-          </div>
-        </section>
+        <MaterialsSection />
 
         {/* MATERIAL SPECS */}
         <MaterialSpecSection />
