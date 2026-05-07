@@ -21,9 +21,9 @@ interface Corridor {
 const METROS: Metro[] = [
   { id: 'DEN', name: 'DENVER', x: 130, y: 96, yards: 0, status: 'live', core: 1 },
   { id: 'DFW', name: 'DFW', x: 198, y: 154, yards: 0, status: 'live', core: 1 },
-  { id: 'WY', name: 'WYOMING', x: 60, y: 50, yards: 0, status: 'staging', core: 0 },
+  { id: 'WY', name: 'WYOMING', x: 135, y: 60, yards: 0, status: 'staging', core: 0 },
   { id: 'HOU', name: 'HOUSTON', x: 268, y: 178, yards: 0, status: 'queued', core: 0 },
-  { id: 'LA', name: 'LOUISIANA', x: 158, y: 188, yards: 0, status: 'queued', core: 0 },
+  { id: 'LA', name: 'LOUISIANA', x: 295, y: 170, yards: 0, status: 'queued', core: 0 },
 ]
 
 const CORRIDORS: Corridor[] = [
