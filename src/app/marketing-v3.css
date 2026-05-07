@@ -1118,54 +1118,54 @@
 .marketing-v3 .v3-mission {
   background: #1F3D2E;
   margin: 0;
-  padding: 80px 24px;
+  padding: 44px 22px;
   border-radius: 0;
   border: none;
   color: rgba(255,255,255,0.92);
 }
 .marketing-v3 .v3-mission-inner {
-  max-width: 1080px;
+  max-width: 880px;
   margin: 0 auto;
 }
 .marketing-v3 .v3-mission-eyebrow {
   font-family: var(--mono-v3);
-  font-size: 11px;
-  letter-spacing: 0.18em;
+  font-size: 10px;
+  letter-spacing: 0.16em;
   color: var(--orange-2);
   text-transform: uppercase;
-  margin: 0 0 24px;
+  margin: 0 0 14px;
 }
 .marketing-v3 .v3-mission-h {
   font-family: var(--serif-v3, 'Instrument Serif', serif);
   font-weight: 400;
-  font-size: 56px;
+  font-size: 32px;
   line-height: 1.05;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: #fff;
-  margin: 0 0 28px;
+  margin: 0 0 16px;
 }
 .marketing-v3 .v3-mission-h em {
   font-style: italic;
   color: var(--orange-2);
 }
 .marketing-v3 .v3-mission-lede {
-  font-size: 17px;
+  font-size: 14.5px;
   line-height: 1.55;
   color: rgba(255,255,255,0.78);
-  max-width: 640px;
-  margin: 0 0 32px;
+  max-width: 56ch;
+  margin: 0 0 20px;
 }
 .marketing-v3 .v3-mission-actions {
-  margin: 0 0 40px;
+  margin: 0 0 22px;
 }
 .marketing-v3 .v3-mission-cta {
   display: inline-block;
   background: var(--orange-2);
   color: #fff;
   font-family: var(--mono-v3);
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.06em;
-  padding: 16px 28px;
+  padding: 12px 22px;
   border-radius: 4px;
   text-decoration: none;
   font-weight: 500;
@@ -1174,21 +1174,21 @@
 .marketing-v3 .v3-mission-cta:hover { opacity: 0.88; }
 .marketing-v3 .v3-mission-foot {
   font-family: var(--mono-v3);
-  font-size: 11px;
+  font-size: 10.5px;
   line-height: 1.5;
   letter-spacing: 0.04em;
   color: rgba(255,255,255,0.5);
-  max-width: 640px;
+  max-width: 56ch;
   margin: 0;
 }
 @media (min-width: 768px) {
-  .marketing-v3 .v3-mission { padding: 112px 48px; }
-  .marketing-v3 .v3-mission-h { font-size: 84px; }
-  .marketing-v3 .v3-mission-lede { font-size: 18px; }
+  .marketing-v3 .v3-mission { padding: 60px 40px; }
+  .marketing-v3 .v3-mission-h { font-size: 44px; margin: 0 0 18px; }
+  .marketing-v3 .v3-mission-lede { font-size: 15px; }
 }
 @media (min-width: 900px) {
-  .marketing-v3 .v3-mission { padding: 144px 64px; }
-  .marketing-v3 .v3-mission-h { font-size: 112px; line-height: 1; margin: 0 0 36px; }
-  .marketing-v3 .v3-mission-lede { font-size: 19px; max-width: 680px; }
-  .marketing-v3 .v3-mission-foot { font-size: 12px; }
+  .marketing-v3 .v3-mission { padding: 80px 56px; }
+  .marketing-v3 .v3-mission-h { font-size: 56px; line-height: 1.02; margin: 0 0 22px; }
+  .marketing-v3 .v3-mission-lede { font-size: 16px; max-width: 60ch; }
+  .marketing-v3 .v3-mission-foot { font-size: 11px; }
 }
