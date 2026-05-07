@@ -2,6 +2,7 @@
 
 import DisambiguationPicker, { type AmbiguousCandidate } from './DisambiguationPicker'
 import NoEntityFoundCard from './no-entity-found-card'
+import { expandContractorNameVariants } from '@/lib/trust/name-variants'
 
 // Inline row type — matches select('*') on trust_reports. Kept here rather
 // than in types.ts because this view is the only consumer.
@@ -202,6 +203,11 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
       report.lic_status === null &&
       (report.data_sources_searched?.length ?? 0) > 0)
   if (isEntityNotFound) {
+    // Variant suggestions: drop variant[0] (the literal user input that just
+    // missed) and pass the rest. expandContractorNameVariants is pure and
+    // safe to call client-side.
+    const allVariants = expandContractorNameVariants(report.contractor_name, 6)
+    const variantSuggestions = allVariants.slice(1, 5)
     return (
       <div className="min-h-screen bg-stone-50">
         <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -209,11 +215,7 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
             searchedName={report.contractor_name}
             stateCode={report.state_code}
             sourcesSearched={report.data_sources_searched ?? []}
-            variantSuggestions={[
-              `${report.contractor_name} LLC`,
-              `${report.contractor_name} Inc`,
-              `${report.contractor_name} Corporation`,
-            ]}
+            variantSuggestions={variantSuggestions}
           />
         </div>
       </div>

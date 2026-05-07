@@ -2,6 +2,7 @@ import type { CleanHints } from "./prompt-guards"
 import type { TrustReport } from "./trust-validator"
 import { runTrustOrchestratorV2 } from "./orchestrator-v2"
 import { TIER_CONFIG, resolveScrapersForTier } from "./tier-config"
+import { expandContractorNameVariants } from "./name-variants"
 /**
  * @deprecated Routes through runTrustOrchestratorV2 — call orchestrator
  * directly in new code. This shim is preserved for back-compat with the
@@ -49,7 +50,7 @@ export async function runFreeTier(
       ...TIER_CONFIG.free,
       tier: 'free',
       scraperKeys,
-      nameVariants: [name], // PR #25 expands to expandContractorNameVariants(name, ...)
+      nameVariants: expandContractorNameVariants(name, TIER_CONFIG.free.nameVariantLimit),
     },
   )
 

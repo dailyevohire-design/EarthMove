@@ -29,9 +29,31 @@ import { scrapeStateAgEnforcement } from './state-ag-enforcement';
 export class NotImplementedScraperError extends ScraperError {}
 
 export interface RunScraperInput {
+  /** Primary name (= nameVariants[0] when variants are provided). Kept for
+   *  back-compat with callers that don't pass variants and for the dispatch
+   *  switch which forwards a single name to each scraper. */
   legalName: string;
+  /** PR #25 — top-N name variants for fallback iteration. Defaults to
+   *  [legalName] when omitted. The runScraper loop tries variants in order
+   *  and returns the first hit; on total miss it returns variant[0]'s
+   *  evidence (a single *_not_found row, not N negative rows). */
+  nameVariants?: string[];
   stateCode: string;
   city?: string | null;
+}
+
+// Finding-type suffixes that mark a "miss" — these don't terminate variant
+// iteration; the runScraper loop continues to the next variant. Anything
+// else (license_active, business_dissolved, sanction_hit, etc.) ends the
+// loop and is returned as the hit.
+const MISS_FINDING_SUFFIXES = [
+  '_not_found', '_no_actions', '_no_record', '_no_violations',
+  '_no_judgments', '_not_profiled', '_clear',
+] as const
+
+function isMissFinding(e: ScraperEvidence): boolean {
+  if (e.finding_type === 'source_error' || e.finding_type === 'source_not_applicable') return true
+  return MISS_FINDING_SUFFIXES.some((suffix) => e.finding_type.endsWith(suffix))
 }
 
 async function dispatch(sourceKey: string, input: RunScraperInput): Promise<ScraperResult> {
@@ -96,8 +118,41 @@ export async function runScraper(
   sourceKey: string,
   input: RunScraperInput,
 ): Promise<ScraperEvidence[]> {
-  const r = await dispatch(sourceKey, input);
-  return Array.isArray(r) ? r : [r];
+  const variants = input.nameVariants && input.nameVariants.length > 0
+    ? input.nameVariants
+    : [input.legalName];
+
+  // PR #25 — variant iteration is performed at registry level (not per-scraper)
+  // to keep the bug-fix scope minimal: scraper modules are unchanged. The
+  // architectural intent (fall back through variants, emit a single
+  // *_not_found per source on total miss) is preserved.
+  let firstResult: ScraperEvidence[] | null = null;
+  let firstError: unknown = null;
+
+  for (let i = 0; i < variants.length; i++) {
+    const variantName = variants[i];
+    try {
+      const r = await dispatch(sourceKey, { ...input, legalName: variantName });
+      const arr = Array.isArray(r) ? r : [r];
+      if (i === 0) firstResult = arr;
+      // First variant that produces at least one non-miss finding wins.
+      if (arr.some((e) => !isMissFinding(e))) return arr;
+    } catch (err) {
+      if (i === 0) firstError = err;
+      // Fall through to next variant — some upstream sources (e.g. SOS) may
+      // 404 on one form of the name and 200 on another. NotImplemented errors
+      // re-throw on the last variant since the source isn't going to start
+      // working.
+      if (err instanceof NotImplementedScraperError) throw err;
+    }
+  }
+
+  // No variant produced a hit. Return variant[0]'s evidence (single
+  // *_not_found row); if variant[0] errored AND no later variant succeeded,
+  // re-throw so the caller can persist a source_error attribution.
+  if (firstResult) return firstResult;
+  if (firstError) throw firstError;
+  return [];
 }
 
 function mockScraperEvidence(input: RunScraperInput): ScraperEvidence {

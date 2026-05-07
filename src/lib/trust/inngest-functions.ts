@@ -1,7 +1,8 @@
 import { inngest } from '@/lib/inngest'
 import { createAdminClient } from '@/lib/supabase/server'
 import { runTrustOrchestratorV2 } from './orchestrator-v2'
-import { resolveScrapersForTier, type Tier } from './tier-config'
+import { resolveScrapersForTier, TIER_CONFIG as ORCHESTRATOR_TIER_CONFIG, type Tier } from './tier-config'
+import { expandContractorNameVariants } from './name-variants'
 import Anthropic from '@anthropic-ai/sdk';
 import { callAnthropicWithWatchdog } from './anthropic-watchdog';
 import {
@@ -95,6 +96,7 @@ export const runTrustJobV2 = inngest.createFunction(
 
     const tier = job.tier as Tier
     const scraperKeys = await resolveScrapersForTier(tier, job.state_code)
+    const nameVariantLimit = ORCHESTRATOR_TIER_CONFIG[tier]?.nameVariantLimit ?? 5
 
     // Delegate to runTrustOrchestratorV2 with runSynthesis: true. Orchestrator
     // wraps each scraper in step.run for durability and sendEvent's
@@ -111,7 +113,7 @@ export const runTrustJobV2 = inngest.createFunction(
         runSynthesis: true,
         scraperKeys,
         synthesisModel: null, // synthesis function picks its own model from synthesize-v2-prompt config
-        nameVariants: [job.contractor_name], // PR #25 expands this
+        nameVariants: expandContractorNameVariants(job.contractor_name, nameVariantLimit),
       },
       step,
     )

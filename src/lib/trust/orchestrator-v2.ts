@@ -126,6 +126,7 @@ export async function runTrustOrchestratorV2(
       try {
         const findings = await runScraper(sourceKey, {
           legalName: primaryName,
+          nameVariants: opts.nameVariants,
           stateCode: input.state_code,
           city: input.city ?? null,
         })
