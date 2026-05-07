@@ -915,7 +915,7 @@
 
   /* MARKET DENSITY — full landscape map, 4-col legend strip */
   .marketing-v3 .v3-md {
-    max-width: 1188px;
+    max-width: 1129px;
     margin: 36px auto 0;
     border-radius: 22px;
   }
@@ -923,7 +923,7 @@
   .marketing-v3 .v3-md-l { font-size: 11px; letter-spacing: 0.18em; }
   .marketing-v3 .v3-md-r { font-size: 11px; }
   .marketing-v3 .v3-md-map {
-    height: 384px;
+    height: 365px;
     aspect-ratio: auto;
     max-width: none;
     margin: 0;
