@@ -46,6 +46,85 @@ function parseSynthesisToolUse(
   return validation.output;
 }
 
+// Diagnostics helpers (PR #26). Migration 226 adds synthesis_started_at,
+// synthesis_completed_at, synthesis_attempt_count to trust_jobs. These
+// helpers write those columns; they're guarded with try/catch + a
+// supabase-error-return check so the writes are NON-FATAL pre-migration.
+//
+// COALESCE / guarded-write design choice (commit 3 spec). The two options
+// the spec presented were (A) information_schema.columns gating per write,
+// or (B) write unconditionally and let the error reach onFailure. I chose
+// option (C): write unconditionally, catch supabase-js errors at the call
+// site, log + continue. Rationale: option A doubles the round-trip cost per
+// write and requires either an RPC or a verbose CTE; option B fails the
+// entire synthesis job because onFailure marks status='failed'. Option (C)
+// is a one-line guard per helper, the columns either exist or they don't,
+// and the only observable cost pre-migration is a console.warn line per
+// synthesis. Documented in commit body.
+async function markSynthesisStartedAt(
+  admin: ReturnType<typeof createAdminClient>,
+  jobId: string,
+): Promise<void> {
+  try {
+    const { error } = await admin
+      .from('trust_jobs')
+      .update({ synthesis_started_at: new Date().toISOString() })
+      .eq('id', jobId);
+    if (error) {
+      console.warn('[diagnostics] synthesis_started_at write failed (column likely absent pre-migration 226):', error.message);
+    }
+  } catch (e) {
+    console.warn('[diagnostics] synthesis_started_at write threw:', (e as Error)?.message);
+  }
+}
+
+async function markSynthesisCompletedAt(
+  admin: ReturnType<typeof createAdminClient>,
+  jobId: string,
+): Promise<void> {
+  try {
+    const { error } = await admin
+      .from('trust_jobs')
+      .update({ synthesis_completed_at: new Date().toISOString() })
+      .eq('id', jobId);
+    if (error) {
+      console.warn('[diagnostics] synthesis_completed_at write failed (column likely absent pre-migration 226):', error.message);
+    }
+  } catch (e) {
+    console.warn('[diagnostics] synthesis_completed_at write threw:', (e as Error)?.message);
+  }
+}
+
+async function incrementSynthesisAttemptCount(
+  admin: ReturnType<typeof createAdminClient>,
+  jobId: string,
+): Promise<void> {
+  // Read-modify-write — not atomic across concurrent runs, but synthesis is
+  // concurrency-capped to 4 globally and one event = one job, so contention
+  // on the same row is impossible. Off-by-one here is benign diagnostics.
+  try {
+    const { data, error: readErr } = await admin
+      .from('trust_jobs')
+      .select('synthesis_attempt_count')
+      .eq('id', jobId)
+      .maybeSingle();
+    if (readErr) {
+      console.warn('[diagnostics] read synthesis_attempt_count failed (column likely absent pre-migration 226):', readErr.message);
+      return;
+    }
+    const next = ((data as { synthesis_attempt_count?: number | null } | null)?.synthesis_attempt_count ?? 0) + 1;
+    const { error: writeErr } = await admin
+      .from('trust_jobs')
+      .update({ synthesis_attempt_count: next })
+      .eq('id', jobId);
+    if (writeErr) {
+      console.warn('[diagnostics] increment synthesis_attempt_count failed:', writeErr.message);
+    }
+  } catch (e) {
+    console.warn('[diagnostics] increment synthesis_attempt_count threw:', (e as Error)?.message);
+  }
+}
+
 // Per-token pricing dispatch keyed on the actual billed model. Opus 4.7 is
 // $5/MTok input + $25/MTok output (5e-6 / 2.5e-5 USD per token). Sonnet 4.6
 // is $3/MTok / $15/MTok. Internal unit is microcents per token.
@@ -134,6 +213,27 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
     triggers: [{ event: 'trust/job.synthesize.requested' }],
     concurrency: { limit: 4 },
     retries: 2,
+    // PR #26 / Mode 1 fix. Without this handler, any throw out of a step
+    // body — non-timeout SDK error, validator rejection, score RPC failure —
+    // exhausted the 2 function retries and left trust_jobs.status stuck on
+    // 'synthesizing' forever (Bedrock job d34ea85f symptom). Mirror
+    // runTrustJobV2's onFailure: mark the row failed so the user sees an
+    // error and the pg_cron sweeper from migration 225 has fewer jobs to
+    // catch.
+    onFailure: async ({ event, error }) => {
+      const orig = (event.data as { event?: { data?: { job_id?: string } } })?.event?.data ?? {}
+      const adminClient = createAdminClient()
+      if (orig.job_id) {
+        await adminClient
+          .from('trust_jobs')
+          .update({
+            status: 'failed',
+            completed_at: new Date().toISOString(),
+            error_message: String(error?.message ?? error).slice(0, 500),
+          })
+          .eq('id', orig.job_id)
+      }
+    },
   },
   async ({ event, step }) => {
     const job_id = event.data.job_id as string;
@@ -215,14 +315,25 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
       return (Array.isArray(data) ? data : []) as PhoenixSignal[];
     });
 
-    const synthResult = await step.run('synth-generate', async () => {
-      if (!tierCfg.useLLM) {
-        return { synthesis: buildFreeTierSynthesis(score), synthesisModel: 'free_tier_templated' };
-      }
+    // PR #26 / Mode 3 fix — synth-generate is no longer a single big step.run.
+    // Each LLM attempt is its own leaf step. The fallback cascade
+    // (Opus → Sonnet → deterministic template) is orchestrated OUTSIDE step.run
+    // so a watchdog timeout on Opus doesn't replay Opus on Inngest retry —
+    // instead we fall through to the next attempt as a separate leaf step.
+    let synthesisOutput: SynthesisOutput | null = null;
+    let synthesisModel: string = tierCfg.model ?? 'free_tier_templated';
+    let primaryStallElapsedMs: number | null = null;
+    let sonnetStallElapsedMs: number | null = null;
+    let totalCents = 0;
+
+    if (!tierCfg.useLLM) {
+      // Free tier — no LLM. Single-line synthesis.
+      synthesisOutput = buildFreeTierSynthesis(score);
+      synthesisModel = 'free_tier_templated';
+    } else {
       if (!process.env.ANTHROPIC_API_KEY) {
         throw new Error('ANTHROPIC_API_KEY missing');
       }
-      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
       const userPrompt = buildUserPrompt({
         contractorName: job.contractor_name_input,
@@ -236,42 +347,65 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
       const tools = [SUBMIT_SYNTHESIS_TOOL as never];
       const toolChoice = { type: 'tool' as const, name: 'submit_synthesis' };
 
-      let synthesisOutput: SynthesisOutput | null = null;
-      let synthesisModel: string = tierCfg.model!;
-      let primaryStallElapsedMs: number | null = null;
-      let sonnetStallElapsedMs: number | null = null;
-      let totalCents = 0;
+      // Diagnostics: stamp synthesis_started_at on the trust_jobs row.
+      // Best-effort — column lands in migration 226. Non-fatal if absent.
+      await markSynthesisStartedAt(admin, job_id);
 
-      // Layer 1: primary tier model (Opus 4.7 for deep_dive/forensic,
-      // Sonnet 4.6 for standard/plus).
+      // Leaf step 1: primary tier model. callAnthropicWithWatchdog returns a
+      // discriminated union (never throws on timeout/SDK error), so this step
+      // body never throws and Inngest's function-level retries=2 won't replay
+      // the LLM call. retries=0 by construction, not by config — Inngest 4.x
+      // StepOptions doesn't expose per-step retries (see types.d.ts:StepOptions).
       const primaryTimeoutMs =
         tierCfg.model === 'claude-opus-4-7' ? OPUS_WATCHDOG_TIMEOUT_MS : SONNET_WATCHDOG_TIMEOUT_MS;
-      const primaryResult = await callAnthropicWithWatchdog({
-        client,
-        model: tierCfg.model!,
-        maxTokens: tierCfg.maxTokens,
-        systemPrompt,
-        userPrompt,
-        tools,
-        toolChoice,
-        timeoutMs: primaryTimeoutMs,
+      const primaryAttempt = await step.run('synth-attempt-primary', async () => {
+        const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+        return callAnthropicWithWatchdog({
+          client,
+          model: tierCfg.model!,
+          maxTokens: tierCfg.maxTokens,
+          systemPrompt,
+          userPrompt,
+          tools,
+          toolChoice,
+          timeoutMs: primaryTimeoutMs,
+        });
       });
+      await incrementSynthesisAttemptCount(admin, job_id);
 
-      if (primaryResult.kind === 'success') {
-        synthesisOutput = parseSynthesisToolUse(primaryResult.response, evidence, score);
-        totalCents = computeCostCents(primaryResult.response, tierCfg.model!);
-      } else if (primaryResult.kind === 'timeout') {
-        primaryStallElapsedMs = primaryResult.elapsedMs;
+      if (primaryAttempt.kind === 'success') {
+        try {
+          synthesisOutput = parseSynthesisToolUse(primaryAttempt.response, evidence, score);
+          totalCents = computeCostCents(primaryAttempt.response, tierCfg.model!);
+        } catch (parseErr) {
+          // Validator rejection — treat as a fall-through (try Sonnet) rather than
+          // a thrown error. Throwing here would re-execute the entire function
+          // including the cached LLM step on retry, wasting tokens.
+          console.warn('[Watchdog] primary parse/validate failed; falling through', {
+            job_id, error: (parseErr as Error)?.message,
+          });
+        }
+      } else if (primaryAttempt.kind === 'timeout') {
+        primaryStallElapsedMs = primaryAttempt.elapsedMs;
         console.warn(
-          `[Watchdog] Primary synthesis stalled at ${primaryResult.elapsedMs}ms ` +
-          `(timeout=${primaryResult.timeoutMs}ms, model=${tierCfg.model}, ` +
+          `[Watchdog] Primary synthesis stalled at ${primaryAttempt.elapsedMs}ms ` +
+          `(timeout=${primaryAttempt.timeoutMs}ms, model=${tierCfg.model}, ` +
           `job_id=${job_id}). Falling back to Sonnet 4.6.`,
         );
+      } else {
+        // Non-timeout SDK error — log and fall through to fallback. The
+        // pre-PR-26 code threw here, which (with Mode 1 no-onFailure) left
+        // jobs stuck. We now have onFailure but a Sonnet retry is cheaper
+        // than failing the job outright; if Sonnet also fails, the
+        // deterministic template path always succeeds.
+        console.error('[Watchdog] primary errored, attempting fallback', primaryAttempt.error);
+      }
 
-        // Layer 2: Sonnet 4.6 fallback — only useful when primary was Opus.
-        // If primary was already Sonnet, skip directly to the template.
-        if (tierCfg.model === 'claude-opus-4-7') {
-          const sonnetResult = await callAnthropicWithWatchdog({
+      // Leaf step 2: Sonnet fallback. Only meaningful when primary was Opus.
+      if (!synthesisOutput && tierCfg.model === 'claude-opus-4-7') {
+        const sonnetAttempt = await step.run('synth-attempt-sonnet', async () => {
+          const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+          return callAnthropicWithWatchdog({
             client,
             model: 'claude-sonnet-4-6',
             maxTokens: tierCfg.maxTokens,
@@ -281,36 +415,42 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
             toolChoice,
             timeoutMs: SONNET_WATCHDOG_TIMEOUT_MS,
           });
-          if (sonnetResult.kind === 'success') {
-            synthesisOutput = parseSynthesisToolUse(sonnetResult.response, evidence, score);
-            synthesisModel = 'claude-sonnet-4-6-fallback';
-            totalCents = computeCostCents(sonnetResult.response, 'claude-sonnet-4-6');
-          } else if (sonnetResult.kind === 'timeout') {
-            sonnetStallElapsedMs = sonnetResult.elapsedMs;
-            console.error(
-              `[Watchdog] Sonnet fallback also stalled at ${sonnetResult.elapsedMs}ms ` +
-              `(job_id=${job_id}). Falling through to deterministic template.`,
-            );
-          } else {
-            console.error('[Watchdog] Sonnet fallback errored:', sonnetResult.error);
-          }
-        }
+        });
+        await incrementSynthesisAttemptCount(admin, job_id);
 
-        // Layer 3: deterministic template — always succeeds, never throws.
-        if (!synthesisOutput) {
-          synthesisOutput = buildFreeTierSynthesis(score);
-          synthesisModel = sonnetStallElapsedMs != null
-            ? 'templated_after_double_stall'
-            : 'templated_after_stall';
+        if (sonnetAttempt.kind === 'success') {
+          try {
+            synthesisOutput = parseSynthesisToolUse(sonnetAttempt.response, evidence, score);
+            synthesisModel = 'claude-sonnet-4-6-fallback';
+            totalCents = computeCostCents(sonnetAttempt.response, 'claude-sonnet-4-6');
+          } catch (parseErr) {
+            console.warn('[Watchdog] sonnet parse/validate failed; falling through to template', {
+              job_id, error: (parseErr as Error)?.message,
+            });
+          }
+        } else if (sonnetAttempt.kind === 'timeout') {
+          sonnetStallElapsedMs = sonnetAttempt.elapsedMs;
+          console.error(
+            `[Watchdog] Sonnet fallback also stalled at ${sonnetAttempt.elapsedMs}ms ` +
+            `(job_id=${job_id}). Falling through to deterministic template.`,
+          );
+        } else {
+          console.error('[Watchdog] Sonnet fallback errored:', sonnetAttempt.error);
         }
-      } else {
-        // Non-timeout SDK error (auth, rate-limit, network). Re-throw so
-        // Inngest's retry policy handles it — watchdog only catches stalls.
-        throw primaryResult.error;
       }
 
-      // Cost-cap enforcement only applies when an LLM actually ran. Template
-      // path leaves totalCents = 0.
+      // Layer 3: deterministic template — always succeeds, never throws.
+      // Counted as an attempt for diagnostics so attempt_count tells the full
+      // cascade story (primary=1, +sonnet=2, +template=3).
+      if (!synthesisOutput) {
+        synthesisOutput = buildFreeTierSynthesis(score);
+        await incrementSynthesisAttemptCount(admin, job_id);
+        synthesisModel = sonnetStallElapsedMs != null
+          ? 'templated_after_double_stall'
+          : 'templated_after_stall';
+      }
+
+      // Cost-cap enforcement (only meaningful when an LLM ran).
       if (totalCents > 0 && totalCents > tierCfg.costCapCents) {
         throw new Error(`COST_CAP_EXCEEDED: ${totalCents.toFixed(2)}c > ${tierCfg.costCapCents}c`);
       }
@@ -322,8 +462,6 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
           .eq('id', job_id);
       }
 
-      // Structured log line for grep-ability in Vercel logs. Aggregate
-      // fallback rate via: `grep '"event":"synthesis_complete"' | jq`.
       console.log(JSON.stringify({
         event: 'synthesis_complete',
         job_id,
@@ -333,19 +471,29 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
         sonnet_stall_ms: sonnetStallElapsedMs,
         fallback_used: synthesisModel !== tierCfg.model,
       }));
+    }
 
-      return { synthesis: synthesisOutput, synthesisModel };
-    });
-    const synthesis: SynthesisOutput = synthResult.synthesis;
+    // Diagnostics: stamp synthesis_completed_at before finalize/mark-completed.
+    // Captures the LLM cascade duration regardless of which layer succeeded.
+    await markSynthesisCompletedAt(admin, job_id);
 
+    if (!synthesisOutput) {
+      // Unreachable — Layer 3 template never returns null. Belt + suspenders
+      // so TS narrows the type below.
+      throw new Error('synthesis pipeline produced no output');
+    }
+    const synthesis: SynthesisOutput = synthesisOutput;
+
+    // Capture synthesisModel before passing into the closure — TS prefers
+    // a stable reference inside step.run.
+    const finalSynthesisModel = synthesisModel;
     const report = await step.run('synth-finalize-report', async () => {
-      const synthesisModel = synthResult.synthesisModel;
       const { data: finalReport, error: finalErr } = await admin.rpc('score_and_finalize_trust_report', {
         p_job_id: job_id,
         p_summary: synthesis.summary,
         p_red_flags: synthesis.red_flags.map((rf) => rf.text),
         p_positive_indicators: synthesis.positives.map((pp) => pp.text),
-        p_synthesis_model: synthesisModel,
+        p_synthesis_model: finalSynthesisModel,
       });
       if (finalErr || !finalReport) throw new Error(`score_and_finalize failed: ${finalErr?.message ?? 'no row'}`);
 
