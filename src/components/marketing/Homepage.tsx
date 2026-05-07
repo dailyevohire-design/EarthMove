@@ -107,7 +107,7 @@ export async function Homepage() {
           <ActivityFeed />
         </div>
 
-        <FootCTA yardsCount={yardsCount} liveMarkets={liveMarkets} />
+        <FootCTA />
 
         <div className="v3-legal">
           <span>DEN · DFW launching today · Portland next</span>

@@ -1111,3 +1111,26 @@
     letter-spacing: 0.14em;
   }
 }
+
+/* Mission section — paper bg, single column, breaks rhythm before legal footer */
+.marketing-v3 .v3-mission {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 48px 32px;
+  margin: 0 16px 32px;
+}
+.marketing-v3 .v3-mission-inner { max-width: 720px; }
+.marketing-v3 .v3-mission .v3-h2 { margin: 12px 0 20px; }
+.marketing-v3 .v3-mission .v3-lede { color: var(--ink-2); margin: 0 0 16px; }
+.marketing-v3 .v3-mission-foot {
+  font-family: var(--mono-v3); font-size: 11px;
+  color: var(--ink-3); letter-spacing: 0.04em;
+  margin: 0 0 20px;
+}
+@media (min-width: 768px) {
+  .marketing-v3 .v3-mission { padding: 64px 48px; margin: 0 32px 48px; }
+}
+@media (min-width: 900px) {
+  .marketing-v3 .v3-mission { padding: 80px 64px; margin: 0 48px 64px; }
+}
