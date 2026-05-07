@@ -147,16 +147,16 @@ export function Hero({ projects }: { projects: Project[] }) {
               <span className="tl">Text dispatch</span>
               <span className="ts">SMS · 24/7 ops</span>
             </a>
-            <Link href="/order" className="v3-pro-tile">
+            <a href="mailto:ops@earthmove.io?subject=Project%20pricing%20inquiry&body=Project%3A%20%0ALocation%20%2F%20ZIP%3A%20%0AMaterial%20%2B%20gradation%3A%20%0AEstimated%20tonnage%3A%20%0ATarget%20delivery%20window%3A%20" className="v3-pro-tile">
               <PriceIcon />
               <span className="tl">Project pricing</span>
               <span className="ts">Multi-load · PO</span>
-            </Link>
-            <Link href="/order" className="v3-pro-tile">
+            </a>
+            <a href="mailto:ops@earthmove.io?subject=Bulk%20%2B%20recurring%20delivery&body=Lane%20%2F%20site%3A%20%0AMaterial%20%2B%20gradation%3A%20%0AFrequency%20%2F%20cadence%3A%20%0ATypical%20load%20size%3A%20%0AStart%20date%3A%20" className="v3-pro-tile">
               <TrucksIcon />
               <span className="tl">Bulk + recurring</span>
               <span className="ts">Lanes · standing</span>
-            </Link>
+            </a>
           </div>
           <div className="v3-pro-foot">
             <span>NET-30 · MSA on request</span>
