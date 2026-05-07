@@ -37,7 +37,7 @@ const ArrowRight = ({ size = 16, weight = 2 }: { size?: number; weight?: number 
   </svg>
 )
 
-const MARKETING_MATERIAL_SLUGS = ['flex-base', 'base-gravel-57', 'fill-dirt', 'topsoil', 'concrete-sand'] as const
+const MARKETING_MATERIAL_SLUGS = ['flex-base', 'pea-gravel', 'fill-dirt', 'topsoil', 'masonry-sand'] as const
 
 export async function Homepage() {
   const supabase = await createClient()
@@ -241,13 +241,13 @@ export async function Homepage() {
               {/* 2: Drainage */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-drain)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <MatImage src={matImg('base-gravel-57')} alt="¾-inch washed drainage stone close-up" />
-                  <span className="mat-tag">¾″ washed stone</span>
+                  <MatImage src={matImg('pea-gravel')} alt="Pea gravel — round, washed drainage and landscape stone" />
+                  <span className="mat-tag">⅜″ pea gravel</span>
                 </div>
                 <div className="mat-body">
-                  <div className="mat-title">Drainage</div>
-                  <div className="mat-spec">Used for French drains, foundation perimeter, and gravel beds. Clean, washed, free-draining — water moves through, soil doesn't.</div>
-                  <div className="mat-meta"><span className="mat-chip">¾″ washed</span><span className="mat-chip">Drain rock</span><span className="mat-chip">Round</span></div>
+                  <div className="mat-title">Drainage &amp; decorative</div>
+                  <div className="mat-spec">Used for French drains, foundation perimeter, walkways, and gravel beds. Round, washed, free-draining — water moves through, soil doesn't.</div>
+                  <div className="mat-meta"><span className="mat-chip">⅜″ rounded</span><span className="mat-chip">Washed</span><span className="mat-chip">Free-draining</span></div>
                   <div className="mat-foot">
                     <div className="mat-trucks">Fits <b>small / standard</b></div>
                     <a className="mat-cta" href="#zipForm">Get a quote <ArrowRight size={14} weight={2.2} /></a>
@@ -289,16 +289,16 @@ export async function Homepage() {
                 </div>
               </article>
 
-              {/* 5: Concrete / structural */}
+              {/* 5: Masonry / paver joints */}
               <article className="mat" style={{ ['--mc' as string]: 'var(--m-struct)' } as React.CSSProperties}>
                 <div className="mat-img">
-                  <MatImage src={matImg('concrete-sand')} alt="Concrete sand — coarse sandy texture with small stones" />
-                  <span className="mat-tag">Concrete sand · pea gravel</span>
+                  <MatImage src={matImg('masonry-sand')} alt="Masonry sand — fine, uniformly graded sand" />
+                  <span className="mat-tag">Masonry sand</span>
                 </div>
                 <div className="mat-body">
-                  <div className="mat-title">Concrete &amp; structural</div>
-                  <div className="mat-spec">Used for concrete mix, paver base, and structural fill. Rounded, washed, ⅜″ aggregate that meets concrete spec.</div>
-                  <div className="mat-meta"><span className="mat-chip">⅜″ rounded</span><span className="mat-chip">Concrete sand</span><span className="mat-chip">Pea gravel</span></div>
+                  <div className="mat-title">Masonry &amp; paver joints</div>
+                  <div className="mat-spec">Used for mortar mixing, brick and stone setting, paver joint sand, and finish-grade leveling. Fine, uniform, smooth.</div>
+                  <div className="mat-meta"><span className="mat-chip">Fine</span><span className="mat-chip">Mortar grade</span><span className="mat-chip">Paver joints</span></div>
                   <div className="mat-foot">
                     <div className="mat-trucks">Fits <b>standard / tri-axle</b></div>
                     <a className="mat-cta" href="#zipForm">Get a quote <ArrowRight size={14} weight={2.2} /></a>
