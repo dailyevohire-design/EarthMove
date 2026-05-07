@@ -6,6 +6,8 @@ import {
   ShieldCheck, AlertTriangle, Search, Clock, ChevronRight, CheckCircle2,
   XCircle, Lock, Download, Zap, Crown, ArrowRight, Loader2
 } from 'lucide-react'
+import NoEntityFoundCard from '@/components/trust/no-entity-found-card'
+import { expandContractorNameVariants } from '@/lib/trust/name-variants'
 
 type PaidTier = 'standard' | 'deep_dive'
 const JOB_POLL_MS = 2000
@@ -398,8 +400,22 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
         {/* Error */}
         {error&&<div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex items-start gap-3"><XCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0"/><div><div className="text-sm font-semibold text-red-800">Verification Failed</div><div className="text-xs text-red-600 mt-0.5">{error}</div></div></div>}
 
+        {/* No-entity-found branch — short-circuits the standard report layout
+            when the orchestrator wrote data_integrity_status='entity_not_found'.
+            Mirrors the branch in src/components/trust/TrustReportView.tsx. */}
+        {report && report.data_integrity_status === 'entity_not_found' && (
+          <div ref={reportRef}>
+            <NoEntityFoundCard
+              searchedName={report.contractor_name}
+              stateCode={report.state_code}
+              sourcesSearched={report.data_sources_searched ?? []}
+              variantSuggestions={expandContractorNameVariants(report.contractor_name, 4).slice(1)}
+            />
+          </div>
+        )}
+
         {/* Report */}
-        {report&&rs&&<div className="space-y-4" ref={reportRef}>
+        {report && report.data_integrity_status !== 'entity_not_found' && rs && <div className="space-y-4" ref={reportRef}>
           {/* Score card */}
           <div className={`bg-white border ${rs.border} rounded-2xl shadow-sm p-6`}>
             <div className="flex items-start gap-6 flex-wrap">
