@@ -1,7 +1,6 @@
 import { serve } from 'inngest/next'
 import { inngest } from '@/lib/inngest'
 import {
-  runTrustJob,
   runTrustJobV2,
   runTrustSynthesizeV2,
   onTrustEvidenceAppended,
@@ -12,7 +11,6 @@ import { opsPagerOnOrderConfirmed } from '@/inngest/functions/ops-pager'
 export const runtime = 'nodejs'
 
 export const inngestFunctions = [
-  runTrustJob,
   runTrustJobV2,
   runTrustSynthesizeV2,
   onTrustEvidenceAppended,
