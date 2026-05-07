@@ -21,9 +21,9 @@ interface Corridor {
 const METROS: Metro[] = [
   { id: 'DEN', name: 'DENVER', x: 130, y: 96, yards: 0, status: 'live', core: 1 },
   { id: 'DFW', name: 'DFW', x: 198, y: 154, yards: 0, status: 'live', core: 1 },
-  { id: 'PDX', name: 'PORTLAND', x: 60, y: 50, yards: 0, status: 'staging', core: 0 },
+  { id: 'WY', name: 'WYOMING', x: 60, y: 50, yards: 0, status: 'staging', core: 0 },
   { id: 'HOU', name: 'HOUSTON', x: 268, y: 178, yards: 0, status: 'queued', core: 0 },
-  { id: 'AUS', name: 'AUSTIN', x: 158, y: 188, yards: 0, status: 'queued', core: 0 },
+  { id: 'LA', name: 'LOUISIANA', x: 158, y: 188, yards: 0, status: 'queued', core: 0 },
 ]
 
 const CORRIDORS: Corridor[] = [
@@ -167,12 +167,12 @@ export function MarketDensity({ denverYards, dfwYards }: { denverYards: number; 
         </div>
         <div className="v3-md-row queued">
           <span className="md-pip stage" />
-          <span className="md-rk">PORTLAND</span>
+          <span className="md-rk">WYOMING</span>
           <span className="md-rv">Expansion · staging</span>
         </div>
         <div className="v3-md-row queued">
           <span className="md-pip queue" />
-          <span className="md-rk">HOU · AUS</span>
+          <span className="md-rk">HOU · LA</span>
           <span className="md-rv">Pipeline · 2026</span>
         </div>
       </div>
