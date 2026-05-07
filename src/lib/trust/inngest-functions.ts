@@ -4,6 +4,7 @@ import { persistEvidence } from './scrapers/persist-evidence'
 import { runScraper } from './scrapers/registry'
 import { sourcesForTier } from './scrapers/tier-sources-loader'
 import Anthropic from '@anthropic-ai/sdk';
+import { callAnthropicWithWatchdog } from './anthropic-watchdog';
 import {
   TIER_CONFIG,
   SUBMIT_SYNTHESIS_TOOL,
@@ -17,6 +18,44 @@ import {
   type SynthesisOutput,
   type SynthesisTier,
 } from './synthesize-v2-prompt';
+
+// Watchdog timeouts — short enough to fire before the SDK's 10-min default
+// kills the request, generous enough that a typical Opus generation
+// (~30-60s for 3000 tokens) doesn't get falsely tripped. Sonnet 4.6 is
+// faster, so the fallback timeout is tighter.
+const OPUS_WATCHDOG_TIMEOUT_MS = 90_000;
+const SONNET_WATCHDOG_TIMEOUT_MS = 60_000;
+
+// Extracts and validates the submit_synthesis tool_use from an Anthropic
+// response. Throws if the model didn't return a well-formed tool_use OR if
+// the validator rejects the synthesis. Used by both the primary call and
+// the Sonnet fallback in runTrustSynthesizeV2.
+function parseSynthesisToolUse(
+  resp: Anthropic.Message,
+  evidence: EvidenceItem[],
+  score: ScoreContext,
+): SynthesisOutput {
+  const toolBlock = resp.content.find((b) => b.type === 'tool_use' && b.name === 'submit_synthesis');
+  if (!toolBlock || toolBlock.type !== 'tool_use') {
+    throw new Error(`Anthropic did not return submit_synthesis tool_use; stop_reason=${resp.stop_reason}`);
+  }
+  const validation = validateSynthesis(toolBlock.input, evidence, score);
+  if (!validation.ok) {
+    throw new Error(`validator rejected synthesis: ${validation.errors.join('; ')}`);
+  }
+  return validation.output;
+}
+
+// Per-token pricing dispatch keyed on the actual billed model. Opus 4.7 is
+// $5/MTok input + $25/MTok output (5e-6 / 2.5e-5 USD per token). Sonnet 4.6
+// is $3/MTok / $15/MTok. Internal unit is microcents per token.
+function computeCostCents(resp: Anthropic.Message, billingModel: string): number {
+  const inputPerToken = billingModel === 'claude-opus-4-7' ? 500 : 300;
+  const outputPerToken = billingModel === 'claude-opus-4-7' ? 2500 : 1500;
+  const inputMicrocents = resp.usage.input_tokens * inputPerToken;
+  const outputMicrocents = resp.usage.output_tokens * outputPerToken;
+  return (inputMicrocents + outputMicrocents) / 1_000_000 * 100;
+}
 
 // Tranche A: mock orchestration spine. One Inngest function consumes
 // trust/job.enqueued events, runs a single mock scraper, finalizes the
@@ -393,64 +432,131 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
       return (Array.isArray(data) ? data : []) as PhoenixSignal[];
     });
 
-    const synthesis: SynthesisOutput = await step.run('synth-generate', async () => {
+    const synthResult = await step.run('synth-generate', async () => {
       if (!tierCfg.useLLM) {
-        return buildFreeTierSynthesis(score);
+        return { synthesis: buildFreeTierSynthesis(score), synthesisModel: 'free_tier_templated' };
       }
       if (!process.env.ANTHROPIC_API_KEY) {
         throw new Error('ANTHROPIC_API_KEY missing');
       }
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-      const resp = await client.messages.create({
+      const userPrompt = buildUserPrompt({
+        contractorName: job.contractor_name_input,
+        city: job.city,
+        stateCode: String(job.state_code).trim(),
+        score,
+        evidence,
+        phoenixSignals,
+      });
+      const systemPrompt = buildSystemPrompt();
+      const tools = [SUBMIT_SYNTHESIS_TOOL as never];
+      const toolChoice = { type: 'tool' as const, name: 'submit_synthesis' };
+
+      let synthesisOutput: SynthesisOutput | null = null;
+      let synthesisModel: string = tierCfg.model!;
+      let primaryStallElapsedMs: number | null = null;
+      let sonnetStallElapsedMs: number | null = null;
+      let totalCents = 0;
+
+      // Layer 1: primary tier model (Opus 4.7 for deep_dive/forensic,
+      // Sonnet 4.6 for standard/plus).
+      const primaryTimeoutMs =
+        tierCfg.model === 'claude-opus-4-7' ? OPUS_WATCHDOG_TIMEOUT_MS : SONNET_WATCHDOG_TIMEOUT_MS;
+      const primaryResult = await callAnthropicWithWatchdog({
+        client,
         model: tierCfg.model!,
-        max_tokens: tierCfg.maxTokens,
-        temperature: 0,
-        system: buildSystemPrompt(),
-        tools: [SUBMIT_SYNTHESIS_TOOL as never],
-        tool_choice: { type: 'tool', name: 'submit_synthesis' },
-        messages: [
-          {
-            role: 'user',
-            content: buildUserPrompt({
-              contractorName: job.contractor_name_input,
-              city: job.city,
-              stateCode: String(job.state_code).trim(),
-              score,
-              evidence,
-              phoenixSignals,
-            }),
-          },
-        ],
+        maxTokens: tierCfg.maxTokens,
+        systemPrompt,
+        userPrompt,
+        tools,
+        toolChoice,
+        timeoutMs: primaryTimeoutMs,
       });
 
-      const inputCostMicrocents = resp.usage.input_tokens * (tierCfg.model === 'claude-opus-4-7' ? 500 : 300);
-      const outputCostMicrocents = resp.usage.output_tokens * (tierCfg.model === 'claude-opus-4-7' ? 2500 : 1500);
-      const totalCents = (inputCostMicrocents + outputCostMicrocents) / 1_000_000 * 100;
-      if (totalCents > tierCfg.costCapCents) {
+      if (primaryResult.kind === 'success') {
+        synthesisOutput = parseSynthesisToolUse(primaryResult.response, evidence, score);
+        totalCents = computeCostCents(primaryResult.response, tierCfg.model!);
+      } else if (primaryResult.kind === 'timeout') {
+        primaryStallElapsedMs = primaryResult.elapsedMs;
+        console.warn(
+          `[Watchdog] Primary synthesis stalled at ${primaryResult.elapsedMs}ms ` +
+          `(timeout=${primaryResult.timeoutMs}ms, model=${tierCfg.model}, ` +
+          `job_id=${job_id}). Falling back to Sonnet 4.6.`,
+        );
+
+        // Layer 2: Sonnet 4.6 fallback — only useful when primary was Opus.
+        // If primary was already Sonnet, skip directly to the template.
+        if (tierCfg.model === 'claude-opus-4-7') {
+          const sonnetResult = await callAnthropicWithWatchdog({
+            client,
+            model: 'claude-sonnet-4-6',
+            maxTokens: tierCfg.maxTokens,
+            systemPrompt,
+            userPrompt,
+            tools,
+            toolChoice,
+            timeoutMs: SONNET_WATCHDOG_TIMEOUT_MS,
+          });
+          if (sonnetResult.kind === 'success') {
+            synthesisOutput = parseSynthesisToolUse(sonnetResult.response, evidence, score);
+            synthesisModel = 'claude-sonnet-4-6-fallback';
+            totalCents = computeCostCents(sonnetResult.response, 'claude-sonnet-4-6');
+          } else if (sonnetResult.kind === 'timeout') {
+            sonnetStallElapsedMs = sonnetResult.elapsedMs;
+            console.error(
+              `[Watchdog] Sonnet fallback also stalled at ${sonnetResult.elapsedMs}ms ` +
+              `(job_id=${job_id}). Falling through to deterministic template.`,
+            );
+          } else {
+            console.error('[Watchdog] Sonnet fallback errored:', sonnetResult.error);
+          }
+        }
+
+        // Layer 3: deterministic template — always succeeds, never throws.
+        if (!synthesisOutput) {
+          synthesisOutput = buildFreeTierSynthesis(score);
+          synthesisModel = sonnetStallElapsedMs != null
+            ? 'templated_after_double_stall'
+            : 'templated_after_stall';
+        }
+      } else {
+        // Non-timeout SDK error (auth, rate-limit, network). Re-throw so
+        // Inngest's retry policy handles it — watchdog only catches stalls.
+        throw primaryResult.error;
+      }
+
+      // Cost-cap enforcement only applies when an LLM actually ran. Template
+      // path leaves totalCents = 0.
+      if (totalCents > 0 && totalCents > tierCfg.costCapCents) {
         throw new Error(`COST_CAP_EXCEEDED: ${totalCents.toFixed(2)}c > ${tierCfg.costCapCents}c`);
       }
 
-      const toolBlock = resp.content.find((b) => b.type === 'tool_use' && b.name === 'submit_synthesis');
-      if (!toolBlock || toolBlock.type !== 'tool_use') {
-        throw new Error(`Anthropic did not return submit_synthesis tool_use; stop_reason=${resp.stop_reason}`);
+      if (totalCents > 0) {
+        await admin
+          .from('trust_jobs')
+          .update({ total_cost_cents: totalCents })
+          .eq('id', job_id);
       }
 
-      const validation = validateSynthesis(toolBlock.input, evidence, score);
-      if (!validation.ok) {
-        throw new Error(`validator rejected synthesis: ${validation.errors.join('; ')}`);
-      }
+      // Structured log line for grep-ability in Vercel logs. Aggregate
+      // fallback rate via: `grep '"event":"synthesis_complete"' | jq`.
+      console.log(JSON.stringify({
+        event: 'synthesis_complete',
+        job_id,
+        primary_model: tierCfg.model,
+        final_model: synthesisModel,
+        primary_stall_ms: primaryStallElapsedMs,
+        sonnet_stall_ms: sonnetStallElapsedMs,
+        fallback_used: synthesisModel !== tierCfg.model,
+      }));
 
-      await admin
-        .from('trust_jobs')
-        .update({ total_cost_cents: totalCents })
-        .eq('id', job_id);
-
-      return validation.output;
+      return { synthesis: synthesisOutput, synthesisModel };
     });
+    const synthesis: SynthesisOutput = synthResult.synthesis;
 
     const report = await step.run('synth-finalize-report', async () => {
-      const synthesisModel = tierCfg.useLLM ? (tierCfg.model ?? 'unknown') : 'free_tier_templated';
+      const synthesisModel = synthResult.synthesisModel;
       const { data: finalReport, error: finalErr } = await admin.rpc('score_and_finalize_trust_report', {
         p_job_id: job_id,
         p_summary: synthesis.summary,
