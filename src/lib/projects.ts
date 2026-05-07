@@ -1,86 +1,60 @@
-export type ProjectSlug = 'driveway' | 'drainage' | 'backfill' | 'garden' | 'concrete'
-export type MarketSlug = 'denver' | 'dallas-fort-worth'
-export type TruckClass = 'small' | 'standard' | 'tri-axle'
-
-export interface ProjectIntent {
-  slug: ProjectSlug
+export type Project = {
+  slug: string
   name: string
   description: string
-  tagChips: string[]
-  materialSlugs: string[]
   typicalTons: { min: number; max: number }
-  truckClasses: TruckClass[]
-  availableMarkets: MarketSlug[]
+  truckClasses: string[]
+  audience: 'homeowner' | 'contractor'
 }
 
-export const PROJECTS: ProjectIntent[] = [
+export const PROJECTS: Project[] = [
   {
-    slug: 'driveway',
-    name: 'Driveway base',
+    slug: 'pea-gravel',
+    name: 'Paths, patios & play areas',
     description:
-      'Best for new driveways, parking pads, and base under concrete or pavers. Compacts hard, holds under load.',
-    tagChips: ['Class 5', '¾″ minus', 'Crushed'],
-    materialSlugs: [
-      'class-6',
-      'abc-stone',
-      'road-base',
-      'recycled-concrete',
-      'recycled-asphalt',
-      'crushed-limestone',
-      'flex-base',
-    ],
-    typicalTons: { min: 8, max: 15 },
-    truckClasses: ['standard', 'tri-axle'],
-    availableMarkets: ['denver', 'dallas-fort-worth'],
-  },
-  {
-    slug: 'drainage',
-    name: 'Drainage',
-    description:
-      "Used for French drains, foundation perimeter, and gravel beds. Clean, washed, free-draining — water moves through, soil doesn't.",
-    tagChips: ['¾″ washed', 'Drain rock', 'Round'],
-    materialSlugs: ['57-stone', 'drainage-rock', 'river-rock', 'washed-river-rock', 'pea-gravel'],
-    typicalTons: { min: 3, max: 10 },
-    truckClasses: ['small', 'standard'],
-    availableMarkets: ['denver', 'dallas-fort-worth'],
-  },
-  {
-    slug: 'backfill',
-    name: 'Backfill & leveling',
-    description:
-      'Used to raise grade, backfill foundations, and close out holes. Screened, no debris, no clay clods.',
-    tagChips: ['Screened', 'Clean fill', 'No debris'],
-    materialSlugs: ['select-fill', 'structural-fill', 'fill-dirt', 'common-fill', 'embankment-fill'],
-    typicalTons: { min: 15, max: 30 },
-    truckClasses: ['standard', 'tri-axle'],
-    availableMarkets: ['dallas-fort-worth'],
-  },
-  {
-    slug: 'garden',
-    name: 'Garden & landscaping',
-    description:
-      'Used for lawns, garden beds, and planting beds. Dark loam, screened to ½″ — what plants want.',
-    tagChips: ['Screened', 'High organic', 'Planting mix'],
-    materialSlugs: ['topsoil', 'screened-topsoil', 'garden-soil', 'garden-soil-mix', 'mulch', 'compost'],
+      'Pea gravel for backyard walkways, fire-pit sitting areas, dog runs, and light drainage. Smooth underfoot, rakes flat, no power tools.',
     typicalTons: { min: 3, max: 8 },
     truckClasses: ['small', 'standard'],
-    availableMarkets: ['dallas-fort-worth'],
+    audience: 'homeowner',
   },
   {
-    slug: 'concrete',
-    name: 'Concrete & structural',
+    slug: 'landscape-rock',
+    name: 'Beds, borders & accents',
     description:
-      'Used for concrete mix, paver base, and structural fill. Rounded, washed, ⅜″ aggregate that meets concrete spec.',
-    tagChips: ['⅜″ rounded', 'Concrete sand', 'Pea gravel'],
-    materialSlugs: ['concrete-sand', 'masonry-sand', 'pea-gravel', '57-stone', '67-stone'],
-    typicalTons: { min: 5, max: 12 },
+      'Decorative river and egg rock for flower beds, foundation accent bands, fence-line weed control, and rock mulch replacement.',
+    typicalTons: { min: 2, max: 6 },
+    truckClasses: ['small', 'standard'],
+    audience: 'homeowner',
+  },
+  {
+    slug: 'paver-base',
+    name: 'Paver patios & small driveways',
+    description:
+      'ABC and ¾″ crushed base under pavers, segmental retaining walls, and small concrete slabs. Compacts hard, holds under load.',
+    typicalTons: { min: 8, max: 15 },
     truckClasses: ['standard', 'tri-axle'],
-    availableMarkets: ['denver', 'dallas-fort-worth'],
+    audience: 'homeowner',
+  },
+  {
+    slug: 'base-stone',
+    name: 'Roads, drives, parking & slabs',
+    description:
+      'Crusher run, #3/#4/#5, and ABC for road base, subdivision streets, commercial parking lots, and subbase under large concrete slabs.',
+    typicalTons: { min: 30, max: 200 },
+    truckClasses: ['tri-axle', 'belly dump'],
+    audience: 'contractor',
+  },
+  {
+    slug: 'concrete-aggregate',
+    name: 'Foundations & flatwork',
+    description:
+      'Washed concrete sand and #67/#89 aggregate for ready-mix, footings, foundations, sidewalks, curbs, and structural concrete.',
+    typicalTons: { min: 20, max: 150 },
+    truckClasses: ['standard', 'tri-axle'],
+    audience: 'contractor',
   },
 ]
 
-export function getProject(slug: string): ProjectIntent | null {
-  return PROJECTS.find((p) => p.slug === slug) ?? null
+export function getProject(slug: string): Project | undefined {
+  return PROJECTS.find((p) => p.slug === slug)
 }
-
-export const PROJECT_SLUGS: ProjectSlug[] = PROJECTS.map((p) => p.slug)

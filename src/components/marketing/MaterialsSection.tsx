@@ -70,7 +70,7 @@ const CONTRACTOR_PROJECTS: ProjectCard[] = [
 function ProjectCardItem({ p }: { p: ProjectCard }) {
   return (
     <Link
-      href={`/order?project=${p.slug}`}
+      href={`/projects/${p.slug}`}
       className="group relative flex flex-col rounded-2xl bg-white border border-stone-200/80 p-7 transition-all duration-200 hover:border-[#1F3D2E]/30 hover:shadow-[0_8px_30px_-12px_rgba(31,61,46,0.18)]"
     >
       <div className="flex items-baseline justify-between mb-5">
