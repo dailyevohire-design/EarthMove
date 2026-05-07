@@ -22,8 +22,8 @@ export function Header() {
         </svg>
       </Link>
       <nav className="v3-hdr-nav">
-        <Link href="/login" className="v3-hdr-cta">Sign in</Link>
-        <Link href="/order" className="pill">Open dispatch →</Link>
+        <Link href="/login" className="pill v3-hdr-signin">SIGN IN</Link>
+        <Link href="/order" className="pill v3-hdr-open-dispatch">Open dispatch →</Link>
       </nav>
     </header>
   )
