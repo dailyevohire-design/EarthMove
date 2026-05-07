@@ -1,8 +1,7 @@
 import { inngest } from '@/lib/inngest'
 import { createAdminClient } from '@/lib/supabase/server'
-import { persistEvidence } from './scrapers/persist-evidence'
-import { runScraper } from './scrapers/registry'
-import { sourcesForTier } from './scrapers/tier-sources-loader'
+import { runTrustOrchestratorV2 } from './orchestrator-v2'
+import { resolveScrapersForTier, type Tier } from './tier-config'
 import Anthropic from '@anthropic-ai/sdk';
 import { callAnthropicWithWatchdog } from './anthropic-watchdog';
 import {
@@ -83,142 +82,41 @@ export const runTrustJobV2 = inngest.createFunction(
     const { job_id } = event.data as { job_id: string }
     const admin = createAdminClient()
 
-    // 1. Load job + tier + contractor identity
+    // Load job tier + contractor identity (orchestrator-v2 takes these as input).
     const job = await step.run('v2-load-job', async () => {
       const { data, error } = await admin
         .from('trust_jobs')
-        .select('id, tier, contractor_name:contractor_name_input, state_code, city, contractor_id')
+        .select('id, tier, contractor_name:contractor_name_input, state_code, city')
         .eq('id', job_id)
         .single()
       if (error) throw new Error(`v2-load-job: ${error.message}`)
       return data
     })
 
-    // 2. Resolve or create contractor row, link to job
-    const contractorRow = await step.run('v2-resolve-contractor', async () => {
-      const { data, error } = await admin.rpc('resolve_or_create_contractor', {
-        p_legal_name: job.contractor_name,
-        p_state_code: job.state_code,
-        p_city: job.city,
-      })
-      if (error) throw new Error(`v2-resolve-contractor: ${error.message}`)
-      if (!job.contractor_id && data?.id) {
-        await admin.from('trust_jobs').update({ contractor_id: data.id }).eq('id', job_id)
-      }
-      return data
-    })
+    const tier = job.tier as Tier
+    const scraperKeys = await resolveScrapersForTier(tier, job.state_code)
 
-    // 3. Determine sources for this tier (DB-driven via migration 200; cached after cold boot).
-    const sources = await sourcesForTier(job.tier, job.state_code)
+    // Delegate to runTrustOrchestratorV2 with runSynthesis: true. Orchestrator
+    // wraps each scraper in step.run for durability and sendEvent's
+    // trust/job.synthesize.requested at the end (handed off to runTrustSynthesizeV2).
+    const result = await runTrustOrchestratorV2(
+      {
+        contractor_name: job.contractor_name,
+        state_code: job.state_code,
+        city: job.city,
+        jobId: job_id,
+      },
+      {
+        tier,
+        runSynthesis: true,
+        scraperKeys,
+        synthesisModel: null, // synthesis function picks its own model from synthesize-v2-prompt config
+        nameVariants: [job.contractor_name], // PR #25 expands this
+      },
+      step,
+    )
 
-    // 4. Mark running + plan counters
-    await step.run('v2-mark-running', async () => {
-      await admin
-        .from('trust_jobs')
-        .update({
-          status: 'running',
-          started_at: new Date().toISOString(),
-          total_sources_planned: sources.length,
-        })
-        .eq('id', job_id)
-    })
-
-    // 5. Fan out scrapers serially within the function (per-job).
-    //    Serial because persistEvidence sequence_number requires per-job
-    //    ordering; the (job_id, sequence_number) unique index would reject
-    //    parallel inserts. Concurrency 5 across DIFFERENT jobs is the parallelism.
-    let completed = 0
-    let failed = 0
-    for (const sourceKey of sources) {
-      const result = await step.run(`v2-scrape-${sourceKey}`, async () => {
-        try {
-          const findings = await runScraper(sourceKey, {
-            legalName: job.contractor_name,
-            stateCode: job.state_code,
-            city: job.city,
-          })
-          // Multi-finding scrapers (e.g. permit history) emit several rows
-          // per source. Persist each finding via the same chain — sequence
-          // numbers are assigned atomically by append_trust_evidence RPC.
-          const evidenceIds: string[] = []
-          const emittedFindings: Array<{ evidence_id: string; finding_type: string }> = []
-          for (const f of findings) {
-            const persisted = await persistEvidence({
-              jobId: job_id,
-              contractorId: contractorRow?.id ?? null,
-              evidence: f,
-              supabase: admin as any,
-            })
-            evidenceIds.push(persisted.evidenceId)
-            emittedFindings.push({ evidence_id: persisted.evidenceId, finding_type: f.finding_type })
-          }
-          return { ok: true as const, evidenceIds, sourceKey, findingCount: findings.length, emittedFindings, contractorId: contractorRow?.id ?? null }
-        } catch (err: any) {
-          const errorEvidence = {
-            source_key: sourceKey,
-            finding_type: 'source_error' as const,
-            confidence: 'low_inference' as const,
-            finding_summary: `Scraper failed for ${sourceKey}: ${String(err?.message ?? err).slice(0, 300)}`,
-            extracted_facts: { error_class: err?.constructor?.name ?? 'Error' },
-            query_sent: null,
-            response_sha256: null,
-            response_snippet: null,
-            duration_ms: 0,
-            cost_cents: 0,
-          }
-          await persistEvidence({
-            jobId: job_id,
-            contractorId: contractorRow?.id ?? null,
-            evidence: errorEvidence,
-            supabase: admin as any,
-          })
-          return { ok: false as const, sourceKey, error: String(err?.message ?? err) }
-        }
-      })
-      if (result.ok) {
-        completed += 1
-        // Emit one trust/evidence.appended event per finding so the
-        // watch-alert worker (onTrustEvidenceAppended) can fan out
-        // dispatch rows for any user watching this contractor. Cheap —
-        // alert-worthy filter is applied inside the worker, not here.
-        if (result.emittedFindings && result.emittedFindings.length > 0 && result.contractorId) {
-          await step.sendEvent(`trust-evidence-appended-${sourceKey}`, result.emittedFindings.map((ef: { evidence_id: string; finding_type: string }) => ({
-            name: 'trust/evidence.appended',
-            data: {
-              evidence_id: ef.evidence_id,
-              finding_type: ef.finding_type,
-              source_key: sourceKey,
-              job_id,
-              contractor_id: result.contractorId,
-            },
-          })))
-        }
-      }
-      else failed += 1
-    }
-
-    await step.run('v2-update-counters', async () => {
-      const { count } = await admin
-        .from('trust_evidence')
-        .select('id', { count: 'exact', head: true })
-        .eq('job_id', job_id)
-      await admin
-        .from('trust_jobs')
-        .update({
-          status: 'synthesizing',
-          sources_completed: completed,
-          sources_failed: failed,
-          evidence_count: count ?? completed + failed,
-        })
-        .eq('id', job_id)
-    })
-
-    await step.sendEvent('trust-synthesize-emit', {
-      name: 'trust/job.synthesize.requested',
-      data: { job_id },
-    })
-
-    return { job_id, sources_attempted: sources.length, completed, failed }
+    return { job_id: result.job_id, kind: result.kind, sources_attempted: scraperKeys.length }
   },
 )
 

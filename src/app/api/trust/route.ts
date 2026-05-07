@@ -328,8 +328,12 @@ export async function POST(req: NextRequest) {
   let cacheCreationTokens = 0
   let piiHits: string[] = []
 
+  // PR #24 — runFreeTier now delegates to runTrustOrchestratorV2, which
+  // also inserts the trust_reports row itself. The result carries report_id;
+  // we honor it and skip the legacy in-route INSERT below.
+  let preInsertedReportId: string | null = null
   try {
-    const result = await runFreeTier(name, sCity, state, q => searches.push(q), hints)
+    const result = await runFreeTier(name, sCity, state, q => searches.push(q), hints, user?.id ?? null)
     report              = result.report
     costUsd             = result.costUsd
     tokensIn            = result.tokensIn
@@ -337,6 +341,8 @@ export async function POST(req: NextRequest) {
     cacheReadTokens     = result.cacheReadTokens
     cacheCreationTokens = result.cacheCreationTokens
     piiHits             = result.piiHits
+    preInsertedReportId = result.report_id ?? null
+    if (result.searches && result.searches.length > 0) searches.push(...result.searches)
   } catch (err: any) {
     console.error('[TrustAPI]', err.message)
     return NextResponse.json({ error: err.message ?? 'Verification failed' }, { status: 500 })
@@ -372,36 +378,39 @@ export async function POST(req: NextRequest) {
 
   const processingMs = Date.now() - start
 
-  let savedReportId: string | null = null
+  let savedReportId: string | null = preInsertedReportId
   try {
-    const { data: saved } = await admin.from('trust_reports').insert({
-      user_id: user?.id ?? null,
-      contractor_name: name,
-      city: sCity,
-      state_code: state,
-      tier,
-      trust_score: report.trust_score,
-      risk_level: report.risk_level,
-      confidence_level: report.confidence_level,
-      biz_status: report.business_registration?.status,
-      lic_status: report.licensing?.status,
-      bbb_rating: report.bbb_profile?.rating,
-      review_avg_rating: report.reviews?.average_rating,
-      review_total: report.reviews?.total_reviews,
-      review_sentiment: report.reviews?.sentiment,
-      legal_status: report.legal_records?.status,
-      osha_status: report.osha_violations?.status,
-      red_flags: report.red_flags ?? [],
-      positive_indicators: report.positive_indicators ?? [],
-      summary: report.summary,
-      data_sources_searched: report.data_sources_searched ?? [],
-      raw_report: report,
-      searches_performed: searches.length,
-      api_cost_usd: costUsd,
-      processing_ms: processingMs,
-    }).select('id').maybeSingle()
-
-    savedReportId = saved?.id ?? null
+    if (!preInsertedReportId) {
+      // Legacy path: orchestrator-v2 didn't pre-insert (e.g. paid-tier sync
+      // 'standard' that still hits this branch). Insert here as before.
+      const { data: saved } = await admin.from('trust_reports').insert({
+        user_id: user?.id ?? null,
+        contractor_name: name,
+        city: sCity,
+        state_code: state,
+        tier,
+        trust_score: report.trust_score,
+        risk_level: report.risk_level,
+        confidence_level: report.confidence_level,
+        biz_status: report.business_registration?.status,
+        lic_status: report.licensing?.status,
+        bbb_rating: report.bbb_profile?.rating,
+        review_avg_rating: report.reviews?.average_rating,
+        review_total: report.reviews?.total_reviews,
+        review_sentiment: report.reviews?.sentiment,
+        legal_status: report.legal_records?.status,
+        osha_status: report.osha_violations?.status,
+        red_flags: report.red_flags ?? [],
+        positive_indicators: report.positive_indicators ?? [],
+        summary: report.summary,
+        data_sources_searched: report.data_sources_searched ?? [],
+        raw_report: report,
+        searches_performed: searches.length,
+        api_cost_usd: costUsd,
+        processing_ms: processingMs,
+      }).select('id').maybeSingle()
+      savedReportId = saved?.id ?? null
+    }
 
     await admin.from('trust_api_usage').insert({
       user_id: user?.id ?? null,
@@ -412,7 +421,11 @@ export async function POST(req: NextRequest) {
       status: 'success',
     })
 
-    if (tier !== 'enterprise') {
+    if (tier !== 'enterprise' && !preInsertedReportId) {
+      // Skip cache write when orchestrator-v2 pre-inserted — the cached
+      // payload shape is stale vs the new flat-shape report and we don't
+      // want a poisoned cache entry. Cache for free tier is rebuilt in a
+      // follow-up commit when route.ts is refactored to read flat fields.
       await admin.rpc('set_cached_trust_report', {
         p_contractor: name,
         p_state: state,

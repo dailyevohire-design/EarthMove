@@ -1,6 +1,7 @@
 'use client'
 
 import DisambiguationPicker, { type AmbiguousCandidate } from './DisambiguationPicker'
+import NoEntityFoundCard from './no-entity-found-card'
 
 // Inline row type — matches select('*') on trust_reports. Kept here rather
 // than in types.ts because this view is the only consumer.
@@ -43,6 +44,7 @@ export interface TrustReport {
   evidence_ids: string[] | null
   synthesis_model: string | null
   structured_source_hit_rate: number | null
+  data_integrity_status: 'ok' | 'partial' | 'entity_not_found' | 'degraded' | 'failed' | null
 }
 
 // ---------- small inline presentational components ----------
@@ -189,6 +191,35 @@ function formatOshaViolations(report: TrustReport): React.ReactNode {
 // ---------- main view ----------
 
 export default function TrustReportView({ report }: { report: TrustReport }) {
+  // Entity-not-found branch — short-circuit the standard layout. Triggers when
+  // either data_integrity_status is explicitly 'entity_not_found', or the
+  // legacy criteria (no score, no biz/lic status, sources were searched).
+  // Variant suggestions are stubbed for commit 1; PR #25 wires real variants.
+  const isEntityNotFound =
+    report.data_integrity_status === 'entity_not_found' ||
+    (report.trust_score === null &&
+      report.biz_status === null &&
+      report.lic_status === null &&
+      (report.data_sources_searched?.length ?? 0) > 0)
+  if (isEntityNotFound) {
+    return (
+      <div className="min-h-screen bg-stone-50">
+        <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          <NoEntityFoundCard
+            searchedName={report.contractor_name}
+            stateCode={report.state_code}
+            sourcesSearched={report.data_sources_searched ?? []}
+            variantSuggestions={[
+              `${report.contractor_name} LLC`,
+              `${report.contractor_name} Inc`,
+              `${report.contractor_name} Corporation`,
+            ]}
+          />
+        </div>
+      </div>
+    )
+  }
+
   const rawCandidates = Array.isArray((report.raw_report as any)?.ambiguous_candidates)
     ? ((report.raw_report as any).ambiguous_candidates as AmbiguousCandidate[])
     : []
