@@ -301,13 +301,45 @@ export function scrubPIIFromReport(report: TrustReport): { scrubbed: TrustReport
   return { scrubbed, hits: Array.from(hits) }
 }
 
+/**
+ * Extract the first complete top-level JSON object by walking brace depth,
+ * respecting string literals and escape sequences. Returns null if no
+ * balanced object is found.
+ *
+ * Replaces a previous slice-from-first-{-to-last-} approach that broke when
+ * the model emitted trailing prose after the report. The system prompt asks
+ * for raw JSON only, but the model occasionally appends a comment or
+ * explanation. The old slice would include that prose, and JSON.parse would
+ * throw "Unexpected non-whitespace character after JSON at position N" —
+ * causing a free-tier "Report validation failed" 500 to the user.
+ */
+function extractFirstJsonObject(text: string): string | null {
+  const start = text.indexOf('{')
+  if (start === -1) return null
+  let depth = 0
+  let inString = false
+  let escape = false
+  for (let i = start; i < text.length; i++) {
+    const c = text[i]
+    if (escape) { escape = false; continue }
+    if (c === '\\') { escape = true; continue }
+    if (c === '"') { inString = !inString; continue }
+    if (inString) continue
+    if (c === '{') depth++
+    else if (c === '}') {
+      depth--
+      if (depth === 0) return text.slice(start, i + 1)
+    }
+  }
+  return null
+}
+
 export function parseReport(raw: string): { ok: true; data: TrustReport } | { ok: false; error: string } {
   try {
-    let json = raw.trim()
+    const cleaned = raw.trim()
       .replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '').trim()
-    const si = json.indexOf('{'), ei = json.lastIndexOf('}')
-    if (si === -1 || ei === -1) throw new Error('No JSON found')
-    json = json.slice(si, ei + 1)
+    const json = extractFirstJsonObject(cleaned)
+    if (!json) throw new Error('No balanced JSON object found in model response')
     const parsed = JSON.parse(json)
     const normalized = normalizeReport(parsed)
     const result = TrustReportSchema.safeParse(normalized)
