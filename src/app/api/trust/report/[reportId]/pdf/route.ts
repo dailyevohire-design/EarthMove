@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-import QRCode from 'qrcode';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { renderTrustPdf } from '@/lib/trust/pdf/render';
 
 export const dynamic = 'force-dynamic';
-
-const EVERGREEN = rgb(0x0E / 255, 0x2A / 255, 0x22 / 255);
-const STONE_500 = rgb(0x78 / 255, 0x71 / 255, 0x6c / 255);
-const STONE_700 = rgb(0x44 / 255, 0x40 / 255, 0x3c / 255);
-const CREAM = rgb(0xF5 / 255, 0xF1 / 255, 0xE8 / 255);
+// react-pdf renders synchronously and embeds woff2 fonts as base64 data URIs.
+// Cold-start adds ~600ms one-shot for font registration; subsequent calls in
+// the same lambda warm-instance reuse the registration.
+export const runtime = 'nodejs';
 
 export async function GET(
   req: NextRequest,
@@ -32,7 +28,11 @@ export async function GET(
   // Auth gate: same logic as create_trust_share_grant — owner OR job-requester OR access row
   const { data: report, error: rerr } = await admin
     .from('trust_reports')
-    .select('id, user_id, job_id, contractor_name, state_code, city, trust_score, risk_level, summary, created_at, lic_status, biz_status, bbb_rating, red_flags, positive_indicators, data_sources_searched')
+    .select(
+      'id, user_id, job_id, contractor_name, state_code, city, trust_score, risk_level, summary, created_at, ' +
+      'lic_status, lic_license_number, biz_status, biz_entity_type, biz_formation_date, bbb_rating, ' +
+      'osha_status, red_flags, positive_indicators, data_sources_searched',
+    )
     .eq('id', reportId)
     .maybeSingle();
 
@@ -56,125 +56,55 @@ export async function GET(
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 
-  // Free-tier sync reports never enter the Inngest job pipeline, so there is
-  // no trust_evidence chain to verify. Skip QR + integrity footer in that case
-  // — see Fix 5b (PR for Judge DFW polish). For paid (job-backed) reports, QR
-  // points at the public verify page, not the raw JSON API route.
-  const hasChain = !!report.job_id;
+  // Paid-tier reports have an evidence chain — count for the QR card subtitle
+  // and pull errored source_keys for the verification chip UNVERIFIED state.
+  // Free-tier reports (job_id null) skip both lookups; render.ts handles null.
   let evidenceCount: number | null = null;
-  let qrPngBytes: Buffer | null = null;
-  if (hasChain) {
+  let erroredSourceKeys: Set<string> | undefined;
+  if (report.job_id) {
     const { count } = await admin
       .from('trust_evidence').select('id', { count: 'exact', head: true }).eq('job_id', report.job_id);
     evidenceCount = count ?? 0;
-    const verifyUrl = `${req.nextUrl.origin}/trust/verify/${reportId}`;
-    qrPngBytes = await QRCode.toBuffer(verifyUrl, { width: 240, margin: 1, errorCorrectionLevel: 'M' });
-  }
 
-  // Build PDF
-  const pdf = await PDFDocument.create();
-  pdf.setTitle(`Groundcheck Report — ${report.contractor_name}`);
-  pdf.setAuthor('Groundcheck (Earth Pro Connect LLC)');
-  pdf.setProducer('Groundcheck');
-  pdf.setCreator('earthmove.io/trust');
-  pdf.setSubject('Public-records contractor verification');
-  pdf.setCreationDate(new Date());
-
-  const page = pdf.addPage([612, 792]); // US Letter
-  const helv = await pdf.embedFont(StandardFonts.Helvetica);
-  const helvBold = await pdf.embedFont(StandardFonts.HelveticaBold);
-
-  // EarthMove parent-brand lockup, embedded once per request. PNG is rasterized
-  // from public/brand/earthmove-lockup.svg at build/dev time — pdf-lib has no
-  // SVG support, so the PNG is the source of truth for the PDF surface.
-  const logoBytes = await fs.readFile(path.join(process.cwd(), 'public/brand/earthmove-lockup.png'));
-  const logoImg = await pdf.embedPng(logoBytes);
-
-  // Header band: Groundcheck wordmark on the left (product brand),
-  // EarthMove lockup on the right (parent brand).
-  page.drawRectangle({ x: 0, y: 740, width: 612, height: 52, color: CREAM });
-  page.drawText('Groundcheck', { x: 40, y: 758, size: 22, font: helvBold, color: EVERGREEN });
-  page.drawText('dig before you sign.', { x: 40, y: 745, size: 9, font: helv, color: STONE_700 });
-  page.drawImage(logoImg, { x: 472, y: 746, width: 100, height: 40 });
-
-  // Subject block
-  let y = 700;
-  page.drawText(report.contractor_name, { x: 40, y, size: 18, font: helvBold, color: EVERGREEN });
-  y -= 18;
-  const locLine = [report.city, report.state_code].filter(Boolean).join(', ');
-  if (locLine) {
-    page.drawText(locLine, { x: 40, y, size: 11, font: helv, color: STONE_500 });
-    y -= 16;
-  }
-  page.drawText(`Report generated ${new Date(report.created_at).toISOString().slice(0, 10)}`, {
-    x: 40, y, size: 9, font: helv, color: STONE_500,
-  });
-  y -= 30;
-
-  // Trust score box
-  page.drawRectangle({ x: 40, y: y - 80, width: 300, height: 80, color: CREAM });
-  page.drawText('Trust score', { x: 56, y: y - 18, size: 9, font: helv, color: STONE_700 });
-  page.drawText(report.trust_score != null ? String(report.trust_score) : '—', {
-    x: 56, y: y - 58, size: 36, font: helvBold, color: EVERGREEN,
-  });
-  page.drawText(report.risk_level ?? '—', {
-    x: 180, y: y - 38, size: 14, font: helvBold, color: EVERGREEN,
-  });
-  page.drawText('out of 100', { x: 130, y: y - 58, size: 9, font: helv, color: STONE_500 });
-  y -= 100;
-
-  // Status lines
-  const statusRows: Array<[string, string | null | undefined]> = [
-    ['Business registration', report.biz_status],
-    ['Licensing', report.lic_status],
-    ['Better Business Bureau', report.bbb_rating],
-  ];
-  for (const [label, val] of statusRows) {
-    page.drawText(label, { x: 40, y, size: 10, font: helvBold, color: STONE_700 });
-    page.drawText(val ?? 'No data', { x: 220, y, size: 10, font: helv, color: STONE_700 });
-    y -= 16;
-  }
-  y -= 10;
-
-  // Summary
-  if (report.summary) {
-    page.drawText('Summary', { x: 40, y, size: 11, font: helvBold, color: EVERGREEN });
-    y -= 16;
-    const wrapped = wrapText(report.summary, 80);
-    for (const line of wrapped.slice(0, 12)) {
-      page.drawText(line, { x: 40, y, size: 9, font: helv, color: STONE_700 });
-      y -= 12;
+    const { data: erroredRows } = await admin
+      .from('trust_evidence')
+      .select('source_key')
+      .eq('job_id', report.job_id)
+      .eq('source_errored', true);
+    if (erroredRows && erroredRows.length > 0) {
+      erroredSourceKeys = new Set(
+        (erroredRows as Array<{ source_key: string }>).map((r) => r.source_key),
+      );
     }
-    y -= 10;
   }
 
-  // QR + verify footer — paid (job-backed) reports only. Free-tier sync
-  // reports skip this block entirely (no trust_evidence chain exists).
-  if (hasChain && qrPngBytes) {
-    const qrImage = await pdf.embedPng(qrPngBytes);
-    page.drawImage(qrImage, { x: 432, y: 60, width: 120, height: 120 });
-    page.drawText('Verify this report', { x: 432, y: 192, size: 9, font: helvBold, color: EVERGREEN });
-    page.drawText('Scan to verify chain integrity', { x: 432, y: 50, size: 7, font: helv, color: STONE_500 });
-    page.drawText(`evidence rows: ${evidenceCount ?? 0}`, { x: 432, y: 40, size: 7, font: helv, color: STONE_500 });
-  } else {
-    page.drawText('Free-tier report — chain verification available on paid plans', {
-      x: 432, y: 70, size: 7, font: helv, color: STONE_500,
-    });
-  }
-
-  // Compliance footer
-  const disclaimer = 'This report compiles publicly available business records. It is not a consumer report under the Fair Credit Reporting Act, 15 U.S.C. § 1681 et seq. Findings are point-in-time observations and should be independently verified.';
-  const wrapDisc = wrapText(disclaimer, 65);
-  let dy = 130;
-  for (const line of wrapDisc) {
-    page.drawText(line, { x: 40, y: dy, size: 7, font: helv, color: STONE_500 });
-    dy -= 9;
-  }
-  page.drawText('Earth Pro Connect LLC · earthmove.io/trust', {
-    x: 40, y: 40, size: 7, font: helv, color: STONE_500,
+  const pdfBytes = await renderTrustPdf({
+    report: {
+      id: report.id,
+      contractor_name: report.contractor_name,
+      city: report.city,
+      state_code: report.state_code,
+      trust_score: report.trust_score,
+      risk_level: report.risk_level,
+      summary: report.summary,
+      red_flags: report.red_flags,
+      positive_indicators: report.positive_indicators,
+      data_sources_searched: report.data_sources_searched,
+      created_at: report.created_at,
+      job_id: report.job_id,
+      biz_entity_type: report.biz_entity_type,
+      biz_formation_date: report.biz_formation_date,
+      lic_license_number: report.lic_license_number,
+      biz_status: report.biz_status,
+      lic_status: report.lic_status,
+      osha_status: report.osha_status,
+      bbb_rating: report.bbb_rating,
+    },
+    evidenceCount,
+    errored_source_keys: erroredSourceKeys,
+    origin: req.nextUrl.origin,
   });
 
-  const pdfBytes = await pdf.save();
   return new NextResponse(Buffer.from(pdfBytes), {
     headers: {
       'Content-Type': 'application/pdf',
@@ -182,22 +112,6 @@ export async function GET(
       'Cache-Control': 'no-store',
     },
   });
-}
-
-function wrapText(s: string, max: number): string[] {
-  const words = s.replace(/\s+/g, ' ').trim().split(' ');
-  const lines: string[] = [];
-  let cur = '';
-  for (const w of words) {
-    if ((cur + ' ' + w).trim().length > max) {
-      if (cur) lines.push(cur);
-      cur = w;
-    } else {
-      cur = (cur + ' ' + w).trim();
-    }
-  }
-  if (cur) lines.push(cur);
-  return lines;
 }
 
 function slugify(s: string): string {
