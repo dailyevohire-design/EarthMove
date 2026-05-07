@@ -51,7 +51,7 @@ export function HeroLeftColumn() {
       </h1>
 
       <p className="hv-sub" id="subhead">
-        Intelligence behind every load — that&apos;s why our delivered cost is lower than any broker, any platform, any phone call you&apos;ve ever made, and finally a truck that shows up.
+        Delivered aggregate pricing in seconds. Drop a ZIP — we match the yard, route the truck, and lock the price against the closest verified yard in your market.
       </p>
 
       <form id="zipForm" className="hv-rq" onSubmit={handleZipSubmit} noValidate>
