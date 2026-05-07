@@ -8,20 +8,18 @@ import {
 } from 'lucide-react'
 import { Logo } from '@/components/logo'
 
-// Role-to-nav mapping
+// Single shared nav for gc + customer roles. /dashboard/page.tsx redirects
+// customer to /dashboard/gc, so both render the same surface tree. The
+// previous CUSTOMER_NAV pointed at /dashboard/contractors and /dashboard/orders
+// which were never built — clicking them 404'd. Orders live at the marketplace
+// /account/orders page (user-facing canonical orders surface).
 const GC_NAV = [
   { href: '/dashboard/gc',              icon: <LayoutDashboard size={14} />, label: 'Overview'          },
   { href: '/dashboard/gc/contractors',  icon: <ShieldCheck size={14} />,     label: 'Contractor Check'  },
   ...(process.env.NEXT_PUBLIC_COLLECTIONS_ENABLED === 'true'
     ? [{ href: '/collections/new',       icon: <ScrollText size={14} />,     label: 'Collections Assist' }]
     : []),
-  { href: '/dashboard/gc/orders',       icon: <ShoppingCart size={14} />,    label: 'My Orders'         },
-]
-
-const CUSTOMER_NAV = [
-  { href: '/dashboard',                 icon: <LayoutDashboard size={14} />, label: 'Overview'          },
-  { href: '/dashboard/orders',          icon: <ShoppingCart size={14} />,    label: 'My Orders'         },
-  { href: '/dashboard/contractors',     icon: <ShieldCheck size={14} />,     label: 'Contractor Check'  },
+  { href: '/account/orders',            icon: <ShoppingCart size={14} />,    label: 'My Orders'         },
 ]
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -50,7 +48,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Drivers render their own V2 chrome from src/app/dashboard/driver/layout.tsx
   if (role === 'driver') return <>{children}</>
 
-  const nav = role === 'gc' ? GC_NAV : CUSTOMER_NAV
+  // gc + customer share the same surface (gc routes); only the portal label
+  // differs. Driver/supplier/admin already redirected away above.
+  const nav = GC_NAV
   const portalLabel = role === 'gc' ? 'GC Portal' : 'My Account'
 
   const homeHref = role === 'gc' ? '/dashboard/gc' : '/dashboard'
