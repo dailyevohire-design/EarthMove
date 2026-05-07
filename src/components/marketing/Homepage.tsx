@@ -22,6 +22,7 @@ import { TrustBand } from './v3/TrustBand'
 import { Dispatch } from './v3/Dispatch'
 import { ActivityFeed } from './v3/ActivityFeed'
 import { FootCTA } from './v3/FootCTA'
+import { V3Footer } from './v3/V3Footer'
 
 export async function Homepage() {
   const supabase = await createClient()
@@ -108,12 +109,8 @@ export async function Homepage() {
         </div>
 
         <FootCTA />
-
-        <div className="v3-legal">
-          <span>DEN · DFW launching today · Portland next</span>
-          <span>v3.0</span>
-        </div>
       </div>
+      <V3Footer />
     </div>
   )
 }

@@ -172,6 +172,70 @@ export async function sendGuestClaimAccount(data: GuestClaimAccountData) {
   }
 }
 
+// ── Contact form ────────────────────────────────────────────────────────────
+
+export interface ContactInquiryData {
+  fullName: string
+  email: string
+  role: 'homeowner' | 'contractor' | 'driver' | 'supplier' | 'other'
+  subject: string
+  message: string
+}
+
+const CONTACT_NOTIFICATION_RECIPIENTS = [
+  'support@filldirtnearme.net',
+  'john@filldirtnearme.net',
+] as const
+
+const ROLE_LABEL: Record<ContactInquiryData['role'], string> = {
+  homeowner:  'Homeowner',
+  contractor: 'Contractor',
+  driver:     'Driver / Hauler',
+  supplier:   'Supplier / Yard',
+  other:      'Other',
+}
+
+/**
+ * Notify internal team when someone submits the /contact form.
+ * Best-effort — the API endpoint persists the inquiry to audit_events so
+ * leads survive transient Resend / network failures.
+ */
+export async function sendContactInquiry(data: ContactInquiryData) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[email] RESEND_API_KEY not set, skipping contact inquiry email')
+    return
+  }
+  const from = process.env.RESEND_FROM_EMAIL ?? 'orders@earthmove.io'
+  const subject = `[Contact] ${data.subject} — ${data.fullName}`
+
+  try {
+    await getResend().emails.send({
+      from,
+      to: [...CONTACT_NOTIFICATION_RECIPIENTS],
+      replyTo: data.email,
+      subject,
+      html: `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:640px;margin:0 auto;padding:24px 16px">
+          <div style="margin-bottom:20px">
+            <span style="display:inline-block;background:#f0fdf4;color:#059669;border:1px solid #bbf7d0;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:600">${esc(ROLE_LABEL[data.role])}</span>
+          </div>
+          <h2 style="color:#111827;font-size:20px;margin:0 0 4px">${esc(data.fullName)}</h2>
+          <p style="color:#6b7280;font-size:13px;margin:0 0 8px">
+            <a href="mailto:${esc(data.email)}" style="color:#059669;text-decoration:none">${esc(data.email)}</a>
+          </p>
+          <p style="color:#6b7280;font-size:13px;margin:0 0 20px">Submitted via /contact</p>
+          <h3 style="color:#111827;font-size:16px;margin:0 0 8px">${esc(data.subject)}</h3>
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;color:#374151;font-size:14px;line-height:1.55;white-space:pre-wrap">${esc(data.message)}</div>
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px">Reply to this email to respond directly.</p>
+        </div>
+      `,
+    })
+    console.log(`[email] Contact inquiry sent for ${data.email}`)
+  } catch (err) {
+    console.error('[email] Failed to send contact inquiry email:', err)
+  }
+}
+
 // ── Join the network (driver + contractor) ─────────────────────────────────
 
 export interface JoinLeadData {

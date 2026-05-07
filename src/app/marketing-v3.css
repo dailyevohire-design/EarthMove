@@ -648,7 +648,7 @@
 
 /* CONTRACTOR FOOTER CTA */
 .marketing-v3 .v3-foot-cta {
-  margin: 36px 22px 0;
+  margin: 36px 22px 40px;
   background: var(--bg-2); border: 1px solid var(--rule);
   border-radius: 14px; padding: 24px 22px;
   position: relative; overflow: hidden;
@@ -729,7 +729,7 @@
 
   .marketing-v3 .v3-feed { margin: 28px 32px 0; }
 
-  .marketing-v3 .v3-foot-cta { margin: 48px 32px 0; padding: 32px; }
+  .marketing-v3 .v3-foot-cta { margin: 48px 32px 56px; padding: 32px; }
   .marketing-v3 .v3-foot-cta h3 { font-size: 32px; }
 
   .marketing-v3 .v3-legal { margin: 48px 32px 32px; }
@@ -1027,7 +1027,7 @@
   /* FOOT CTA — dark full-bleed card with stats column */
   .marketing-v3 .v3-foot-cta {
     max-width: 1320px;
-    margin: 110px auto 0;
+    margin: 110px auto 88px;
     padding: 64px 56px;
     border-radius: 22px;
     background: var(--ink);
@@ -1191,4 +1191,262 @@
   .marketing-v3 .v3-mission-h { font-size: 56px; line-height: 1.02; margin: 0 0 22px; }
   .marketing-v3 .v3-mission-lede { font-size: 16px; max-width: 60ch; }
   .marketing-v3 .v3-mission-foot { font-size: 11px; }
+}
+
+/* ================================================================
+   V3 SITE FOOTER — paper bg, mono headers, audience-grouped nav.
+   Sits below the mission emerald band; provides visual rest before
+   legal strip. Mobile: stacked single-column. Desktop: 4-col grid.
+   ================================================================ */
+.marketing-v3 .v3-footer {
+  background: var(--bg);
+  border-top: 1px solid var(--rule);
+  padding: 48px 22px 28px;
+  margin: 0;
+  color: var(--ink-2);
+}
+.marketing-v3 .v3-footer-top {
+  display: flex; flex-direction: column; gap: 12px;
+  margin-bottom: 36px;
+}
+.marketing-v3 .v3-footer-brand { display: inline-flex; color: #14302A; }
+.marketing-v3 .v3-footer-brand svg { display: block; height: 22px; width: auto; }
+.marketing-v3 .v3-footer-tag {
+  font-size: 13px; line-height: 1.5; color: var(--ink-3);
+  margin: 0; max-width: 42ch;
+}
+.marketing-v3 .v3-footer-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px 18px;
+  margin-bottom: 36px;
+}
+.marketing-v3 .v3-footer-col {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.marketing-v3 .v3-footer-h {
+  font-family: var(--mono-v3); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--mute); margin-bottom: 4px;
+}
+.marketing-v3 .v3-footer-col a {
+  font-size: 13.5px; color: var(--ink); line-height: 1.4;
+  transition: color 0.15s;
+}
+.marketing-v3 .v3-footer-col a:hover { color: var(--orange); }
+.marketing-v3 .v3-footer-rule {
+  height: 1px; background: var(--rule); margin: 8px 0 22px;
+}
+.marketing-v3 .v3-footer-legal {
+  display: flex; flex-direction: column; gap: 14px;
+  font-family: var(--mono-v3); font-size: 10px;
+  letter-spacing: 0.10em; color: var(--mute);
+  text-transform: uppercase;
+}
+.marketing-v3 .v3-footer-meta {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.marketing-v3 .v3-footer-legal-links {
+  display: flex; gap: 18px; flex-wrap: wrap;
+}
+.marketing-v3 .v3-footer-legal-links a {
+  color: var(--ink-3); transition: color 0.15s;
+}
+.marketing-v3 .v3-footer-legal-links a:hover { color: var(--ink); }
+
+@media (min-width: 768px) {
+  .marketing-v3 .v3-footer { padding: 64px 32px 36px; }
+  .marketing-v3 .v3-footer-nav { grid-template-columns: repeat(4, 1fr); gap: 32px; }
+  .marketing-v3 .v3-footer-tag { font-size: 14px; }
+}
+
+@media (min-width: 900px) {
+  .marketing-v3 .v3-footer {
+    padding: 88px 56px 44px;
+  }
+  .marketing-v3 .v3-footer-top {
+    flex-direction: row; justify-content: space-between;
+    align-items: flex-end; gap: 32px; margin-bottom: 56px;
+  }
+  .marketing-v3 .v3-footer-brand svg { height: 26px; }
+  .marketing-v3 .v3-footer-tag {
+    text-align: right; max-width: 32ch; margin: 0;
+  }
+  .marketing-v3 .v3-footer-nav { gap: 48px; margin-bottom: 56px; }
+  .marketing-v3 .v3-footer-col a { font-size: 14px; }
+  .marketing-v3 .v3-footer-legal {
+    flex-direction: row; justify-content: space-between; align-items: center;
+    gap: 24px; font-size: 10.5px;
+  }
+  .marketing-v3 .v3-footer-meta { flex-direction: row; gap: 24px; }
+}
+
+/* ================================================================
+   /contact PAGE — paper hero, 2-col form layout on desktop.
+   Mirrors v3 marketing tokens (Instrument Serif h, mono eyebrow,
+   dark CTA, paper bg). Standalone — does not extend Homepage shell.
+   ================================================================ */
+.marketing-v3 .v3-contact-page {
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--ink);
+}
+.marketing-v3 .v3-contact-hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 22px; border-bottom: 1px solid var(--rule);
+}
+.marketing-v3 .v3-contact-brand { display: inline-flex; color: #14302A; }
+.marketing-v3 .v3-contact-back {
+  font-family: var(--mono-v3); font-size: 10px; letter-spacing: 0.10em;
+  color: var(--mute); text-transform: uppercase;
+  transition: color 0.15s;
+}
+.marketing-v3 .v3-contact-back:hover { color: var(--ink); }
+
+.marketing-v3 .v3-contact-main {
+  max-width: 1200px; margin: 0 auto;
+  padding: 48px 22px 64px;
+  display: flex; flex-direction: column; gap: 40px;
+}
+.marketing-v3 .v3-contact-eyebrow {
+  font-family: var(--mono-v3); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 14px;
+}
+.marketing-v3 .v3-contact-h {
+  font-family: var(--serif-v3); font-weight: 400;
+  font-size: 48px; line-height: 0.96; letter-spacing: -0.025em;
+  margin: 0 0 18px; color: var(--ink);
+}
+.marketing-v3 .v3-contact-h em { font-style: italic; color: var(--orange); }
+.marketing-v3 .v3-contact-h2 {
+  font-family: var(--serif-v3); font-weight: 400;
+  font-size: 28px; line-height: 1.05; letter-spacing: -0.02em;
+  margin: 0 0 20px;
+}
+.marketing-v3 .v3-contact-lede {
+  font-size: 15px; line-height: 1.55; color: var(--ink-3);
+  margin: 0 0 28px; max-width: 50ch;
+}
+
+.marketing-v3 .v3-contact-quick {
+  display: flex; flex-direction: column;
+  background: var(--paper); border: 1px solid var(--rule);
+  border-radius: 12px; overflow: hidden;
+  margin-bottom: 8px;
+}
+.marketing-v3 .v3-contact-quick-row {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 16px; border-bottom: 1px solid var(--rule);
+  transition: background 0.15s;
+}
+.marketing-v3 .v3-contact-quick-row:last-child { border-bottom: 0; }
+.marketing-v3 .v3-contact-quick-row:hover { background: var(--bg-2); }
+.marketing-v3 .v3-contact-quick-row .k {
+  font-family: var(--mono-v3); font-size: 9.5px; letter-spacing: 0.10em;
+  color: var(--mute); text-transform: uppercase;
+}
+.marketing-v3 .v3-contact-quick-row .v {
+  font-size: 14px; color: var(--ink); font-weight: 500;
+}
+
+/* form */
+.marketing-v3 .v3-contact-form-wrap {
+  background: var(--paper); border: 1px solid var(--rule);
+  border-radius: 14px; padding: 28px 22px;
+  box-shadow: 0 1px 0 rgba(14,20,16,0.02), 0 18px 40px -22px rgba(14,20,16,0.18);
+}
+.marketing-v3 .v3-contact-form { display: flex; flex-direction: column; gap: 18px; }
+.marketing-v3 .v3-contact-form .v3-contact-eyebrow { margin-bottom: 8px; }
+.marketing-v3 .v3-contact-row {
+  display: flex; flex-direction: column; gap: 18px;
+}
+.marketing-v3 .v3-contact-field {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.marketing-v3 .v3-contact-field .lbl {
+  font-family: var(--mono-v3); font-size: 9px; letter-spacing: 0.14em;
+  color: var(--mute); text-transform: uppercase;
+}
+.marketing-v3 .v3-contact-field input,
+.marketing-v3 .v3-contact-field textarea {
+  background: var(--bg); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 12px 14px;
+  font-family: var(--sans-v3); font-size: 15px;
+  color: var(--ink); outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.marketing-v3 .v3-contact-field input::placeholder,
+.marketing-v3 .v3-contact-field textarea::placeholder { color: var(--mute); }
+.marketing-v3 .v3-contact-field input:focus,
+.marketing-v3 .v3-contact-field textarea:focus {
+  border-color: var(--ink); background: #fff;
+  box-shadow: 0 0 0 3px rgba(26,27,30,0.08);
+}
+.marketing-v3 .v3-contact-field textarea {
+  resize: vertical; min-height: 120px; line-height: 1.5;
+}
+.marketing-v3 .v3-contact-roles {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.marketing-v3 .v3-contact-role {
+  padding: 9px 14px; border: 1px solid var(--rule); border-radius: 999px;
+  background: var(--bg); font-size: 12.5px; font-weight: 500;
+  color: var(--ink-2); transition: all 0.15s;
+  letter-spacing: -0.005em;
+}
+.marketing-v3 .v3-contact-role:hover { border-color: var(--rule-2); background: var(--paper); }
+.marketing-v3 .v3-contact-role.on {
+  background: var(--ink); color: #fff; border-color: var(--ink);
+}
+.marketing-v3 .v3-contact-error {
+  background: rgba(176,73,42,0.08); border: 1px solid rgba(176,73,42,0.24);
+  color: #8E3B22; padding: 10px 14px; border-radius: 8px;
+  font-size: 13.5px;
+}
+.marketing-v3 .v3-contact-actions {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 8px;
+}
+.marketing-v3 .v3-contact-actions .v3-cta { width: 100%; }
+.marketing-v3 .v3-contact-fineprint {
+  font-size: 11.5px; color: var(--ink-3); line-height: 1.5;
+}
+.marketing-v3 .v3-contact-fineprint a { text-decoration: underline; }
+
+.marketing-v3 .v3-contact-success {
+  text-align: left;
+}
+.marketing-v3 .v3-contact-success p {
+  font-size: 15px; line-height: 1.55; color: var(--ink-3);
+  margin: 0 0 22px;
+}
+.marketing-v3 .v3-contact-success .v3-cta {
+  display: inline-flex; padding: 0 22px; height: 48px;
+}
+
+@media (min-width: 768px) {
+  .marketing-v3 .v3-contact-hdr { padding: 22px 32px; }
+  .marketing-v3 .v3-contact-main { padding: 64px 32px 80px; gap: 48px; }
+  .marketing-v3 .v3-contact-h { font-size: 64px; }
+  .marketing-v3 .v3-contact-h2 { font-size: 32px; }
+  .marketing-v3 .v3-contact-form-wrap { padding: 36px 32px; }
+  .marketing-v3 .v3-contact-row { flex-direction: row; }
+  .marketing-v3 .v3-contact-row .v3-contact-field { flex: 1; }
+}
+
+@media (min-width: 900px) {
+  .marketing-v3 .v3-contact-hdr { padding: 22px 56px; }
+  .marketing-v3 .v3-contact-main {
+    padding: 88px 56px 96px;
+    display: grid;
+    grid-template-columns: 0.95fr 1.05fr;
+    gap: 80px;
+    align-items: start;
+  }
+  .marketing-v3 .v3-contact-intro { position: sticky; top: 56px; }
+  .marketing-v3 .v3-contact-h { font-size: 80px; letter-spacing: -0.03em; }
+  .marketing-v3 .v3-contact-form-wrap { padding: 40px 36px; }
+  .marketing-v3 .v3-contact-actions { flex-direction: row; align-items: center; gap: 18px; }
+  .marketing-v3 .v3-contact-actions .v3-cta { width: auto; padding: 0 28px; flex-shrink: 0; }
 }
