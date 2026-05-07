@@ -53,10 +53,42 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const nav = role === 'gc' ? GC_NAV : CUSTOMER_NAV
   const portalLabel = role === 'gc' ? 'GC Portal' : 'My Account'
 
+  const homeHref = role === 'gc' ? '/dashboard/gc' : '/dashboard'
+
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar — light theme to match /join + contractor check */}
-      <aside className="w-56 flex-shrink-0 border-r border-gray-200 flex flex-col bg-white sticky top-0 h-screen">
+    <div className="em-surface min-h-screen md:flex">
+      {/* Mobile top bar — visible below md only. Brand row + horizontal nav strip. */}
+      <header className="md:hidden sticky top-0 z-20 bg-white border-b border-gray-200">
+        <div className="px-4 h-14 flex items-center justify-between">
+          <Link href={homeHref} className="flex items-center gap-2 min-w-0">
+            <Logo variant="mark" size={18} />
+            <div className="min-w-0">
+              <div className="text-xs font-black text-gray-900 leading-tight truncate">
+                {displayName}
+              </div>
+              <div className="text-[10px] text-emerald-600 font-semibold leading-none">{portalLabel}</div>
+            </div>
+          </Link>
+          <Link href="/login" className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-600">
+            <LogOut size={13} /> Sign Out
+          </Link>
+        </div>
+        <nav className="flex overflow-x-auto px-3 pb-2 gap-1">
+          {nav.map(item => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg whitespace-nowrap transition-colors"
+            >
+              <span className="text-gray-400">{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      </header>
+
+      {/* Desktop sidebar — visible md+ only. Same content as before. */}
+      <aside className="hidden md:flex w-56 flex-shrink-0 border-r border-gray-200 flex-col bg-white sticky top-0 h-screen">
         <div className="h-16 flex items-center px-5 border-b border-gray-200">
           <div className="flex items-center gap-2">
             <Logo variant="mark" size={18} />
@@ -91,7 +123,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </aside>
 
-      <main className="flex-1 min-w-0 overflow-auto bg-gray-50">{children}</main>
+      <main className="flex-1 min-w-0 overflow-auto">{children}</main>
     </div>
   )
 }
