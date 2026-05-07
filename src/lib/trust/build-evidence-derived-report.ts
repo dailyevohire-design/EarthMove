@@ -17,6 +17,18 @@
 
 import type { ScraperEvidence, TrustFindingType } from './scrapers/types'
 
+/**
+ * Input type — extends ScraperEvidence with the DB-row fields needed to
+ * populate evidence_ids and raw_report.sources_cited. Callers reading from
+ * trust_evidence pass id/chain_hash/pulled_at; in-memory callers (tests,
+ * fresh-from-scraper paths) can omit them.
+ */
+export interface BuildReportEvidence extends ScraperEvidence {
+  id?: string
+  chain_hash?: string | null
+  pulled_at?: string | null
+}
+
 export interface EvidenceDerivedReport {
   biz_status: string | null
   biz_entity_type: string | null
@@ -40,6 +52,13 @@ export interface EvidenceDerivedReport {
   data_integrity_status: 'ok' | 'partial' | 'entity_not_found' | 'degraded' | 'failed'
   data_sources_searched: string[]
   synthesis_model: string
+  /** Trust_evidence row ids backing this report — required for QR chain
+   *  verification and PDF citation links. Omitted ids (in-memory callers)
+   *  are filtered out, so the array length may be less than evidence.length. */
+  evidence_ids: string[]
+  /** Structured projection of extracted_facts for PDF + share-page consumers.
+   *  See raw_report shape comment in buildEvidenceDerivedReport. */
+  raw_report: Record<string, unknown>
 }
 
 const NULL_FINDING_SUFFIXES = [
@@ -55,7 +74,7 @@ function uniq(arr: string[]): string[] {
   return Array.from(new Set(arr.filter((x) => x && x.trim().length > 0)))
 }
 
-export function buildEvidenceDerivedReport(evidence: ScraperEvidence[]): EvidenceDerivedReport {
+export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): EvidenceDerivedReport {
   const sourcesSearched = uniq(evidence.map((e) => e.source_key))
   const errored = evidence.filter((e) => e.finding_type === 'source_error')
   const totalSourceTouches = sourcesSearched.length || 1
@@ -284,6 +303,143 @@ export function buildEvidenceDerivedReport(evidence: ScraperEvidence[]): Evidenc
     trustScore,
   })
 
+  // Projection pass: walk evidence by source_key and pull richer extracted_facts
+  // into both flat columns (biz_entity_type, biz_formation_date, lic_*, bbb_*)
+  // and the raw_report jsonb consumed by the PDF + share-page renderers.
+  // Runs AFTER the scoring switch above so the column values from the rich
+  // facts override the implicit ones (the switch only extracted entity_type/
+  // formation_date for `business_active`, missing inactive/dissolved cases —
+  // which is how Bedrock excavating corp / report 53b2733c ended up with
+  // null biz_entity_type despite a clean co_sos_biz hit).
+  const evidenceIds: string[] = evidence
+    .map((e) => e.id)
+    .filter((id): id is string => typeof id === 'string')
+
+  const rawBusiness: Record<string, unknown> = {}
+  const rawLicensing: Record<string, unknown> = {}
+  const rawSanctions: Record<string, unknown> = {}
+  const rawLegal: { sources_searched: string[]; findings: string[] } = {
+    sources_searched: [],
+    findings: [],
+  }
+  const sourcesCited: Array<Record<string, unknown>> = []
+
+  let businessSet = false
+  let licensingSet = false
+  let sanctionsSet = false
+
+  const SOS_KEYS = new Set([
+    'co_sos_biz', 'tx_sos_biz', 'fl_sunbiz', 'ca_sos_biz', 'ny_sos_biz',
+    'wa_sos_biz', 'or_sos_biz', 'nc_sos_biz', 'ga_sos_biz', 'az_ecorp',
+  ])
+  const LICENSE_KEYS = new Set([
+    'co_dora', 'tx_tdlr', 'cslb_ca', 'roc_az', 'ccb_or', 'lni_wa',
+    'dbpr_fl', 'nclbgc_nc',
+  ])
+  const LEGAL_KEYS = new Set(['courtlistener_fed', 'state_ag_enforcement'])
+
+  for (const e of evidence) {
+    const facts = (e.extracted_facts ?? {}) as Record<string, unknown>
+    const str = (k: string): string | null =>
+      typeof facts[k] === 'string' && (facts[k] as string).length > 0 ? (facts[k] as string) : null
+
+    if (SOS_KEYS.has(e.source_key)) {
+      // Project to flat columns even when the finding wasn't `business_active`
+      // (Delinquent/Dissolved entities still have entity_type/formation_date).
+      bizEntityType = bizEntityType ?? str('entity_type')
+      bizFormationDate = bizFormationDate ?? str('formation_date')
+
+      if (!businessSet) {
+        const officers = Array.isArray(facts.officers)
+          ? (facts.officers as Array<Record<string, unknown>>)
+          : []
+        const registeredAgent = officers.find(
+          (o) => o && (o as { role_hint?: unknown }).role_hint === 'registered_agent',
+        )
+        rawBusiness.entity_name = str('entity_name')
+        rawBusiness.entity_type = str('entity_type')
+        rawBusiness.entity_id = str('entity_id')
+        rawBusiness.formation_date = str('formation_date')
+        rawBusiness.jurisdiction = str('jurisdiction') ?? str('jurisdiction_of_formation')
+        rawBusiness.status = str('status') ?? bizStatus
+        rawBusiness.principal_address = str('principal_address')
+        rawBusiness.registered_agent =
+          registeredAgent && typeof (registeredAgent as { name?: unknown }).name === 'string'
+            ? ((registeredAgent as { name: string }).name)
+            : (str('registered_agent_organization') ?? null)
+        rawBusiness.source_url = str('source_url') ?? str('citation_url')
+        businessSet = true
+      }
+    }
+
+    if (LICENSE_KEYS.has(e.source_key)) {
+      licLicenseNumber = licLicenseNumber ?? str('license_number')
+      if (!licensingSet) {
+        rawLicensing.status = licStatus
+        rawLicensing.license_number = str('license_number')
+        rawLicensing.expires = str('expires_at') ?? str('expiration_date')
+        rawLicensing.source_note = e.finding_summary
+        rawLicensing.source_url = str('source_url') ?? str('citation_url')
+        licensingSet = true
+      }
+    }
+
+    if (e.source_key === 'sam_gov_exclusions' && !sanctionsSet) {
+      rawSanctions.status = e.finding_type === 'sanction_hit' ? 'hit' : 'clear'
+      rawSanctions.source_url = str('source_url') ?? str('citation_url')
+      rawSanctions.source_note = e.finding_summary
+      sanctionsSet = true
+    }
+
+    if (e.source_key === 'osha_est_search') {
+      const vc = facts.violation_count
+      const sc = facts.serious_count
+      if (typeof vc === 'number' && oshaViolationCount === null) oshaViolationCount = vc
+      if (typeof sc === 'number' && oshaSeriousCount === null) oshaSeriousCount = sc
+    }
+
+    if (e.source_key === 'bbb_profile') {
+      bbbRating = bbbRating ?? str('rating')
+      const cc = facts.complaint_count
+      if (typeof cc === 'number') bbbComplaintCount = cc
+      const acc = facts.accredited
+      if (typeof acc === 'boolean') bbbAccredited = acc
+    }
+
+    if (LEGAL_KEYS.has(e.source_key)) {
+      if (!rawLegal.sources_searched.includes(e.source_key)) {
+        rawLegal.sources_searched.push(e.source_key)
+      }
+      const adverseTypes: TrustFindingType[] = [
+        'legal_action_found', 'legal_judgment_against', 'civil_judgment_against',
+        'civil_settlement', 'mechanic_lien_filed',
+      ]
+      if (adverseTypes.includes(e.finding_type)) {
+        rawLegal.findings.push(e.finding_summary)
+      }
+    }
+
+    sourcesCited.push({
+      source_key: e.source_key,
+      finding_summary: e.finding_summary,
+      confidence: e.confidence,
+      pulled_at: e.pulled_at ?? null,
+      chain_hash: e.chain_hash ?? null,
+      citation_url:
+        typeof facts.citation_url === 'string' ? (facts.citation_url as string)
+        : typeof facts.search_url === 'string' ? (facts.search_url as string)
+        : null,
+    })
+  }
+
+  const rawReport: Record<string, unknown> = {
+    business: businessSet ? rawBusiness : null,
+    licensing: licensingSet ? rawLicensing : null,
+    sanctions: sanctionsSet ? rawSanctions : null,
+    legal: rawLegal,
+    sources_cited: sourcesCited,
+  }
+
   return {
     biz_status: bizStatus,
     biz_entity_type: bizEntityType,
@@ -307,6 +463,8 @@ export function buildEvidenceDerivedReport(evidence: ScraperEvidence[]): Evidenc
     data_integrity_status: dataIntegrityStatus,
     data_sources_searched: sourcesSearched,
     synthesis_model: 'templated_evidence_derived',
+    evidence_ids: evidenceIds,
+    raw_report: rawReport,
   }
 }
 

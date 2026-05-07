@@ -249,19 +249,26 @@ async function finalizeFreeTier(
   opts: OrchestratorOpts,
   jobId: string,
 ): Promise<OrchestratorResult> {
+  // Pull richer columns so buildEvidenceDerivedReport can populate
+  // evidence_ids and raw_report.sources_cited (needs id, chain_hash,
+  // pulled_at — see BuildReportEvidence interface).
   const { data: evidenceRows, error: evidenceErr } = await admin
     .from('trust_evidence')
-    .select('source_key, finding_type, confidence, finding_summary, extracted_facts')
+    .select('id, source_key, finding_type, confidence, finding_summary, extracted_facts, chain_hash, pulled_at, sequence_number')
     .eq('job_id', jobId)
+    .order('sequence_number', { ascending: true })
 
   if (evidenceErr) throw new Error(`finalizeFreeTier: read evidence: ${evidenceErr.message}`)
 
-  const evidence: ScraperEvidence[] = (evidenceRows ?? []).map((r) => ({
-    source_key: r.source_key,
-    finding_type: r.finding_type,
-    confidence: r.confidence,
-    finding_summary: r.finding_summary,
+  const evidence = (evidenceRows ?? []).map((r) => ({
+    id: r.id as string,
+    source_key: r.source_key as string,
+    finding_type: r.finding_type as ScraperEvidence['finding_type'],
+    confidence: r.confidence as ScraperEvidence['confidence'],
+    finding_summary: r.finding_summary as string,
     extracted_facts: (r.extracted_facts as Record<string, unknown>) ?? {},
+    chain_hash: (r.chain_hash as string | null) ?? null,
+    pulled_at: (r.pulled_at as string | null) ?? null,
     query_sent: null,
     response_sha256: null,
     response_snippet: null,
@@ -303,6 +310,8 @@ async function finalizeFreeTier(
       data_integrity_status: derived.data_integrity_status,
       synthesis_model: derived.synthesis_model,
       searches_performed: derived.data_sources_searched.length,
+      evidence_ids: derived.evidence_ids,
+      raw_report: derived.raw_report,
     })
     .select('id, created_at')
     .single()
