@@ -720,7 +720,9 @@
   .marketing-v3 .v3-legal { margin: 48px 32px 32px; }
 }
 
-@media (min-width: 1100px) {
+/* Lowered from 1100px so Chrome Android "Request desktop site" (~980px) hits
+   the full desktop composition instead of the awkward tablet middle state. */
+@media (min-width: 900px) {
   .marketing-v3-shell { max-width: 1180px; }
 
   .marketing-v3 .v3-hdr { padding: 20px 48px; }
