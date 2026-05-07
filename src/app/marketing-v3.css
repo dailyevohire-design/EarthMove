@@ -705,12 +705,12 @@
   .marketing-v3 .v3-pe-h { font-size: 38px; }
 
   .marketing-v3 .v3-md { margin: 28px 32px 0; }
-  .marketing-v3 .v3-md-map { height: 280px; }
+  .marketing-v3 .v3-md-map { aspect-ratio: 16 / 10; height: auto; max-width: 760px; margin-left: auto; margin-right: auto; }
 
   .marketing-v3 .v3-trust { padding: 28px 32px 22px; }
 
   .marketing-v3 .v3-tele { margin: 28px 32px 0; }
-  .marketing-v3 .v3-tele-map { height: 240px; }
+  .marketing-v3 .v3-tele-map { aspect-ratio: 16 / 10; height: auto; max-width: 760px; margin-left: auto; margin-right: auto; }
 
   .marketing-v3 .v3-feed { margin: 28px 32px 0; }
 
@@ -766,7 +766,7 @@
   .marketing-v3 .v3-pe-anchor .num { font-size: 34px; }
 
   .marketing-v3 .v3-md { margin: 36px 48px 0; }
-  .marketing-v3 .v3-md-map { height: 360px; }
+  .marketing-v3 .v3-md-map { aspect-ratio: 16 / 10; height: auto; max-width: 900px; margin-left: auto; margin-right: auto; }
   .marketing-v3 .v3-md-row {
     grid-template-columns: 14px 160px 1fr;
     padding: 12px 24px;
@@ -778,7 +778,7 @@
   .marketing-v3 .v3-trust-cell .tv { font-size: 28px; }
 
   .marketing-v3 .v3-tele { margin: 36px 48px 0; }
-  .marketing-v3 .v3-tele-map { height: 300px; }
+  .marketing-v3 .v3-tele-map { aspect-ratio: 16 / 10; height: auto; max-width: 900px; margin-left: auto; margin-right: auto; }
   .marketing-v3 .v3-tele-row { padding: 14px 22px; font-size: 13px; }
 
   .marketing-v3 .v3-feed { margin: 36px 48px 0; }
