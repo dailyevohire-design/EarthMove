@@ -373,7 +373,20 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
           registeredAgent && typeof (registeredAgent as { name?: unknown }).name === 'string'
             ? ((registeredAgent as { name: string }).name)
             : (str('registered_agent_organization') ?? null)
-        rawBusiness.source_url = str('source_url') ?? str('citation_url')
+        // Citation URL: prefer scraper-emitted source_url; fall back to a
+        // canonical deep-link constructed from entity_id when the source key
+        // is one we know the URL pattern for. Powers the "Verify on official
+        // record →" link in EntityConfirmationBanner.
+        const sosEntityId = str('entity_id')
+        let canonicalUrl = str('source_url') ?? str('citation_url') ?? null
+        if (!canonicalUrl && sosEntityId) {
+          if (e.source_key === 'co_sos_biz') {
+            canonicalUrl = `https://www.coloradosos.gov/biz/BusinessEntityDetail.do?nameTyp=ENT&entityId2=${sosEntityId}`
+          } else if (e.source_key === 'tx_sos_biz') {
+            canonicalUrl = `https://mycpa.cpa.state.tx.us/coa/coaSearchBtn?taxId=${sosEntityId}`
+          }
+        }
+        rawBusiness.source_url = canonicalUrl
         businessSet = true
       }
     }
@@ -385,7 +398,14 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
         rawLicensing.license_number = str('license_number')
         rawLicensing.expires = str('expires_at') ?? str('expiration_date')
         rawLicensing.source_note = e.finding_summary
-        rawLicensing.source_url = str('source_url') ?? str('citation_url')
+        // CO DORA's deep links require session state (cookies + form POST)
+        // so there's no stable per-license URL. Fall through to the lookup
+        // home page when scraper didn't emit a usable URL.
+        let licCanonicalUrl = str('source_url') ?? str('citation_url') ?? null
+        if (!licCanonicalUrl && e.source_key === 'co_dora') {
+          licCanonicalUrl = 'https://apps.colorado.gov/dora/licensing/Lookup/LicenseLookup.aspx'
+        }
+        rawLicensing.source_url = licCanonicalUrl
         licensingSet = true
       }
     }

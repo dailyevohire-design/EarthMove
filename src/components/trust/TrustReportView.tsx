@@ -2,6 +2,7 @@
 
 import DisambiguationPicker, { type AmbiguousCandidate } from './DisambiguationPicker'
 import NoEntityFoundCard from './no-entity-found-card'
+import EntityConfirmationBanner from './EntityConfirmationBanner'
 import { expandContractorNameVariants } from '@/lib/trust/name-variants'
 
 // Inline row type — matches select('*') on trust_reports. Kept here rather
@@ -292,6 +293,13 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
         )}
 
         <div className={provisional ? 'opacity-60' : ''}>
+          {/* Entity confirmation banner — surfaces the matched entity above
+              the score so wrong-entity reports are catchable at a glance.
+              Self-handles state branching (returns null for entity_not_found
+              + entity_disambiguation_required). */}
+          <div className="mb-4">
+            <EntityConfirmationBanner report={report} />
+          </div>
           {/* Score card */}
           <section className="rounded-2xl border border-stone-200 bg-white p-6 mb-6 flex items-center gap-6 flex-wrap">
             <ScoreRing score={report.trust_score} risk={report.risk_level} />
