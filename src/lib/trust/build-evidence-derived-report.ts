@@ -66,6 +66,9 @@ export interface EvidenceDerivedReport {
   open_web_corroboration_depth: number
   open_web_recency_min: number | null
   open_web_engines_used: string[]
+  /** 231: phoenix detector — array of related entities sharing address /
+   *  officer / agent with the canonical entity. Patent claim 1. */
+  related_entities: Array<Record<string, unknown>>
 }
 
 const NULL_FINDING_SUFFIXES = [
@@ -531,12 +534,55 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     else riskLevel = 'CRITICAL'
   }
 
+  // 231: phoenix detector projection. Evidence rows with finding_types
+  // 'phoenix_signal' / 'officer_match' / 'address_reuse' carry related-
+  // entity facts in extracted_facts. Aggregate into rawReport.related_entities
+  // and apply score adjustments per relationship_type.
+  const phoenixEvidence = evidence.filter((e) =>
+    e.finding_type === 'phoenix_signal' ||
+    e.finding_type === 'officer_match' ||
+    e.finding_type === 'address_reuse',
+  )
+  const relatedEntities = phoenixEvidence.map((e) => {
+    const f = (e.extracted_facts ?? {}) as Record<string, unknown>
+    return {
+      entity_name: f.entity_name ?? null,
+      entity_id: f.entity_id ?? null,
+      status: f.status ?? null,
+      formation_date: f.formation_date ?? null,
+      dissolution_date: f.dissolution_date ?? null,
+      shared_indicator: f.shared_indicator ?? null,
+      relationship_type: f.relationship_type ?? null,
+      source_url: f.source_url ?? null,
+    }
+  })
+
+  // Score adjustments — phoenix signals are severe.
+  const phoenixCount = phoenixEvidence.filter((e) => e.finding_type === 'phoenix_signal').length
+  const sameOperatorCount = phoenixEvidence.filter((e) => e.finding_type === 'officer_match').length
+  if (phoenixCount > 0 && trustScore !== null) {
+    const delta = -Math.min(30, 15 * phoenixCount)
+    trustScore = Math.max(0, Math.min(100, trustScore + delta))
+    dedupRedFlags.unshift(
+      `Possible phoenix-LLC pattern: ${phoenixCount} dissolved related entit${phoenixCount === 1 ? 'y' : 'ies'} at same address/officer`,
+    )
+    if (trustScore >= 80) riskLevel = 'LOW'
+    else if (trustScore >= 60) riskLevel = 'MEDIUM'
+    else if (trustScore >= 40) riskLevel = 'HIGH'
+    else riskLevel = 'CRITICAL'
+  }
+  if (sameOperatorCount > 0 && trustScore !== null) {
+    const delta = -Math.min(10, 5 * sameOperatorCount)
+    trustScore = Math.max(0, Math.min(100, trustScore + delta))
+  }
+
   const rawReport: Record<string, unknown> = {
     business: businessSet ? rawBusiness : null,
     licensing: licensingSet ? rawLicensing : null,
     sanctions: sanctionsSet ? rawSanctions : null,
     legal: rawLegal,
     open_web: rawOpenWeb,
+    related_entities: relatedEntities.length > 0 ? relatedEntities : null,
     sources_cited: sourcesCited,
   }
 
@@ -619,6 +665,7 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     open_web_corroboration_depth: corroborations.length,
     open_web_recency_min: openWebRecencyMin,
     open_web_engines_used: Array.from(enginesUsed),
+    related_entities: relatedEntities,
   }
 }
 

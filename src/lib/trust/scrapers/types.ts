@@ -42,6 +42,8 @@ export type TrustFindingType =
   | 'permit_history_low' | 'permit_history_stale' | 'permit_scope_violation'
   // operational
   | 'source_error' | 'source_not_applicable' | 'raw_source_response'
+  // 231: phoenix detector + cross-entity fraud network (patent claim 1)
+  | 'phoenix_signal' | 'officer_match' | 'address_reuse' | 'phone_reuse' | 'ein_match'
   // 227: entity disambiguation
   | 'entity_disambiguation_candidates' | 'name_discrepancy_observed'
   // 230: dual-engine open-web (patent claim 6)

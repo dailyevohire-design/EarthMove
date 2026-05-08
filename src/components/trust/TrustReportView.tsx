@@ -3,6 +3,7 @@
 import DisambiguationPicker, { type AmbiguousCandidate } from './DisambiguationPicker'
 import NoEntityFoundCard from './no-entity-found-card'
 import OpenWebFindingsTile, { type OpenWebSection } from './OpenWebFindingsTile'
+import RelatedEntitiesPanel from './RelatedEntitiesPanel'
 import { expandContractorNameVariants } from '@/lib/trust/name-variants'
 
 // Inline row type — matches select('*') on trust_reports. Kept here rather
@@ -325,6 +326,18 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
                 || (report.open_web_positive_count ?? 0) > 0}
             />
           </div>
+
+          {/* 231: phoenix detector / cross-entity fraud-network panel.
+              Renders only when raw_report.related_entities has rows. */}
+          {(() => {
+            const related = (report.raw_report as { related_entities?: Array<Record<string, unknown>> } | null)?.related_entities
+            if (!related || related.length === 0) return null
+            return (
+              <div className="mb-6">
+                <RelatedEntitiesPanel relatedEntities={related as unknown as Parameters<typeof RelatedEntitiesPanel>[0]['relatedEntities']} />
+              </div>
+            )
+          })()}
 
           {/* Data panels */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

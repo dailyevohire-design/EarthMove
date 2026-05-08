@@ -36,6 +36,7 @@ import { rankCandidates } from './name-similarity'
 import { scrapePerplexitySweep } from './scrapers/perplexity-sweep'
 import { scrapeClaudeWebSearchVerify } from './scrapers/claude-web-search'
 import { detectCrossEngineCorroboration } from './cross-engine-corroboration'
+import { detectPhoenixPattern, relatedEntitiesToEvidence, type CanonicalEntity } from './scrapers/phoenix-detector'
 
 export interface OrchestratorInput {
   contractor_name: string
@@ -408,6 +409,51 @@ export async function runTrustOrchestratorV2(
     })
   }
 
+  // 231: phoenix-LLC + cross-entity fraud-network detection (patent claim 1).
+  // Runs when we have a canonical SOS hit (CO or TX). Queries the same
+  // dataset for related entities sharing principal_address / agent / officer.
+  // Opportunistic — never blocks the main flow.
+  await wrap('orch-phoenix', async () => {
+    try {
+      const { data: sosRow } = await admin
+        .from('trust_evidence')
+        .select('source_key, finding_type, extracted_facts')
+        .eq('job_id', jobId)
+        .in('source_key', ['co_sos_biz', 'tx_sos_biz'])
+        .in('finding_type', ['business_active', 'business_inactive', 'business_dissolved'])
+        .order('sequence_number', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      if (!sosRow) return
+      const facts = (sosRow.extracted_facts ?? {}) as Record<string, unknown>
+      const officers = Array.isArray(facts.officers) ? facts.officers as Array<Record<string, unknown>> : []
+      const agentObj = officers.find((o) => o?.role_hint === 'registered_agent')
+      const agentName = agentObj && typeof (agentObj as { name?: unknown }).name === 'string'
+        ? (agentObj as { name: string }).name
+        : (typeof facts.registered_agent_organization === 'string' ? facts.registered_agent_organization : null)
+      const canonical: CanonicalEntity = {
+        source_key: sosRow.source_key as 'co_sos_biz' | 'tx_sos_biz',
+        entity_id: typeof facts.entity_id === 'string' ? facts.entity_id : '',
+        entity_name: typeof facts.entity_name === 'string' ? facts.entity_name : input.contractor_name,
+        principal_address: typeof facts.principal_address === 'string' ? facts.principal_address : null,
+        registered_agent_name: agentName,
+        formation_date: typeof facts.formation_date === 'string' ? facts.formation_date : null,
+      }
+      if (!canonical.entity_id) return
+      const related = await detectPhoenixPattern(canonical)
+      if (related.length === 0) return
+      const phoenixEvidence = relatedEntitiesToEvidence(related, canonical)
+      for (const ev of phoenixEvidence) {
+        await persistEvidence({
+          jobId, contractorId: contractorRow?.id ?? null,
+          evidence: ev, supabase: admin as unknown as SupabaseClient,
+        })
+      }
+    } catch (err) {
+      console.warn('[orchestrator-v2] phoenix detection failed (non-fatal)', err)
+    }
+  })
+
   // Update counters
   await wrap('orch-update-counters', async () => {
     const { count } = await admin
@@ -529,6 +575,7 @@ async function finalizeFreeTier(
       open_web_corroboration_depth: derived.open_web_corroboration_depth,
       open_web_recency_min: derived.open_web_recency_min,
       open_web_engines_used: derived.open_web_engines_used,
+      related_entities: derived.related_entities.length > 0 ? derived.related_entities : null,
     })
     .select('id, created_at')
     .single()
