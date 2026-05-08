@@ -24,6 +24,7 @@
  * footer detail per existing rule (PR #17).
  */
 
+import type { ReactElement } from 'react'
 import {
   Document,
   Page,
@@ -52,6 +53,16 @@ export interface TrustPdfReportInput {
   biz_entity_type: string | null
   biz_formation_date: string | null
   lic_license_number: string | null
+  biz_status?: string | null
+  lic_status?: string | null
+  osha_status?: string | null
+  bbb_rating?: string | null
+  /** D2: confirmation banner inputs. searched_as drives the click-through
+   *  case (amber banner + name-discrepancy callout). raw_report.business
+   *  carries the canonical entity payload (entity_id, principal_address,
+   *  registered_agent, source_url) projected by buildEvidenceDerivedReport. */
+  searched_as?: string | null
+  raw_report?: Record<string, unknown> | null
 }
 
 export interface TrustPdfDocumentProps {
@@ -135,6 +146,70 @@ const styles = StyleSheet.create({
     fontSize: Type.small,
     color: Colors.inkMuted,
     fontFamily: Type.mono,
+  },
+  // ---------- Entity confirmation banner (D2) ----------
+  confirmBanner: {
+    marginHorizontal: Spacing.pageMargin,
+    marginBottom: Spacing.lg,
+    padding: Spacing.md,
+    border: `0.5pt solid ${Colors.hair}`,
+    borderTopWidth: 3,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.card,
+  },
+  confirmKicker: {
+    fontFamily: Type.mono,
+    fontSize: Type.micro,
+    color: Colors.ink3,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginBottom: Spacing.sm,
+  },
+  confirmEntityRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: Spacing.sm,
+    flexWrap: 'wrap',
+  },
+  confirmEntityName: {
+    fontFamily: Type.display,
+    fontWeight: 600,
+    fontSize: Type.h3,
+    color: Colors.ink,
+  },
+  confirmStatusPill: {
+    fontFamily: Type.sans,
+    fontSize: Type.micro,
+    fontWeight: 700,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: Radius.pill,
+  },
+  confirmDetails: {
+    marginTop: Spacing.xs,
+    fontFamily: Type.sans,
+    fontSize: Type.small,
+    color: Colors.ink2,
+  },
+  confirmDiscrepancy: {
+    marginTop: Spacing.sm,
+    padding: Spacing.sm,
+    border: '0.5pt solid #F0B848',
+    backgroundColor: '#FEF8E7',
+    borderRadius: Radius.sm,
+    fontFamily: Type.sans,
+    fontSize: Type.micro,
+    color: '#7A4F00',
+  },
+  confirmSource: {
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.xs,
+    borderTop: `0.5pt solid ${Colors.cardMuted}`,
+    fontFamily: Type.mono,
+    fontSize: Type.micro,
+    color: Colors.ink3,
   },
   // ---------- Two-col body ----------
   body: {
@@ -455,6 +530,11 @@ export function TrustPdfDocument(props: TrustPdfDocumentProps) {
           <Text style={styles.subjectDate}>Generated {reportDate}</Text>
         </View>
 
+        {/* ENTITY CONFIRMATION BANNER (D2) — print analog of the dashboard's
+            EntityConfirmationBanner. Only renders when raw_report.business
+            is present (i.e. status not entity_not_found / entity_disambiguation_required). */}
+        {renderConfirmationBanner(report)}
+
         {/* TWO-COL BODY */}
         <View style={styles.body}>
           {/* LEFT — Risk card (60%) */}
@@ -639,4 +719,83 @@ function SourcesSection({ items }: { items: string[] }) {
 function shortReportId(id: string): string {
   // First 8 chars + ellipsis. UUIDs are unwieldy in print.
   return id.length > 8 ? `${id.slice(0, 8)}…` : id
+}
+
+// D2: PDF analog of the dashboard's EntityConfirmationBanner. Returns null
+// for entity_not_found / entity_disambiguation_required states (PDF for those
+// states is a separate concern — TODO: a dedicated "no exact match" PDF).
+// For exact-match + click-through cases, renders a compact bordered block
+// with the canonical entity, status pill, source attribution.
+function renderConfirmationBanner(report: TrustPdfReportInput): ReactElement | null {
+  const raw = report.raw_report ?? null
+  const business = (raw && (raw as { business?: Record<string, unknown> }).business) ?? null
+  if (!business || typeof business !== 'object') return null
+
+  const str = (k: string): string | null => {
+    const v = (business as Record<string, unknown>)[k]
+    return typeof v === 'string' && v.length > 0 ? v : null
+  }
+  const entityName = str('entity_name') ?? report.contractor_name
+  const entityType = str('entity_type') ?? report.biz_entity_type
+  const formationDate = str('formation_date') ?? report.biz_formation_date
+  const status = str('status') ?? report.biz_status
+  const principalAddress = str('principal_address')
+  const registeredAgent = str('registered_agent')
+  const entityId = str('entity_id')
+  const sourceUrl = str('source_url')
+  const jurisdiction = str('jurisdiction')
+
+  const searched = report.searched_as ?? null
+  const isClickThrough = !!searched && searched.trim().length > 0
+    && searched.trim().toLowerCase() !== (report.contractor_name ?? '').trim().toLowerCase()
+  const accentColor = isClickThrough ? '#F0B848' : '#10B981'
+  const kicker = isClickThrough
+    ? `Searched as "${searched}" — confirmed entity:`
+    : 'Report matched to:'
+
+  const statusColors = pdfStatusPillColors(status ?? null)
+  const sourceLabel =
+    jurisdiction === 'CO' ? 'Colorado Secretary of State' :
+    jurisdiction === 'TX' ? 'Texas Comptroller of Public Accounts' :
+    'state business registry'
+
+  return (
+    <View style={[styles.confirmBanner, { borderTopColor: accentColor }]}>
+      <Text style={styles.confirmKicker}>{kicker}</Text>
+      <View style={styles.confirmEntityRow}>
+        <Text style={styles.confirmEntityName}>{entityName}</Text>
+        {status && (
+          <Text style={[styles.confirmStatusPill, { backgroundColor: statusColors.bg, color: statusColors.text }]}>
+            {status}
+          </Text>
+        )}
+      </View>
+      <View style={styles.confirmDetails}>
+        {entityType && <Text>{entityType}{formationDate ? ` · Formed ${formationDate}` : ''}</Text>}
+        {principalAddress && <Text>{principalAddress}</Text>}
+        {registeredAgent && <Text>Registered agent: {registeredAgent}</Text>}
+        {entityId && <Text>Entity ID: {entityId}</Text>}
+      </View>
+      {isClickThrough && (
+        <Text style={styles.confirmDiscrepancy}>
+          Name discrepancy is itself a fraud indicator. Confirm directly with the contractor that this is their registered legal entity.
+        </Text>
+      )}
+      <Text style={styles.confirmSource}>
+        Source: {sourceLabel}
+        {sourceUrl ? `  ·  ${sourceUrl}` : ''}
+      </Text>
+    </View>
+  )
+}
+
+function pdfStatusPillColors(status: string | null): { bg: string; text: string } {
+  const s = (status ?? '').trim().toLowerCase()
+  if (s === 'good standing' || s === 'active' || s === 'a') return { bg: '#D1FAE5', text: '#047857' }
+  if (s === 'delinquent' || s === 'inactive' || s === 'noncompliant') return { bg: '#FEF3C7', text: '#92400E' }
+  if (
+    s === 'voluntarily dissolved' || s === 'dissolved' || s === 'forfeited' ||
+    s === 'cancelled' || s === 'canceled' || s === 'withdrawn' || s === 'merged' || s === 'converted'
+  ) return { bg: '#FEE2E2', text: '#991B1B' }
+  return { bg: '#F5F5F4', text: '#57534E' }
 }

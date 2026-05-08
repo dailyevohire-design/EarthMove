@@ -7,6 +7,7 @@ import {
   XCircle, Lock, Download, Zap, Crown, ArrowRight, Loader2
 } from 'lucide-react'
 import NoEntityFoundCard from '@/components/trust/no-entity-found-card'
+import EntityConfirmationBanner from '@/components/trust/EntityConfirmationBanner'
 import { expandContractorNameVariants } from '@/lib/trust/name-variants'
 import type { EntityCandidate } from '@/lib/trust/scrapers/types'
 
@@ -468,6 +469,13 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
           && report.data_integrity_status !== 'entity_not_found'
           && report.data_integrity_status !== 'entity_disambiguation_required'
           && rs && <div className="space-y-4" ref={reportRef}>
+          {/* Entity confirmation banner — see TrustReportView.tsx for the
+              same pattern. Self-handles non-render states. onReset clears
+              the form so the user can search a different name. */}
+          <EntityConfirmationBanner
+            report={report}
+            onReset={() => { setReport(null); setSearches([]); setError(null) }}
+          />
           {/* Score card */}
           <div className={`bg-white border ${rs.border} rounded-2xl shadow-sm p-6`}>
             <div className="flex items-start gap-6 flex-wrap">
