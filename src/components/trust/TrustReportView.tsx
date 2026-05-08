@@ -2,7 +2,18 @@
 
 import DisambiguationPicker, { type AmbiguousCandidate } from './DisambiguationPicker'
 import NoEntityFoundCard from './no-entity-found-card'
+import EntityConfirmationBanner from './EntityConfirmationBanner'
 import { expandContractorNameVariants } from '@/lib/trust/name-variants'
+import {
+  deriveBusinessTile,
+  deriveLicensingTile,
+  deriveBbbTile,
+  deriveReviewsTile,
+  deriveLegalTile,
+  deriveOshaTile,
+  type TileDisplay,
+  type TileTone,
+} from '@/lib/trust/tile-status'
 
 // Inline row type — matches select('*') on trust_reports. Kept here rather
 // than in types.ts because this view is the only consumer.
@@ -130,6 +141,37 @@ function Panel({ title, icon, children }: { title: string; icon?: string; childr
   )
 }
 
+// D5: tile pill driven by tile-status helpers. Replaces misleading blanks
+// (em-dashes when a field is null) with verified/clean/not_applicable/
+// not_searched language that explains why a panel is empty. Tooltip surfaces
+// the long-form explanation on hover.
+const TONE_CLASSES: Record<TileTone, string> = {
+  verified: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+  clean: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+  not_applicable: 'bg-stone-50 text-stone-600 ring-1 ring-stone-200',
+  not_searched: 'bg-stone-100 text-stone-500 ring-1 ring-stone-200',
+  warning: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+  critical: 'bg-red-50 text-red-700 ring-1 ring-red-200',
+}
+
+function TilePill({ tile }: { tile: TileDisplay }) {
+  return (
+    <div className="mb-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span
+          className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${TONE_CLASSES[tile.tone]}`}
+          title={tile.tooltipText ?? undefined}
+        >
+          {tile.statusLabel}
+        </span>
+        {tile.bodyText && (
+          <span className="text-xs text-stone-600">{tile.bodyText}</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div className="flex justify-between items-center py-1.5 border-b border-stone-100 last:border-0 text-sm">
@@ -164,28 +206,10 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString()
 }
 
-// State-code → full state name. Drives the explicit "Not registered in
-// {STATE} Secretary of State" copy when biz_status is null/Not Found, so
-// users see a concrete absence-of-record claim rather than a blank "Unknown".
-const STATE_NAMES: Record<string, string> = {
-  CO: 'Colorado',
-  TX: 'Texas',
-}
-
-function formatBizStatus(report: TrustReport): React.ReactNode {
-  const s = report.biz_status
-  if (s && s !== 'Not Found' && s !== 'Unknown') return s
-  const stateName = STATE_NAMES[report.state_code]
-  if (!stateName) return s
-  return `Not registered in ${stateName} Secretary of State`
-}
-
-function formatOshaStatus(report: TrustReport): React.ReactNode {
-  const s = report.osha_status
-  if (s === 'ERROR') return 'Unknown — lookup error'
-  if (s == null) return 'No OSHA inspection records found'
-  return s
-}
+// STATE_NAMES + formatBizStatus + formatOshaStatus deleted in D5 — superseded by
+// deriveBusinessTile + deriveOshaTile from src/lib/trust/tile-status.ts.
+// formatOshaViolations retained because it formats the violation count
+// row (separate from the status pill).
 
 function formatOshaViolations(report: TrustReport): React.ReactNode {
   const n = report.osha_violation_count
@@ -292,6 +316,13 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
         )}
 
         <div className={provisional ? 'opacity-60' : ''}>
+          {/* Entity confirmation banner — surfaces the matched entity above
+              the score so wrong-entity reports are catchable at a glance.
+              Self-handles state branching (returns null for entity_not_found
+              + entity_disambiguation_required). */}
+          <div className="mb-4">
+            <EntityConfirmationBanner report={report} />
+          </div>
           {/* Score card */}
           <section className="rounded-2xl border border-stone-200 bg-white p-6 mb-6 flex items-center gap-6 flex-wrap">
             <ScoreRing score={report.trust_score} risk={report.risk_level} />
@@ -309,31 +340,32 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
           {/* Data panels */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <Panel title="Business Registration" icon="🏛">
-              <Row k="Status"    v={formatBizStatus(report)} />
+              <TilePill tile={deriveBusinessTile(report)} />
               <Row k="Entity"    v={report.biz_entity_type} />
               <Row k="Formed"    v={report.biz_formation_date} />
             </Panel>
 
             <Panel title="License" icon="📋">
-              <Row k="Status"    v={report.lic_status} />
+              <TilePill tile={deriveLicensingTile(report)} />
               <Row k="License #" v={report.lic_license_number} />
             </Panel>
 
             {showBbbPanel && (
               <Panel title="BBB Profile" icon="🛡">
-                <Row k="Rating"      v={report.bbb_rating} />
+                <TilePill tile={deriveBbbTile(report)} />
                 <Row k="Accredited"  v={report.bbb_accredited == null ? null : (report.bbb_accredited ? 'Yes' : 'No')} />
                 <Row k="Complaints"  v={report.bbb_complaint_count} />
               </Panel>
             )}
 
             <Panel title="Reviews" icon="⭐">
-              <Row k="Avg rating" v={report.review_avg_rating == null ? null : `${report.review_avg_rating}/5.0`} />
+              <TilePill tile={deriveReviewsTile(report)} />
               <Row k="Total"      v={report.review_total} />
               <Row k="Sentiment"  v={report.review_sentiment} />
             </Panel>
 
             <Panel title="Legal Records" icon="⚖">
+              <TilePill tile={deriveLegalTile(report)} />
               <List
                 items={report.legal_findings}
                 emptyText="No lawsuits, liens, or judgments surfaced in public records. This is not an exhaustive search — county-level civil dockets often require manual lookup."
@@ -344,7 +376,7 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
             </Panel>
 
             <Panel title="OSHA Safety" icon="🔶">
-              <Row k="Status"      v={formatOshaStatus(report)} />
+              <TilePill tile={deriveOshaTile(report)} />
               <Row k="Violations"  v={formatOshaViolations(report)} />
               <Row k="Serious"     v={report.osha_serious_count} />
             </Panel>

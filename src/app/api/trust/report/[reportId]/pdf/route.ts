@@ -31,7 +31,8 @@ export async function GET(
     .select(
       'id, user_id, job_id, contractor_name, state_code, city, trust_score, risk_level, summary, created_at, ' +
       'lic_status, lic_license_number, biz_status, biz_entity_type, biz_formation_date, bbb_rating, ' +
-      'osha_status, red_flags, positive_indicators, data_sources_searched',
+      'osha_status, red_flags, positive_indicators, data_sources_searched, ' +
+      'searched_as, raw_report',
     )
     .eq('id', reportId)
     .maybeSingle();
@@ -99,6 +100,8 @@ export async function GET(
       lic_status: report.lic_status,
       osha_status: report.osha_status,
       bbb_rating: report.bbb_rating,
+      searched_as: report.searched_as,
+      raw_report: report.raw_report as Record<string, unknown> | null,
     },
     evidenceCount,
     errored_source_keys: erroredSourceKeys,

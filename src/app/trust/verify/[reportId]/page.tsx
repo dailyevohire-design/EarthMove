@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/server';
 import { verifyChain, type EvidenceChainNode } from '@/lib/trust/chain-verify';
+import EntityConfirmationBanner from '@/components/trust/EntityConfirmationBanner';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,10 @@ interface VerifyData {
     created_at: string;
     job_id: string | null;
     data_sources_searched: string[] | null;
+    // 227/D2 — drives EntityConfirmationBanner rendering on the share page.
+    searched_as: string | null;
+    data_integrity_status: string | null;
+    raw_report: Record<string, unknown> | null;
   };
   verified: boolean;
   evidence_count: number;
@@ -34,7 +39,7 @@ async function loadVerification(reportId: string): Promise<VerifyData | null> {
   const { data: report } = await admin
     .from('trust_reports')
     .select(
-      'id, job_id, contractor_name, state_code, city, trust_score, risk_level, created_at, data_sources_searched',
+      'id, job_id, contractor_name, state_code, city, trust_score, risk_level, created_at, data_sources_searched, searched_as, data_integrity_status, raw_report',
     )
     .eq('id', reportId)
     .maybeSingle();
@@ -91,6 +96,12 @@ export default async function TrustVerifyPage({ params }: VerifyPageProps) {
             <span>Chain verification</span>
           </div>
         </header>
+
+        {/* D2: confirmation banner. Surfaces the matched entity above the
+            chain-verification block. Self-handles non-render states. */}
+        <div className="mb-4">
+          <EntityConfirmationBanner report={report} />
+        </div>
 
         <section className="rounded-2xl border border-stone-200 bg-white p-6 sm:p-8 shadow-sm">
           {!hasChain ? (
