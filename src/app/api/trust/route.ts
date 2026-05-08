@@ -84,7 +84,20 @@ export async function POST(req: NextRequest) {
     principal,
     license_number,
     ein_last4,
+    // 227: click-through fields. When present, the user came from
+    // <EntityDisambiguationCard /> with a canonical legal entity selected.
+    // entity_source/entity_id are recorded for audit; original_query
+    // becomes searched_as on the orchestrator input + final trust_reports
+    // row, driving the name-discrepancy fraud signal.
+    entity_id,
+    entity_source,
+    original_query,
   } = body
+  const entityIdFromClick = typeof entity_id === 'string' && entity_id.length > 0 ? entity_id : null
+  const entitySourceFromClick = typeof entity_source === 'string' && entity_source.length > 0 ? entity_source : null
+  const searchedAsRaw = typeof original_query === 'string' && original_query.trim().length > 0
+    ? original_query.trim()
+    : null
 
   const validation = validateInput(
     contractor_name ?? '',
@@ -316,7 +329,16 @@ export async function POST(req: NextRequest) {
   // we honor it and skip the legacy in-route INSERT below.
   let preInsertedReportId: string | null = null
   try {
-    const result = await runFreeTier(name, sCity, state, q => searches.push(q), hints, user?.id ?? null)
+    const result = await runFreeTier(
+      name, sCity, state, q => searches.push(q), hints, user?.id ?? null,
+      // 227: click-through context. Triggers the name-discrepancy evidence
+      // row + skips variant expansion when the user already picked.
+      {
+        searched_as: searchedAsRaw,
+        entity_id_from_click: entityIdFromClick,
+        entity_source_from_click: entitySourceFromClick,
+      },
+    )
     report              = result.report
     costUsd             = result.costUsd
     tokensIn            = result.tokensIn

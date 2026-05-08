@@ -49,7 +49,7 @@ export interface EvidenceDerivedReport {
   trust_score: number | null
   risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'AMBIGUOUS' | null
   confidence_level: 'HIGH' | 'MEDIUM' | 'LOW' | null
-  data_integrity_status: 'ok' | 'partial' | 'entity_not_found' | 'degraded' | 'failed'
+  data_integrity_status: 'ok' | 'partial' | 'entity_not_found' | 'degraded' | 'failed' | 'entity_disambiguation_required'
   data_sources_searched: string[]
   synthesis_model: string
   /** Trust_evidence row ids backing this report — required for QR chain
@@ -440,6 +440,55 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     sources_cited: sourcesCited,
   }
 
+  // 227: entity disambiguation projection.
+  // The orchestrator writes a single 'entity_disambiguation_candidates'
+  // evidence row when the exact-match round missed but candidate-search
+  // found similar names. Project that into raw_report.disambiguation and
+  // override data_integrity_status — the renderer (NoEntityFoundCard +
+  // EntityDisambiguationCard) reads off both.
+  const disambigEvidence = evidence.find(
+    (e) => e.finding_type === 'entity_disambiguation_candidates',
+  )
+  if (disambigEvidence) {
+    const facts = disambigEvidence.extracted_facts ?? {}
+    const candidates = Array.isArray(facts.candidates) ? facts.candidates : []
+    const query = typeof facts.query === 'string' ? facts.query : null
+    rawReport.disambiguation = { candidates, query }
+    dataIntegrityStatus = 'entity_disambiguation_required'
+    trustScore = null
+    riskLevel = null
+    confidenceLevel = 'LOW'
+  }
+
+  // 227: name-discrepancy projection (independent of disambiguation —
+  // can co-occur with any data_integrity_status). The orchestrator writes
+  // 'name_discrepancy_observed' at the head of the chain when the user
+  // arrived via a click-through with a different searched_as. Project to
+  // a red flag + raw_report.name_discrepancy.
+  const discrepancyEvidence = evidence.find(
+    (e) => e.finding_type === 'name_discrepancy_observed',
+  )
+  if (discrepancyEvidence) {
+    const facts = discrepancyEvidence.extracted_facts ?? {}
+    dedupRedFlags.unshift(
+      'Solicited under a name that does not match registered legal entity — independent fraud indicator',
+    )
+    rawReport.name_discrepancy = {
+      searched_as: typeof facts.searched_as === 'string' ? facts.searched_as : null,
+      canonical_name: typeof facts.canonical_name === 'string' ? facts.canonical_name : null,
+    }
+  }
+
+  // 227: when disambiguation is required, override the summary with a
+  // user-facing call-to-action. Build last so it sees the final candidate count.
+  let finalSummary = summary
+  if (dataIntegrityStatus === 'entity_disambiguation_required' && disambigEvidence) {
+    const facts = disambigEvidence.extracted_facts ?? {}
+    const candidates = Array.isArray(facts.candidates) ? facts.candidates : []
+    const query = typeof facts.query === 'string' ? facts.query : 'this name'
+    finalSummary = `We didn't find an exact match for "${query}". Found ${candidates.length} similar registered entities — review and select the correct one to run the full report.`
+  }
+
   return {
     biz_status: bizStatus,
     biz_entity_type: bizEntityType,
@@ -456,7 +505,7 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     osha_serious_count: oshaSeriousCount,
     red_flags: dedupRedFlags,
     positive_indicators: dedupPositive,
-    summary,
+    summary: finalSummary,
     trust_score: trustScore,
     risk_level: riskLevel,
     confidence_level: confidenceLevel,

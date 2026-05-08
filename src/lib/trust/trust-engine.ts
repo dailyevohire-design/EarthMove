@@ -15,6 +15,17 @@ import { expandContractorNameVariants } from "./name-variants"
  * itself, so callers should detect `report_id` on the return and skip their
  * own DB write to avoid duplicate inserts.
  */
+export interface FreeTierClickThrough {
+  /** Original user query when the canonical legal name from the
+   *  click-through differs. Drives the name-discrepancy fraud signal. */
+  searched_as?: string | null
+  /** entity_id from the candidate the user clicked. Recorded in raw_report
+   *  for audit. */
+  entity_id_from_click?: string | null
+  /** source_key the entity_id came from. */
+  entity_source_from_click?: string | null
+}
+
 export async function runFreeTier(
   name: string,
   city: string,
@@ -22,6 +33,7 @@ export async function runFreeTier(
   _onSearch?: (q: string) => void,
   _hints?: CleanHints | null,
   requestedByUserId?: string | null,
+  clickThrough?: FreeTierClickThrough,
 ): Promise<{
   report: TrustReport & { report_id: string; job_id: string }
   report_id: string
@@ -39,18 +51,29 @@ export async function runFreeTier(
   sonarTokensOut: number
 }> {
   const scraperKeys = await resolveScrapersForTier('free', state)
+  // 227: when the user clicked through entity disambiguation, skip name
+  // variant expansion — the click already provided the canonical legal
+  // name, and exact-match against the canonical SOS row should hit cleanly.
+  const cameFromClick = Boolean(clickThrough?.entity_id_from_click)
   const result = await runTrustOrchestratorV2(
     {
       contractor_name: name,
       state_code: state,
       city: city || null,
       requested_by_user_id: requestedByUserId ?? null,
+      searched_as: clickThrough?.searched_as ?? null,
+      entity_id_from_click: clickThrough?.entity_id_from_click ?? null,
+      entity_source_from_click: clickThrough?.entity_source_from_click ?? null,
     },
     {
       ...TIER_CONFIG.free,
       tier: 'free',
       scraperKeys,
-      nameVariants: expandContractorNameVariants(name, TIER_CONFIG.free.nameVariantLimit),
+      // Click-through path: skip variant expansion — canonical name is what
+      // the user picked from the disambiguation card. Regular path: expand.
+      nameVariants: cameFromClick
+        ? [name]
+        : expandContractorNameVariants(name, TIER_CONFIG.free.nameVariantLimit),
     },
   )
 
@@ -88,6 +111,9 @@ export async function runFreeTier(
     report_tier:           'free',
     report_id:             result.report_id,
     job_id:                result.job_id,
+    // 227: surface searched_as on the API response so the dashboard can show
+    // the discrepancy banner without re-fetching the trust_reports row.
+    searched_as:           clickThrough?.searched_as ?? null,
   } as unknown as TrustReport & { report_id: string; job_id: string }
 
   return {

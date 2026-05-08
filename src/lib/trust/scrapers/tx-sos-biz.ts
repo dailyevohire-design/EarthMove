@@ -2,11 +2,13 @@ import { createHash } from 'node:crypto';
 import {
   type ScraperEvidence,
   type TrustFindingType,
+  type EntityCandidate,
   ScraperRateLimitError,
   ScraperUpstreamError,
   ScraperTimeoutError,
 } from './types';
 import { normalizeForExternalQuery } from './_helpers/normalize-for-query';
+import { rankCandidates } from '../name-similarity';
 
 const SOURCE_KEY = 'tx_sos_biz';
 const ENDPOINT = 'https://data.texas.gov/resource/9cir-efmm.json';
@@ -211,4 +213,82 @@ function buildSummary(
     return `TX Comptroller: "${legalName}" is active (right to transact business)${fd}`;
   }
   return `TX Comptroller: "${legalName}" status SOS=${sosStatus || '?'} RTB=${rtbCode || '?'}${fd}`;
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// 227: entity disambiguation — candidate search.
+//
+// TX dataset 9cir-efmm is a Socrata endpoint with the same LIKE filter shape
+// as CO. Mirror the CO candidate flow for consistency. Opportunistic — never
+// throws; returns [] on any error.
+// ──────────────────────────────────────────────────────────────────────────
+
+const TX_CANDIDATE_FETCH_LIMIT = 20;
+const TX_CANDIDATE_RETURN_LIMIT = 5;
+
+function txComposeAddress(row: TxRawRow): string | null {
+  const parts = [row.taxpayer_address, row.taxpayer_city, row.taxpayer_state, row.taxpayer_zip]
+    .map((p) => (p ?? '').trim())
+    .filter((p) => p.length > 0);
+  return parts.length > 0 ? parts.join(', ') : null;
+}
+
+export interface TxSosBizCandidateInput {
+  legalName: string;
+  fetchFn?: typeof fetch;
+  timeoutMs?: number;
+  signal?: AbortSignal;
+}
+
+export async function searchTxSosCandidates(
+  input: TxSosBizCandidateInput,
+  limit: number = TX_CANDIDATE_RETURN_LIMIT,
+): Promise<EntityCandidate[]> {
+  const legalName = input.legalName?.trim();
+  if (!legalName) return [];
+
+  const fetchFn = input.fetchFn ?? fetch;
+  const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const searchTerm = normalizeForExternalQuery(legalName);
+  const escaped = searchTerm.replace(/'/g, "''");
+  const where = `upper(taxpayer_name) like upper('%${escaped}%')`;
+  const url = `${ENDPOINT}?$where=${encodeURIComponent(where)}&$limit=${TX_CANDIDATE_FETCH_LIMIT}`;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (input.signal) input.signal.addEventListener('abort', () => controller.abort());
+
+  try {
+    const resp = await fetchFn(url, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    });
+    if (!resp.ok) return [];
+    const rows = (await resp.json()) as TxRawRow[];
+    if (!Array.isArray(rows) || rows.length === 0) return [];
+    const mapped: EntityCandidate[] = rows
+      .filter((r) => typeof r.taxpayer_name === 'string' && r.taxpayer_name.length > 0)
+      .map((r) => ({
+        entity_id:
+          (r.secretary_of_state_sos_or_coa_file_number ?? r.taxpayer_number ?? '').trim()
+          || `tx_sos:${r.taxpayer_name}`,
+        entity_name: (r.taxpayer_name ?? '').trim(),
+        entity_type: mapOrgType(r.taxpayer_organizational_type),
+        status: (r.sos_status_code ?? null) as string | null,
+        formation_date: parseTxDate(r.sos_charter_date) ?? parseTxDate(r.responsibility_beginning_date),
+        principal_address: txComposeAddress(r),
+        // TX dataset doesn't surface a registered-agent column. The Comptroller
+        // dataset captures taxpayer info, not RA. Leaving null is correct.
+        registered_agent: null,
+        source_key: SOURCE_KEY,
+        source_url: `${ENDPOINT}?$where=${encodeURIComponent(`upper(taxpayer_name) like upper('%${escaped}%')`)}`,
+        similarity_score: 0,
+      }));
+    return rankCandidates(legalName, mapped, { limit });
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
 }

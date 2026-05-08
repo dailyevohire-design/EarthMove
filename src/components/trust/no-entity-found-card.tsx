@@ -14,12 +14,19 @@
  */
 
 import Link from 'next/link'
+import type { EntityCandidate } from '@/lib/trust/scrapers/types'
+import EntityDisambiguationCard from './EntityDisambiguationCard'
 
 interface Props {
   searchedName: string
   stateCode: string
   sourcesSearched: string[]
   variantSuggestions: string[]
+  /** 227: when the orchestrator's disambiguation fallback found similar
+   *  registered entities, render <EntityDisambiguationCard /> instead of
+   *  the no-found UI. */
+  candidates?: EntityCandidate[]
+  onSelectCandidate?: (candidate: EntityCandidate) => void
 }
 
 function externalSearchUrls(name: string, stateCode: string): Array<{ label: string; href: string }> {
@@ -47,7 +54,21 @@ export default function NoEntityFoundCard({
   stateCode,
   sourcesSearched,
   variantSuggestions,
+  candidates,
+  onSelectCandidate,
 }: Props) {
+  // 227: prefer EntityDisambiguationCard when similar entities exist.
+  // The standard no-found UI is the fallback for the genuine
+  // entity_not_found case (no candidates, no near-matches anywhere).
+  if (candidates && candidates.length > 0 && onSelectCandidate) {
+    return (
+      <EntityDisambiguationCard
+        candidates={candidates}
+        query={searchedName}
+        onSelect={onSelectCandidate}
+      />
+    )
+  }
   const externalLinks = externalSearchUrls(searchedName, stateCode)
   return (
     <section
