@@ -86,14 +86,17 @@ describe('buildScoreExplanation', () => {
     expect(r.final_score).toBe(0)
   })
 
-  it('honors finalScoreOverride when caller passes one', () => {
-    // Caller can pass the orchestrator-computed score (which uses
-    // different adjustments e.g. open-web delta) so the explanation
-    // arithmetic doesn't have to perfectly match.
-    const r = buildScoreExplanation([ev('business_dissolved')], 60)
-    expect(r.final_score).toBe(60)
-    // arithmetic still recorded — override only changes the final number
+  it('final_score is the source of truth (no override)', () => {
+    // Post-reconciliation: the function IS the source of trust_score.
+    // The arithmetic walk and the displayed final_score MUST match —
+    // no override prop, no band-aid.
+    const r = buildScoreExplanation([ev('business_dissolved')])
+    // base 100 - 25 = 75
+    expect(r.final_score).toBe(75)
     expect(r.adjustments[0].delta).toBe(-25)
+    // Sum-of-deltas + base equals the final score, exactly.
+    const sumOfDeltas = r.adjustments.reduce((s, a) => s + a.delta, 0)
+    expect(r.base_score + sumOfDeltas).toBe(r.final_score)
   })
 
   it('attributes source + evidence_id', () => {

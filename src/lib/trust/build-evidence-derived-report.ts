@@ -299,9 +299,12 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     riskLevel = null
     confidenceLevel = 'LOW'
   } else {
-    const base = 75
-    const raw = base - dedupRedFlags.length * 20 + dedupPositive.length * 10
-    trustScore = Math.max(0, Math.min(100, raw))
+    // Source of truth: buildScoreExplanation walks evidence + per-finding-
+    // type rules + categorical caps. The card displays exactly the same
+    // arithmetic; no override, no mismatch. Patent claim: transparent
+    // algorithmic scoring.
+    const initialBreakdown = buildScoreExplanation(evidence)
+    trustScore = initialBreakdown.final_score
     if (trustScore >= 80) riskLevel = 'LOW'
     else if (trustScore >= 60) riskLevel = 'MEDIUM'
     else if (trustScore >= 40) riskLevel = 'HIGH'
@@ -547,34 +550,14 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     const f = (e.extracted_facts ?? {}) as Record<string, unknown>
     return f.claim_direction === 'adverse'
   }).length
-  const corroboratedPositive = corroborations.filter((e) => {
-    const f = (e.extracted_facts ?? {}) as Record<string, unknown>
-    return f.claim_direction === 'positive'
-  }).length
-  let openWebScoreDelta = 0
-  // Push to dedupRedFlags directly (it's the array consumed by the return);
-  // raw redFlags has already been deduped at this point in the function.
+  // Open-web red_flag annotations. Score deltas live in
+  // score-explanation.ts ADJUSTMENT_RULES (single source of truth) — we
+  // only push presentation-layer flags here so users see the corroboration
+  // language in the red_flags list.
   if (corroboratedAdverse >= 2) {
-    openWebScoreDelta -= Math.min(20, 5 * corroboratedAdverse)
     dedupRedFlags.push(`${corroboratedAdverse} cross-engine corroborated adverse signal${corroboratedAdverse === 1 ? '' : 's'} on the open web`)
   } else if (corroboratedAdverse === 1) {
-    openWebScoreDelta -= 5
     dedupRedFlags.push('Cross-engine corroborated adverse signal on the open web')
-  } else if (openWebAdverse.length >= 1) {
-    openWebScoreDelta -= Math.min(10, 2 * openWebAdverse.length)
-  }
-  if (corroboratedPositive > 0) {
-    openWebScoreDelta += Math.min(10, 3 * corroboratedPositive)
-  }
-  // Apply open-web delta to trust_score (trustScore is mutable after the
-  // base computation block).
-  if (trustScore !== null && openWebScoreDelta !== 0) {
-    trustScore = Math.max(0, Math.min(100, trustScore + openWebScoreDelta))
-    // Re-derive risk level from the adjusted score so it stays consistent.
-    if (trustScore >= 80) riskLevel = 'LOW'
-    else if (trustScore >= 60) riskLevel = 'MEDIUM'
-    else if (trustScore >= 40) riskLevel = 'HIGH'
-    else riskLevel = 'CRITICAL'
   }
 
   // 231: phoenix detector projection. Evidence rows with finding_types
@@ -600,26 +583,21 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     }
   })
 
-  // Score adjustments — phoenix signals are severe.
+  // Phoenix red_flag annotation. Score deltas live in
+  // score-explanation.ts ADJUSTMENT_RULES — see open-web block above.
   const phoenixCount = phoenixEvidence.filter((e) => e.finding_type === 'phoenix_signal').length
-  const sameOperatorCount = phoenixEvidence.filter((e) => e.finding_type === 'officer_match').length
-  if (phoenixCount > 0 && trustScore !== null) {
-    const delta = -Math.min(30, 15 * phoenixCount)
-    trustScore = Math.max(0, Math.min(100, trustScore + delta))
+  if (phoenixCount > 0) {
     dedupRedFlags.unshift(
       `Possible phoenix-LLC pattern: ${phoenixCount} dissolved related entit${phoenixCount === 1 ? 'y' : 'ies'} at same address/officer`,
     )
-    if (trustScore >= 80) riskLevel = 'LOW'
-    else if (trustScore >= 60) riskLevel = 'MEDIUM'
-    else if (trustScore >= 40) riskLevel = 'HIGH'
-    else riskLevel = 'CRITICAL'
-  }
-  if (sameOperatorCount > 0 && trustScore !== null) {
-    const delta = -Math.min(10, 5 * sameOperatorCount)
-    trustScore = Math.max(0, Math.min(100, trustScore + delta))
   }
 
-  const scoreBreakdown = buildScoreExplanation(evidence, trustScore)
+  // Recompute the breakdown with the FINAL evidence set (after disambig +
+  // discrepancy injection — those don't change scoring but the function
+  // is cheap and re-running keeps adjustments[] in sync with what's in
+  // evidence). The score returned here is canonical and matches the
+  // earlier trustScore assignment unless evidence was mutated.
+  const scoreBreakdown = buildScoreExplanation(evidence)
   const rawReport: Record<string, unknown> = {
     business: businessSet ? rawBusiness : null,
     licensing: licensingSet ? rawLicensing : null,
