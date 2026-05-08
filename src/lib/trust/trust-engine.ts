@@ -107,6 +107,23 @@ export async function runFreeTier(
     bbb_profile:           { rating: r.bbb_rating, accredited: r.bbb_accredited, complaint_count: r.bbb_complaint_count },
     legal_records:         { status: r.legal_status, findings: r.legal_findings },
     osha_violations:       { status: r.osha_status, violation_count: r.osha_violation_count, serious_count: r.osha_serious_count },
+    // D5: also expose the flat-field shape so client-side tile-status
+    // helpers work without an adapter. The nested shape above is preserved
+    // for back-compat with existing readers.
+    biz_status:            r.biz_status,
+    biz_entity_type:       r.biz_entity_type,
+    biz_formation_date:    r.biz_formation_date,
+    lic_status:            r.lic_status,
+    lic_license_number:    r.lic_license_number,
+    bbb_rating:            r.bbb_rating,
+    bbb_accredited:        r.bbb_accredited,
+    bbb_complaint_count:   r.bbb_complaint_count,
+    legal_status:          r.legal_status,
+    legal_findings:        r.legal_findings,
+    osha_status:           r.osha_status,
+    osha_violation_count:  r.osha_violation_count,
+    osha_serious_count:    r.osha_serious_count,
+    raw_report:            r.raw_report,
     reviews:               null as null | Record<string, unknown>,
     report_tier:           'free',
     report_id:             result.report_id,
