@@ -35,7 +35,6 @@ export interface IndustryBaselineProps {
 interface Props {
   breakdown: ScoreBreakdownProps | null | undefined
   baseline: IndustryBaselineProps | null | undefined
-  finalScore: number | null
 }
 
 function ordinal(n: number): string {
@@ -44,8 +43,11 @@ function ordinal(n: number): string {
   return n + (s[(v - 20) % 10] || s[v] || s[0])
 }
 
-export default function ScoreExplanationCard({ breakdown, baseline, finalScore }: Props) {
-  if (!breakdown || finalScore === null) return null
+export default function ScoreExplanationCard({ breakdown, baseline }: Props) {
+  if (!breakdown) return null
+  // breakdown.final_score IS the displayed score — no override prop, no
+  // mismatch with the orchestrator-computed trust_score (post-reconcile).
+  const finalScore = breakdown.final_score
 
   const positiveAdjustments = breakdown.adjustments.filter((a) => a.delta > 0)
   const negativeAdjustments = breakdown.adjustments.filter((a) => a.delta < 0)

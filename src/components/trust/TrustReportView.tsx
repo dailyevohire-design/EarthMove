@@ -337,7 +337,6 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
             <ScoreExplanationCard
               breakdown={report.score_breakdown ?? null}
               baseline={report.industry_baseline ?? null}
-              finalScore={report.trust_score}
             />
           </div>
 
