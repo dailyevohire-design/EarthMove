@@ -2,6 +2,7 @@
 
 import DisambiguationPicker, { type AmbiguousCandidate } from './DisambiguationPicker'
 import NoEntityFoundCard from './no-entity-found-card'
+import OpenWebFindingsTile, { type OpenWebSection } from './OpenWebFindingsTile'
 import { expandContractorNameVariants } from '@/lib/trust/name-variants'
 
 // Inline row type — matches select('*') on trust_reports. Kept here rather
@@ -50,6 +51,12 @@ export interface TrustReport {
    *  via click-through from the disambiguation card). Drives the warning
    *  banner below + powers the name-discrepancy fraud signal. */
   searched_as: string | null
+  // 230: open-web aggregates (drives OpenWebFindingsTile sweepRan probe).
+  open_web_adverse_count?: number | null
+  open_web_positive_count?: number | null
+  open_web_corroboration_depth?: number | null
+  open_web_recency_min?: number | null
+  open_web_engines_used?: string[] | null
 }
 
 // ---------- small inline presentational components ----------
@@ -305,6 +312,19 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
               </p>
             </div>
           </section>
+
+          {/* 230: Open Web Findings — dual-engine layer (Perplexity sweep
+              + Claude verify + cross-engine corroboration). Patent claim 6.
+              Renders above the data panels because corroborated open-web
+              signals are the highest-signal element of the report. */}
+          <div className="mb-6">
+            <OpenWebFindingsTile
+              openWeb={(report.raw_report as { open_web?: OpenWebSection } | null)?.open_web ?? null}
+              sweepRan={(report.open_web_engines_used?.length ?? 0) > 0
+                || (report.open_web_adverse_count ?? 0) > 0
+                || (report.open_web_positive_count ?? 0) > 0}
+            />
+          </div>
 
           {/* Data panels */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
