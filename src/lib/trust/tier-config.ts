@@ -11,6 +11,18 @@ import { sourcesForTier } from './scrapers/tier-sources-loader'
 
 export type Tier = 'free' | 'standard' | 'plus' | 'deep_dive' | 'forensic'
 
+/**
+ * Subset of scraper source_keys whose modules export a candidate-search
+ * function (searchCoSosCandidates, searchTxSosCandidates, etc.). Consumed
+ * by the orchestrator's disambiguation fallback — when exact-match would
+ * yield entity_not_found, the orchestrator iterates this list and pulls
+ * top-N similar entities to surface in <EntityDisambiguationCard />.
+ *
+ * Add a source_key here only after that scraper module exports a
+ * search<X>Candidates function returning Promise<EntityCandidate[]>.
+ */
+export const ENTITY_REGISTRY_SCRAPERS = ['co_sos_biz', 'tx_sos_biz'] as const
+
 export interface TierConfig {
   runSynthesis: boolean
   nameVariantLimit: number

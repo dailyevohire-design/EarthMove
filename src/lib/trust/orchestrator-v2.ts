@@ -26,9 +26,13 @@ import { inngest } from '@/lib/inngest'
 import { createAdminClient } from '@/lib/supabase/server'
 import { runScraper } from './scrapers/registry'
 import { persistEvidence } from './scrapers/persist-evidence'
-import type { ScraperEvidence } from './scrapers/types'
+import type { ScraperEvidence, EntityCandidate } from './scrapers/types'
 import { buildEvidenceDerivedReport, type EvidenceDerivedReport } from './build-evidence-derived-report'
 import type { Tier } from './tier-config'
+import { ENTITY_REGISTRY_SCRAPERS } from './tier-config'
+import { searchCoSosCandidates } from './scrapers/co-sos-biz'
+import { searchTxSosCandidates } from './scrapers/tx-sos-biz'
+import { rankCandidates } from './name-similarity'
 
 export interface OrchestratorInput {
   contractor_name: string
@@ -37,6 +41,28 @@ export interface OrchestratorInput {
   requested_by_user_id?: string | null
   /** Provided when invoked from runTrustJobV2; null/undefined for sync free path. */
   jobId?: string | null
+  /**
+   * 227: when the user clicked through entity disambiguation, the original
+   * typed query (different from the canonical legal name now in
+   * contractor_name). Triggers an early name_discrepancy_observed evidence
+   * row + drives the report's name_discrepancy fraud-flag projection.
+   */
+  searched_as?: string | null
+  /** 227: entity_id provided by click-through. Recorded in raw_report.business
+   *  for audit. */
+  entity_id_from_click?: string | null
+  /** 227: source_key the entity_id came from (e.g. 'co_sos_biz'). */
+  entity_source_from_click?: string | null
+}
+
+/** Maps source_key → candidate-search function. Keep narrow — every entry
+ *  here also needs to be in ENTITY_REGISTRY_SCRAPERS. */
+const CANDIDATE_SEARCH_DISPATCH: Record<
+  string,
+  (input: { legalName: string }, limit?: number) => Promise<EntityCandidate[]>
+> = {
+  co_sos_biz: (input, limit) => searchCoSosCandidates(input, limit),
+  tx_sos_biz: (input, limit) => searchTxSosCandidates(input, limit),
 }
 
 export interface OrchestratorOpts {
@@ -113,6 +139,45 @@ export async function runTrustOrchestratorV2(
       })
       .eq('id', jobId)
   })
+
+  // 227: name-discrepancy injection. Click-through path passes searched_as
+  // (the user's original typed query) when the canonical legal name from
+  // their candidate selection differs. Record an evidence row BEFORE any
+  // scraper runs so the chain captures the discrepancy at the head of the
+  // job's history. Builder projects this into red_flags +
+  // raw_report.name_discrepancy.
+  if (
+    input.searched_as &&
+    input.searched_as.trim().length > 0 &&
+    input.searched_as.trim().toLowerCase() !== input.contractor_name.trim().toLowerCase()
+  ) {
+    await wrap('orch-name-discrepancy', async () => {
+      await persistEvidence({
+        jobId,
+        contractorId: contractorRow?.id ?? null,
+        evidence: {
+          source_key: 'system_internal',
+          finding_type: 'name_discrepancy_observed',
+          confidence: 'verified_structured',
+          finding_summary:
+            `Contractor was solicited as "${input.searched_as}" but their canonical legal entity is registered as "${input.contractor_name}". ` +
+            `Name discrepancies in contractor solicitations are an independent fraud indicator.`,
+          extracted_facts: {
+            searched_as: input.searched_as,
+            canonical_name: input.contractor_name,
+            entity_id_from_click: input.entity_id_from_click ?? null,
+            entity_source_from_click: input.entity_source_from_click ?? null,
+          },
+          query_sent: null,
+          response_sha256: null,
+          response_snippet: null,
+          duration_ms: 0,
+          cost_cents: 0,
+        },
+        supabase: admin as unknown as SupabaseClient,
+      })
+    })
+  }
 
   // Run scrapers serially per-job (the (job_id, sequence_number) unique
   // index in trust_evidence forbids parallel inserts within a job; cross-job
@@ -195,6 +260,75 @@ export async function runTrustOrchestratorV2(
     } else {
       failed += 1
     }
+  }
+
+  // 227: disambiguation fallback. If the exact-match scraper round produced
+  // no business_active/inactive/dissolved finding (entity_not_found shape),
+  // ask each registered entity-registry scraper for similar candidates by
+  // name. Opportunistic — failures swallowed inside searchCoSosCandidates /
+  // searchTxSosCandidates (return []). Skipped when the user came in via a
+  // click-through (entity_id_from_click present) since they already picked.
+  if (!input.entity_id_from_click) {
+    await wrap('orch-disambiguation', async () => {
+      try {
+        const exactMatchHit = await admin
+          .from('trust_evidence')
+          .select('id', { count: 'exact', head: true })
+          .eq('job_id', jobId)
+          .in('finding_type', [
+            'business_active', 'business_inactive', 'business_dissolved',
+          ])
+        const hitCount = exactMatchHit.count ?? 0
+        if (hitCount > 0) return // exact match found, no need to disambiguate
+
+        const registryKeys = opts.scraperKeys.filter((k) =>
+          (ENTITY_REGISTRY_SCRAPERS as readonly string[]).includes(k) &&
+          typeof CANDIDATE_SEARCH_DISPATCH[k] === 'function',
+        )
+        if (registryKeys.length === 0) return
+
+        const batches = await Promise.allSettled(
+          registryKeys.map((k) =>
+            CANDIDATE_SEARCH_DISPATCH[k]({ legalName: primaryName }, 20),
+          ),
+        )
+        const allCandidates: EntityCandidate[] = batches
+          .filter((r): r is PromiseFulfilledResult<EntityCandidate[]> => r.status === 'fulfilled')
+          .flatMap((r) => r.value)
+        if (allCandidates.length === 0) return
+
+        // Re-rank across the merged set. Each scraper already returned its
+        // own top-5 ranked locally; rankCandidates strips
+        // already-attached similarity_score on `T extends {entity_name}`
+        // (the spread reassigns it). Top 5 across all sources.
+        const ranked = rankCandidates(primaryName, allCandidates, { limit: 5 })
+        if (ranked.length === 0) return
+
+        await persistEvidence({
+          jobId,
+          contractorId: contractorRow?.id ?? null,
+          evidence: {
+            source_key: ranked[0].source_key,
+            finding_type: 'entity_disambiguation_candidates',
+            confidence: 'verified_structured',
+            finding_summary:
+              `Found ${ranked.length} entity candidate(s) similar to "${primaryName}" — exact-name lookup missed but related registered entities exist`,
+            extracted_facts: {
+              candidates: ranked,
+              query: primaryName,
+            },
+            query_sent: null,
+            response_sha256: null,
+            response_snippet: null,
+            duration_ms: 0,
+            cost_cents: 0,
+          },
+          supabase: admin as unknown as SupabaseClient,
+        })
+      } catch (err) {
+        console.warn('[orchestrator-v2] disambiguation fallback failed (non-fatal)', err)
+      }
+    })
   }
 
   // Update counters
@@ -312,6 +446,7 @@ async function finalizeFreeTier(
       searches_performed: derived.data_sources_searched.length,
       evidence_ids: derived.evidence_ids,
       raw_report: derived.raw_report,
+      searched_as: input.searched_as ?? null,
     })
     .select('id, created_at')
     .single()
