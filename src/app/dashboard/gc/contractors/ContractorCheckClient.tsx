@@ -25,6 +25,7 @@ import {
   tileProvenanceMulti,
   type TileProvenance,
 } from '@/lib/trust/tile-provenance'
+import ConfirmationStep from '@/components/trust/ConfirmationStep'
 
 type PaidTier = 'standard' | 'deep_dive'
 const JOB_POLL_MS = 2000
@@ -323,14 +324,67 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
     }
   }
 
+  // PR #29: two-step confirmation flow.
+  // Step 1 (runCheck): /api/trust/discover — fast SOS-only candidate lookup
+  // Step 2 (runFullReportOnConfirmedCandidate): /api/trust with
+  // confirmed_from_discovery — runs the full pipeline against the canonical
+  // entity the user picked.
+  type DiscoveryResult = {
+    exact_match: EntityCandidate | null
+    candidates: EntityCandidate[]
+    zero_results: boolean
+    query: string
+  }
+  const [discovery, setDiscovery] = useState<DiscoveryResult | null>(null)
+
   async function runCheck() {
     if (!name.trim() || !city.trim() || loading) return
+    setLoading(true); setSearches([]); setReport(null); setError(null); setDiscovery(null)
+    try {
+      const discRes = await fetch('/api/trust/discover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), city: city.trim(), state_code: state, tier }),
+      })
+      if (!discRes.ok) {
+        const e = await discRes.json().catch(() => ({}))
+        throw new Error(e.error ?? `Discovery error ${discRes.status}`)
+      }
+      const disc = await discRes.json()
+      setDiscovery({
+        exact_match: disc.exact_match ?? null,
+        candidates: disc.candidates ?? [],
+        zero_results: !!disc.zero_results,
+        query: name.trim(),
+      })
+    } catch (e: any) { setError(e.message ?? 'Discovery failed') }
+    finally { setLoading(false) }
+  }
+
+  function searchAgain() {
+    setDiscovery(null)
+    setReport(null)
+    setError(null)
+  }
+
+  async function runFullReportOnConfirmedCandidate(candidate: EntityCandidate) {
+    if (loading) return
+    const originalQuery = discovery?.query ?? name.trim()
     setLoading(true); setSearches([]); setReport(null); setError(null)
     try {
       const res = await fetch('/api/trust', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contractor_name: name.trim(), city: city.trim(), state_code: state, tier }),
+        body: JSON.stringify({
+          contractor_name: candidate.entity_name,
+          city: city.trim(),
+          state_code: state,
+          tier,
+          // Plumbed through to the orchestrator via the existing PR #26 contract.
+          entity_id: candidate.entity_id,
+          entity_source: candidate.source_key,
+          original_query: originalQuery,
+        }),
       })
       if (res.status === 402) {
         const data = await res.json().catch(() => ({}))
@@ -344,6 +398,7 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
       if (!res.ok) { const e = await res.json(); throw new Error(e.error ?? `Error ${res.status}`) }
       const data = await res.json()
       setReport(data)
+      setDiscovery(null) // collapse confirmation step once report renders
       if (data.searches?.length) setSearches(data.searches)
       setHistory(prev => [data, ...prev].slice(0, 20))
     } catch (e: any) { setError(e.message ?? 'Verification failed') }
@@ -546,6 +601,24 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
 
         {/* Error */}
         {error&&<div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex items-start gap-3"><XCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0"/><div><div className="text-sm font-semibold text-red-800">Verification Failed</div><div className="text-xs text-red-600 mt-0.5">{error}</div></div></div>}
+
+        {/* PR #29: confirmation step — surfaces entity candidates from
+            /api/trust/discover before running the full report. The user
+            picks one (or refines the search). Selected candidate's
+            entity_id/entity_source/original_query feed back to
+            /api/trust as confirmed_from_discovery via PR #26's contract. */}
+        {discovery && !report && (
+          <div className="mb-6">
+            <ConfirmationStep
+              query={discovery.query}
+              exactMatch={discovery.exact_match}
+              candidates={discovery.candidates}
+              zeroResults={discovery.zero_results}
+              onConfirm={runFullReportOnConfirmedCandidate}
+              onSearchAgain={searchAgain}
+            />
+          </div>
+        )}
 
         {/* 227: entity_disambiguation_required branch — render the
             disambiguation card with click-through to re-run on the
