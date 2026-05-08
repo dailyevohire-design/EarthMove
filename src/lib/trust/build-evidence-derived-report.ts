@@ -16,6 +16,7 @@
  */
 
 import type { ScraperEvidence, TrustFindingType } from './scrapers/types'
+import { buildScoreExplanation, type ScoreBreakdown } from './score-explanation'
 
 /**
  * Input type — extends ScraperEvidence with the DB-row fields needed to
@@ -69,6 +70,8 @@ export interface EvidenceDerivedReport {
   /** 231: phoenix detector — array of related entities sharing address /
    *  officer / agent with the canonical entity. Patent claim 1. */
   related_entities: Array<Record<string, unknown>>
+  /** 231: per-evidence score adjustment trail (audit transparency). */
+  score_breakdown: ScoreBreakdown
 }
 
 const NULL_FINDING_SUFFIXES = [
@@ -576,6 +579,7 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     trustScore = Math.max(0, Math.min(100, trustScore + delta))
   }
 
+  const scoreBreakdown = buildScoreExplanation(evidence, trustScore)
   const rawReport: Record<string, unknown> = {
     business: businessSet ? rawBusiness : null,
     licensing: licensingSet ? rawLicensing : null,
@@ -583,6 +587,7 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     legal: rawLegal,
     open_web: rawOpenWeb,
     related_entities: relatedEntities.length > 0 ? relatedEntities : null,
+    score_breakdown: scoreBreakdown,
     sources_cited: sourcesCited,
   }
 
@@ -666,6 +671,7 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     open_web_recency_min: openWebRecencyMin,
     open_web_engines_used: Array.from(enginesUsed),
     related_entities: relatedEntities,
+    score_breakdown: scoreBreakdown,
   }
 }
 

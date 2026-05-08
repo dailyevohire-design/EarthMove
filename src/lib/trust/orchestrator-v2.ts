@@ -37,6 +37,7 @@ import { scrapePerplexitySweep } from './scrapers/perplexity-sweep'
 import { scrapeClaudeWebSearchVerify } from './scrapers/claude-web-search'
 import { detectCrossEngineCorroboration } from './cross-engine-corroboration'
 import { detectPhoenixPattern, relatedEntitiesToEvidence, type CanonicalEntity } from './scrapers/phoenix-detector'
+import { computeIndustryBaseline } from './score-explanation'
 
 export interface OrchestratorInput {
   contractor_name: string
@@ -576,6 +577,8 @@ async function finalizeFreeTier(
       open_web_recency_min: derived.open_web_recency_min,
       open_web_engines_used: derived.open_web_engines_used,
       related_entities: derived.related_entities.length > 0 ? derived.related_entities : null,
+      score_breakdown: derived.score_breakdown,
+      industry_baseline: await computeIndustryBaseline(input.state_code, admin, derived.trust_score),
     })
     .select('id, created_at')
     .single()

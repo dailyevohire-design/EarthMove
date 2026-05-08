@@ -4,6 +4,7 @@ import DisambiguationPicker, { type AmbiguousCandidate } from './DisambiguationP
 import NoEntityFoundCard from './no-entity-found-card'
 import OpenWebFindingsTile, { type OpenWebSection } from './OpenWebFindingsTile'
 import RelatedEntitiesPanel from './RelatedEntitiesPanel'
+import ScoreExplanationCard, { type ScoreBreakdownProps, type IndustryBaselineProps } from './ScoreExplanationCard'
 import { expandContractorNameVariants } from '@/lib/trust/name-variants'
 
 // Inline row type — matches select('*') on trust_reports. Kept here rather
@@ -58,6 +59,9 @@ export interface TrustReport {
   open_web_corroboration_depth?: number | null
   open_web_recency_min?: number | null
   open_web_engines_used?: string[] | null
+  // 231: score explanation + industry baseline (jsonb columns).
+  score_breakdown?: ScoreBreakdownProps | null
+  industry_baseline?: IndustryBaselineProps | null
 }
 
 // ---------- small inline presentational components ----------
@@ -324,6 +328,16 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
               sweepRan={(report.open_web_engines_used?.length ?? 0) > 0
                 || (report.open_web_adverse_count ?? 0) > 0
                 || (report.open_web_positive_count ?? 0) > 0}
+            />
+          </div>
+
+          {/* 231: score explanation + industry baseline. Renders below
+              the score card so users see *why* the score is what it is. */}
+          <div className="mb-6">
+            <ScoreExplanationCard
+              breakdown={report.score_breakdown ?? null}
+              baseline={report.industry_baseline ?? null}
+              finalScore={report.trust_score}
             />
           </div>
 
