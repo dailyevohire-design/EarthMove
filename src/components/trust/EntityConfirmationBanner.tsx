@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * EntityConfirmationBanner — surfaces the entity the report matched, prominently,
  * at the top of every report. Lets the user catch wrong-entity matches at a glance
@@ -9,7 +11,9 @@
  *   Case C — disambiguation_required → returns null (EntityDisambiguationCard renders)
  *   Case D — entity_not_found     → returns null (NoEntityFoundCard renders)
  *
- * SSR-safe: pure render off props, no useEffect, no hooks.
+ * Client component: the "Not the right company?" reset button uses onClick +
+ * window.history.back(), so this file must be 'use client'. Render is otherwise
+ * pure off props (no useEffect, no useState).
  */
 
 import Link from 'next/link'
