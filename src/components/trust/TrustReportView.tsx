@@ -150,20 +150,35 @@ const TONE_CLASSES: Record<TileTone, string> = {
   clean: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
   not_applicable: 'bg-stone-50 text-stone-600 ring-1 ring-stone-200',
   not_searched: 'bg-stone-100 text-stone-500 ring-1 ring-stone-200',
+  // 229: muted-but-clickable for link-out tiles (e.g. bbb.org search URL).
+  not_searched_link_out: 'bg-stone-100 text-emerald-700 ring-1 ring-stone-200 hover:bg-stone-200',
   warning: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
   critical: 'bg-red-50 text-red-700 ring-1 ring-red-200',
 }
 
 function TilePill({ tile }: { tile: TileDisplay }) {
+  const pill = (
+    <span
+      className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${TONE_CLASSES[tile.tone]}`}
+      title={tile.tooltipText ?? undefined}
+    >
+      {tile.statusLabel}
+    </span>
+  )
   return (
     <div className="mb-2">
       <div className="flex items-center gap-2 flex-wrap">
-        <span
-          className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${TONE_CLASSES[tile.tone]}`}
-          title={tile.tooltipText ?? undefined}
-        >
-          {tile.statusLabel}
-        </span>
+        {tile.tone === 'not_searched_link_out' && tile.linkOutUrl ? (
+          <a
+            href={tile.linkOutUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1"
+          >
+            {pill}
+            <span className="text-emerald-700">↗</span>
+          </a>
+        ) : pill}
         {tile.bodyText && (
           <span className="text-xs text-stone-600">{tile.bodyText}</span>
         )}

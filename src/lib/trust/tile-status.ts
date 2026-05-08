@@ -24,7 +24,14 @@
  * DB row, and the PDF input — all without forcing them to share a type.
  */
 
-export type TileTone = 'verified' | 'clean' | 'not_applicable' | 'not_searched' | 'warning' | 'critical'
+export type TileTone =
+  | 'verified'
+  | 'clean'
+  | 'not_applicable'
+  | 'not_searched'
+  | 'not_searched_link_out' // 229: muted styling + clickable link (e.g. BBB link-out)
+  | 'warning'
+  | 'critical'
 
 export interface TileDisplay {
   /** Short pill label (e.g. "Active", "Not Required", "Not Searched"). */
@@ -36,6 +43,9 @@ export interface TileDisplay {
   /** Long-form hover/print content explaining what was checked + why a
    *  blank tile is not "no data found" (for not_applicable / not_searched). */
   tooltipText: string | null
+  /** When tone === 'not_searched_link_out', the URL the tile should link
+   *  to (e.g. bbb.org search URL constructed by bbb_link_check). */
+  linkOutUrl?: string | null
 }
 
 interface TileReportLike {
@@ -177,9 +187,34 @@ export function deriveLicensingTile(r: TileReportLike): TileDisplay {
   }
 }
 
+function rawBbbProfile(r: TileReportLike): { profile_url: string | null; cta: string | null } | null {
+  const raw = r.raw_report
+  if (!raw || typeof raw !== 'object') return null
+  const bbb = (raw as { bbb?: unknown }).bbb
+  if (!bbb || typeof bbb !== 'object') return null
+  const b = bbb as { profile_url?: unknown; cta?: unknown }
+  return {
+    profile_url: typeof b.profile_url === 'string' ? b.profile_url : null,
+    cta: typeof b.cta === 'string' ? b.cta : null,
+  }
+}
+
 export function deriveBbbTile(r: TileReportLike): TileDisplay {
   const rating = (r.bbb_rating ?? '').trim()
   if (!rating) {
+    // 229: bbb_link_check pattern — when the orchestrator wrote
+    // raw_report.bbb.profile_url, surface it as a not_searched_link_out
+    // tile (muted but clickable) instead of the bare "Not Searched" pill.
+    const bbb = rawBbbProfile(r)
+    if (bbb?.profile_url) {
+      return {
+        statusLabel: 'View BBB Profile',
+        tone: 'not_searched_link_out',
+        bodyText: bbb.cta ?? 'Click to verify directly at bbb.org',
+        tooltipText: 'Free tier: profile lookup only. Standard tier adds rating + complaint synthesis.',
+        linkOutUrl: bbb.profile_url,
+      }
+    }
     return {
       statusLabel: 'Not Searched',
       tone: 'not_searched',
