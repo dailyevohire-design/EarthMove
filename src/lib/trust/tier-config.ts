@@ -45,8 +45,10 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     synthesisModel: null,
     maxConcurrent: 3,
     freeTierScraperFallback: {
-      CO: ['sam_gov_exclusions', 'co_sos_biz', 'co_dora', 'courtlistener_fed', 'state_ag_enforcement'],
-      TX: ['sam_gov_exclusions', 'tx_sos_biz', 'tx_tdlr', 'courtlistener_fed', 'state_ag_enforcement'],
+      // 229: osha_est_search added — locally-mirrored DOL data, no external HTTP at score time.
+      // 229: bbb_link_check added — deterministic URL construction only (no scraping).
+      CO: ['sam_gov_exclusions', 'co_sos_biz', 'co_dora', 'courtlistener_fed', 'state_ag_enforcement', 'osha_est_search', 'bbb_link_check'],
+      TX: ['sam_gov_exclusions', 'tx_sos_biz', 'tx_tdlr', 'courtlistener_fed', 'state_ag_enforcement', 'osha_est_search', 'bbb_link_check'],
     },
   },
   standard:  { runSynthesis: true, nameVariantLimit: 5, synthesisModel: 'claude-sonnet-4-6', maxConcurrent: 10 },

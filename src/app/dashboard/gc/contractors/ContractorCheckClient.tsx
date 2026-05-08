@@ -7,8 +7,25 @@ import {
   XCircle, Lock, Download, Zap, Crown, ArrowRight, Loader2
 } from 'lucide-react'
 import NoEntityFoundCard from '@/components/trust/no-entity-found-card'
+import EntityConfirmationBanner from '@/components/trust/EntityConfirmationBanner'
 import { expandContractorNameVariants } from '@/lib/trust/name-variants'
 import type { EntityCandidate } from '@/lib/trust/scrapers/types'
+import {
+  deriveBusinessTile,
+  deriveLicensingTile,
+  deriveBbbTile,
+  deriveReviewsTile,
+  deriveLegalTile,
+  deriveOshaTile,
+  type TileDisplay,
+  type TileTone,
+} from '@/lib/trust/tile-status'
+import {
+  tileProvenance,
+  tileProvenanceMulti,
+  type TileProvenance,
+} from '@/lib/trust/tile-provenance'
+import ConfirmationStep from '@/components/trust/ConfirmationStep'
 
 type PaidTier = 'standard' | 'deep_dive'
 const JOB_POLL_MS = 2000
@@ -52,6 +69,105 @@ function scoreAge(createdAt: string): 'fresh' | 'aging' | 'stale' {
   if (days < 30) return 'fresh'
   if (days < 90) return 'aging'
   return 'stale'
+}
+
+// D5 + 229: dashboard tile pill. Mirrors TilePill in TrustReportView.tsx but
+// styled to match the dashboard's existing card grid. Tone classes resolve
+// to muted/clickable styling for not_searched_link_out (e.g. bbb.org link).
+const DASHBOARD_TONE_CLASSES: Record<TileTone, string> = {
+  verified: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+  clean: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+  not_applicable: 'bg-stone-50 text-stone-600 ring-1 ring-stone-200',
+  not_searched: 'bg-stone-100 text-stone-500 ring-1 ring-stone-200',
+  not_searched_link_out: 'bg-stone-100 text-emerald-700 ring-1 ring-stone-200 hover:bg-stone-200',
+  warning: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+  critical: 'bg-red-50 text-red-700 ring-1 ring-red-200',
+}
+
+function DashboardTilePill({ tile, provenance }: { tile: TileDisplay; provenance?: TileProvenance }) {
+  const pill = (
+    <span
+      className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${DASHBOARD_TONE_CLASSES[tile.tone]}`}
+      title={tile.tooltipText ?? undefined}
+    >
+      {tile.statusLabel}
+    </span>
+  )
+  const isNotSearched = tile.tone === 'not_searched' || tile.tone === 'not_searched_link_out' || tile.tone === 'not_applicable'
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2 flex-wrap">
+        {tile.tone === 'not_searched_link_out' && tile.linkOutUrl ? (
+          <a
+            href={tile.linkOutUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1"
+          >
+            {pill}
+            <span className="text-emerald-700 text-xs">↗</span>
+          </a>
+        ) : pill}
+      </div>
+      {tile.bodyText && <p className="text-xs text-gray-600">{tile.bodyText}</p>}
+      {provenance && (
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          {isNotSearched || provenance.status === 'not_searched' ? (
+            <>Source: {provenance.displayName} · Not searched in this tier</>
+          ) : (
+            <>
+              Source: {provenance.displayName}
+              {provenance.pulledAtRelative && ` · Pulled ${provenance.pulledAtRelative}`}
+              {provenance.citationUrl && (
+                <>
+                  {' · '}
+                  <a
+                    href={provenance.citationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-600 hover:text-emerald-700"
+                  >
+                    Verify →
+                  </a>
+                </>
+              )}
+            </>
+          )}
+        </p>
+      )}
+    </div>
+  )
+}
+
+// Same state-keyed provenance helpers as TrustReportView. Duplicated to
+// avoid coupling client modules; small + stable.
+function dashSosKeyForState(stateCode: string | null | undefined): string {
+  switch ((stateCode ?? '').toUpperCase()) {
+    case 'CO': return 'co_sos_biz'
+    case 'TX': return 'tx_sos_biz'
+    case 'FL': return 'fl_sunbiz'
+    case 'CA': return 'ca_sos_biz'
+    case 'NY': return 'ny_sos_biz'
+    case 'WA': return 'wa_sos_biz'
+    case 'OR': return 'or_sos_biz'
+    case 'NC': return 'nc_sos_biz'
+    case 'GA': return 'ga_sos_biz'
+    case 'AZ': return 'az_ecorp'
+    default: return 'co_sos_biz'
+  }
+}
+function dashLicenseKeyForState(stateCode: string | null | undefined): string {
+  switch ((stateCode ?? '').toUpperCase()) {
+    case 'CO': return 'co_dora'
+    case 'TX': return 'tx_tdlr'
+    case 'CA': return 'cslb_ca'
+    case 'OR': return 'ccb_or'
+    case 'AZ': return 'roc_az'
+    case 'WA': return 'lni_wa'
+    case 'FL': return 'dbpr_fl'
+    case 'NC': return 'nclbgc_nc'
+    default: return 'co_dora'
+  }
 }
 
 function ScoreRing({ score, riskLevel }: { score: number; riskLevel: string }) {
@@ -208,14 +324,67 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
     }
   }
 
+  // PR #29: two-step confirmation flow.
+  // Step 1 (runCheck): /api/trust/discover — fast SOS-only candidate lookup
+  // Step 2 (runFullReportOnConfirmedCandidate): /api/trust with
+  // confirmed_from_discovery — runs the full pipeline against the canonical
+  // entity the user picked.
+  type DiscoveryResult = {
+    exact_match: EntityCandidate | null
+    candidates: EntityCandidate[]
+    zero_results: boolean
+    query: string
+  }
+  const [discovery, setDiscovery] = useState<DiscoveryResult | null>(null)
+
   async function runCheck() {
     if (!name.trim() || !city.trim() || loading) return
+    setLoading(true); setSearches([]); setReport(null); setError(null); setDiscovery(null)
+    try {
+      const discRes = await fetch('/api/trust/discover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), city: city.trim(), state_code: state, tier }),
+      })
+      if (!discRes.ok) {
+        const e = await discRes.json().catch(() => ({}))
+        throw new Error(e.error ?? `Discovery error ${discRes.status}`)
+      }
+      const disc = await discRes.json()
+      setDiscovery({
+        exact_match: disc.exact_match ?? null,
+        candidates: disc.candidates ?? [],
+        zero_results: !!disc.zero_results,
+        query: name.trim(),
+      })
+    } catch (e: any) { setError(e.message ?? 'Discovery failed') }
+    finally { setLoading(false) }
+  }
+
+  function searchAgain() {
+    setDiscovery(null)
+    setReport(null)
+    setError(null)
+  }
+
+  async function runFullReportOnConfirmedCandidate(candidate: EntityCandidate) {
+    if (loading) return
+    const originalQuery = discovery?.query ?? name.trim()
     setLoading(true); setSearches([]); setReport(null); setError(null)
     try {
       const res = await fetch('/api/trust', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contractor_name: name.trim(), city: city.trim(), state_code: state, tier }),
+        body: JSON.stringify({
+          contractor_name: candidate.entity_name,
+          city: city.trim(),
+          state_code: state,
+          tier,
+          // Plumbed through to the orchestrator via the existing PR #26 contract.
+          entity_id: candidate.entity_id,
+          entity_source: candidate.source_key,
+          original_query: originalQuery,
+        }),
       })
       if (res.status === 402) {
         const data = await res.json().catch(() => ({}))
@@ -229,6 +398,7 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
       if (!res.ok) { const e = await res.json(); throw new Error(e.error ?? `Error ${res.status}`) }
       const data = await res.json()
       setReport(data)
+      setDiscovery(null) // collapse confirmation step once report renders
       if (data.searches?.length) setSearches(data.searches)
       setHistory(prev => [data, ...prev].slice(0, 20))
     } catch (e: any) { setError(e.message ?? 'Verification failed') }
@@ -432,6 +602,24 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
         {/* Error */}
         {error&&<div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex items-start gap-3"><XCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0"/><div><div className="text-sm font-semibold text-red-800">Verification Failed</div><div className="text-xs text-red-600 mt-0.5">{error}</div></div></div>}
 
+        {/* PR #29: confirmation step — surfaces entity candidates from
+            /api/trust/discover before running the full report. The user
+            picks one (or refines the search). Selected candidate's
+            entity_id/entity_source/original_query feed back to
+            /api/trust as confirmed_from_discovery via PR #26's contract. */}
+        {discovery && !report && (
+          <div className="mb-6">
+            <ConfirmationStep
+              query={discovery.query}
+              exactMatch={discovery.exact_match}
+              candidates={discovery.candidates}
+              zeroResults={discovery.zero_results}
+              onConfirm={runFullReportOnConfirmedCandidate}
+              onSearchAgain={searchAgain}
+            />
+          </div>
+        )}
+
         {/* 227: entity_disambiguation_required branch — render the
             disambiguation card with click-through to re-run on the
             canonical entity. orchestrator-v2 wrote raw_report.disambiguation
@@ -468,6 +656,13 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
           && report.data_integrity_status !== 'entity_not_found'
           && report.data_integrity_status !== 'entity_disambiguation_required'
           && rs && <div className="space-y-4" ref={reportRef}>
+          {/* Entity confirmation banner — see TrustReportView.tsx for the
+              same pattern. Self-handles non-render states. onReset clears
+              the form so the user can search a different name. */}
+          <EntityConfirmationBanner
+            report={report}
+            onReset={() => { setReport(null); setSearches([]); setError(null) }}
+          />
           {/* Score card */}
           <div className={`bg-white border ${rs.border} rounded-2xl shadow-sm p-6`}>
             <div className="flex items-start gap-6 flex-wrap">
@@ -492,23 +687,24 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
           {report.positive_indicators?.length>0&&<div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5"><div className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-3">✓ Verified ({report.positive_indicators.length})</div>
             {report.positive_indicators.map((p:string,i:number)=><div key={i} className="flex items-start gap-2 py-1.5"><CheckCircle2 size={13} className="text-emerald-500 mt-0.5 flex-shrink-0"/><span className="text-sm text-emerald-800">{p}</span></div>)}</div>}
 
-          {/* Data sources grid */}
+          {/* Data sources grid — D5 unified state machine. Each tile uses
+              tile-status helpers + tile-provenance footer so the user can
+              trace every claim back to its official source + verify on the
+              record. */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              {t:'Business Registration',ic:'🏛',rows:[{l:'Status',v:report.business_registration?.status,b:true},{l:'Entity',v:report.business_registration?.entity_type},{l:'Formed',v:report.business_registration?.formation_date},{l:'Agent',v:report.business_registration?.registered_agent}]},
-              {t:'Licensing',ic:'📋',rows:[{l:'Status',v:report.licensing?.status,b:true},{l:'License #',v:report.licensing?.license_number},{l:'Expires',v:report.licensing?.expiration}]},
-              {t:'BBB Profile',ic:'🛡',rows:[{l:'Rating',v:report.bbb_profile?.rating},{l:'Accredited',v:report.bbb_profile?.accredited!=null?(report.bbb_profile.accredited?'Yes':'No'):null},{l:'Complaints',v:report.bbb_profile?.complaint_count!=null?`${report.bbb_profile.complaint_count} on file`:null}]},
-              {t:'Online Reviews',ic:'⭐',rows:[{l:'Avg Rating',v:report.reviews?.average_rating!=null?`${report.reviews.average_rating}/5.0`:null},{l:'Total',v:report.reviews?.total_reviews},{l:'Sentiment',v:report.reviews?.sentiment}]},
-              {t:'Legal Records',ic:'⚖',rows:[{l:'Status',v:report.legal_records?.status,b:true},{l:'Finding',v:report.legal_records?.findings?.[0]??null}]},
-              {t:'OSHA Safety',ic:'🔶',rows:[{l:'Status',v:report.osha_violations?.status,b:true},{l:'Violations',v:report.osha_violations?.violation_count},{l:'Serious',v:report.osha_violations?.serious_count}]},
-            ].map(card=>(
-              <div key={card.t} className="bg-white border border-gray-200/80 rounded-2xl shadow-sm p-4">
-                <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3"><span>{card.ic}</span>{card.t}</div>
-                {card.rows.map(row=><div key={row.l} className="flex justify-between items-center py-1.5 border-b border-gray-50 last:border-0">
-                  <span className="text-xs text-gray-500">{row.l}</span>
-                  {row.b?<span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${['VERIFIED','CLEAN'].includes(row.v??'')?'bg-emerald-50 text-emerald-700 border border-emerald-200':['NOT_FOUND','INACTIVE','EXPIRED'].includes(row.v??'')?'bg-red-50 text-red-700 border border-red-200':'bg-gray-100 text-gray-500 border border-gray-200'}`}>{row.v??'Unknown'}</span>
-                  :<span className="text-xs font-medium text-gray-800 text-right max-w-[60%]">{row.v??'—'}</span>}
-                </div>)}
+              { title: 'Business Registration', icon: '🏛', tile: deriveBusinessTile(report), provenance: tileProvenance(report, dashSosKeyForState(report.state_code)) },
+              { title: 'Licensing',             icon: '📋', tile: deriveLicensingTile(report), provenance: tileProvenance(report, dashLicenseKeyForState(report.state_code)) },
+              { title: 'BBB Profile',           icon: '🛡', tile: deriveBbbTile(report),       provenance: tileProvenanceMulti(report, ['bbb_profile', 'bbb_link_check']) },
+              { title: 'Online Reviews',        icon: '⭐', tile: deriveReviewsTile(report),   provenance: tileProvenance(report, 'google_reviews') },
+              { title: 'Legal Records',         icon: '⚖', tile: deriveLegalTile(report),     provenance: tileProvenanceMulti(report, ['courtlistener_fed', 'state_ag_enforcement']) },
+              { title: 'OSHA Safety',           icon: '🔶', tile: deriveOshaTile(report),     provenance: tileProvenance(report, 'osha_est_search') },
+            ].map(card => (
+              <div key={card.title} className="bg-white border border-gray-200/80 rounded-2xl shadow-sm p-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                  <span>{card.icon}</span>{card.title}
+                </div>
+                <DashboardTilePill tile={card.tile} provenance={card.provenance} />
               </div>
             ))}
           </div>
