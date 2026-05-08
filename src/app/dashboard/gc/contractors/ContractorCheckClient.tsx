@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import NoEntityFoundCard from '@/components/trust/no-entity-found-card'
 import { expandContractorNameVariants } from '@/lib/trust/name-variants'
+import type { EntityCandidate } from '@/lib/trust/scrapers/types'
 
 type PaidTier = 'standard' | 'deep_dive'
 const JOB_POLL_MS = 2000
@@ -234,6 +235,37 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
     finally { setLoading(false) }
   }
 
+  // 227: click-through re-search from <EntityDisambiguationCard />.
+  // Uses the canonical entity_name from the candidate as the new search
+  // term + records the user's original typed name as original_query so the
+  // orchestrator emits the name_discrepancy_observed evidence row.
+  async function runCheckOnCandidate(candidate: EntityCandidate) {
+    if (loading || !report) return
+    const originalQuery = report.contractor_name as string | undefined
+    setLoading(true); setSearches([]); setReport(null); setError(null)
+    try {
+      const res = await fetch('/api/trust', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contractor_name: candidate.entity_name,
+          city: city.trim(),
+          state_code: state,
+          tier,
+          entity_id: candidate.entity_id,
+          entity_source: candidate.source_key,
+          original_query: originalQuery,
+        }),
+      })
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error ?? `Error ${res.status}`) }
+      const data = await res.json()
+      setReport(data)
+      if (data.searches?.length) setSearches(data.searches)
+      setHistory(prev => [data, ...prev].slice(0, 20))
+    } catch (e: any) { setError(e.message ?? 'Verification failed') }
+    finally { setLoading(false) }
+  }
+
   function downloadReport() {
     if (!report) return
     const w = window.open('', '_blank')
@@ -400,6 +432,23 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
         {/* Error */}
         {error&&<div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex items-start gap-3"><XCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0"/><div><div className="text-sm font-semibold text-red-800">Verification Failed</div><div className="text-xs text-red-600 mt-0.5">{error}</div></div></div>}
 
+        {/* 227: entity_disambiguation_required branch — render the
+            disambiguation card with click-through to re-run on the
+            canonical entity. orchestrator-v2 wrote raw_report.disambiguation
+            with the candidate list. */}
+        {report && report.data_integrity_status === 'entity_disambiguation_required' && (
+          <div ref={reportRef}>
+            <NoEntityFoundCard
+              searchedName={report.contractor_name}
+              stateCode={report.state_code}
+              sourcesSearched={report.data_sources_searched ?? []}
+              variantSuggestions={[]}
+              candidates={(report.raw_report?.disambiguation?.candidates ?? []) as EntityCandidate[]}
+              onSelectCandidate={runCheckOnCandidate}
+            />
+          </div>
+        )}
+
         {/* No-entity-found branch — short-circuits the standard report layout
             when the orchestrator wrote data_integrity_status='entity_not_found'.
             Mirrors the branch in src/components/trust/TrustReportView.tsx. */}
@@ -415,7 +464,10 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
         )}
 
         {/* Report */}
-        {report && report.data_integrity_status !== 'entity_not_found' && rs && <div className="space-y-4" ref={reportRef}>
+        {report
+          && report.data_integrity_status !== 'entity_not_found'
+          && report.data_integrity_status !== 'entity_disambiguation_required'
+          && rs && <div className="space-y-4" ref={reportRef}>
           {/* Score card */}
           <div className={`bg-white border ${rs.border} rounded-2xl shadow-sm p-6`}>
             <div className="flex items-start gap-6 flex-wrap">

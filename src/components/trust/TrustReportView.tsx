@@ -45,7 +45,11 @@ export interface TrustReport {
   evidence_ids: string[] | null
   synthesis_model: string | null
   structured_source_hit_rate: number | null
-  data_integrity_status: 'ok' | 'partial' | 'entity_not_found' | 'degraded' | 'failed' | null
+  data_integrity_status: 'ok' | 'partial' | 'entity_not_found' | 'degraded' | 'failed' | 'entity_disambiguation_required' | null
+  /** 227: original user query when canonical legal name differs (populated
+   *  via click-through from the disambiguation card). Drives the warning
+   *  banner below + powers the name-discrepancy fraud signal. */
+  searched_as: string | null
 }
 
 // ---------- small inline presentational components ----------
@@ -255,6 +259,20 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
             <ConfidenceLabel level={report.confidence_level} />
           </div>
         </header>
+
+        {/* 227: name-discrepancy banner — surfaces when the user clicked
+            through entity disambiguation. The canonical legal name differs
+            from what they originally searched. The discrepancy is itself a
+            fraud signal (see commit 2 builder projection that pushes the
+            matching red_flag), so this banner reinforces that finding at
+            the top of the report rather than burying it in the red flags
+            list below. */}
+        {report.searched_as && report.searched_as !== report.contractor_name && (
+          <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+            <span className="font-semibold">⚠ Searched as &ldquo;{report.searched_as}&rdquo;</span>{' '}
+            — actual registered entity is &ldquo;{report.contractor_name}&rdquo;. This name discrepancy is itself a risk indicator.
+          </div>
+        )}
 
         {isAmbiguous && (
           <div className="mb-6">
