@@ -132,9 +132,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Origin not allowed' }, { status: 400 })
   }
 
-  // Insert order in pending_payment
-  // delivery_type maps from delivery_window: 'this_week' → asap, others → scheduled
-  const deliveryType = body.delivery_window === 'this_week' ? 'asap' : 'scheduled'
+  // Derive delivery_type + requested_delivery_date from the customer's window
+  // choice. 'this_week' (and null) → ASAP, no date. Other windows → scheduled
+  // with a tentative midpoint date the dispatcher can refine. Required by the
+  // 'scheduled_requires_date' check constraint on orders.
+  const offsetDays =
+    body.delivery_window === 'next_2_weeks' ? 10 :
+    body.delivery_window === 'this_month'   ? 21 :
+    body.delivery_window === 'researching'  ? 30 :
+    null
+  const deliveryType: 'asap' | 'scheduled' = offsetDays == null ? 'asap' : 'scheduled'
+  let requestedDeliveryDate: string | null = null
+  if (offsetDays != null) {
+    const d = new Date()
+    d.setDate(d.getDate() + offsetDays)
+    requestedDeliveryDate = d.toISOString().split('T')[0]
+  }
 
   const orderInsert: Record<string, unknown> = {
     market_id: MARKET_ID_DFW,
@@ -155,6 +168,7 @@ export async function POST(req: NextRequest) {
     },
     delivery_notes: body.delivery.notes ?? null,
     requested_delivery_window: body.delivery_window,
+    requested_delivery_date: requestedDeliveryDate,
     price_per_unit: quote.pricePerTonCents / 100,
     subtotal: quote.subtotalCents / 100,
     delivery_fee: quote.deliveryFeeCents / 100,
