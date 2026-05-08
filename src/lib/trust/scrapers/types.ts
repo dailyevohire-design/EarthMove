@@ -43,7 +43,9 @@ export type TrustFindingType =
   // operational
   | 'source_error' | 'source_not_applicable'
   // 227: entity disambiguation
-  | 'entity_disambiguation_candidates' | 'name_discrepancy_observed';
+  | 'entity_disambiguation_candidates' | 'name_discrepancy_observed'
+  // 229: BBB link-out (no scraping, deterministic URL only)
+  | 'bbb_link_constructed';
 
 /**
  * Single registry-entity row surfaced by an entity-registry scraper's

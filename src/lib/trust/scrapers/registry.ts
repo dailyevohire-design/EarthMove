@@ -10,6 +10,7 @@ import { scrapeTxTdlrOrders } from './tx-tdlr-orders';
 import { scrapeCourtListenerFed } from './courtlistener-fed';
 import { scrapeStateAgEnforcement } from './state-ag-enforcement';
 import { scrapeOshaEstSearch } from './osha-est-search';
+import { scrapeBbbLinkCheck } from './bbb-link-check';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -91,6 +92,13 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
 
     case 'osha_est_search':
       return scrapeOshaEstSearch({ legalName: input.legalName, stateCode: input.stateCode });
+
+    case 'bbb_link_check':
+      return scrapeBbbLinkCheck({
+        legalName: input.legalName,
+        city: input.city ?? null,
+        stateCode: input.stateCode,
+      });
 
     case 'denver_cpd':
     case 'cslb_ca':
