@@ -20,6 +20,11 @@ import {
   type TileDisplay,
   type TileTone,
 } from '@/lib/trust/tile-status'
+import {
+  tileProvenance,
+  tileProvenanceMulti,
+  type TileProvenance,
+} from '@/lib/trust/tile-provenance'
 
 type PaidTier = 'standard' | 'deep_dive'
 const JOB_POLL_MS = 2000
@@ -78,7 +83,7 @@ const DASHBOARD_TONE_CLASSES: Record<TileTone, string> = {
   critical: 'bg-red-50 text-red-700 ring-1 ring-red-200',
 }
 
-function DashboardTilePill({ tile }: { tile: TileDisplay }) {
+function DashboardTilePill({ tile, provenance }: { tile: TileDisplay; provenance?: TileProvenance }) {
   const pill = (
     <span
       className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${DASHBOARD_TONE_CLASSES[tile.tone]}`}
@@ -87,6 +92,7 @@ function DashboardTilePill({ tile }: { tile: TileDisplay }) {
       {tile.statusLabel}
     </span>
   )
+  const isNotSearched = tile.tone === 'not_searched' || tile.tone === 'not_searched_link_out' || tile.tone === 'not_applicable'
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2 flex-wrap">
@@ -103,8 +109,64 @@ function DashboardTilePill({ tile }: { tile: TileDisplay }) {
         ) : pill}
       </div>
       {tile.bodyText && <p className="text-xs text-gray-600">{tile.bodyText}</p>}
+      {provenance && (
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          {isNotSearched || provenance.status === 'not_searched' ? (
+            <>Source: {provenance.displayName} · Not searched in this tier</>
+          ) : (
+            <>
+              Source: {provenance.displayName}
+              {provenance.pulledAtRelative && ` · Pulled ${provenance.pulledAtRelative}`}
+              {provenance.citationUrl && (
+                <>
+                  {' · '}
+                  <a
+                    href={provenance.citationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-600 hover:text-emerald-700"
+                  >
+                    Verify →
+                  </a>
+                </>
+              )}
+            </>
+          )}
+        </p>
+      )}
     </div>
   )
+}
+
+// Same state-keyed provenance helpers as TrustReportView. Duplicated to
+// avoid coupling client modules; small + stable.
+function dashSosKeyForState(stateCode: string | null | undefined): string {
+  switch ((stateCode ?? '').toUpperCase()) {
+    case 'CO': return 'co_sos_biz'
+    case 'TX': return 'tx_sos_biz'
+    case 'FL': return 'fl_sunbiz'
+    case 'CA': return 'ca_sos_biz'
+    case 'NY': return 'ny_sos_biz'
+    case 'WA': return 'wa_sos_biz'
+    case 'OR': return 'or_sos_biz'
+    case 'NC': return 'nc_sos_biz'
+    case 'GA': return 'ga_sos_biz'
+    case 'AZ': return 'az_ecorp'
+    default: return 'co_sos_biz'
+  }
+}
+function dashLicenseKeyForState(stateCode: string | null | undefined): string {
+  switch ((stateCode ?? '').toUpperCase()) {
+    case 'CO': return 'co_dora'
+    case 'TX': return 'tx_tdlr'
+    case 'CA': return 'cslb_ca'
+    case 'OR': return 'ccb_or'
+    case 'AZ': return 'roc_az'
+    case 'WA': return 'lni_wa'
+    case 'FL': return 'dbpr_fl'
+    case 'NC': return 'nclbgc_nc'
+    default: return 'co_dora'
+  }
 }
 
 function ScoreRing({ score, riskLevel }: { score: number; riskLevel: string }) {
@@ -553,23 +615,23 @@ export default function ContractorCheckClient({ initialHistory, checkoutEnabled 
             {report.positive_indicators.map((p:string,i:number)=><div key={i} className="flex items-start gap-2 py-1.5"><CheckCircle2 size={13} className="text-emerald-500 mt-0.5 flex-shrink-0"/><span className="text-sm text-emerald-800">{p}</span></div>)}</div>}
 
           {/* Data sources grid — D5 unified state machine. Each tile uses
-              tile-status helpers so blank values render as
-              verified/clean/not_applicable/not_searched/not_searched_link_out
-              instead of misleading em-dashes. */}
+              tile-status helpers + tile-provenance footer so the user can
+              trace every claim back to its official source + verify on the
+              record. */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              { title: 'Business Registration', icon: '🏛', tile: deriveBusinessTile(report) },
-              { title: 'Licensing',             icon: '📋', tile: deriveLicensingTile(report) },
-              { title: 'BBB Profile',           icon: '🛡', tile: deriveBbbTile(report) },
-              { title: 'Online Reviews',        icon: '⭐', tile: deriveReviewsTile(report) },
-              { title: 'Legal Records',         icon: '⚖', tile: deriveLegalTile(report) },
-              { title: 'OSHA Safety',           icon: '🔶', tile: deriveOshaTile(report) },
+              { title: 'Business Registration', icon: '🏛', tile: deriveBusinessTile(report), provenance: tileProvenance(report, dashSosKeyForState(report.state_code)) },
+              { title: 'Licensing',             icon: '📋', tile: deriveLicensingTile(report), provenance: tileProvenance(report, dashLicenseKeyForState(report.state_code)) },
+              { title: 'BBB Profile',           icon: '🛡', tile: deriveBbbTile(report),       provenance: tileProvenanceMulti(report, ['bbb_profile', 'bbb_link_check']) },
+              { title: 'Online Reviews',        icon: '⭐', tile: deriveReviewsTile(report),   provenance: tileProvenance(report, 'google_reviews') },
+              { title: 'Legal Records',         icon: '⚖', tile: deriveLegalTile(report),     provenance: tileProvenanceMulti(report, ['courtlistener_fed', 'state_ag_enforcement']) },
+              { title: 'OSHA Safety',           icon: '🔶', tile: deriveOshaTile(report),     provenance: tileProvenance(report, 'osha_est_search') },
             ].map(card => (
               <div key={card.title} className="bg-white border border-gray-200/80 rounded-2xl shadow-sm p-4">
                 <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
                   <span>{card.icon}</span>{card.title}
                 </div>
-                <DashboardTilePill tile={card.tile} />
+                <DashboardTilePill tile={card.tile} provenance={card.provenance} />
               </div>
             ))}
           </div>

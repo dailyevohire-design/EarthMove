@@ -14,6 +14,11 @@ import {
   type TileDisplay,
   type TileTone,
 } from '@/lib/trust/tile-status'
+import {
+  tileProvenance,
+  tileProvenanceMulti,
+  type TileProvenance,
+} from '@/lib/trust/tile-provenance'
 
 // Inline row type — matches select('*') on trust_reports. Kept here rather
 // than in types.ts because this view is the only consumer.
@@ -156,7 +161,7 @@ const TONE_CLASSES: Record<TileTone, string> = {
   critical: 'bg-red-50 text-red-700 ring-1 ring-red-200',
 }
 
-function TilePill({ tile }: { tile: TileDisplay }) {
+function TilePill({ tile, provenance }: { tile: TileDisplay; provenance?: TileProvenance }) {
   const pill = (
     <span
       className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${TONE_CLASSES[tile.tone]}`}
@@ -183,7 +188,40 @@ function TilePill({ tile }: { tile: TileDisplay }) {
           <span className="text-xs text-stone-600">{tile.bodyText}</span>
         )}
       </div>
+      {provenance && <ProvenanceFooter provenance={provenance} tileTone={tile.tone} />}
     </div>
+  )
+}
+
+function ProvenanceFooter({ provenance, tileTone }: { provenance: TileProvenance; tileTone: TileTone }) {
+  // For not_searched tones, surface "Not searched in this tier" instead of
+  // a stale-looking timestamp. Sets correct expectations vs. implying we
+  // looked but found nothing.
+  if (provenance.status === 'not_searched' || tileTone === 'not_searched' || tileTone === 'not_searched_link_out' || tileTone === 'not_applicable') {
+    return (
+      <p className="mt-1.5 text-[11px] text-stone-400">
+        Source: {provenance.displayName} · Not searched in this tier
+      </p>
+    )
+  }
+  return (
+    <p className="mt-1.5 text-[11px] text-stone-500">
+      Source: {provenance.displayName}
+      {provenance.pulledAtRelative && ` · Pulled ${provenance.pulledAtRelative}`}
+      {provenance.citationUrl && (
+        <>
+          {' · '}
+          <a
+            href={provenance.citationUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-700 hover:text-emerald-800"
+          >
+            Verify on official record →
+          </a>
+        </>
+      )}
+    </p>
   )
 }
 
@@ -219,6 +257,37 @@ function relativeTime(iso: string): string {
   const d = Math.floor(h / 24)
   if (d < 30)  return `${d}d ago`
   return new Date(iso).toLocaleDateString()
+}
+
+// State-keyed provenance lookups. For Business Registration and License
+// panels, the source_key depends on which state's registry/board ran.
+function sosKeyForState(stateCode: string | null): string {
+  switch ((stateCode ?? '').toUpperCase()) {
+    case 'CO': return 'co_sos_biz'
+    case 'TX': return 'tx_sos_biz'
+    case 'FL': return 'fl_sunbiz'
+    case 'CA': return 'ca_sos_biz'
+    case 'NY': return 'ny_sos_biz'
+    case 'WA': return 'wa_sos_biz'
+    case 'OR': return 'or_sos_biz'
+    case 'NC': return 'nc_sos_biz'
+    case 'GA': return 'ga_sos_biz'
+    case 'AZ': return 'az_ecorp'
+    default: return 'co_sos_biz' // launch markets default
+  }
+}
+function licenseKeyForState(stateCode: string | null): string {
+  switch ((stateCode ?? '').toUpperCase()) {
+    case 'CO': return 'co_dora'
+    case 'TX': return 'tx_tdlr'
+    case 'CA': return 'cslb_ca'
+    case 'OR': return 'ccb_or'
+    case 'AZ': return 'roc_az'
+    case 'WA': return 'lni_wa'
+    case 'FL': return 'dbpr_fl'
+    case 'NC': return 'nclbgc_nc'
+    default: return 'co_dora'
+  }
 }
 
 // STATE_NAMES + formatBizStatus + formatOshaStatus deleted in D5 — superseded by
@@ -352,35 +421,52 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
             </div>
           </section>
 
-          {/* Data panels */}
+          {/* Data panels — each tile gets a provenance footer (source +
+              pulled-at + verify link) so the user can trace every claim
+              back to the official record. */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <Panel title="Business Registration" icon="🏛">
-              <TilePill tile={deriveBusinessTile(report)} />
+              <TilePill
+                tile={deriveBusinessTile(report)}
+                provenance={tileProvenance(report, sosKeyForState(report.state_code))}
+              />
               <Row k="Entity"    v={report.biz_entity_type} />
               <Row k="Formed"    v={report.biz_formation_date} />
             </Panel>
 
             <Panel title="License" icon="📋">
-              <TilePill tile={deriveLicensingTile(report)} />
+              <TilePill
+                tile={deriveLicensingTile(report)}
+                provenance={tileProvenance(report, licenseKeyForState(report.state_code))}
+              />
               <Row k="License #" v={report.lic_license_number} />
             </Panel>
 
             {showBbbPanel && (
               <Panel title="BBB Profile" icon="🛡">
-                <TilePill tile={deriveBbbTile(report)} />
+                <TilePill
+                  tile={deriveBbbTile(report)}
+                  provenance={tileProvenanceMulti(report, ['bbb_profile', 'bbb_link_check'])}
+                />
                 <Row k="Accredited"  v={report.bbb_accredited == null ? null : (report.bbb_accredited ? 'Yes' : 'No')} />
                 <Row k="Complaints"  v={report.bbb_complaint_count} />
               </Panel>
             )}
 
             <Panel title="Reviews" icon="⭐">
-              <TilePill tile={deriveReviewsTile(report)} />
+              <TilePill
+                tile={deriveReviewsTile(report)}
+                provenance={tileProvenance(report, 'google_reviews')}
+              />
               <Row k="Total"      v={report.review_total} />
               <Row k="Sentiment"  v={report.review_sentiment} />
             </Panel>
 
             <Panel title="Legal Records" icon="⚖">
-              <TilePill tile={deriveLegalTile(report)} />
+              <TilePill
+                tile={deriveLegalTile(report)}
+                provenance={tileProvenanceMulti(report, ['courtlistener_fed', 'state_ag_enforcement'])}
+              />
               <List
                 items={report.legal_findings}
                 emptyText="No lawsuits, liens, or judgments surfaced in public records. This is not an exhaustive search — county-level civil dockets often require manual lookup."
@@ -391,7 +477,10 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
             </Panel>
 
             <Panel title="OSHA Safety" icon="🔶">
-              <TilePill tile={deriveOshaTile(report)} />
+              <TilePill
+                tile={deriveOshaTile(report)}
+                provenance={tileProvenance(report, 'osha_est_search')}
+              />
               <Row k="Violations"  v={formatOshaViolations(report)} />
               <Row k="Serious"     v={report.osha_serious_count} />
             </Panel>
