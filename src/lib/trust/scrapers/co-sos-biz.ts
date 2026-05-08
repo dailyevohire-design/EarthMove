@@ -2,10 +2,12 @@ import { createHash } from 'node:crypto';
 import {
   type ScraperEvidence,
   type TrustFindingType,
+  type EntityCandidate,
   ScraperRateLimitError,
   ScraperUpstreamError,
   ScraperTimeoutError,
 } from './types';
+import { rankCandidates } from '../name-similarity';
 
 const SOURCE_KEY = 'co_sos_biz';
 const ENDPOINT = 'https://data.colorado.gov/resource/4ykn-tg5h.json';
@@ -270,5 +272,97 @@ function buildSummary(
       return `CO SOS: "${legalName}" status is ${status || 'dissolved'}${fd}`;
     default:
       return `CO SOS: "${legalName}" status ${status}${fd}`;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// 227: entity disambiguation — candidate search.
+//
+// Hits the same Socrata dataset as scrapeCoSosBiz but with a higher row cap
+// and returns all rows mapped to EntityCandidate, ranked by name-similarity.
+// Opportunistic — never throws, returns [] on any error so the orchestrator's
+// disambiguation fallback degrades gracefully into entity_not_found.
+// ──────────────────────────────────────────────────────────────────────────
+
+export interface CoSosBizCandidateInput {
+  legalName: string;
+  fetchFn?: typeof fetch;
+  timeoutMs?: number;
+  signal?: AbortSignal;
+}
+
+const CANDIDATE_FETCH_LIMIT = 20;
+const CANDIDATE_RETURN_LIMIT = 5;
+
+function composePrincipalAddress(row: CoSosRawRow): string | null {
+  const parts = [
+    row.principaladdress1,
+    row.principalcity,
+    row.principalstate,
+    row.principalzipcode,
+  ].map((p) => (p ?? '').trim()).filter((p) => p.length > 0);
+  return parts.length > 0 ? parts.join(', ') : null;
+}
+
+function composeRegisteredAgent(row: CoSosRawRow): string | null {
+  const org = (row.agentorganizationname ?? '').trim();
+  if (org) return org;
+  const first = (row.agentfirstname ?? '').trim();
+  const last = (row.agentlastname ?? '').trim();
+  if (!first || !last) return null;
+  const middle = (row.agentmiddlename ?? '').trim();
+  const suffix = (row.agentsuffix ?? '').trim();
+  return [first, middle, last, suffix].filter((p) => p.length > 0).join(' ');
+}
+
+export async function searchCoSosCandidates(
+  input: CoSosBizCandidateInput,
+  limit: number = CANDIDATE_RETURN_LIMIT,
+): Promise<EntityCandidate[]> {
+  const legalName = input.legalName?.trim();
+  if (!legalName) return [];
+
+  const fetchFn = input.fetchFn ?? fetch;
+  const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const searchTerm = normalizeForSocrataQuery(legalName);
+  const escaped = searchTerm.replace(/'/g, "''");
+  const where = `upper(entityname) like upper('%${escaped}%')`;
+  const url = `${ENDPOINT}?$where=${encodeURIComponent(where)}&$limit=${CANDIDATE_FETCH_LIMIT}`;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (input.signal) input.signal.addEventListener('abort', () => controller.abort());
+
+  try {
+    const resp = await fetchFn(url, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    });
+    if (!resp.ok) return [];
+    const rows = (await resp.json()) as CoSosRawRow[];
+    if (!Array.isArray(rows) || rows.length === 0) return [];
+    const mapped: EntityCandidate[] = rows
+      .filter((r) => typeof r.entityname === 'string' && r.entityname.length > 0)
+      .map((r) => ({
+        entity_id: (r.entityid ?? '').trim() || `co_sos:${r.entityname}`,
+        entity_name: (r.entityname ?? '').trim(),
+        entity_type: mapEntityType(r.entitytype as string | null),
+        status: (r.entitystatus ?? null) as string | null,
+        formation_date: parseCoDate(r.entityformdate),
+        principal_address: composePrincipalAddress(r),
+        registered_agent: composeRegisteredAgent(r),
+        source_key: SOURCE_KEY,
+        source_url: `${ENDPOINT}?$where=${encodeURIComponent(`upper(entityname) like upper('%${escaped}%')`)}`,
+        similarity_score: 0, // overwritten by rankCandidates
+      }));
+    return rankCandidates(legalName, mapped, { limit });
+  } catch {
+    // Disambiguation is opportunistic — never block the request on a candidate
+    // lookup failure. The caller (orchestrator) falls through to
+    // entity_not_found when this returns [].
+    return [];
+  } finally {
+    clearTimeout(timer);
   }
 }

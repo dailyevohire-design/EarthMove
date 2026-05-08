@@ -41,7 +41,30 @@ export type TrustFindingType =
   | 'permit_history_robust' | 'permit_history_clean'
   | 'permit_history_low' | 'permit_history_stale' | 'permit_scope_violation'
   // operational
-  | 'source_error' | 'source_not_applicable';
+  | 'source_error' | 'source_not_applicable'
+  // 227: entity disambiguation
+  | 'entity_disambiguation_candidates' | 'name_discrepancy_observed';
+
+/**
+ * Single registry-entity row surfaced by an entity-registry scraper's
+ * candidate-search method. Ranked + filtered by name-similarity in the
+ * orchestrator before being persisted in extracted_facts.candidates.
+ *
+ * Powers the 'Did you mean...?' disambiguation card (PR #27 commit 3).
+ */
+export interface EntityCandidate {
+  entity_id: string;
+  entity_name: string;
+  entity_type: string | null;
+  status: string | null;
+  formation_date: string | null;
+  principal_address: string | null;
+  registered_agent: string | null;
+  source_key: string;
+  source_url: string | null;
+  /** Populated by rankCandidates() — never read from upstream registry. */
+  similarity_score: number;
+}
 
 export type TrustConfidence =
   | 'verified_structured'
