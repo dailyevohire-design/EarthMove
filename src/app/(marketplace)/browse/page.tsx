@@ -169,7 +169,7 @@ export default async function BrowsePage({ searchParams }: Props) {
   const { data: mats } = await supabase
     .from('material_catalog')
     .select(`
-      id, slug, name, description, default_unit, density_tons_per_cuyd, sort_order,
+      id, slug, name, description, default_unit, density_tons_per_cuyd, sort_order, image_url,
       category:material_categories!inner(slug, name, sort_order)
     `)
     .in('id', ids)
@@ -183,6 +183,7 @@ export default async function BrowsePage({ searchParams }: Props) {
     default_unit: 'ton' | 'cubic_yard'
     density_tons_per_cuyd: number | null
     sort_order: number | null
+    image_url: string | null
     category: { slug: string; name: string; sort_order: number | null }
   }
   const items: BrowseListItem[] = ((mats ?? []) as unknown as MatRow[]).map((m) => {
@@ -201,7 +202,7 @@ export default async function BrowsePage({ searchParams }: Props) {
       minPriceTon: agg.min_pton,
       minPriceCuyd: agg.min_pcuyd,
       minOrderQty: agg.min_order_qty,
-      imageUrl: agg.image_url,
+      imageUrl: agg.image_url ?? m.image_url ?? null,
       offeringCount: agg.offering_count,
     }
   })
