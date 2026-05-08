@@ -29,10 +29,13 @@ import { persistEvidence } from './scrapers/persist-evidence'
 import type { ScraperEvidence, EntityCandidate } from './scrapers/types'
 import { buildEvidenceDerivedReport, type EvidenceDerivedReport } from './build-evidence-derived-report'
 import type { Tier } from './tier-config'
-import { ENTITY_REGISTRY_SCRAPERS } from './tier-config'
+import { ENTITY_REGISTRY_SCRAPERS, OPEN_WEB_CONFIG } from './tier-config'
 import { searchCoSosCandidates } from './scrapers/co-sos-biz'
 import { searchTxSosCandidates } from './scrapers/tx-sos-biz'
 import { rankCandidates } from './name-similarity'
+import { scrapePerplexitySweep } from './scrapers/perplexity-sweep'
+import { scrapeClaudeWebSearchVerify } from './scrapers/claude-web-search'
+import { detectCrossEngineCorroboration } from './cross-engine-corroboration'
 
 export interface OrchestratorInput {
   contractor_name: string
@@ -331,6 +334,80 @@ export async function runTrustOrchestratorV2(
     })
   }
 
+  // 230: dual-engine open-web phase. Patent claim 6.
+  // Sweep with Perplexity → fan-out top adverse hits to Claude verify →
+  // cross-engine corroboration detection. Opportunistic — non-fatal.
+  // Skipped when entity_id_from_click is set (click-through path: user
+  // already picked, no need to re-investigate).
+  const openWebCfg = OPEN_WEB_CONFIG[opts.tier]
+  if (openWebCfg.sweep_enabled && !input.entity_id_from_click) {
+    await wrap('orch-open-web', async () => {
+      try {
+        const sweepEvidence = await scrapePerplexitySweep({
+          legalName: primaryName,
+          city: input.city ?? null,
+          stateCode: input.state_code,
+          lookbackMonths: openWebCfg.sweep_lookback_months,
+          model: openWebCfg.sweep_model,
+        })
+        // Persist all sweep rows (envelope + per-citation classified rows).
+        const persistedSweep: Array<ScraperEvidence & { id?: string }> = []
+        for (const ev of sweepEvidence) {
+          const persisted = await persistEvidence({
+            jobId, contractorId: contractorRow?.id ?? null,
+            evidence: ev, supabase: admin as unknown as SupabaseClient,
+          })
+          persistedSweep.push({ ...ev, id: persisted.evidenceId })
+        }
+
+        // Verify fan-out — top N adverse hits get a Claude web_search verify.
+        // Free tier: verify_fanout_limit=0 so this is a no-op.
+        const adverseHits = persistedSweep
+          .filter((e) => e.finding_type === 'open_web_adverse_signal')
+          .slice(0, openWebCfg.verify_fanout_limit)
+
+        const persistedVerifications: Array<ScraperEvidence & { id?: string }> = []
+        if (adverseHits.length > 0) {
+          const verifyResults = await Promise.allSettled(
+            adverseHits.map((hit) => {
+              const facts = (hit.extracted_facts ?? {}) as Record<string, unknown>
+              const url = typeof facts.citation_url === 'string' ? facts.citation_url : null
+              if (!url) return Promise.resolve(null)
+              return scrapeClaudeWebSearchVerify({
+                claim: hit.finding_summary,
+                citationUrl: url,
+                contractorName: input.contractor_name,
+              })
+            }),
+          )
+          for (const r of verifyResults) {
+            if (r.status !== 'fulfilled' || !r.value) continue
+            const persisted = await persistEvidence({
+              jobId, contractorId: contractorRow?.id ?? null,
+              evidence: r.value, supabase: admin as unknown as SupabaseClient,
+            })
+            persistedVerifications.push({ ...r.value, id: persisted.evidenceId })
+          }
+        }
+
+        // Cross-engine corroboration. Emit one event row per
+        // Perplexity+Claude pair that agrees on URL or summary.
+        const corroborations = detectCrossEngineCorroboration({
+          perplexityEvidence: persistedSweep,
+          claudeVerifications: persistedVerifications,
+        })
+        for (const ev of corroborations) {
+          await persistEvidence({
+            jobId, contractorId: contractorRow?.id ?? null,
+            evidence: ev, supabase: admin as unknown as SupabaseClient,
+          })
+        }
+      } catch (err) {
+        console.warn('[orchestrator-v2] open-web phase failed (non-fatal)', err)
+      }
+    })
+  }
+
   // Update counters
   await wrap('orch-update-counters', async () => {
     const { count } = await admin
@@ -447,6 +524,11 @@ async function finalizeFreeTier(
       evidence_ids: derived.evidence_ids,
       raw_report: derived.raw_report,
       searched_as: input.searched_as ?? null,
+      open_web_adverse_count: derived.open_web_adverse_count,
+      open_web_positive_count: derived.open_web_positive_count,
+      open_web_corroboration_depth: derived.open_web_corroboration_depth,
+      open_web_recency_min: derived.open_web_recency_min,
+      open_web_engines_used: derived.open_web_engines_used,
     })
     .select('id, created_at')
     .single()
