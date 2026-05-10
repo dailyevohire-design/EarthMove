@@ -22,10 +22,10 @@ const COLS =
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ reportId: string }> },
 ) {
-  const { id } = await params
-  if (!id) return NextResponse.json({ error: 'missing_id' }, { status: 400 })
+  const { reportId } = await params
+  if (!reportId) return NextResponse.json({ error: 'missing_id' }, { status: 400 })
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -36,11 +36,11 @@ export async function GET(
   const { data, error } = await supabase
     .from('trust_reports')
     .select(COLS)
-    .eq('id', id)
+    .eq('id', reportId)
     .maybeSingle()
 
   if (error) {
-    console.error('[api/trust/report/:id] select error', { id, err: error.message })
+    console.error('[api/trust/report/:reportId] select error', { reportId, err: error.message })
     return NextResponse.json({ error: 'fetch_failed' }, { status: 500 })
   }
   if (!data) return NextResponse.json({ error: 'not_found' }, { status: 404 })

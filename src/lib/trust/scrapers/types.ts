@@ -46,6 +46,8 @@ export type TrustFindingType =
   | 'phoenix_signal' | 'officer_match' | 'address_reuse' | 'phone_reuse' | 'ein_match'
   // 227: entity disambiguation
   | 'entity_disambiguation_candidates' | 'name_discrepancy_observed'
+  // 229: BBB link-out (no scraping, deterministic URL only)
+  | 'bbb_link_constructed'
   // 230: dual-engine open-web (patent claim 6)
   | 'open_web_adverse_signal' | 'open_web_positive_signal'
   | 'open_web_verified' | 'open_web_unverified'
