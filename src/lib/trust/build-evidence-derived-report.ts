@@ -322,6 +322,12 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     sources_searched: [],
     findings: [],
   }
+  // 229: bbb_link_check projection target. When the bbb_link_constructed
+  // finding is present, surface a CTA pointing at the bbb.org search URL
+  // — we can't populate bbb_rating/bbb_complaint_count (no data fetched),
+  // so the renderer should show a "View BBB Profile →" link instead.
+  const rawBbb: Record<string, unknown> = {}
+  let bbbSet = false
   const sourcesCited: Array<Record<string, unknown>> = []
 
   let businessSet = false
@@ -367,7 +373,20 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
           registeredAgent && typeof (registeredAgent as { name?: unknown }).name === 'string'
             ? ((registeredAgent as { name: string }).name)
             : (str('registered_agent_organization') ?? null)
-        rawBusiness.source_url = str('source_url') ?? str('citation_url')
+        // Citation URL: prefer scraper-emitted source_url; fall back to a
+        // canonical deep-link constructed from entity_id when the source key
+        // is one we know the URL pattern for. Powers the "Verify on official
+        // record →" link in EntityConfirmationBanner.
+        const sosEntityId = str('entity_id')
+        let canonicalUrl = str('source_url') ?? str('citation_url') ?? null
+        if (!canonicalUrl && sosEntityId) {
+          if (e.source_key === 'co_sos_biz') {
+            canonicalUrl = `https://www.coloradosos.gov/biz/BusinessEntityDetail.do?nameTyp=ENT&entityId2=${sosEntityId}`
+          } else if (e.source_key === 'tx_sos_biz') {
+            canonicalUrl = `https://mycpa.cpa.state.tx.us/coa/coaSearchBtn?taxId=${sosEntityId}`
+          }
+        }
+        rawBusiness.source_url = canonicalUrl
         businessSet = true
       }
     }
@@ -379,7 +398,14 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
         rawLicensing.license_number = str('license_number')
         rawLicensing.expires = str('expires_at') ?? str('expiration_date')
         rawLicensing.source_note = e.finding_summary
-        rawLicensing.source_url = str('source_url') ?? str('citation_url')
+        // CO DORA's deep links require session state (cookies + form POST)
+        // so there's no stable per-license URL. Fall through to the lookup
+        // home page when scraper didn't emit a usable URL.
+        let licCanonicalUrl = str('source_url') ?? str('citation_url') ?? null
+        if (!licCanonicalUrl && e.source_key === 'co_dora') {
+          licCanonicalUrl = 'https://apps.colorado.gov/dora/licensing/Lookup/LicenseLookup.aspx'
+        }
+        rawLicensing.source_url = licCanonicalUrl
         licensingSet = true
       }
     }
@@ -404,6 +430,20 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
       if (typeof cc === 'number') bbbComplaintCount = cc
       const acc = facts.accredited
       if (typeof acc === 'boolean') bbbAccredited = acc
+    }
+
+    // 229: bbb_link_check — surfaces the constructed bbb.org search URL
+    // for a "View BBB Profile →" CTA. Does NOT populate bbb_rating /
+    // bbb_complaint_count (no fetch, no data). Renderer shows the link
+    // in place of a rating tile via raw_report.bbb.profile_url.
+    if (e.source_key === 'bbb_link_check' && !bbbSet) {
+      const url = str('bbb_search_url') ?? str('citation_url')
+      if (url) {
+        rawBbb.profile_url = url
+        rawBbb.source_method = 'link_construction'
+        rawBbb.cta = 'View BBB profile directly →'
+        bbbSet = true
+      }
     }
 
     if (LEGAL_KEYS.has(e.source_key)) {
@@ -437,6 +477,7 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     licensing: licensingSet ? rawLicensing : null,
     sanctions: sanctionsSet ? rawSanctions : null,
     legal: rawLegal,
+    bbb: bbbSet ? rawBbb : null,
     sources_cited: sourcesCited,
   }
 
