@@ -41,11 +41,17 @@ export type TrustFindingType =
   | 'permit_history_robust' | 'permit_history_clean'
   | 'permit_history_low' | 'permit_history_stale' | 'permit_scope_violation'
   // operational
-  | 'source_error' | 'source_not_applicable'
+  | 'source_error' | 'source_not_applicable' | 'raw_source_response'
+  // 231: phoenix detector + cross-entity fraud network (patent claim 1)
+  | 'phoenix_signal' | 'officer_match' | 'address_reuse' | 'phone_reuse' | 'ein_match'
   // 227: entity disambiguation
   | 'entity_disambiguation_candidates' | 'name_discrepancy_observed'
   // 229: BBB link-out (no scraping, deterministic URL only)
-  | 'bbb_link_constructed';
+  | 'bbb_link_constructed'
+  // 230: dual-engine open-web (patent claim 6)
+  | 'open_web_adverse_signal' | 'open_web_positive_signal'
+  | 'open_web_verified' | 'open_web_unverified'
+  | 'cross_engine_corroboration_event';
 
 /**
  * Single registry-entity row surfaced by an entity-registry scraper's

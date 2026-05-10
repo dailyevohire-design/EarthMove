@@ -12,6 +12,29 @@ import { sourcesForTier } from './scrapers/tier-sources-loader'
 export type Tier = 'free' | 'standard' | 'plus' | 'deep_dive' | 'forensic'
 
 /**
+ * 230: dual-engine open-web config per tier. Drives orchestrator-v2's
+ * open-web phase. Sweep is the Perplexity grounded-research call (free
+ * tier gets it). Verify fan-out is the Claude web_search verification of
+ * top-N adverse hits (standard+). Targeted queries are independent Claude
+ * investigations (deep_dive+). Patent claim 6 — cross-engine corroboration.
+ */
+export interface OpenWebTierConfig {
+  sweep_enabled: boolean
+  verify_fanout_limit: number  // top-N Perplexity hits to verify with Claude
+  targeted_queries_enabled: boolean
+  sweep_lookback_months: number
+  sweep_model: 'sonar' | 'sonar-pro'
+}
+
+export const OPEN_WEB_CONFIG: Record<Tier, OpenWebTierConfig> = {
+  free:      { sweep_enabled: true, verify_fanout_limit: 0, targeted_queries_enabled: false, sweep_lookback_months: 12, sweep_model: 'sonar' },
+  standard:  { sweep_enabled: true, verify_fanout_limit: 3, targeted_queries_enabled: false, sweep_lookback_months: 12, sweep_model: 'sonar' },
+  plus:      { sweep_enabled: true, verify_fanout_limit: 5, targeted_queries_enabled: false, sweep_lookback_months: 18, sweep_model: 'sonar' },
+  deep_dive: { sweep_enabled: true, verify_fanout_limit: 8, targeted_queries_enabled: true,  sweep_lookback_months: 24, sweep_model: 'sonar-pro' },
+  forensic:  { sweep_enabled: true, verify_fanout_limit: 12, targeted_queries_enabled: true, sweep_lookback_months: 36, sweep_model: 'sonar-pro' },
+}
+
+/**
  * Subset of scraper source_keys whose modules export a candidate-search
  * function (searchCoSosCandidates, searchTxSosCandidates, etc.). Consumed
  * by the orchestrator's disambiguation fallback — when exact-match would

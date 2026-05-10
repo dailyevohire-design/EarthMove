@@ -16,6 +16,7 @@
  */
 
 import type { ScraperEvidence, TrustFindingType } from './scrapers/types'
+import { buildScoreExplanation, type ScoreBreakdown } from './score-explanation'
 
 /**
  * Input type — extends ScraperEvidence with the DB-row fields needed to
@@ -59,6 +60,18 @@ export interface EvidenceDerivedReport {
   /** Structured projection of extracted_facts for PDF + share-page consumers.
    *  See raw_report shape comment in buildEvidenceDerivedReport. */
   raw_report: Record<string, unknown>
+  /** 230: open-web aggregates persisted to dedicated trust_reports columns.
+   *  Drives the OpenWebFindingsTile + score adjustments. */
+  open_web_adverse_count: number
+  open_web_positive_count: number
+  open_web_corroboration_depth: number
+  open_web_recency_min: number | null
+  open_web_engines_used: string[]
+  /** 231: phoenix detector — array of related entities sharing address /
+   *  officer / agent with the canonical entity. Patent claim 1. */
+  related_entities: Array<Record<string, unknown>>
+  /** 231: per-evidence score adjustment trail (audit transparency). */
+  score_breakdown: ScoreBreakdown
 }
 
 const NULL_FINDING_SUFFIXES = [
@@ -472,12 +485,150 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     })
   }
 
+  // 230: dual-engine open-web projection (patent claim 6).
+  // Aggregates open-web evidence rows into rawReport.open_web. Counts
+  // adverse + positive findings, computes corroboration depth from
+  // cross_engine_corroboration_event count, finds newest citation date
+  // for recency, lists engines used.
+  const openWebAdverse = evidence.filter((e) => e.finding_type === 'open_web_adverse_signal')
+  const openWebPositive = evidence.filter((e) => e.finding_type === 'open_web_positive_signal')
+  const openWebVerified = evidence.filter((e) => e.finding_type === 'open_web_verified')
+  const corroborations = evidence.filter((e) => e.finding_type === 'cross_engine_corroboration_event')
+  const enginesUsed = new Set<string>()
+  for (const e of evidence) {
+    if (e.source_key === 'perplexity_sweep') enginesUsed.add('perplexity_sweep')
+    if (e.source_key === 'llm_web_search') enginesUsed.add('llm_web_search')
+  }
+  const openWebSet = openWebAdverse.length > 0 || openWebPositive.length > 0 || corroborations.length > 0 || enginesUsed.size > 0
+  let openWebRecencyMin: number | null = null
+  let newestPublishedTs: number | null = null
+  for (const e of [...openWebAdverse, ...openWebPositive, ...openWebVerified]) {
+    const facts = (e.extracted_facts ?? {}) as Record<string, unknown>
+    const pub = typeof facts.citation_published_date === 'string' ? facts.citation_published_date : null
+    if (pub) {
+      const t = Date.parse(pub)
+      if (!isNaN(t) && (newestPublishedTs === null || t > newestPublishedTs)) newestPublishedTs = t
+    }
+  }
+  if (newestPublishedTs !== null) {
+    openWebRecencyMin = Math.max(0, Math.round((Date.now() - newestPublishedTs) / 60000))
+  }
+
+  const rawOpenWeb: Record<string, unknown> | null = openWebSet ? {
+    summary: corroborations.length >= 2
+      ? `${corroborations.length} cross-engine corroborations · ${openWebAdverse.length} adverse · ${openWebPositive.length} positive`
+      : `${openWebAdverse.length} adverse · ${openWebPositive.length} positive (single-engine)`,
+    adverse_findings: openWebAdverse.map((e) => ({
+      summary: e.finding_summary,
+      citation_url: ((e.extracted_facts ?? {}) as Record<string, unknown>).citation_url ?? null,
+      published_date: ((e.extracted_facts ?? {}) as Record<string, unknown>).citation_published_date ?? null,
+    })),
+    positive_findings: openWebPositive.map((e) => ({
+      summary: e.finding_summary,
+      citation_url: ((e.extracted_facts ?? {}) as Record<string, unknown>).citation_url ?? null,
+      published_date: ((e.extracted_facts ?? {}) as Record<string, unknown>).citation_published_date ?? null,
+    })),
+    corroboration_events: corroborations.map((e) => ({
+      summary: e.finding_summary,
+      shared_url: ((e.extracted_facts ?? {}) as Record<string, unknown>).shared_citation_url ?? null,
+      method: ((e.extracted_facts ?? {}) as Record<string, unknown>).corroboration_method ?? null,
+      direction: ((e.extracted_facts ?? {}) as Record<string, unknown>).claim_direction ?? null,
+    })),
+    corroboration_depth: corroborations.length,
+    engines_used: Array.from(enginesUsed),
+    newest_finding_age_minutes: openWebRecencyMin,
+    adverse_count: openWebAdverse.length,
+    positive_count: openWebPositive.length,
+  } : null
+
+  // Open-web score adjustments. corroborated adverse hits are stronger
+  // than single-engine; corroborated positives slightly nudge up.
+  const corroboratedAdverse = corroborations.filter((e) => {
+    const f = (e.extracted_facts ?? {}) as Record<string, unknown>
+    return f.claim_direction === 'adverse'
+  }).length
+  const corroboratedPositive = corroborations.filter((e) => {
+    const f = (e.extracted_facts ?? {}) as Record<string, unknown>
+    return f.claim_direction === 'positive'
+  }).length
+  let openWebScoreDelta = 0
+  // Push to dedupRedFlags directly (it's the array consumed by the return);
+  // raw redFlags has already been deduped at this point in the function.
+  if (corroboratedAdverse >= 2) {
+    openWebScoreDelta -= Math.min(20, 5 * corroboratedAdverse)
+    dedupRedFlags.push(`${corroboratedAdverse} cross-engine corroborated adverse signal${corroboratedAdverse === 1 ? '' : 's'} on the open web`)
+  } else if (corroboratedAdverse === 1) {
+    openWebScoreDelta -= 5
+    dedupRedFlags.push('Cross-engine corroborated adverse signal on the open web')
+  } else if (openWebAdverse.length >= 1) {
+    openWebScoreDelta -= Math.min(10, 2 * openWebAdverse.length)
+  }
+  if (corroboratedPositive > 0) {
+    openWebScoreDelta += Math.min(10, 3 * corroboratedPositive)
+  }
+  // Apply open-web delta to trust_score (trustScore is mutable after the
+  // base computation block).
+  if (trustScore !== null && openWebScoreDelta !== 0) {
+    trustScore = Math.max(0, Math.min(100, trustScore + openWebScoreDelta))
+    // Re-derive risk level from the adjusted score so it stays consistent.
+    if (trustScore >= 80) riskLevel = 'LOW'
+    else if (trustScore >= 60) riskLevel = 'MEDIUM'
+    else if (trustScore >= 40) riskLevel = 'HIGH'
+    else riskLevel = 'CRITICAL'
+  }
+
+  // 231: phoenix detector projection. Evidence rows with finding_types
+  // 'phoenix_signal' / 'officer_match' / 'address_reuse' carry related-
+  // entity facts in extracted_facts. Aggregate into rawReport.related_entities
+  // and apply score adjustments per relationship_type.
+  const phoenixEvidence = evidence.filter((e) =>
+    e.finding_type === 'phoenix_signal' ||
+    e.finding_type === 'officer_match' ||
+    e.finding_type === 'address_reuse',
+  )
+  const relatedEntities = phoenixEvidence.map((e) => {
+    const f = (e.extracted_facts ?? {}) as Record<string, unknown>
+    return {
+      entity_name: f.entity_name ?? null,
+      entity_id: f.entity_id ?? null,
+      status: f.status ?? null,
+      formation_date: f.formation_date ?? null,
+      dissolution_date: f.dissolution_date ?? null,
+      shared_indicator: f.shared_indicator ?? null,
+      relationship_type: f.relationship_type ?? null,
+      source_url: f.source_url ?? null,
+    }
+  })
+
+  // Score adjustments — phoenix signals are severe.
+  const phoenixCount = phoenixEvidence.filter((e) => e.finding_type === 'phoenix_signal').length
+  const sameOperatorCount = phoenixEvidence.filter((e) => e.finding_type === 'officer_match').length
+  if (phoenixCount > 0 && trustScore !== null) {
+    const delta = -Math.min(30, 15 * phoenixCount)
+    trustScore = Math.max(0, Math.min(100, trustScore + delta))
+    dedupRedFlags.unshift(
+      `Possible phoenix-LLC pattern: ${phoenixCount} dissolved related entit${phoenixCount === 1 ? 'y' : 'ies'} at same address/officer`,
+    )
+    if (trustScore >= 80) riskLevel = 'LOW'
+    else if (trustScore >= 60) riskLevel = 'MEDIUM'
+    else if (trustScore >= 40) riskLevel = 'HIGH'
+    else riskLevel = 'CRITICAL'
+  }
+  if (sameOperatorCount > 0 && trustScore !== null) {
+    const delta = -Math.min(10, 5 * sameOperatorCount)
+    trustScore = Math.max(0, Math.min(100, trustScore + delta))
+  }
+
+  const scoreBreakdown = buildScoreExplanation(evidence, trustScore)
   const rawReport: Record<string, unknown> = {
     business: businessSet ? rawBusiness : null,
     licensing: licensingSet ? rawLicensing : null,
     sanctions: sanctionsSet ? rawSanctions : null,
     legal: rawLegal,
     bbb: bbbSet ? rawBbb : null,
+    open_web: rawOpenWeb,
+    related_entities: relatedEntities.length > 0 ? relatedEntities : null,
+    score_breakdown: scoreBreakdown,
     sources_cited: sourcesCited,
   }
 
@@ -555,6 +706,13 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     synthesis_model: 'templated_evidence_derived',
     evidence_ids: evidenceIds,
     raw_report: rawReport,
+    open_web_adverse_count: openWebAdverse.length,
+    open_web_positive_count: openWebPositive.length,
+    open_web_corroboration_depth: corroborations.length,
+    open_web_recency_min: openWebRecencyMin,
+    open_web_engines_used: Array.from(enginesUsed),
+    related_entities: relatedEntities,
+    score_breakdown: scoreBreakdown,
   }
 }
 

@@ -29,10 +29,15 @@ import { persistEvidence } from './scrapers/persist-evidence'
 import type { ScraperEvidence, EntityCandidate } from './scrapers/types'
 import { buildEvidenceDerivedReport, type EvidenceDerivedReport } from './build-evidence-derived-report'
 import type { Tier } from './tier-config'
-import { ENTITY_REGISTRY_SCRAPERS } from './tier-config'
+import { ENTITY_REGISTRY_SCRAPERS, OPEN_WEB_CONFIG } from './tier-config'
 import { searchCoSosCandidates } from './scrapers/co-sos-biz'
 import { searchTxSosCandidates } from './scrapers/tx-sos-biz'
 import { rankCandidates } from './name-similarity'
+import { scrapePerplexitySweep } from './scrapers/perplexity-sweep'
+import { scrapeClaudeWebSearchVerify } from './scrapers/claude-web-search'
+import { detectCrossEngineCorroboration } from './cross-engine-corroboration'
+import { detectPhoenixPattern, relatedEntitiesToEvidence, type CanonicalEntity } from './scrapers/phoenix-detector'
+import { computeIndustryBaseline } from './score-explanation'
 
 export interface OrchestratorInput {
   contractor_name: string
@@ -331,6 +336,125 @@ export async function runTrustOrchestratorV2(
     })
   }
 
+  // 230: dual-engine open-web phase. Patent claim 6.
+  // Sweep with Perplexity → fan-out top adverse hits to Claude verify →
+  // cross-engine corroboration detection. Opportunistic — non-fatal.
+  // Skipped when entity_id_from_click is set (click-through path: user
+  // already picked, no need to re-investigate).
+  const openWebCfg = OPEN_WEB_CONFIG[opts.tier]
+  if (openWebCfg.sweep_enabled && !input.entity_id_from_click) {
+    await wrap('orch-open-web', async () => {
+      try {
+        const sweepEvidence = await scrapePerplexitySweep({
+          legalName: primaryName,
+          city: input.city ?? null,
+          stateCode: input.state_code,
+          lookbackMonths: openWebCfg.sweep_lookback_months,
+          model: openWebCfg.sweep_model,
+        })
+        // Persist all sweep rows (envelope + per-citation classified rows).
+        const persistedSweep: Array<ScraperEvidence & { id?: string }> = []
+        for (const ev of sweepEvidence) {
+          const persisted = await persistEvidence({
+            jobId, contractorId: contractorRow?.id ?? null,
+            evidence: ev, supabase: admin as unknown as SupabaseClient,
+          })
+          persistedSweep.push({ ...ev, id: persisted.evidenceId })
+        }
+
+        // Verify fan-out — top N adverse hits get a Claude web_search verify.
+        // Free tier: verify_fanout_limit=0 so this is a no-op.
+        const adverseHits = persistedSweep
+          .filter((e) => e.finding_type === 'open_web_adverse_signal')
+          .slice(0, openWebCfg.verify_fanout_limit)
+
+        const persistedVerifications: Array<ScraperEvidence & { id?: string }> = []
+        if (adverseHits.length > 0) {
+          const verifyResults = await Promise.allSettled(
+            adverseHits.map((hit) => {
+              const facts = (hit.extracted_facts ?? {}) as Record<string, unknown>
+              const url = typeof facts.citation_url === 'string' ? facts.citation_url : null
+              if (!url) return Promise.resolve(null)
+              return scrapeClaudeWebSearchVerify({
+                claim: hit.finding_summary,
+                citationUrl: url,
+                contractorName: input.contractor_name,
+              })
+            }),
+          )
+          for (const r of verifyResults) {
+            if (r.status !== 'fulfilled' || !r.value) continue
+            const persisted = await persistEvidence({
+              jobId, contractorId: contractorRow?.id ?? null,
+              evidence: r.value, supabase: admin as unknown as SupabaseClient,
+            })
+            persistedVerifications.push({ ...r.value, id: persisted.evidenceId })
+          }
+        }
+
+        // Cross-engine corroboration. Emit one event row per
+        // Perplexity+Claude pair that agrees on URL or summary.
+        const corroborations = detectCrossEngineCorroboration({
+          perplexityEvidence: persistedSweep,
+          claudeVerifications: persistedVerifications,
+        })
+        for (const ev of corroborations) {
+          await persistEvidence({
+            jobId, contractorId: contractorRow?.id ?? null,
+            evidence: ev, supabase: admin as unknown as SupabaseClient,
+          })
+        }
+      } catch (err) {
+        console.warn('[orchestrator-v2] open-web phase failed (non-fatal)', err)
+      }
+    })
+  }
+
+  // 231: phoenix-LLC + cross-entity fraud-network detection (patent claim 1).
+  // Runs when we have a canonical SOS hit (CO or TX). Queries the same
+  // dataset for related entities sharing principal_address / agent / officer.
+  // Opportunistic — never blocks the main flow.
+  await wrap('orch-phoenix', async () => {
+    try {
+      const { data: sosRow } = await admin
+        .from('trust_evidence')
+        .select('source_key, finding_type, extracted_facts')
+        .eq('job_id', jobId)
+        .in('source_key', ['co_sos_biz', 'tx_sos_biz'])
+        .in('finding_type', ['business_active', 'business_inactive', 'business_dissolved'])
+        .order('sequence_number', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      if (!sosRow) return
+      const facts = (sosRow.extracted_facts ?? {}) as Record<string, unknown>
+      const officers = Array.isArray(facts.officers) ? facts.officers as Array<Record<string, unknown>> : []
+      const agentObj = officers.find((o) => o?.role_hint === 'registered_agent')
+      const agentName = agentObj && typeof (agentObj as { name?: unknown }).name === 'string'
+        ? (agentObj as { name: string }).name
+        : (typeof facts.registered_agent_organization === 'string' ? facts.registered_agent_organization : null)
+      const canonical: CanonicalEntity = {
+        source_key: sosRow.source_key as 'co_sos_biz' | 'tx_sos_biz',
+        entity_id: typeof facts.entity_id === 'string' ? facts.entity_id : '',
+        entity_name: typeof facts.entity_name === 'string' ? facts.entity_name : input.contractor_name,
+        principal_address: typeof facts.principal_address === 'string' ? facts.principal_address : null,
+        registered_agent_name: agentName,
+        formation_date: typeof facts.formation_date === 'string' ? facts.formation_date : null,
+      }
+      if (!canonical.entity_id) return
+      const related = await detectPhoenixPattern(canonical)
+      if (related.length === 0) return
+      const phoenixEvidence = relatedEntitiesToEvidence(related, canonical)
+      for (const ev of phoenixEvidence) {
+        await persistEvidence({
+          jobId, contractorId: contractorRow?.id ?? null,
+          evidence: ev, supabase: admin as unknown as SupabaseClient,
+        })
+      }
+    } catch (err) {
+      console.warn('[orchestrator-v2] phoenix detection failed (non-fatal)', err)
+    }
+  })
+
   // Update counters
   await wrap('orch-update-counters', async () => {
     const { count } = await admin
@@ -447,6 +571,14 @@ async function finalizeFreeTier(
       evidence_ids: derived.evidence_ids,
       raw_report: derived.raw_report,
       searched_as: input.searched_as ?? null,
+      open_web_adverse_count: derived.open_web_adverse_count,
+      open_web_positive_count: derived.open_web_positive_count,
+      open_web_corroboration_depth: derived.open_web_corroboration_depth,
+      open_web_recency_min: derived.open_web_recency_min,
+      open_web_engines_used: derived.open_web_engines_used,
+      related_entities: derived.related_entities.length > 0 ? derived.related_entities : null,
+      score_breakdown: derived.score_breakdown,
+      industry_baseline: await computeIndustryBaseline(input.state_code, admin, derived.trust_score),
     })
     .select('id, created_at')
     .single()

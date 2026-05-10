@@ -1,8 +1,11 @@
 'use client'
 
 import DisambiguationPicker, { type AmbiguousCandidate } from './DisambiguationPicker'
-import NoEntityFoundCard from './no-entity-found-card'
 import EntityConfirmationBanner from './EntityConfirmationBanner'
+import NoEntityFoundCard from './no-entity-found-card'
+import OpenWebFindingsTile, { type OpenWebSection } from './OpenWebFindingsTile'
+import RelatedEntitiesPanel from './RelatedEntitiesPanel'
+import ScoreExplanationCard, { type ScoreBreakdownProps, type IndustryBaselineProps } from './ScoreExplanationCard'
 import { expandContractorNameVariants } from '@/lib/trust/name-variants'
 import {
   deriveBusinessTile,
@@ -66,6 +69,15 @@ export interface TrustReport {
    *  via click-through from the disambiguation card). Drives the warning
    *  banner below + powers the name-discrepancy fraud signal. */
   searched_as: string | null
+  // 230: open-web aggregates (drives OpenWebFindingsTile sweepRan probe).
+  open_web_adverse_count?: number | null
+  open_web_positive_count?: number | null
+  open_web_corroboration_depth?: number | null
+  open_web_recency_min?: number | null
+  open_web_engines_used?: string[] | null
+  // 231: score explanation + industry baseline (jsonb columns).
+  score_breakdown?: ScoreBreakdownProps | null
+  industry_baseline?: IndustryBaselineProps | null
 }
 
 // ---------- small inline presentational components ----------
@@ -420,6 +432,41 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
               </p>
             </div>
           </section>
+
+          {/* 230: Open Web Findings — dual-engine layer (Perplexity sweep
+              + Claude verify + cross-engine corroboration). Patent claim 6.
+              Renders above the data panels because corroborated open-web
+              signals are the highest-signal element of the report. */}
+          <div className="mb-6">
+            <OpenWebFindingsTile
+              openWeb={(report.raw_report as { open_web?: OpenWebSection } | null)?.open_web ?? null}
+              sweepRan={(report.open_web_engines_used?.length ?? 0) > 0
+                || (report.open_web_adverse_count ?? 0) > 0
+                || (report.open_web_positive_count ?? 0) > 0}
+            />
+          </div>
+
+          {/* 231: score explanation + industry baseline. Renders below
+              the score card so users see *why* the score is what it is. */}
+          <div className="mb-6">
+            <ScoreExplanationCard
+              breakdown={report.score_breakdown ?? null}
+              baseline={report.industry_baseline ?? null}
+              finalScore={report.trust_score}
+            />
+          </div>
+
+          {/* 231: phoenix detector / cross-entity fraud-network panel.
+              Renders only when raw_report.related_entities has rows. */}
+          {(() => {
+            const related = (report.raw_report as { related_entities?: Array<Record<string, unknown>> } | null)?.related_entities
+            if (!related || related.length === 0) return null
+            return (
+              <div className="mb-6">
+                <RelatedEntitiesPanel relatedEntities={related as unknown as Parameters<typeof RelatedEntitiesPanel>[0]['relatedEntities']} />
+              </div>
+            )
+          })()}
 
           {/* Data panels — each tile gets a provenance footer (source +
               pulled-at + verify link) so the user can trace every claim
