@@ -2,12 +2,19 @@
  * Score explanation + industry baseline. Patent-relevant transparency
  * surface (vs ISNetworld's black-box score).
  *
+ * As of the score-arithmetic reconciliation: this module is now the
+ * SOURCE OF TRUTH for trust_score. buildScoreExplanation computes the
+ * final score from per-finding-type rules + categorical caps; the
+ * builder reads its return value directly and stops doing its own
+ * base-75 arithmetic. Card displays the same numbers without override.
+ *
  * Two pure / semi-pure helpers:
- *   buildScoreExplanation(evidence, finalScore) — pure, deterministic
- *     score arithmetic walk. Returns base + per-evidence adjustments +
- *     final score. Powers the ScoreExplanationCard "Why this score" view.
- *   computeIndustryBaseline(stateCode, supabase) — reads
- *     mv_state_score_baseline (mig 231). Returns per-state median /
+ *   buildScoreExplanation(evidence) — pure, deterministic. Returns
+ *     base 100 + per-evidence adjustments + final score (sum of deltas
+ *     floored at 0, ceilinged at 100). Powers ScoreExplanationCard
+ *     "Why this score" view AND the builder's trust_score derivation.
+ *   computeIndustryBaseline(stateCode, supabase, contractorScore?) —
+ *     reads mv_state_score_baseline (mig 231). Returns per-state median /
  *     percentile snapshot. Best-effort: returns null when no baseline data.
  *
  * Score adjustments are deterministic — same inputs → same numbers.
@@ -104,7 +111,6 @@ const ADJUSTMENT_RULES: Array<{
 
 export function buildScoreExplanation(
   evidence: Array<ScraperEvidence & { id?: string }>,
-  finalScoreOverride?: number | null,
 ): ScoreBreakdown {
   const adjustments: ScoreAdjustment[] = []
   const categoryTotals: Record<string, number> = {}
@@ -136,11 +142,7 @@ export function buildScoreExplanation(
   }
 
   const arithmeticTotal = adjustments.reduce((sum, a) => sum + a.delta, BASE_SCORE)
-  const computed = Math.max(0, Math.min(100, arithmeticTotal))
-  const final =
-    finalScoreOverride !== undefined && finalScoreOverride !== null
-      ? finalScoreOverride
-      : computed
+  const final = Math.max(0, Math.min(100, arithmeticTotal))
 
   return {
     base_score: BASE_SCORE,
