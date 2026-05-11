@@ -16,6 +16,7 @@ import { createHash } from 'crypto'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe'
 import { quoteOrder, computeWelcome5DiscountCents } from '@/lib/checkout/pricing'
+import { normalizeDeliverySchedule } from '@/lib/delivery-window-bridge'
 
 export const runtime = 'nodejs'
 
@@ -47,6 +48,7 @@ interface SessionBody {
     phone: string
   }
   delivery_window: string | null
+  delivery_date?: string | null
   project_type: string | null
   sub_type: string | null
   apply_welcome5: boolean
@@ -132,21 +134,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Origin not allowed' }, { status: 400 })
   }
 
-  // Derive delivery_type + requested_delivery_date from the customer's window
-  // choice. 'this_week' (and null) → ASAP, no date. Other windows → scheduled
-  // with a tentative midpoint date the dispatcher can refine. Required by the
-  // 'scheduled_requires_date' check constraint on orders.
-  const offsetDays =
-    body.delivery_window === 'next_2_weeks' ? 10 :
-    body.delivery_window === 'this_month'   ? 21 :
-    body.delivery_window === 'researching'  ? 30 :
-    null
-  const deliveryType: 'asap' | 'scheduled' = offsetDays == null ? 'asap' : 'scheduled'
-  let requestedDeliveryDate: string | null = null
-  if (offsetDays != null) {
-    const d = new Date()
-    d.setDate(d.getDate() + offsetDays)
-    requestedDeliveryDate = d.toISOString().split('T')[0]
+  const schedule = normalizeDeliverySchedule({
+    delivery_window: body.delivery_window,
+    delivery_date:   body.delivery_date,
+  })
+  if (schedule.delivery_type === 'scheduled' && !schedule.requested_delivery_date) {
+    return NextResponse.json({ error: 'Scheduled delivery requires a date' }, { status: 400 })
   }
 
   const orderInsert: Record<string, unknown> = {
@@ -159,7 +152,7 @@ export async function POST(req: NextRequest) {
     quantity: body.tons,
     unit: 'ton',
     fulfillment_method: 'delivery',
-    delivery_type: deliveryType,
+    delivery_type: schedule.delivery_type,
     delivery_address_snapshot: {
       street: body.delivery.street,
       city: body.delivery.city,
@@ -167,8 +160,8 @@ export async function POST(req: NextRequest) {
       zip: body.delivery.zip,
     },
     delivery_notes: body.delivery.notes ?? null,
-    requested_delivery_window: body.delivery_window,
-    requested_delivery_date: requestedDeliveryDate,
+    requested_delivery_window: schedule.requested_delivery_window,
+    requested_delivery_date: schedule.requested_delivery_date,
     price_per_unit: quote.pricePerTonCents / 100,
     subtotal: quote.subtotalCents / 100,
     delivery_fee: quote.deliveryFeeCents / 100,

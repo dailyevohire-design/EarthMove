@@ -6,6 +6,7 @@ import { resolveOffering, FulfillmentError } from '@/lib/fulfillment-resolver'
 import { buildPriceQuote, PricingError } from '@/lib/pricing-engine'
 import { resolveDistanceMiles } from '@/lib/distance-resolver'
 import { createCheckoutSession } from '@/lib/stripe'
+import { normalizeDeliverySchedule } from '@/lib/delivery-window-bridge'
 import type { ApiResult } from '@/types'
 
 const Schema = z.object({
@@ -83,7 +84,11 @@ export async function createOrderAndCheckout(
     if (input.fulfillment_method === 'delivery' && !input.delivery_address) {
       return { success: false, error: 'Delivery address is required.' }
     }
-    if (input.delivery_type === 'scheduled' && !input.requested_delivery_date) {
+    const schedule = normalizeDeliverySchedule({
+      delivery_window: input.requested_delivery_window,
+      delivery_date:   input.requested_delivery_date,
+    })
+    if (schedule.delivery_type === 'scheduled' && !schedule.requested_delivery_date) {
       return { success: false, error: 'A delivery date is required for scheduled orders.' }
     }
 
@@ -139,7 +144,7 @@ export async function createOrderAndCheckout(
         offering:           resolved.offering,
         quantity:           input.quantity,
         fulfillment_method: input.fulfillment_method,
-        delivery_type:      input.delivery_type,
+        delivery_type:      schedule.delivery_type,
         market_material_id: input.market_material_id,
         distance_miles:     distanceMiles,
         promotion:          promo ?? null,
@@ -185,10 +190,10 @@ export async function createOrderAndCheckout(
         supply_yard_name_snapshot:  resolved.supply_yard.name,
         quantity:                   input.quantity,
         unit:                       resolved.offering.unit,
-        delivery_type:              input.delivery_type,
+        delivery_type:              schedule.delivery_type,
         delivery_address_snapshot:  input.delivery_address ?? null,
-        requested_delivery_date:    input.requested_delivery_date ?? null,
-        requested_delivery_window:  input.requested_delivery_window ?? null,
+        requested_delivery_date:    schedule.requested_delivery_date,
+        requested_delivery_window:  schedule.requested_delivery_window,
         delivery_notes:             input.delivery_notes ?? null,
         price_per_unit:             quote.price_per_unit,
         subtotal:                   quote.subtotal,
