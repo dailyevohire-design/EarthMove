@@ -7,7 +7,8 @@ import type { EntityCandidate } from '@/lib/trust/scrapers/types'
 import NoEntityFoundCard from './no-entity-found-card'
 import OpenWebFindingsTile, { type OpenWebSection } from './OpenWebFindingsTile'
 import RelatedEntitiesPanel from './RelatedEntitiesPanel'
-import ScoreExplanationCard, { type ScoreBreakdownProps, type IndustryBaselineProps } from './ScoreExplanationCard'
+import ScoreExplanationCard, { type ScoreBreakdownProps } from './ScoreExplanationCard'
+import type { IndustryBaseline } from '@/lib/trust/industry-baseline'
 import { expandContractorNameVariants } from '@/lib/trust/name-variants'
 import {
   deriveBusinessTile,
@@ -79,7 +80,7 @@ export interface TrustReport {
   open_web_engines_used?: string[] | null
   // 231: score explanation + industry baseline (jsonb columns).
   score_breakdown?: ScoreBreakdownProps | null
-  industry_baseline?: IndustryBaselineProps | null
+  industry_baseline?: IndustryBaseline | null
 }
 
 // ---------- small inline presentational components ----------
