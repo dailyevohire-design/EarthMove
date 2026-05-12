@@ -383,10 +383,36 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
     report.bbb_accredited !== null ||
     report.bbb_complaint_count !== null
 
+  const showStamp = (report.trust_score ?? 0) >= 80
+  const shortReportId = report.id.replace(/-/g, '').slice(0, 8).toUpperCase()
+
   return (
     <div className="min-h-screen bg-stone-50">
       <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header row */}
+        {/* Brand band — matches TrustPdfDocument header (wordmark left,
+            report id right, conditional verified stamp). */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <div className="relative mb-6 rounded-2xl bg-[#F5F1E8] border border-stone-300/40 px-6 py-5 flex items-center justify-between">
+          <img
+            src="/brand/groundcheck-wordmark.png"
+            alt="Groundcheck"
+            className="h-7 w-auto"
+          />
+          <div className="text-right">
+            <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-stone-500">Report</div>
+            <div className="text-xs font-mono text-[#0E2A22] mt-0.5">{shortReportId}</div>
+          </div>
+          {showStamp && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/brand/groundcheck-stamp.png"
+              alt="Verified contractor"
+              className="absolute -top-3 right-24 h-16 w-16 pointer-events-none rotate-[-8deg]"
+            />
+          )}
+        </div>
+
+        {/* Subject identity row */}
         <header className="mb-6 flex flex-wrap items-start gap-3 justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-stone-900">{report.contractor_name}</h1>
@@ -565,8 +591,15 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
           </Panel>
         </div>
 
-        {/* Footer meta */}
-        <footer className="mt-8 pt-4 border-t border-stone-200 text-[11px] text-stone-500 flex flex-wrap gap-x-4 gap-y-1">
+        {/* Brand footer — matches TrustPdfDocument attribution line */}
+        <footer className="mt-10 rounded-2xl bg-[#F5F1E8] border border-stone-300/40 px-6 py-4 text-center">
+          <div className="text-[11px] font-mono uppercase tracking-[0.14em] text-[#0E2A22]">
+            Earth Pro Connect LLC · earthmove.io/trust
+          </div>
+        </footer>
+
+        {/* Run meta — kept as muted detail below the brand line */}
+        <div className="mt-3 mb-2 text-[11px] text-stone-400 flex flex-wrap gap-x-3 gap-y-1 justify-center">
           <span>{report.searches_performed ?? 0} searches</span>
           <span>·</span>
           <span>{(report.data_sources_searched ?? []).length} sources</span>
@@ -576,7 +609,7 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
           <span>{report.synthesis_model ?? 'unknown model'}</span>
           <span>·</span>
           <span>{new Date(report.created_at).toLocaleString()}</span>
-        </footer>
+        </div>
       </div>
     </div>
   )
