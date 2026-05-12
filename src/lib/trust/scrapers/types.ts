@@ -51,7 +51,11 @@ export type TrustFindingType =
   // 230: dual-engine open-web (patent claim 6)
   | 'open_web_adverse_signal' | 'open_web_positive_signal'
   | 'open_web_verified' | 'open_web_unverified'
-  | 'cross_engine_corroboration_event';
+  | 'cross_engine_corroboration_event'
+  // 241: USDOT carrier safety (FMCSA SAFER)
+  | 'usdot_active' | 'usdot_out_of_service' | 'usdot_revoked'
+  | 'usdot_safety_satisfactory' | 'usdot_safety_conditional' | 'usdot_safety_unsatisfactory'
+  | 'usdot_not_found';
 
 /**
  * Single registry-entity row surfaced by an entity-registry scraper's
