@@ -11,6 +11,7 @@ import { scrapeCourtListenerFed } from './courtlistener-fed';
 import { scrapeStateAgEnforcement } from './state-ag-enforcement';
 import { scrapeOshaEstSearch } from './osha-est-search';
 import { scrapeBbbLinkCheck } from './bbb-link-check';
+import { scrapeTdlrDisciplinary } from './tdlr-disciplinary';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -99,6 +100,9 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
         city: input.city ?? null,
         stateCode: input.stateCode,
       });
+
+    case 'tdlr_disciplinary':
+      return scrapeTdlrDisciplinary({ legalName: input.legalName, stateCode: input.stateCode });
 
     case 'denver_cpd':
     case 'cslb_ca':

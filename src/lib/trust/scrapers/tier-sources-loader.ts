@@ -13,7 +13,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 
 const FALLBACK_BY_STATE: Record<string, string[]> = {
   CO: ['co_sos_biz', 'co_dora', 'denver_pim', 'sam_gov_exclusions'],
-  TX: ['tx_sos_biz', 'tx_tdlr', 'dallas_open_data', 'sam_gov_exclusions'],
+  TX: ['tx_sos_biz', 'tx_tdlr', 'tdlr_disciplinary', 'dallas_open_data', 'sam_gov_exclusions'],
 }
 
 const cache = new Map<string, { sources: string[]; cachedAt: number }>()
