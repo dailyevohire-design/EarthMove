@@ -53,7 +53,7 @@ export interface EvidenceDerivedReport {
   positive_indicators: string[]
   summary: string | null
   trust_score: number | null
-  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'AMBIGUOUS' | null
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | null
   confidence_level: 'HIGH' | 'MEDIUM' | 'LOW' | null
   data_integrity_status: 'ok' | 'partial' | 'entity_not_found' | 'degraded' | 'failed' | 'entity_disambiguation_required'
   data_sources_searched: string[]
