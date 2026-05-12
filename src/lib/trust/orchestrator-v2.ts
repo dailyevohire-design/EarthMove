@@ -39,6 +39,7 @@ import { detectCrossEngineCorroboration } from './cross-engine-corroboration'
 import { detectPhoenixPattern, relatedEntitiesToEvidence, type CanonicalEntity } from './scrapers/phoenix-detector'
 import { computeIndustryBaseline } from './industry-baseline'
 import { projectInputsSnapshotToBreakdown } from './project-score-breakdown'
+import { buildTrustSummaryTemplate } from './summary-template'
 
 export interface OrchestratorInput {
   contractor_name: string
@@ -561,6 +562,16 @@ async function finalizeFreeTier(
         scoreRow.inputs_snapshot,
         Number(scoreRow.composite_score),
         scoreRow.effective_weights,
+      )
+      // PR #38 drift fix: buildEvidenceDerivedReport produced derived.summary
+      // with a null placeholder trust_score (yielding "Trust score 0/100…").
+      // Regenerate now that trust_score + risk_level reflect the SQL composite,
+      // so the row hits the integrity trigger with summary already aligned.
+      derived.summary = buildTrustSummaryTemplate(
+        derived.trust_score,
+        derived.risk_level,
+        derived.red_flags.length,
+        derived.positive_indicators.length,
       )
     }
   }
