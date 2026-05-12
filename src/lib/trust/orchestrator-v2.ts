@@ -37,7 +37,8 @@ import { scrapePerplexitySweep } from './scrapers/perplexity-sweep'
 import { scrapeClaudeWebSearchVerify } from './scrapers/claude-web-search'
 import { detectCrossEngineCorroboration } from './cross-engine-corroboration'
 import { detectPhoenixPattern, relatedEntitiesToEvidence, type CanonicalEntity } from './scrapers/phoenix-detector'
-import { computeIndustryBaseline } from './score-explanation'
+import { computeIndustryBaseline } from './industry-baseline'
+import { projectInputsSnapshotToBreakdown } from './project-score-breakdown'
 
 export interface OrchestratorInput {
   contractor_name: string
@@ -536,6 +537,34 @@ async function finalizeFreeTier(
 
   const derived = buildEvidenceDerivedReport(evidence)
 
+  // Path (a) score override: route trust_score / risk_level / score_breakdown
+  // through calculate_contractor_trust_score (SQL, weighted+capped) instead
+  // of the in-TS additive scorer. Only when data_integrity_status==='ok' and
+  // we have evidence to score — entity_not_found / failed / partial /
+  // degraded paths keep the null trust_score emitted by the builder.
+  if (derived.data_integrity_status === 'ok' && evidence.length > 0) {
+    const { data: scoreRow, error: scoreErr } = await admin
+      .rpc('score_free_tier_inline', { p_job_id: jobId })
+      .single<{
+        composite_score: number
+        risk_level: string
+        inputs_snapshot: Record<string, unknown>
+        effective_weights: Record<string, unknown>
+      }>()
+    if (scoreErr) {
+      throw new Error(`finalizeFreeTier: score_free_tier_inline: ${scoreErr.message}`)
+    }
+    if (scoreRow) {
+      derived.trust_score = Math.round(Number(scoreRow.composite_score))
+      derived.risk_level = scoreRow.risk_level as EvidenceDerivedReport['risk_level']
+      derived.score_breakdown = projectInputsSnapshotToBreakdown(
+        scoreRow.inputs_snapshot,
+        Number(scoreRow.composite_score),
+        scoreRow.effective_weights,
+      )
+    }
+  }
+
   const { data: insertedReport, error: insertErr } = await admin
     .from('trust_reports')
     .insert({
@@ -595,6 +624,15 @@ async function finalizeFreeTier(
       report_id: insertedReport.id,
     })
     .eq('id', jobId)
+
+  // Link the contractor_trust_scores row (inserted by score_free_tier_inline
+  // with report_id=NULL) back to the trust_reports row. No-op when the path
+  // (a) override didn't fire (null integrity status, no evidence).
+  await admin
+    .from('contractor_trust_scores')
+    .update({ report_id: insertedReport.id })
+    .eq('job_id', jobId)
+    .is('report_id', null)
 
   return {
     kind: 'sync_complete',

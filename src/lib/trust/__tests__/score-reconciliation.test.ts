@@ -1,14 +1,21 @@
 /**
- * Score-arithmetic reconciliation invariant.
+ * Free-tier builder contract — post path-(a) realignment.
  *
- * After the reconciliation, buildEvidenceDerivedReport's trust_score
- * MUST equal score_breakdown.final_score for every report. The
- * breakdown's adjustments[] must sum to (final_score - base_score) within
- * the floor/ceiling clamps. This test file is the regression guard.
+ * buildEvidenceDerivedReport no longer computes trust_score; the
+ * orchestrator overrides trust_score / risk_level / score_breakdown with
+ * the SQL pipeline (calculate_contractor_trust_score) when
+ * data_integrity_status==='ok'. This file is the regression guard for the
+ * builder's new contract:
  *
- * If any of these tests fail, the audit-trail invariant is broken and
- * the displayed score no longer matches what the user can derive from
- * the explanation card. That's the bug we just fixed.
+ *   - entity_not_found / failed paths emit trust_score=null.
+ *   - ok / partial / degraded paths emit trust_score=null as a placeholder
+ *     that the orchestrator overrides before INSERT.
+ *   - score_breakdown carries the placeholder methodology marker so the
+ *     PDF / share page can detect the rare case where the override didn't
+ *     fire.
+ *   - Column projection (biz_status, lic_status, bbb_rating, osha_status,
+ *     legal_status, evidence_ids, raw_report) is unaffected by the swap
+ *     and continues to populate from evidence rows.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -36,151 +43,138 @@ function ev(
   }
 }
 
-function assertReconciled(report: ReturnType<typeof buildEvidenceDerivedReport>) {
-  // For null trust_score (entity_not_found / failed), the breakdown still
-  // computes from evidence. Skip the equality check in those cases.
-  if (report.trust_score === null) {
-    expect(report.data_integrity_status === 'entity_not_found' || report.data_integrity_status === 'failed').toBe(true)
-    return
-  }
-  // Core invariant: displayed trust_score == breakdown final_score.
-  expect(report.trust_score).toBe(report.score_breakdown.final_score)
-  // Arithmetic invariant: base + sum(deltas) clamped to [0, 100] == final.
-  const sumOfDeltas = report.score_breakdown.adjustments.reduce((s, a) => s + a.delta, 0)
-  const expected = Math.max(0, Math.min(100, report.score_breakdown.base_score + sumOfDeltas))
-  expect(report.score_breakdown.final_score).toBe(expected)
-}
-
-describe('Score reconciliation — trust_score equals breakdown.final_score', () => {
-  it('clean entity (business_active + sanction_clear)', () => {
-    const report = buildEvidenceDerivedReport([
-      ev('business_active', 'co_sos_biz', { entity_type: 'LLC', formation_date: '2010-01-01' }),
-      ev('sanction_clear', 'sam_gov_exclusions'),
-      ev('legal_no_actions', 'courtlistener_fed'),
-      ev('osha_violations_clean', 'osha_est_search'),
-    ])
-    assertReconciled(report)
-  })
-
-  it('dissolved business + revoked license', () => {
-    const report = buildEvidenceDerivedReport([
-      ev('business_dissolved', 'co_sos_biz'),
-      ev('license_revoked', 'co_dora'),
-    ])
-    assertReconciled(report)
-  })
-
-  it('multi-OSHA citations hit category cap', () => {
-    const report = buildEvidenceDerivedReport([
-      ev('business_active', 'co_sos_biz'),
-      ev('osha_serious_citation', 'osha_est_search', {}, 'o1'),
-      ev('osha_serious_citation', 'osha_est_search', {}, 'o2'),
-      ev('osha_serious_citation', 'osha_est_search', {}, 'o3'),
-      ev('osha_serious_citation', 'osha_est_search', {}, 'o4'),
-      ev('osha_willful_citation', 'osha_est_search', {}, 'w1'),
-    ])
-    assertReconciled(report)
-  })
-
-  it('phoenix-LLC pattern triggers cap-bounded deduction', () => {
-    const report = buildEvidenceDerivedReport([
-      ev('business_active', 'co_sos_biz'),
-      ev('phoenix_signal', 'system_internal', {}, 'p1'),
-      ev('phoenix_signal', 'system_internal', {}, 'p2'),
-      ev('phoenix_signal', 'system_internal', {}, 'p3'),
-    ])
-    assertReconciled(report)
-  })
-
-  it('open-web adverse single-engine', () => {
-    const report = buildEvidenceDerivedReport([
-      ev('business_active', 'co_sos_biz'),
-      ev('open_web_adverse_signal', 'perplexity_sweep', {}, 'a1'),
-      ev('open_web_adverse_signal', 'perplexity_sweep', {}, 'a2'),
-    ])
-    assertReconciled(report)
-  })
-
-  it('cross-engine corroborated adverse', () => {
-    const report = buildEvidenceDerivedReport([
-      ev('business_active', 'co_sos_biz'),
-      ev('open_web_adverse_signal', 'perplexity_sweep', {}, 'a1'),
-      ev('cross_engine_corroboration_event', 'system_internal', { claim_direction: 'adverse' }, 'c1'),
-      ev('cross_engine_corroboration_event', 'system_internal', { claim_direction: 'adverse' }, 'c2'),
-    ])
-    assertReconciled(report)
-  })
-
-  it('cross-engine corroborated positive', () => {
-    const report = buildEvidenceDerivedReport([
-      ev('business_active', 'co_sos_biz'),
-      ev('open_web_positive_signal', 'perplexity_sweep'),
-      ev('cross_engine_corroboration_event', 'system_internal', { claim_direction: 'positive' }, 'c1'),
-    ])
-    assertReconciled(report)
-  })
-
-  it('sanction_hit drives -50 (severe)', () => {
-    const report = buildEvidenceDerivedReport([
-      ev('business_active', 'co_sos_biz'),
-      ev('sanction_hit', 'sam_gov_exclusions'),
-    ])
-    assertReconciled(report)
-    expect(report.trust_score).toBe(50) // 100 - 50
-  })
-
-  it('multiple categories combined (legal + osha + phoenix)', () => {
-    const report = buildEvidenceDerivedReport([
-      ev('business_active', 'co_sos_biz'),
-      ev('legal_action_found', 'courtlistener_fed', {}, 'l1'),
-      ev('legal_action_found', 'courtlistener_fed', {}, 'l2'),
-      ev('osha_serious_citation', 'osha_est_search', {}, 'o1'),
-      ev('phoenix_signal', 'system_internal', {}, 'p1'),
-    ])
-    assertReconciled(report)
-  })
-
-  it('positive-heavy report does not exceed 100', () => {
-    const report = buildEvidenceDerivedReport([
-      ev('business_active', 'co_sos_biz'),
-      ev('bbb_rating_a_plus', 'bbb_link_check'),
-      ev('sanction_clear', 'sam_gov_exclusions'),
-      ev('legal_no_actions', 'courtlistener_fed'),
-      ev('osha_violations_clean', 'osha_est_search'),
-      ev('federal_contractor_active', 'sam_gov_exclusions'),
-    ])
-    assertReconciled(report)
-    expect(report.trust_score).toBeLessThanOrEqual(100)
-  })
-
-  it('entity_not_found null-score path stays consistent', () => {
+describe('Free-tier builder — null trust_score on entity_not_found / failed', () => {
+  it('entity_not_found emits null trust_score and null risk_level', () => {
     const report = buildEvidenceDerivedReport([
       ev('business_not_found', 'co_sos_biz'),
       ev('license_no_record', 'co_dora'),
       ev('sanction_clear', 'sam_gov_exclusions'),
     ])
-    assertReconciled(report)
-    expect(report.trust_score).toBeNull()
     expect(report.data_integrity_status).toBe('entity_not_found')
+    expect(report.trust_score).toBeNull()
+    expect(report.risk_level).toBeNull()
+    expect(report.confidence_level).toBe('LOW')
   })
 
-  it('failure cascade caps at 0 floor', () => {
+  it('all sources errored ⇒ failed + null trust_score', () => {
     const report = buildEvidenceDerivedReport([
-      ev('business_dissolved', 'co_sos_biz'),
-      ev('license_revoked', 'co_dora'),
-      ev('sanction_hit', 'sam_gov_exclusions'),
-      ev('osha_willful_citation', 'osha_est_search'),
-      ev('phoenix_signal', 'system_internal', {}, 'p1'),
-      ev('phoenix_signal', 'system_internal', {}, 'p2'),
+      ev('source_error', 'co_sos_biz'),
+      ev('source_error', 'co_dora'),
+      ev('source_error', 'sam_gov_exclusions'),
     ])
-    assertReconciled(report)
-    expect(report.trust_score).toBe(0)
+    expect(report.data_integrity_status).toBe('failed')
+    expect(report.trust_score).toBeNull()
+    expect(report.risk_level).toBeNull()
   })
 
-  it('empty evidence stays at base 100 (clean fallback)', () => {
+  it('entity_disambiguation_required emits null trust_score', () => {
+    const report = buildEvidenceDerivedReport([
+      ev('entity_disambiguation_candidates', 'system_internal', {
+        candidates: [{ entity_name: 'Foo LLC', entity_id: '1' }],
+        query: 'Foo',
+      }),
+    ])
+    expect(report.data_integrity_status).toBe('entity_disambiguation_required')
+    expect(report.trust_score).toBeNull()
+  })
+
+  it('empty evidence routes through entity_not_found null path', () => {
     const report = buildEvidenceDerivedReport([])
-    // Empty evidence puts data_integrity_status in 'entity_not_found' or
-    // similar — assertReconciled handles both branches.
-    assertReconciled(report)
+    expect(report.trust_score).toBeNull()
+    expect(report.risk_level).toBeNull()
+  })
+})
+
+describe('Free-tier builder — placeholder trust_score on ok / partial / degraded', () => {
+  it('ok path emits placeholder null trust_score (orchestrator overrides)', () => {
+    const report = buildEvidenceDerivedReport([
+      ev('business_active', 'co_sos_biz', { entity_type: 'LLC', formation_date: '2010-01-01' }),
+      ev('license_active', 'co_dora', { license_number: 'EC.0001234' }),
+      ev('sanction_clear', 'sam_gov_exclusions'),
+      ev('legal_no_actions', 'courtlistener_fed'),
+    ])
+    expect(report.data_integrity_status).toBe('ok')
+    expect(report.trust_score).toBeNull()
+    expect(report.risk_level).toBeNull()
+    expect(report.score_breakdown.methodology).toBe('placeholder_pre_sql_override')
+    expect(report.score_breakdown.adjustments).toEqual([])
+    expect(report.score_breakdown.final_score).toBeNull()
+  })
+
+  it('partial coverage still emits placeholder for orchestrator to override', () => {
+    const report = buildEvidenceDerivedReport([
+      ev('business_active', 'co_sos_biz', { entity_type: 'LLC' }),
+      ev('source_error', 'co_dora'),
+    ])
+    expect(report.data_integrity_status).toBe('partial')
+    expect(report.trust_score).toBeNull()
+    expect(report.score_breakdown.methodology).toBe('placeholder_pre_sql_override')
+  })
+})
+
+describe('Free-tier builder — column projection unchanged by score swap', () => {
+  it('projects biz_status / biz_entity_type / biz_formation_date from SOS evidence', () => {
+    const report = buildEvidenceDerivedReport([
+      ev('business_active', 'co_sos_biz', {
+        entity_type: 'LLC',
+        formation_date: '2010-01-01',
+        entity_name: 'Foo LLC',
+      }),
+    ])
+    expect(report.biz_status).toBe('Active')
+    expect(report.biz_entity_type).toBe('LLC')
+    expect(report.biz_formation_date).toBe('2010-01-01')
+  })
+
+  it('projects lic_status / lic_license_number from license evidence', () => {
+    const report = buildEvidenceDerivedReport([
+      ev('license_active', 'co_dora', { license_number: 'EC.0001234' }),
+    ])
+    expect(report.lic_status).toBe('Active')
+    expect(report.lic_license_number).toBe('EC.0001234')
+  })
+
+  it('open_web_* aggregates still populate from evidence', () => {
+    const report = buildEvidenceDerivedReport([
+      ev('business_active', 'co_sos_biz'),
+      ev('open_web_adverse_signal', 'perplexity_sweep', {}, 'a1'),
+      ev('open_web_adverse_signal', 'perplexity_sweep', {}, 'a2'),
+      ev('open_web_positive_signal', 'perplexity_sweep', {}, 'p1'),
+      ev('cross_engine_corroboration_event', 'system_internal', { claim_direction: 'adverse' }, 'c1'),
+    ])
+    expect(report.open_web_adverse_count).toBe(2)
+    expect(report.open_web_positive_count).toBe(1)
+    expect(report.open_web_corroboration_depth).toBe(1)
+  })
+
+  it('phoenix related_entities still project from phoenix_signal evidence', () => {
+    const report = buildEvidenceDerivedReport([
+      ev('business_active', 'co_sos_biz'),
+      ev('phoenix_signal', 'system_internal', {
+        entity_name: 'Other LLC',
+        entity_id: '999',
+        relationship_type: 'shared_officer',
+      }, 'p1'),
+    ])
+    expect(report.related_entities).toHaveLength(1)
+    expect(report.related_entities[0]).toMatchObject({
+      entity_name: 'Other LLC',
+      relationship_type: 'shared_officer',
+    })
+  })
+
+  it('evidence_ids populates from rows with ids', () => {
+    const report = buildEvidenceDerivedReport([
+      ev('business_active', 'co_sos_biz', {}, 'id-1'),
+      ev('license_active', 'co_dora', {}, 'id-2'),
+    ])
+    expect(report.evidence_ids).toEqual(['id-1', 'id-2'])
+  })
+
+  it('synthesis_model stays templated_evidence_derived', () => {
+    const report = buildEvidenceDerivedReport([
+      ev('business_active', 'co_sos_biz'),
+    ])
+    expect(report.synthesis_model).toBe('templated_evidence_derived')
   })
 })

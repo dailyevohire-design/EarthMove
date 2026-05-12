@@ -3,8 +3,13 @@
  * ScraperEvidence findings without any LLM call.
  *
  * Used for free-tier reports (templated_evidence_derived). Maps finding_types
- * to the ~20 columns on trust_reports + computes a deterministic trust_score
- * from positive/negative signal counts.
+ * to the ~20 column projection on trust_reports + sets data_integrity_status.
+ *
+ * Trust score / risk_level / score_breakdown are NOT computed here — the
+ * orchestrator overrides them via calculate_contractor_trust_score (SQL,
+ * weighted+capped) when data_integrity_status==='ok'. For entity_not_found
+ * and failed paths this function emits trust_score=null directly; the
+ * orchestrator skips the SQL override in those cases.
  *
  * data_integrity_status determination (canonical 5 values):
  *   - 'entity_not_found' — every meaningful finding is a *_not_found / *_clear /
@@ -16,7 +21,7 @@
  */
 
 import type { ScraperEvidence, TrustFindingType } from './scrapers/types'
-import { buildScoreExplanation, type ScoreBreakdown } from './score-explanation'
+import type { ScoreBreakdown } from './project-score-breakdown'
 
 /**
  * Input type — extends ScraperEvidence with the DB-row fields needed to
@@ -299,16 +304,12 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     riskLevel = null
     confidenceLevel = 'LOW'
   } else {
-    // Source of truth: buildScoreExplanation walks evidence + per-finding-
-    // type rules + categorical caps. The card displays exactly the same
-    // arithmetic; no override, no mismatch. Patent claim: transparent
-    // algorithmic scoring.
-    const initialBreakdown = buildScoreExplanation(evidence)
-    trustScore = initialBreakdown.final_score
-    if (trustScore >= 80) riskLevel = 'LOW'
-    else if (trustScore >= 60) riskLevel = 'MEDIUM'
-    else if (trustScore >= 40) riskLevel = 'HIGH'
-    else riskLevel = 'CRITICAL'
+    // Placeholder — the orchestrator overrides trust_score / risk_level /
+    // score_breakdown with calculate_contractor_trust_score (SQL, weighted+
+    // capped) before INSERTing trust_reports. See orchestrator-v2.ts
+    // finalizeFreeTier for the override site.
+    trustScore = null
+    riskLevel = null
     confidenceLevel = dataIntegrityStatus === 'ok' ? 'MEDIUM' : 'LOW'
   }
 
@@ -550,10 +551,10 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     const f = (e.extracted_facts ?? {}) as Record<string, unknown>
     return f.claim_direction === 'adverse'
   }).length
-  // Open-web red_flag annotations. Score deltas live in
-  // score-explanation.ts ADJUSTMENT_RULES (single source of truth) — we
-  // only push presentation-layer flags here so users see the corroboration
-  // language in the red_flags list.
+  // Open-web red_flag annotations. Score impact is computed downstream by
+  // the SQL pipeline (calculate_contractor_trust_score open_web_* sub-score
+  // contributions); we only push presentation-layer flags here so users see
+  // the corroboration language in the red_flags list.
   if (corroboratedAdverse >= 2) {
     dedupRedFlags.push(`${corroboratedAdverse} cross-engine corroborated adverse signal${corroboratedAdverse === 1 ? '' : 's'} on the open web`)
   } else if (corroboratedAdverse === 1) {
@@ -583,8 +584,8 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     }
   })
 
-  // Phoenix red_flag annotation. Score deltas live in
-  // score-explanation.ts ADJUSTMENT_RULES — see open-web block above.
+  // Phoenix red_flag annotation. Score impact is computed downstream by
+  // the SQL pipeline phoenix_score — see open-web block above.
   const phoenixCount = phoenixEvidence.filter((e) => e.finding_type === 'phoenix_signal').length
   if (phoenixCount > 0) {
     dedupRedFlags.unshift(
@@ -592,12 +593,16 @@ export function buildEvidenceDerivedReport(evidence: BuildReportEvidence[]): Evi
     )
   }
 
-  // Recompute the breakdown with the FINAL evidence set (after disambig +
-  // discrepancy injection — those don't change scoring but the function
-  // is cheap and re-running keeps adjustments[] in sync with what's in
-  // evidence). The score returned here is canonical and matches the
-  // earlier trustScore assignment unless evidence was mutated.
-  const scoreBreakdown = buildScoreExplanation(evidence)
+  // Placeholder score_breakdown — the orchestrator overrides this with the
+  // SQL pipeline's projection (project-score-breakdown.ts) before INSERT.
+  // Adjusts to a real ScoreBreakdown for entity_not_found / failed paths
+  // is unnecessary since trust_score is null in those cases anyway.
+  const scoreBreakdown: ScoreBreakdown = {
+    base_score: 0,
+    adjustments: [],
+    final_score: null,
+    methodology: 'placeholder_pre_sql_override',
+  }
   const rawReport: Record<string, unknown> = {
     business: businessSet ? rawBusiness : null,
     licensing: licensingSet ? rawLicensing : null,
