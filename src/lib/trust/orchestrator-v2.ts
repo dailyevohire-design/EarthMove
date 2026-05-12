@@ -37,7 +37,6 @@ import { scrapePerplexitySweep } from './scrapers/perplexity-sweep'
 import { scrapeClaudeWebSearchVerify } from './scrapers/claude-web-search'
 import { detectCrossEngineCorroboration } from './cross-engine-corroboration'
 import { detectPhoenixPattern, relatedEntitiesToEvidence, type CanonicalEntity } from './scrapers/phoenix-detector'
-import { computeIndustryBaseline } from './industry-baseline'
 import { projectInputsSnapshotToBreakdown } from './project-score-breakdown'
 import { buildTrustSummaryTemplate } from './summary-template'
 
@@ -618,7 +617,7 @@ async function finalizeFreeTier(
       open_web_engines_used: derived.open_web_engines_used,
       related_entities: derived.related_entities.length > 0 ? derived.related_entities : null,
       score_breakdown: derived.score_breakdown,
-      industry_baseline: await computeIndustryBaseline(input.state_code, admin, derived.trust_score),
+      // industry_baseline written server-side by trust_reports_post_integrity_industry_baseline trigger (mig 240)
     })
     .select('id, created_at')
     .single()

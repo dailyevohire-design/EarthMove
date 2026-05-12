@@ -9,6 +9,8 @@
  *   - Empty-baseline state for under-sampled states.
  */
 
+import type { IndustryBaseline } from '@/lib/trust/industry-baseline'
+
 interface ScoreAdjustment {
   reason: string
   delta: number
@@ -22,19 +24,9 @@ export interface ScoreBreakdownProps {
   final_score: number
 }
 
-export interface IndustryBaselineProps {
-  state_code: string
-  median_score: number
-  p25_score: number
-  p75_score: number
-  mean_score: number
-  sample_size: number
-  percentile_rank: number | null
-}
-
 interface Props {
   breakdown: ScoreBreakdownProps | null | undefined
-  baseline: IndustryBaselineProps | null | undefined
+  baseline: IndustryBaseline | null | undefined
 }
 
 function ordinal(n: number): string {
