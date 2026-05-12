@@ -1,42 +1,38 @@
 import 'server-only';
-import { createHash } from 'node:crypto';
 import {
   type ScraperEvidence,
   type TrustFindingType,
   type TrustConfidence,
-  ScraperAuthError,
-  ScraperRateLimitError,
-  ScraperTimeoutError,
   ScraperUpstreamError,
 } from './types';
+import {
+  getSearchProvider,
+  type SearchProviderResult,
+} from './search-providers';
 
 /**
- * tdlr_disciplinary — Texas TDLR Disciplinary Actions via Google Custom Search.
+ * tdlr_disciplinary — Texas TDLR Disciplinary Actions via a configurable search provider.
  *
  * Pivots around the cimsfo/fosearch.asp unscriptable problem (mig 212) by querying
- * Google's index of tdlr.texas.gov Final Order detail pages via the Custom Search
- * JSON API. Free tier: 100 queries/day. Roadmap: swap to Serper at production scale.
+ * Google's index of tdlr.texas.gov Final Order detail pages. Provider is chosen
+ * via SEARCH_PROVIDER env var (default: serper). GCSE remains supported as a
+ * fallback for free-tier (100/day) operation.
  *
- * Confidence weight 0.85 vs tx_tdlr 0.90 reflects index-coverage gap (~60-80% of FOs).
- * Coverage gap is documented in trust_source_registry.notes.
+ * Confidence weight 0.85 vs tx_tdlr 0.90 reflects index-coverage gap (~60-80%
+ * of FOs are indexed by Google). Coverage gap is documented in trust_source_registry.notes.
  *
  * Contract: mirrors state-ag-enforcement.ts — pure function that returns
  * ScraperEvidence (or array) and throws typed ScraperError subclasses on infra
  * failure. persist-evidence.ts is the single DB chokepoint.
- *
- * API-key safety: citation_url and query_sent both use google.com/search (no key),
- * never the GCSE endpoint URL. The fully-keyed requestUrl never leaves this module.
  */
 
 const SOURCE_KEY = 'tdlr_disciplinary';
-const GCSE_ENDPOINT = 'https://customsearch.googleapis.com/customsearch/v1';
-const GCSE_TIMEOUT_MS = 8_000;
 const ALLOWED_HOSTNAMES = new Set([
   'www.tdlr.texas.gov',
   'tdlr.texas.gov',
 ]);
 const MAX_NAME_LENGTH = 200;
-const MAX_GCSE_ITEMS_PROCESSED = 5;
+const MAX_ITEMS_PROCESSED = 5;
 const MAX_DESTINATION_FETCHES = 3;
 const DESTINATION_FETCH_TIMEOUT_MS = 5_000;
 const DESTINATION_MAX_BYTES = 2 * 1024 * 1024; // 2MB
@@ -162,28 +158,6 @@ async function fetchAllowlistedHtml(url: string): Promise<string | null> {
   return new TextDecoder('utf-8').decode(merged);
 }
 
-interface GcseItem {
-  link: string;
-  title: string;
-  snippet: string;
-}
-
-/** Defensive narrowing of GCSE response shape — no zod dep. */
-function parseGcseItems(raw: unknown): GcseItem[] {
-  if (raw === null || typeof raw !== 'object') return [];
-  const items = (raw as { items?: unknown }).items;
-  if (!Array.isArray(items)) return [];
-  const out: GcseItem[] = [];
-  for (const it of items) {
-    if (it === null || typeof it !== 'object') continue;
-    const r = it as Record<string, unknown>;
-    if (typeof r.link === 'string' && typeof r.title === 'string' && typeof r.snippet === 'string') {
-      out.push({ link: r.link, title: r.title, snippet: r.snippet });
-    }
-  }
-  return out;
-}
-
 interface Classification {
   finding_type: TrustFindingType;
   matched_keyword: string;
@@ -227,104 +201,40 @@ export async function scrapeTdlrDisciplinary(
     throw new ScraperUpstreamError('TDLR Disciplinary: empty/invalid legalName', SOURCE_KEY, 0);
   }
 
-  // 3. Env gate. Throwing ScraperAuthError lets the orchestrator persist a
-  //    source_error attribution; nothing else in this module references the key.
-  const cseId = process.env.GOOGLE_CSE_ID;
-  const apiKey = process.env.GOOGLE_CSE_API_KEY;
-  if (!cseId || !apiKey) {
-    throw new ScraperAuthError(
-      'TDLR Disciplinary: GOOGLE_CSE_ID or GOOGLE_CSE_API_KEY not set',
-      SOURCE_KEY,
-    );
-  }
+  // 3. Resolve the configured search provider (default: serper). Provider
+  //    throws ScraperAuthError / ScraperRateLimitError / ScraperUpstreamError
+  //    / ScraperTimeoutError on infra failure — orchestrator catches and
+  //    persists a source_error attribution against this scraper's source_key.
+  const provider = getSearchProvider();
 
   // 4. Query — quoted name forces phrase match across known sanction keywords.
   const query = `site:tdlr.texas.gov "${name}" (revoked OR suspended OR sanction OR penalty OR "agreed order" OR "final order")`;
-  const params = new URLSearchParams({ key: apiKey, cx: cseId, q: query, num: '10' });
-  const requestUrl = `${GCSE_ENDPOINT}?${params.toString()}`;
-  // citationUrl is what we persist (query_sent / extracted_facts.citation_url).
-  // It must never contain the API key — requestUrl is for the in-flight fetch only.
-  const citationUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+  const result: SearchProviderResult = await provider.search(query, { numResults: 10 });
 
-  // 5. GCSE fetch with timeout.
-  let gcseRes: Response;
-  try {
-    gcseRes = await fetch(requestUrl, {
-      method: 'GET',
-      signal: AbortSignal.timeout(GCSE_TIMEOUT_MS),
-      headers: { Accept: 'application/json' },
-    });
-  } catch (err: unknown) {
-    if (err instanceof Error && err.name === 'AbortError') {
-      throw new ScraperTimeoutError(
-        `TDLR Disciplinary: GCSE timeout after ${GCSE_TIMEOUT_MS}ms`,
-        SOURCE_KEY,
-      );
-    }
-    throw new ScraperUpstreamError(
-      `TDLR Disciplinary: GCSE network error: ${err instanceof Error ? err.message : 'unknown'}`,
-      SOURCE_KEY,
-      0,
-    );
-  }
+  const items = result.items.slice(0, MAX_ITEMS_PROCESSED);
 
-  const rawText = await gcseRes.text();
-  const responseSha = createHash('sha256').update(rawText).digest('hex');
-  const snippetForDb = rawText.slice(0, SNIPPET_DB_CAP);
-
-  // 6. Quota / forbidden — throw ScraperRateLimitError; orchestrator persists.
-  if (gcseRes.status === 429 || gcseRes.status === 403) {
-    const ra = gcseRes.headers.get('retry-after');
-    throw new ScraperRateLimitError(
-      `TDLR Disciplinary: GCSE quota exhausted (HTTP ${gcseRes.status})`,
-      SOURCE_KEY,
-      ra ? Number(ra) : null,
-    );
-  }
-
-  if (!gcseRes.ok) {
-    throw new ScraperUpstreamError(
-      `TDLR Disciplinary: GCSE HTTP ${gcseRes.status}`,
-      SOURCE_KEY,
-      gcseRes.status,
-    );
-  }
-
-  // 7. Defensive JSON parse.
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(rawText);
-  } catch {
-    throw new ScraperUpstreamError(
-      'TDLR Disciplinary: GCSE returned non-JSON body',
-      SOURCE_KEY,
-      gcseRes.status,
-    );
-  }
-
-  const items = parseGcseItems(parsed).slice(0, MAX_GCSE_ITEMS_PROCESSED);
-
-  // 8. Zero indexed hits → single license_no_record evidence.
+  // 5. Zero indexed hits → single license_no_record evidence.
   if (items.length === 0) {
     return {
       source_key: SOURCE_KEY,
       finding_type: 'license_no_record',
       confidence: 'verified_structured',
-      finding_summary: `TDLR Disciplinary (TX): no indexed sanction pages found for "${name}" (0 GCSE hits)`,
+      finding_summary: `TDLR Disciplinary (TX): no indexed sanction pages found for "${name}" (0 search hits via ${provider.name})`,
       extracted_facts: {
         ag_state: 'TX',
         results_checked: 0,
-        citation_url: citationUrl,
+        citation_url: result.citationUrl,
+        search_provider: provider.name,
       },
-      query_sent: citationUrl,
-      response_sha256: responseSha,
-      response_snippet: snippetForDb,
+      query_sent: result.citationUrl,
+      response_sha256: result.rawResponseSha256,
+      response_snippet: result.rawResponseSnippet,
       duration_ms: Date.now() - start,
-      cost_cents: 0,
+      cost_cents: result.cost_cents,
     };
   }
 
-  // 9. Two-pass classification: snippet first, fall back to destination body.
+  // 6. Two-pass classification: snippet first, fall back to destination body.
   const evidence: ScraperEvidence[] = [];
   let destinationFetchBudget = MAX_DESTINATION_FETCHES;
 
@@ -377,7 +287,7 @@ export async function scrapeTdlrDisciplinary(
     const evidenceSnippet =
       matchSource === 'destination_page'
         ? finalText.slice(0, SNIPPET_DB_CAP)
-        : snippetForDb;
+        : result.rawResponseSnippet;
 
     evidence.push({
       source_key: SOURCE_KEY,
@@ -392,34 +302,36 @@ export async function scrapeTdlrDisciplinary(
         hit_index: i,
         match_source: matchSource,
         sanction_keyword: finalClassification.matched_keyword,
-        gcse_search_url: citationUrl,
+        search_url: result.citationUrl,
+        search_provider: provider.name,
         results_checked: items.length,
       },
-      query_sent: citationUrl,
-      response_sha256: responseSha,
+      query_sent: result.citationUrl,
+      response_sha256: result.rawResponseSha256,
       response_snippet: evidenceSnippet,
       duration_ms: Date.now() - start,
-      cost_cents: 0,
+      cost_cents: result.cost_cents,
     });
   }
 
-  // 10. GCSE returned items but none classified → single no_record summary.
+  // 7. Search returned items but none classified → single no_record summary.
   if (evidence.length === 0) {
     return {
       source_key: SOURCE_KEY,
       finding_type: 'license_no_record',
       confidence: 'verified_structured',
-      finding_summary: `TDLR Disciplinary (TX): ${items.length} GCSE hits but no strict-name + sanction-keyword matches for "${name}"`,
+      finding_summary: `TDLR Disciplinary (TX): ${items.length} search hits via ${provider.name} but no strict-name + sanction-keyword matches for "${name}"`,
       extracted_facts: {
         ag_state: 'TX',
         results_checked: items.length,
-        citation_url: citationUrl,
+        citation_url: result.citationUrl,
+        search_provider: provider.name,
       },
-      query_sent: citationUrl,
-      response_sha256: responseSha,
-      response_snippet: snippetForDb,
+      query_sent: result.citationUrl,
+      response_sha256: result.rawResponseSha256,
+      response_snippet: result.rawResponseSnippet,
       duration_ms: Date.now() - start,
-      cost_cents: 0,
+      cost_cents: result.cost_cents,
     };
   }
 
