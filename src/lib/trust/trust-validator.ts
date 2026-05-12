@@ -28,7 +28,7 @@ export const TrustReportSchema = z.object({
   contractor_name:  z.string().min(1).max(300),
   location:         z.string().min(1).max(200),
   trust_score:      z.number().int().min(0).max(100).nullable(),
-  risk_level:       z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'AMBIGUOUS']).nullable(),
+  risk_level:       z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).nullable(),
   confidence_level: z.enum(['HIGH', 'MEDIUM', 'LOW']),
   report_tier:      z.enum(['free', 'pro', 'enterprise']),
   business_registration: z.object({
@@ -210,7 +210,7 @@ function normalizeReport(p: any): any {
     contractor_name:  truncString(p.contractor_name, 300) || 'Unknown',
     location:         truncString(p.location, 200) || 'Unknown',
     trust_score:      p.trust_score == null ? null : Math.round(clampNum(p.trust_score, 0, 100, 0)),
-    risk_level:       p.risk_level == null ? null : pickEnum(p.risk_level, ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'AMBIGUOUS'] as const, 'MEDIUM'),
+    risk_level:       p.risk_level == null ? null : pickEnumOrNull(p.risk_level, ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const),
     confidence_level: pickEnum(p.confidence_level, ['HIGH', 'MEDIUM', 'LOW'] as const, 'LOW'),
     report_tier:      pickEnum(p.report_tier, ['free', 'pro', 'enterprise'] as const, 'free'),
     business_registration: {

@@ -10,7 +10,7 @@
  *
  * Matches the visual language of the standard report cards (rounded-2xl,
  * stone-on-paper neutrals; amber accent reserved for "we couldn't conclude"
- * states, mirroring DisambiguationPicker).
+ * states, mirroring EntityDisambiguationCard).
  */
 
 import Link from 'next/link'

@@ -133,7 +133,7 @@ export const Radius = {
   pill: 999,
 } as const
 
-export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'AMBIGUOUS' | null
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | null
 
 export function colorsForRiskLevel(level: RiskLevel) {
   switch (level) {
@@ -144,7 +144,6 @@ export function colorsForRiskLevel(level: RiskLevel) {
     case 'CRITICAL':
       return { fill: Colors.riskCriticalFill, text: Colors.riskCriticalText }
     case 'MEDIUM':
-    case 'AMBIGUOUS':
     case null:
     default:
       return { fill: Colors.riskMediumFill, text: Colors.riskMediumText }

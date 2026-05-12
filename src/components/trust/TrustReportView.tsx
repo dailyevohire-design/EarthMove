@@ -1,7 +1,9 @@
 'use client'
 
-import DisambiguationPicker, { type AmbiguousCandidate } from './DisambiguationPicker'
+import { useRouter } from 'next/navigation'
 import EntityConfirmationBanner from './EntityConfirmationBanner'
+import EntityDisambiguationCard from './EntityDisambiguationCard'
+import type { EntityCandidate } from '@/lib/trust/scrapers/types'
 import NoEntityFoundCard from './no-entity-found-card'
 import OpenWebFindingsTile, { type OpenWebSection } from './OpenWebFindingsTile'
 import RelatedEntitiesPanel from './RelatedEntitiesPanel'
@@ -34,7 +36,7 @@ export interface TrustReport {
   tier: string | null
   contractor_id: string | null
   trust_score: number | null
-  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'AMBIGUOUS' | null
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | null
   confidence_level: 'HIGH' | 'MEDIUM' | 'LOW' | null
   biz_status: string | null
   biz_entity_type: string | null
@@ -97,14 +99,13 @@ function TierBadge({ tier }: { tier: string | null }) {
 
 function RiskPill({ level }: { level: TrustReport['risk_level'] }) {
   // Trust-surface color rules: emerald-only accent; non-emerald reserved for
-  // risk semantics. LOW=emerald, MEDIUM=stone (neutral), HIGH=red, CRITICAL=red-deep,
-  // AMBIGUOUS=stone. No bright-spectrum accents (amber/blue/orange mid-shades) anywhere.
+  // risk semantics. LOW=emerald, MEDIUM=stone (neutral), HIGH=red, CRITICAL=red-deep.
+  // No bright-spectrum accents (amber/blue/orange mid-shades) anywhere.
   const map: Record<string, string> = {
     LOW:        'bg-emerald-50 text-emerald-700 border border-emerald-200',
     MEDIUM:     'bg-stone-100 text-stone-800 border border-stone-300',
     HIGH:       'bg-red-50 text-red-700 border border-red-200',
     CRITICAL:   'bg-red-100 text-red-800 border border-red-300',
-    AMBIGUOUS:  'bg-stone-100 text-stone-700 border border-stone-200',
   }
   const label = level ?? 'UNKNOWN'
   const cls = level ? map[level] : 'bg-stone-100 text-stone-700 border border-stone-200'
@@ -124,7 +125,7 @@ function ConfidenceLabel({ level }: { level: TrustReport['confidence_level'] }) 
   )
 }
 
-function ScoreRing({ score, risk }: { score: number | null; risk: TrustReport['risk_level'] }) {
+function ScoreRing({ score }: { score: number | null }) {
   const s = score ?? 0
   let color = 'text-stone-400'
   if (score == null) color = 'text-stone-400'
@@ -132,9 +133,7 @@ function ScoreRing({ score, risk }: { score: number | null; risk: TrustReport['r
   else if (s >= 60) color = 'text-stone-700'
   else color = 'text-red-600'
 
-  const label = score == null
-    ? (risk === 'AMBIGUOUS' ? '—' : 'N/A')
-    : String(s)
+  const label = score == null ? 'N/A' : String(s)
 
   return (
     <div className="flex flex-col items-center">
@@ -316,6 +315,38 @@ function formatOshaViolations(report: TrustReport): React.ReactNode {
 // ---------- main view ----------
 
 export default function TrustReportView({ report }: { report: TrustReport }) {
+  const router = useRouter()
+
+  // Entity-disambiguation-required branch — orchestrator found similar
+  // candidates but no exact match. raw_report.disambiguation is projected
+  // by buildEvidenceDerivedReport from the 'entity_disambiguation_candidates'
+  // evidence row. Re-running with a picked candidate routes through the
+  // /dashboard/gc/contractors entry point (matches ContractorCheckClient's
+  // entity_id + entity_source param shape).
+  if (report.data_integrity_status === 'entity_disambiguation_required') {
+    const disambig = (report.raw_report as { disambiguation?: { candidates?: EntityCandidate[]; query?: string } } | null)?.disambiguation
+    const candidates = disambig?.candidates ?? []
+    const query = disambig?.query ?? report.contractor_name ?? ''
+    return (
+      <div className="min-h-screen bg-stone-50">
+        <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          <EntityDisambiguationCard
+            candidates={candidates}
+            query={query}
+            onSelect={(candidate) => {
+              const params = new URLSearchParams({
+                prefill: query,
+                entity_id: candidate.entity_id,
+                entity_source: candidate.source_key,
+              })
+              router.push(`/dashboard/gc/contractors?${params.toString()}`)
+            }}
+          />
+        </div>
+      </div>
+    )
+  }
+
   // Entity-not-found branch — short-circuit the standard layout. Triggers when
   // either data_integrity_status is explicitly 'entity_not_found', or the
   // legacy criteria (no score, no biz/lic status, sources were searched).
@@ -345,12 +376,6 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
       </div>
     )
   }
-
-  const rawCandidates = Array.isArray((report.raw_report as any)?.ambiguous_candidates)
-    ? ((report.raw_report as any).ambiguous_candidates as AmbiguousCandidate[])
-    : []
-  const isAmbiguous = report.risk_level === 'AMBIGUOUS' && rawCandidates.length > 0
-  const provisional = isAmbiguous
 
   const showBbbPanel =
     report.bbb_rating !== null ||
@@ -394,24 +419,7 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
           </div>
         )}
 
-        {isAmbiguous && (
-          <div className="mb-6">
-            <DisambiguationPicker
-              candidates={rawCandidates}
-              contractorName={report.contractor_name}
-              stateCode={report.state_code}
-              city={report.city}
-            />
-          </div>
-        )}
-
-        {provisional && (
-          <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-            Score is provisional until you confirm which business you meant.
-          </div>
-        )}
-
-        <div className={provisional ? 'opacity-60' : ''}>
+        <div>
           {/* Entity confirmation banner — surfaces the matched entity above
               the score so wrong-entity reports are catchable at a glance.
               Self-handles state branching (returns null for entity_not_found
@@ -421,7 +429,7 @@ export default function TrustReportView({ report }: { report: TrustReport }) {
           </div>
           {/* Score card */}
           <section className="rounded-2xl border border-stone-200 bg-white p-6 mb-6 flex items-center gap-6 flex-wrap">
-            <ScoreRing score={report.trust_score} risk={report.risk_level} />
+            <ScoreRing score={report.trust_score} />
             <div className="flex-1 min-w-[220px]">
               <div className="flex items-center gap-3 flex-wrap">
                 <h2 className="text-lg font-semibold text-stone-900">Trust assessment</h2>

@@ -54,7 +54,7 @@ describe('buildTrustSummaryTemplate — TS twin of SQL build_trust_summary_text'
 
   it('unknown risk band falls back to bare score', () => {
     expect(buildTrustSummaryTemplate(50, null, 0, 0)).toBe('Trust score 50/100.');
-    expect(buildTrustSummaryTemplate(50, 'AMBIGUOUS', 0, 0)).toBe('Trust score 50/100.');
+    expect(buildTrustSummaryTemplate(50, 'UNKNOWN_FUTURE_VALUE' as never, 0, 0)).toBe('Trust score 50/100.');
   });
 
   it('matches the SQL trigger regex (score word-boundary inside /100 pattern)', () => {
