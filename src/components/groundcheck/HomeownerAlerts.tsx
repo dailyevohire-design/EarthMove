@@ -48,7 +48,7 @@ export async function HomeownerAlerts({
   });
 
   const { data, error } = await supabase.rpc(
-    'compute_homeowner_alerts_with_context',
+    'compute_homeowner_alerts_v2',
     {
       p_contractor_id: contractorId,
       p_work_state_code: workStateCode,
