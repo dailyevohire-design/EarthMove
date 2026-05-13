@@ -59,13 +59,28 @@ describe('scrapeFmcsaSafer', () => {
     expect(arr[0].extracted_facts.legal_name).toBe('TEST CO');
   });
 
-  it('hits canonical /qc/name/ path (not legacy /qc/services/carriers)', async () => {
+  it('hits canonical /qc/services/carriers/name/ path (not HAL _links /qc/name/)', async () => {
     const fetchFn = vi.fn().mockResolvedValue(mockJson({ content: [] }));
     await scrapeFmcsaSafer({ legalName: 'TEST CO', fetchFn });
     expect(fetchFn).toHaveBeenCalledOnce();
     const calledUrl = String(fetchFn.mock.calls[0][0]);
-    expect(calledUrl).toContain('/qc/name/');
-    expect(calledUrl).not.toContain('/qc/services/carriers');
+    expect(calledUrl).toContain('/qc/services/carriers/name/');
+    expect(calledUrl).not.toMatch(/\/qc\/name\//);
+  });
+
+  it('"There is no resource" string from a bad path → source_error with reason=api_string_response (NOT auth_failed)', async () => {
+    // FMCSA returns this sentinel verbatim when the route is invalid (e.g. the
+    // HAL _links /qc/name/{name} path). Must classify as api_string_response so
+    // future probes against bad paths are not misread as webKey rejection.
+    const fetchFn = vi.fn().mockResolvedValue(
+      mockJson({ content: 'There is no resource matching the request', _links: {} }),
+    );
+    const result = await scrapeFmcsaSafer({ legalName: 'TEST CO', fetchFn });
+    const ev = Array.isArray(result) ? result[0] : result;
+    expect(ev.finding_type).toBe('source_error');
+    expect(ev.extracted_facts.reason).toBe('api_string_response');
+    expect(ev.extracted_facts.reason).not.toBe('auth_failed');
+    expect(ev.extracted_facts.raw_message).toBe('There is no resource matching the request');
   });
 
   it('webkey-missing env returns source_not_applicable without fetching', async () => {

@@ -8,15 +8,25 @@ import {
 /**
  * fmcsa_safer — FMCSA SAFER carrier safety lookup via the QCMobile public API.
  *
- * Canonical endpoint (per the API's own _links.searchByName):
- *   GET https://mobile.fmcsa.dot.gov/qc/name/{name}?webKey={key}
+ * Canonical endpoints (per FMCSA QCMobile docs at
+ * mobile.fmcsa.dot.gov/QCDevsite/docs/qcApi):
+ *   GET https://mobile.fmcsa.dot.gov/qc/services/carriers/{dotNumber}?webKey={key}
+ *   GET https://mobile.fmcsa.dot.gov/qc/services/carriers/name/{name}?webKey={key}
+ *
+ * The HAL _links block in responses (e.g. _links.searchByName → /qc/name/{name})
+ * describes FMCSA-internal routing; those paths return
+ * `{ content: "There is no resource for path ..." }` on the public API and must
+ * not be used. Live verification with a valid webKey against USDOT 3686940
+ * confirmed only the /qc/services/carriers/... paths work.
  *
  * Requires FMCSA_WEB_KEY env var (register at
  * https://mobile.fmcsa.dot.gov/QCDevsite/). When the env var is missing the
  * scraper returns source_not_applicable; when the env var is invalid the API
  * answers HTTP 200 with body `{ content: "Webkey not found" }` — we detect
  * this and emit source_error with reason='auth_failed' instead of silent
- * usdot_not_found misclassification.
+ * usdot_not_found misclassification. Any other string in `content` (such as
+ * the "There is no resource for path ..." sentinel returned by bad routes)
+ * maps to reason='api_string_response'.
  *
  * Vocabulary (mig 241 extends trust_evidence finding_type CHECK + TS union):
  *   usdot_active                 — operating active per any of statusCode/allowedToOperate/operatingStatus
@@ -190,8 +200,10 @@ export async function scrapeFmcsaSafer(input: FmcsaSaferInput): Promise<ScraperR
     };
   }
 
-  // Canonical name-search path per QCMobile API _links.searchByName.
-  const url = `${API_BASE}/name/${encodeURIComponent(name)}?webKey=${encodeURIComponent(webKey)}`;
+  // Canonical name-search path per QCMobile docs. The /qc/name/{name} variant
+  // surfaced in the HAL _links block is not a public route — it returns
+  // `{ content: "There is no resource for path ..." }`.
+  const url = `${API_BASE}/services/carriers/name/${encodeURIComponent(name)}?webKey=${encodeURIComponent(webKey)}`;
   const redactedUrl = url.replace(encodeURIComponent(webKey), 'REDACTED');
 
   let res: Response;
