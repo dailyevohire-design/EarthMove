@@ -89,8 +89,10 @@ export function extractStateCodes(ugc: string[] | undefined): string[] {
 }
 
 // Minimal supabase shape we depend on (lets the smoke test stub).
+// PromiseLike (not Promise) so it accepts supabase-js's chainable
+// PostgrestFilterBuilder (which is thenable).
 export type IngestSupabaseClient = {
-  rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+  rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>;
 };
 
 export type IngestSummary = {
