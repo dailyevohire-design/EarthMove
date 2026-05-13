@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/server';
 import { verifyChain, type EvidenceChainNode } from '@/lib/trust/chain-verify';
 import EntityConfirmationBanner from '@/components/trust/EntityConfirmationBanner';
+import { HomeownerAlerts } from '@/components/groundcheck/HomeownerAlerts';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,7 @@ interface VerifyPageProps {
 interface VerifyData {
   report: {
     id: string;
+    contractor_id: string | null;
     contractor_name: string;
     state_code: string;
     city: string | null;
@@ -39,7 +41,7 @@ async function loadVerification(reportId: string): Promise<VerifyData | null> {
   const { data: report } = await admin
     .from('trust_reports')
     .select(
-      'id, job_id, contractor_name, state_code, city, trust_score, risk_level, created_at, data_sources_searched, searched_as, data_integrity_status, raw_report',
+      'id, contractor_id, job_id, contractor_name, state_code, city, trust_score, risk_level, created_at, data_sources_searched, searched_as, data_integrity_status, raw_report',
     )
     .eq('id', reportId)
     .maybeSingle();
@@ -96,6 +98,17 @@ export default async function TrustVerifyPage({ params }: VerifyPageProps) {
             <span>Chain verification</span>
           </div>
         </header>
+
+        {/* mig 247+248: homeowner-facing red-flag alerts. Renders null when
+            the contractor has no flagged signals, so the page is unchanged
+            for clean contractors. Async server component fetches via the
+            anon-granted compute_homeowner_alerts_with_context RPC. */}
+        {report.contractor_id && (
+          <HomeownerAlerts
+            contractorId={report.contractor_id}
+            workStateCode={report.state_code}
+          />
+        )}
 
         {/* D2: confirmation banner. Surfaces the matched entity above the
             chain-verification block. Self-handles non-render states. */}
