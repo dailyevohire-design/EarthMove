@@ -2,9 +2,9 @@
  * Groundcheck HomeownerAlerts
  *
  * Server component that renders homeowner-facing alerts above the trust
- * report on /trust/[slug]. Reads compute_homeowner_alerts_with_context()
- * (mig 247+248). Returns null when there are no alerts so the page is
- * unchanged for clean contractors.
+ * report on /trust/[slug]. Reads compute_homeowner_alerts_v2()
+ * (mig 247+248+249). Returns null when there are no alerts so the page
+ * is unchanged for clean contractors.
  *
  * Two exports:
  *   HomeownerAlerts       async server component — fetches + renders
