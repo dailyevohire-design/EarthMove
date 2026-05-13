@@ -1,4 +1,3 @@
-import 'server-only';
 import {
   type ScraperEvidence,
   type ScraperResult,
@@ -9,21 +8,20 @@ import {
 /**
  * fmcsa_safer — FMCSA SAFER carrier safety lookup via the QCMobile public API.
  *
- * Endpoint shape:
- *   GET https://mobile.fmcsa.dot.gov/qc/services/carriers/name/{name}?webKey={key}
+ * Canonical endpoint (per the API's own _links.searchByName):
+ *   GET https://mobile.fmcsa.dot.gov/qc/name/{name}?webKey={key}
  *
  * Requires FMCSA_WEB_KEY env var (register at
- * https://mobile.fmcsa.dot.gov/QCDevsite/). When the env var is missing, the
- * scraper returns a single source_not_applicable evidence row so it ships
- * safely before the key lands in Vercel prod env. Aligned with the existing
- * scraper contract: pure function returning ScraperEvidence (or array), typed
- * ScraperError subclasses on infra failure, persist-evidence.ts is the single
- * DB chokepoint.
+ * https://mobile.fmcsa.dot.gov/QCDevsite/). When the env var is missing the
+ * scraper returns source_not_applicable; when the env var is invalid the API
+ * answers HTTP 200 with body `{ content: "Webkey not found" }` — we detect
+ * this and emit source_error with reason='auth_failed' instead of silent
+ * usdot_not_found misclassification.
  *
  * Vocabulary (mig 241 extends trust_evidence finding_type CHECK + TS union):
- *   usdot_active                 — statusCode A + allowedToOperate Y
- *   usdot_out_of_service         — allowedToOperate N OR statusCode I OR oosDate present
- *   usdot_revoked                — statusCode R
+ *   usdot_active                 — operating active per any of statusCode/allowedToOperate/operatingStatus
+ *   usdot_out_of_service         — N/I or operatingStatus indicates OOS or oosDate present
+ *   usdot_revoked                — statusCode R or operatingStatus REVOKED
  *   usdot_safety_satisfactory    — safetyRating "Satisfactory*"
  *   usdot_safety_conditional     — safetyRating "Conditional*"
  *   usdot_safety_unsatisfactory  — safetyRating "Unsatisfactory*"
@@ -31,12 +29,27 @@ import {
  */
 
 const SOURCE_KEY = 'fmcsa_safer';
-const API_BASE = 'https://mobile.fmcsa.dot.gov/qc/services/carriers';
+const API_BASE = 'https://mobile.fmcsa.dot.gov/qc';
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_NAME_LENGTH = 100;
 
+/** Thrown when the API returns a top-level string in `content` — almost
+ *  always an auth failure ("Webkey not found"). Lets the main fn translate
+ *  to source_error with structured reason. */
+class FmcsaAuthError extends Error {
+  constructor(
+    public readonly reason: 'auth_failed' | 'api_string_response',
+    public readonly raw_message: string,
+  ) {
+    super(raw_message);
+    this.name = 'FmcsaAuthError';
+  }
+}
+
 export interface FmcsaSaferInput {
   legalName: string;
+  /** DI seam for tests — defaults to global fetch in production. */
+  fetchFn?: typeof fetch;
 }
 
 interface FmcsaCarrier {
@@ -48,8 +61,12 @@ interface FmcsaCarrier {
   phyState?: string;
   phone?: string;
   mcNumber?: string;
+  /** Single-letter code from the legacy carrier snapshot (A=Active, I=Inactive, R=Revoked). */
   statusCode?: string;
+  /** Y/N — present in QCMobile responses. */
   allowedToOperate?: string;
+  /** Word-form alternative ("ACTIVE", "INACTIVE", "REVOKED", "OUT_OF_SERVICE"). */
+  operatingStatus?: string;
   safetyRating?: string;
   totalDrivers?: number;
   totalPowerUnits?: number;
@@ -62,17 +79,34 @@ function sanitizeName(raw: string): string | null {
   return cleaned.length === 0 ? null : cleaned;
 }
 
+/** Extracts carrier rows from a QCMobile response. Throws FmcsaAuthError
+ *  when `content` is a string (the API's error-channel for invalid webKey
+ *  and similar auth/quota issues). */
 function extractCarriersFromResponse(data: unknown): FmcsaCarrier[] {
   if (!data || typeof data !== 'object') return [];
   const root = data as Record<string, unknown>;
   const content = root.content;
-  if (!Array.isArray(content)) return [];
+
+  if (typeof content === 'string') {
+    const reason: 'auth_failed' | 'api_string_response' =
+      content === 'Webkey not found' ? 'auth_failed' : 'api_string_response';
+    throw new FmcsaAuthError(reason, content);
+  }
+
   const carriers: FmcsaCarrier[] = [];
-  for (const entry of content) {
-    if (entry && typeof entry === 'object' && 'carrier' in entry) {
-      const c = (entry as { carrier: unknown }).carrier;
-      if (c && typeof c === 'object') carriers.push(c as FmcsaCarrier);
+  // Two shapes seen in the wild:
+  //   { content: [{ carrier: {...} }, ...] }  — name-search list
+  //   { content: { carrier: {...} } }         — single-DOT detail
+  if (Array.isArray(content)) {
+    for (const entry of content) {
+      if (entry && typeof entry === 'object' && 'carrier' in entry) {
+        const c = (entry as { carrier: unknown }).carrier;
+        if (c && typeof c === 'object') carriers.push(c as FmcsaCarrier);
+      }
     }
+  } else if (content && typeof content === 'object' && 'carrier' in content) {
+    const c = (content as { carrier: unknown }).carrier;
+    if (c && typeof c === 'object') carriers.push(c as FmcsaCarrier);
   }
   return carriers;
 }
@@ -84,7 +118,7 @@ function buildExtractedFacts(carrier: FmcsaCarrier): Record<string, unknown> {
     mc_number: carrier.mcNumber ?? null,
     legal_name: carrier.legalName ?? null,
     dba_name: carrier.dbaName ?? null,
-    operating_status: carrier.statusCode ?? null,
+    operating_status: carrier.operatingStatus ?? carrier.statusCode ?? null,
     allowed_to_operate: carrier.allowedToOperate ?? null,
     safety_rating: carrier.safetyRating ?? null,
     out_of_service_date: carrier.oosDate ?? null,
@@ -104,9 +138,20 @@ function classifyOperatingStatus(
 ): 'usdot_active' | 'usdot_out_of_service' | 'usdot_revoked' | null {
   const allowed = (carrier.allowedToOperate ?? '').toUpperCase();
   const code = (carrier.statusCode ?? '').toUpperCase();
-  if (code === 'R') return 'usdot_revoked';
-  if (allowed === 'N' || carrier.oosDate || code === 'I') return 'usdot_out_of_service';
-  if (allowed === 'Y' && (code === 'A' || code === '')) return 'usdot_active';
+  const status = (carrier.operatingStatus ?? '').toUpperCase();
+
+  if (code === 'R' || status === 'REVOKED') return 'usdot_revoked';
+  if (
+    allowed === 'N' ||
+    carrier.oosDate ||
+    code === 'I' ||
+    status === 'INACTIVE' ||
+    status === 'OUT_OF_SERVICE' ||
+    status === 'OUT-OF-SERVICE'
+  ) {
+    return 'usdot_out_of_service';
+  }
+  if (allowed === 'Y' || code === 'A' || status === 'ACTIVE') return 'usdot_active';
   return null;
 }
 
@@ -122,13 +167,13 @@ function classifySafetyRating(
 
 export async function scrapeFmcsaSafer(input: FmcsaSaferInput): Promise<ScraperResult> {
   const start = Date.now();
+  const fetchImpl = input.fetchFn ?? fetch;
   const name = sanitizeName(input.legalName);
 
   if (!name) {
     throw new ScraperUpstreamError('FMCSA SAFER: empty/invalid legalName', SOURCE_KEY, 0);
   }
 
-  // Env-var graceful degrade — scraper ships before the key lands in Vercel.
   const webKey = process.env.FMCSA_WEB_KEY?.trim();
   if (!webKey) {
     return {
@@ -145,12 +190,13 @@ export async function scrapeFmcsaSafer(input: FmcsaSaferInput): Promise<ScraperR
     };
   }
 
+  // Canonical name-search path per QCMobile API _links.searchByName.
   const url = `${API_BASE}/name/${encodeURIComponent(name)}?webKey=${encodeURIComponent(webKey)}`;
   const redactedUrl = url.replace(encodeURIComponent(webKey), 'REDACTED');
 
   let res: Response;
   try {
-    res = await fetch(url, {
+    res = await fetchImpl(url, {
       method: 'GET',
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       headers: {
@@ -187,7 +233,26 @@ export async function scrapeFmcsaSafer(input: FmcsaSaferInput): Promise<ScraperR
     );
   }
 
-  const carriers = extractCarriersFromResponse(data);
+  let carriers: FmcsaCarrier[];
+  try {
+    carriers = extractCarriersFromResponse(data);
+  } catch (err) {
+    if (err instanceof FmcsaAuthError) {
+      return {
+        source_key: SOURCE_KEY,
+        finding_type: 'source_error',
+        confidence: 'verified_structured',
+        finding_summary: `FMCSA SAFER: ${err.reason === 'auth_failed' ? 'webKey rejected' : 'unexpected API string response'} — "${err.raw_message}"`,
+        extracted_facts: { reason: err.reason, raw_message: err.raw_message },
+        query_sent: redactedUrl,
+        response_sha256: null,
+        response_snippet: null,
+        duration_ms: Date.now() - start,
+        cost_cents: 0,
+      };
+    }
+    throw err;
+  }
 
   if (carriers.length === 0) {
     return {
@@ -240,8 +305,6 @@ export async function scrapeFmcsaSafer(input: FmcsaSaferInput): Promise<ScraperR
   }
 
   if (evidence.length === 0) {
-    // Carrier match but unclassifiable status/rating — record as not_found with
-    // facts so the row still flows for audit / future re-scraping.
     return {
       source_key: SOURCE_KEY,
       finding_type: 'usdot_not_found',
