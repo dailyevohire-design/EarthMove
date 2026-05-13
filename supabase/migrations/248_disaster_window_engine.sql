@@ -191,17 +191,17 @@ BEGIN
   work_state := COALESCE(p_work_state_code, f.state_code);
 
   -- Active disaster in work state
-  SELECT * INTO d FROM active_disaster_windows()
-   WHERE work_state = ANY(affected_state_codes)
-   ORDER BY CASE severity WHEN 'extreme' THEN 4 WHEN 'severe' THEN 3 WHEN 'moderate' THEN 2 ELSE 1 END DESC,
-            declared_at DESC
+  SELECT adw.* INTO d FROM active_disaster_windows() adw
+   WHERE work_state = ANY(adw.affected_state_codes)
+   ORDER BY CASE adw.severity WHEN 'extreme' THEN 4 WHEN 'severe' THEN 3 WHEN 'moderate' THEN 2 ELSE 1 END DESC,
+            adw.declared_at DESC
    LIMIT 1;
 
   -- Active disaster in contractor's home state
-  SELECT * INTO cd FROM active_disaster_windows()
-   WHERE f.state_code = ANY(affected_state_codes)
-   ORDER BY CASE severity WHEN 'extreme' THEN 4 WHEN 'severe' THEN 3 WHEN 'moderate' THEN 2 ELSE 1 END DESC,
-            declared_at DESC
+  SELECT adw.* INTO cd FROM active_disaster_windows() adw
+   WHERE f.state_code = ANY(adw.affected_state_codes)
+   ORDER BY CASE adw.severity WHEN 'extreme' THEN 4 WHEN 'severe' THEN 3 WHEN 'moderate' THEN 2 ELSE 1 END DESC,
+            adw.declared_at DESC
    LIMIT 1;
 
   -- CRITICAL: OUT_OF_STATE_CONTRACTOR_DURING_DISASTER
