@@ -16,6 +16,7 @@ import { scrapeFmcsaSafer } from './fmcsa-safer';
 import { scrapeGoogleReviews } from './google-reviews';
 import { scrapeSecEdgar } from './sec-edgar';
 import { scrapeUsaspending } from './usaspending';
+import { scrapeCcbOr } from './ccb-or';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -130,10 +131,15 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
         jurisdiction: input.stateCode,
       });
 
+    case 'ccb_or':
+      return scrapeCcbOr({
+        query_name: input.legalName,
+        jurisdiction: input.stateCode,
+      });
+
     case 'denver_cpd':
     case 'cslb_ca':
     case 'roc_az':
-    case 'ccb_or':
     case 'lni_wa':
     case 'dbpr_fl':
     case 'nclbgc_nc':
