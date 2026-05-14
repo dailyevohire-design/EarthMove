@@ -2,7 +2,9 @@
 
 import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatCurrency, unitLabel } from '@/lib/pricing-engine'
+import { MaterialImagePlaceholder } from '@/components/material/MaterialImagePlaceholder'
 
 export interface RelatedMaterial {
   slug: string
@@ -780,17 +782,14 @@ function RelatedSection({
           <Link key={m.slug} className="pdp-tile" href={`/browse/${m.slug}`}>
             <div className="pdp-tile-img">
               {m.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.imageUrl} alt={`${m.name} — bulk aggregate material`} />
+                <Image
+                  src={m.imageUrl}
+                  alt={`${m.name} — bulk aggregate material`}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
               ) : (
-                <div style={{
-                  position: 'absolute', inset: 0, display: 'grid', placeItems: 'center',
-                  background: 'var(--card-muted)', color: 'var(--ink-3)',
-                  fontFamily: 'var(--pdp-mono)', fontSize: 11, letterSpacing: '0.08em',
-                  textTransform: 'uppercase', fontWeight: 600,
-                }}>
-                  {m.name}
-                </div>
+                <MaterialImagePlaceholder label={m.name} />
               )}
               {m.categoryName && (
                 <div className="lozenge-row">
