@@ -26,7 +26,7 @@ export async function SiteHeader() {
       <div className="container-main">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" aria-label="Earthmove home" className="flex items-center"><BrandLogo variant="wordmark" size={22} color="#1F3D2E" /></Link>
+          <Link href="/" aria-label="Earthmove home" className="flex items-center min-h-11 -mx-2 px-2"><BrandLogo variant="wordmark" size={22} color="#1F3D2E" /></Link>
 
           {/* Center: location + nav */}
           <div className="hidden md:flex items-center gap-4">
@@ -71,10 +71,10 @@ export async function SiteHeader() {
               </>
             ) : (
               <>
-                <Link href="/login" className="btn-ghost btn-sm hidden md:flex text-xs">
+                <Link href="/login" className="btn-ghost btn-sm hidden md:flex text-xs min-h-11 items-center">
                   Log in
                 </Link>
-                <Link href="/signup" className="btn-primary btn-sm text-xs">
+                <Link href="/signup" className="btn-primary btn-sm text-xs min-h-11 flex items-center">
                   Sign up
                 </Link>
               </>

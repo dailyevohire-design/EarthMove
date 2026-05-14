@@ -272,7 +272,7 @@ const BROWSE_PAGE_CSS = `
 
   /* sticky filter — keep sticky but tighten size; horizontal-scroll handled by overflow-x already */
   .browse-page .filter-bar { padding: 10px 0; margin-top: 24px; }
-  .browse-page .filter-pill { padding: 10px 14px; min-height: 40px; font-size: 13px; }
+  .browse-page .filter-pill { padding: 12px 14px; min-height: 44px; font-size: 13px; }
 
   /* category groups */
   .browse-page .cat-group { margin-top: 32px; }
