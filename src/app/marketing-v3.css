@@ -59,7 +59,7 @@
   position: sticky; top: 0; z-index: 10;
   border-bottom: 1px solid var(--rule);
 }
-.marketing-v3 .v3-hdr-brand { display: flex; align-items: center; color: #14302A; }
+.marketing-v3 .v3-hdr-brand { display: flex; align-items: center; color: #14302A; min-height: 44px; }
 .marketing-v3 .v3-hdr-logo { height: 22px; width: auto; display: block; }
 .marketing-v3 .v3-hdr-nav { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .marketing-v3 .v3-hdr-nav a {
@@ -67,10 +67,11 @@
   color: var(--mute); text-transform: uppercase; white-space: nowrap;
 }
 .marketing-v3 .v3-hdr-nav .pill {
-  padding: 5px 9px; border-radius: 999px;
+  padding: 5px 12px; border-radius: 999px;
   background: var(--ink); color: var(--bg);
   font-family: var(--mono-v3); font-size: 9px; letter-spacing: 0.10em;
   white-space: nowrap;
+  min-height: 44px; display: inline-flex; align-items: center;
 }
 
 /* RAIL */
@@ -193,7 +194,7 @@
 }
 .marketing-v3 .v3-entry-chips::-webkit-scrollbar { display: none; }
 .marketing-v3 .v3-entry-chip {
-  flex-shrink: 0; padding: 8px 12px;
+  flex-shrink: 0; padding: 8px 12px; min-height: 44px;
   border: 1px solid var(--rule); border-radius: 999px;
   background: var(--bg); font-size: 12px; font-weight: 500;
   letter-spacing: -0.005em; color: var(--ink-2);
