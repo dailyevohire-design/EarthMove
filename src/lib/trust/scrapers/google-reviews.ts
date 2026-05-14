@@ -13,7 +13,7 @@
  *
  * Confidence: verified_structured when userRatingCount >= 10, else low_inference.
  *
- * Env: GOOGLE_PLACES_API_KEY (required) — throws ScraperAuthError if missing.
+ * Env: GOOGLE_MAPS_API_KEY (required) — throws ScraperAuthError if missing.
  */
 
 import { createHash } from 'node:crypto';
@@ -71,10 +71,10 @@ function sha256Hex(s: string): string {
 export async function scrapeGoogleReviews(
   input: ScrapeGoogleReviewsInput,
 ): Promise<ScraperEvidence> {
-  const apiKey = input.apiKey ?? process.env.GOOGLE_PLACES_API_KEY;
+  const apiKey = input.apiKey ?? process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey || apiKey.length < MIN_API_KEY_LENGTH) {
     throw new ScraperAuthError(
-      'GOOGLE_PLACES_API_KEY not set or too short to be valid',
+      'GOOGLE_MAPS_API_KEY not set or too short to be valid',
       SOURCE_KEY,
     );
   }
