@@ -43,7 +43,7 @@ export function LearnHub() {
   return (
     <div className="learn-page" style={{ background: 'var(--commerce-cream)' }}>
       {/* ═══ SECTION 1: HERO ═══ */}
-      <section className="knowledge-hero relative overflow-hidden min-h-[520px] flex flex-col justify-center">
+      <section data-surface="commerce-panel" className="knowledge-hero relative overflow-hidden min-h-[520px] flex flex-col justify-center">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d2a1a 50%, #0d1117 100%)' }} />
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 60%, rgba(16,185,129,0.1) 0%, transparent 60%), radial-gradient(ellipse at 70% 30%, rgba(245,158,11,0.06) 0%, transparent 50%)' }} />
 
@@ -191,7 +191,7 @@ export function LearnHub() {
       </section>
 
       {/* ═══ SECTION 7: NEWSLETTER ═══ */}
-      <section className="py-14" style={{ background: '#0d1117' }}>
+      <section data-surface="commerce-panel" className="py-14" style={{ background: '#0d1117' }}>
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl font-extrabold text-white mb-2">Project guides, sent monthly.</h2>
           <p className="text-gray-500 mb-6">Spec deep-dives, calculators, and practical aggregate know-how. No spam.</p>
