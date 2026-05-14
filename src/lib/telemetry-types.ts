@@ -1,6 +1,20 @@
-// Shared client/server event type registry for command center telemetry.
-// Whitelist is enforced server-side in /api/telemetry/route.ts — anything not
-// in this list is dropped before it ever reaches entity_events.
+// Client-side event registry for the command center.
+//
+// CROSS-REFERENCE: this file is the CLIENT emit whitelist. The SERVER-side
+// emit registry lives in src/lib/events.ts (EventType enum). The two do not
+// overlap and serve different purposes:
+//
+//   - src/lib/events.ts: server-emitted events (Stripe webhook, Inngest,
+//     internal RPCs). Includes ORDER_PLACED, ORDER_FIRST_TIME, etc.
+//   - This file: client-emitted events fired from the browser via the
+//     /api/telemetry batch ingest. Browser-only signals like page.view,
+//     cart.material_added, groundcheck.search.
+//
+// Both write to the same `entity_events` table; downstream funnel queries
+// can join them by session_id or actor_id.
+//
+// Whitelist is enforced server-side in /api/telemetry/route.ts — anything
+// not in TELEMETRY_EVENT_TYPES is dropped before it ever reaches the table.
 
 export const TELEMETRY_EVENT_TYPES = [
   'page.view',
@@ -38,7 +52,7 @@ export function eventTypeToEntityType(
   return 'session';
 }
 
-// Severity map: page.view/idle are debug-level (high volume); everything else is info.
+// Severity map: page.view/idle are debug-level (high volume); rest is info.
 export function eventTypeToSeverity(type: TelemetryEventType): 'debug' | 'info' {
   if (type === 'page.view' || type === 'page.idle') return 'debug';
   return 'info';
