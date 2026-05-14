@@ -24,8 +24,9 @@ export const ARTICLE_IMAGES: Record<string, string> = {
   'decomposed-granite-patios-walkways': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Decomposed-Granite-square-b2fb2288366387dde0d5e1429e0ffe50-.jpg',
   'pea-gravel-landscaping-sizing-depth-edging': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/pea%20gravel%20co.png',
   'river-rock-vs-crushed-stone-drainage': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/crushed%20rock%20bull%20rock%20co.png',
-  // gap: using filldirt as proxy until a real topsoil photo lands
-  'topsoil-new-lawns-depth-amendments': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/filldirt.png',
+  // resolved duplicate (was filldirt.png — collided with raising-low-spots).
+  // Brannan Select Fill stays in the soil-prep family without repeating the fill-dirt photo.
+  'topsoil-new-lawns-depth-amendments': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Select-Fill-1-square-11d63ea9f6e2b2e94b8fd726959f2989-.jpg',
   'gravel-shed-playset-bases': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Colorado%2057%20stone.png',
   'riprap-erosion-control-residential': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/9-Inch-L-Rip-Rap-Pit-R-1.jpg',
   'mulch-alternatives-gravel-stone-dg': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/crusher%20fines%20co.png',
@@ -40,12 +41,16 @@ export const ARTICLE_IMAGES: Record<string, string> = {
   'riprap-classes-d50-fdot-txdot': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/12-Inch-M-Rip-Rap-Pit-R-1.jpg',
   'concrete-sand-vs-mason-sand': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/concrete%20sand%20co.png',
   'trench-backfill-pipe-bedding-final-cover': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/bedding%20sand.png',
-  // gap: needs FL lime rock / shell rock photo; class-6 ABC is a generic crushed-aggregate proxy
-  'lime-rock-shell-rock-florida-spec': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/class6-abc-pitR-min.jpg',
+  // resolved duplicate (was class6-abc — collided with subgrade-prep). Structural-fill
+  // photo is light-colored and avoids the gray-aggregate repetition. Still a proxy
+  // until a real FL lime-rock/shell-rock photo arrives.
+  'lime-rock-shell-rock-florida-spec': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/structural%20fill%20co.png',
 
   // Calculators
-  // gap: real calculator graphic would be better than a material photo
-  'tonnage-estimator-by-density': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Colorado%2057%20stone.png',
+  // resolved duplicate (was Colorado 57 stone — collided with gravel-shed). Brannan
+  // 3/8 minus concrete is a mid-grade aggregate that fits the tonnage-calculator
+  // theme without repeating the 57 stone photo. Real calculator graphic still ideal.
+  'tonnage-estimator-by-density': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/38-Minus-Concrete-square-c62a7dd10823b22ea64d0d6d3037d78e-.jpg',
   // gap: same
   'driveway-gravel-cost-estimator': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Pea-Gravel-square-2823924938d635fbd7f920a874dabd7a-.jpg',
 
