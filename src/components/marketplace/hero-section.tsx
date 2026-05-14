@@ -16,7 +16,7 @@ export function HeroSection({ marketCount, marketName, marketState }: HeroProps)
   useEffect(() => setMounted(true), [])
 
   return (
-    <section className="relative overflow-hidden min-h-[600px] md:min-h-[680px] flex flex-col justify-center">
+    <section data-surface="commerce-panel" className="relative overflow-hidden min-h-[600px] md:min-h-[680px] flex flex-col justify-center">
       {/* === LAYER 1: Base gradient === */}
       <div
         className="absolute inset-0"
