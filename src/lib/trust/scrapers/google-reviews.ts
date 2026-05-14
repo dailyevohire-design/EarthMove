@@ -125,8 +125,9 @@ export async function scrapeGoogleReviews(
   clearTimeout(timeoutId);
 
   if (resp.status === 401 || resp.status === 403) {
+    const errBody = await resp.text().catch(() => '');
     throw new ScraperAuthError(
-      `Google Places auth failed: HTTP ${resp.status}`,
+      `Google Places auth failed: HTTP ${resp.status} :: ${errBody.slice(0, 400)}`,
       SOURCE_KEY,
     );
   }
@@ -139,8 +140,9 @@ export async function scrapeGoogleReviews(
     );
   }
   if (!resp.ok) {
+    const errBody = await resp.text().catch(() => '');
     throw new ScraperUpstreamError(
-      `Google Places HTTP ${resp.status}`,
+      `Google Places HTTP ${resp.status} :: ${errBody.slice(0, 400)}`,
       SOURCE_KEY,
       resp.status,
     );
