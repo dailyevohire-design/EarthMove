@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatCurrency } from '@/lib/pricing-engine'
 
 export interface BrowseListItem {
@@ -476,8 +477,12 @@ function MaterialTile({ m }: { m: BrowseListItem }) {
     <Link className="br-tile" href={`/browse/${m.slug}`}>
       <div className="br-tile-img">
         {m.imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={m.imageUrl} alt={`${m.name} — bulk aggregate material available for delivery`} />
+          <Image
+            src={m.imageUrl}
+            alt={`${m.name} — bulk aggregate material available for delivery`}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          />
         )}
         <div className="lozenge-row">
           <span className="br-lozenge">{m.categoryName.toUpperCase()}</span>
