@@ -16,6 +16,8 @@ import { scrapeFmcsaSafer } from './fmcsa-safer';
 import { scrapeGoogleReviews } from './google-reviews';
 import { scrapeSecEdgar } from './sec-edgar';
 import { enforceSecEdgarStrictMatch } from './wrappers/sec-edgar-strict';
+import { enforceTxSosBizRtbPrecedence } from './wrappers/tx-sos-biz-strict';
+import { enforceOshaStrictMatch } from './wrappers/osha-strict';
 import { scrapeUsaspending } from './usaspending';
 import { scrapeCcbOr } from './ccb-or';
 import { scrapeTxAssessor } from './tx-assessor';
@@ -80,8 +82,12 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
     case 'co_sos_biz':
       return scrapeCoSosBiz({ legalName: input.legalName });
 
-    case 'tx_sos_biz':
-      return scrapeTxSosBiz({ legalName: input.legalName });
+    case 'tx_sos_biz': {
+      const result = await scrapeTxSosBiz({ legalName: input.legalName });
+      // Post-process: TX Comptroller's RTB (Right To Business) is authoritative;
+      // a SOS standing letter != 'A' alone does NOT mean inactive when RTB=A.
+      return enforceTxSosBizRtbPrecedence(result);
+    }
 
     case 'co_dora':
       return scrapeCoDoraDiscipline({ legalName: input.legalName });
@@ -98,8 +104,13 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
     case 'mock_source':
       return mockScraperEvidence(input);
 
-    case 'osha_est_search':
-      return scrapeOshaEstSearch({ legalName: input.legalName, stateCode: input.stateCode });
+    case 'osha_est_search': {
+      const result = await scrapeOshaEstSearch({ legalName: input.legalName, stateCode: input.stateCode });
+      // Post-process: OSHA establishment search matches loosely on shared words
+      // (e.g. "Austin Industries" -> "VERA INDUSTRIES LLC"). Wrapper downgrades
+      // wrong-entity matches to source_not_applicable.
+      return enforceOshaStrictMatch(input.legalName, result);
+    }
 
     case 'bbb_link_check':
       return scrapeBbbLinkCheck({
