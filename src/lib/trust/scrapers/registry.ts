@@ -17,6 +17,7 @@ import { scrapeGoogleReviews } from './google-reviews';
 import { scrapeSecEdgar } from './sec-edgar';
 import { scrapeUsaspending } from './usaspending';
 import { scrapeCcbOr } from './ccb-or';
+import { scrapeTxAssessor } from './tx-assessor';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -135,6 +136,13 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
       return scrapeCcbOr({
         query_name: input.legalName,
         jurisdiction: input.stateCode,
+      });
+
+    case 'tx_assessor':
+      return scrapeTxAssessor({
+        query_name: input.legalName,
+        jurisdiction: input.stateCode,
+        city: input.city,
       });
 
     case 'denver_cpd':
