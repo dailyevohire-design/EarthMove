@@ -368,7 +368,23 @@ export function validateSynthesis(
 // Free-tier templated path (no LLM)
 // ---------------------------------------------------------------------------
 
-export function buildFreeTierSynthesis(score: ScoreContext): SynthesisOutput {
+/**
+ * Evidence-existence gate flags. Required for score-based red flags that
+ * could otherwise stamp false-positive findings (phoenix, license_suspended)
+ * when the score field is set but no backing trust_evidence row exists.
+ * Computed by callers via `evidenceBackedFlags()` from
+ * `./synth/templated-flag-gate.ts`. Pass null/undefined to fail-closed
+ * (never stamp these flags) — that's the safe default for tests + unit work.
+ */
+export interface TemplatedEvidenceFlags {
+  phoenix: boolean;
+  license_suspended: boolean;
+}
+
+export function buildFreeTierSynthesis(
+  score: ScoreContext,
+  evidenceFlags?: TemplatedEvidenceFlags | null,
+): SynthesisOutput {
   const summary =
     `Composite trust score ${score.composite_score}/100 ` +
     `(grade ${score.grade}, ${score.risk_level} risk) ` +
@@ -379,18 +395,24 @@ export function buildFreeTierSynthesis(score: ScoreContext): SynthesisOutput {
   const FREE_TIER_SENTINEL = ['__free_tier_no_citation__'];
 
   if (score.sanction_hit) {
+    // sanction_hit is set directly from sam_gov_exclusions evidence rows
+    // by the scoring layer, so it's already evidence-backed.
     red_flags.push({
       text: 'Active sanction or watchlist hit detected.',
       evidence_ids: FREE_TIER_SENTINEL,
     });
   }
-  if (score.license_suspended) {
+  // license_suspended + phoenix must have BOTH the score signal AND a backing
+  // trust_evidence row of a relevant finding_type — otherwise the templated
+  // fallback fabricates red flags on every LLM stall. Fail-closed when
+  // evidenceFlags is absent.
+  if (score.license_suspended && evidenceFlags?.license_suspended === true) {
     red_flags.push({
       text: 'License shows suspended status.',
       evidence_ids: FREE_TIER_SENTINEL,
     });
   }
-  if (score.phoenix_score < 80) {
+  if (score.phoenix_score < 80 && evidenceFlags?.phoenix === true) {
     red_flags.push({
       text: 'Phoenix-company pattern indicators present.',
       evidence_ids: FREE_TIER_SENTINEL,

@@ -18,6 +18,7 @@ import {
   type SynthesisOutput,
   type SynthesisTier,
 } from './synthesize-v2-prompt';
+import { evidenceBackedFlags } from './synth/templated-flag-gate';
 
 // Watchdog timeouts — short enough to fire before the SDK's 10-min default
 // kills the request, generous enough that a typical Opus generation
@@ -327,8 +328,11 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
     let totalCents = 0;
 
     if (!tierCfg.useLLM) {
-      // Free tier — no LLM. Single-line synthesis.
-      synthesisOutput = buildFreeTierSynthesis(score);
+      // Free tier — no LLM. Single-line synthesis. Gate the score-derived
+      // red flags (phoenix, license_suspended) on actual evidence existence
+      // so the templated fallback never fabricates them.
+      const freeFlags = await evidenceBackedFlags({ supabase: admin, jobId: job_id });
+      synthesisOutput = buildFreeTierSynthesis(score, freeFlags);
       synthesisModel = 'free_tier_templated';
     } else {
       if (!process.env.ANTHROPIC_API_KEY) {
@@ -442,8 +446,13 @@ export const runTrustSynthesizeV2 = inngest.createFunction(
       // Layer 3: deterministic template — always succeeds, never throws.
       // Counted as an attempt for diagnostics so attempt_count tells the full
       // cascade story (primary=1, +sonnet=2, +template=3).
+      // Gate score-derived red flags (phoenix, license_suspended) on actual
+      // evidence existence: prior to 2026-05-14, every templated_after_stall
+      // fallback would stamp those flags from score thresholds alone, which
+      // fabricated phoenix/license accusations on customer reports.
       if (!synthesisOutput) {
-        synthesisOutput = buildFreeTierSynthesis(score);
+        const fallbackFlags = await evidenceBackedFlags({ supabase: admin, jobId: job_id });
+        synthesisOutput = buildFreeTierSynthesis(score, fallbackFlags);
         await incrementSynthesisAttemptCount(admin, job_id);
         synthesisModel = sonnetStallElapsedMs != null
           ? 'templated_after_double_stall'

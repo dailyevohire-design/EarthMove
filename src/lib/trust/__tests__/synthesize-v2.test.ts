@@ -193,15 +193,29 @@ describe('buildFreeTierSynthesis', () => {
     expect(out.red_flags.some((f) => f.text.toLowerCase().includes('sanction'))).toBe(true);
   });
 
-  it('flags license_suspended', () => {
-    const out = buildFreeTierSynthesis({ ...baseScore, license_suspended: true });
-    expect(out.red_flags.some((f) => f.text.toLowerCase().includes('suspended'))).toBe(true);
+  it('flags license_suspended ONLY when evidence-backed', () => {
+    // Score signal alone is NOT enough — must also have backing evidence row.
+    const noEvidence = buildFreeTierSynthesis({ ...baseScore, license_suspended: true });
+    expect(noEvidence.red_flags.some((f) => f.text.toLowerCase().includes('suspended'))).toBe(false);
+
+    const withEvidence = buildFreeTierSynthesis(
+      { ...baseScore, license_suspended: true },
+      { phoenix: false, license_suspended: true },
+    );
+    expect(withEvidence.red_flags.some((f) => f.text.toLowerCase().includes('suspended'))).toBe(true);
   });
 
-  it('flags phoenix_score<80 (signals present)', () => {
-    const out = buildFreeTierSynthesis({ ...baseScore, phoenix_score: 3 });
-    expect(out.red_flags.some((f) => f.text.toLowerCase().includes('phoenix'))).toBe(true);
-    expect(out.phoenix_pattern_assessment.toLowerCase()).toContain('phoenix');
+  it('flags phoenix_score<80 ONLY when evidence-backed', () => {
+    // Score signal alone is NOT enough — must also have backing evidence row.
+    const noEvidence = buildFreeTierSynthesis({ ...baseScore, phoenix_score: 3 });
+    expect(noEvidence.red_flags.some((f) => f.text.toLowerCase().includes('phoenix'))).toBe(false);
+
+    const withEvidence = buildFreeTierSynthesis(
+      { ...baseScore, phoenix_score: 3 },
+      { phoenix: true, license_suspended: false },
+    );
+    expect(withEvidence.red_flags.some((f) => f.text.toLowerCase().includes('phoenix'))).toBe(true);
+    expect(withEvidence.phoenix_pattern_assessment.toLowerCase()).toContain('phoenix');
   });
 
   it('lists clean legal record when legal_score>=80', () => {
@@ -221,10 +235,15 @@ describe('buildFreeTierSynthesis', () => {
   });
 
   it('output contains no forbidden vocab', () => {
-    const out = buildFreeTierSynthesis({
-      ...baseScore, sanction_hit: true, license_suspended: true, phoenix_score: 5,
-      legal_score: 85, business_entity_score: 90, license_score: 85,
-    });
+    const out = buildFreeTierSynthesis(
+      {
+        ...baseScore, sanction_hit: true, license_suspended: true, phoenix_score: 5,
+        legal_score: 85, business_entity_score: 90, license_score: 85,
+      },
+      // Pass evidence-backed flags so license + phoenix red flags actually fire
+      // and their text is part of the vocab-safety assertion.
+      { phoenix: true, license_suspended: true },
+    );
     const blob = [
       out.summary, out.phoenix_pattern_assessment,
       ...out.red_flags.map((r) => r.text), ...out.positives.map((p) => p.text),
