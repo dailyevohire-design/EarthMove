@@ -1,8 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { deriveDisplayPrice } from '@/lib/pricing-engine'
-import { SiteHeader } from '@/components/layout/site-header'
-import { SiteFooter } from '@/components/layout/site-footer'
 import { MaterialCard } from '@/components/marketplace/material-card'
 import { localBusinessSchema, breadcrumbSchema, faqSchema, jsonLd } from '@/lib/structured-data'
 import Link from 'next/link'
@@ -99,7 +97,6 @@ export default async function CityPage({ params }: Props) {
 
   return (
     <>
-      <SiteHeader />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(
         localBusinessSchema({ name: market.name, state: market.state, slug: market.slug, materialCount: cards.length })
       ) }} />
@@ -107,36 +104,43 @@ export default async function CityPage({ params }: Props) {
         breadcrumbSchema([{ name: 'Home', url: '/' }, { name: market.name, url: `/${city}` }])
       ) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(faqSchema(cityFaqs)) }} />
-      <main className="bg-gray-50/30">
-        <section className="bg-gray-900 py-16 md:py-20">
-          <div className="container-main">
-            <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium mb-4">
-              <MapPin size={14} />{market.name}, {market.state}
+      <main style={{ background: '#F1ECE2' }}>
+        {/* Hero — industrial commerce-panel */}
+        <section data-surface="commerce-panel" className="relative overflow-hidden py-16 md:py-24" style={{ background: '#14322A' }}>
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 20% 30%, rgba(229,112,27,0.18) 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(45,179,122,0.10) 0%, transparent 50%)' }} />
+          <div className="container-main relative z-10">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] mb-5" style={{ color: '#E5701B', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>
+              <MapPin size={13} />
+              {market.name}, {market.state} &middot; Live
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight max-w-3xl">
-              Bulk Material Delivery<br />in {market.name}
+            <h1 className="font-fraunces text-4xl sm:text-5xl md:text-6xl font-semibold leading-[1.05] tracking-tight max-w-3xl" style={{ color: '#F1ECE2', letterSpacing: '-0.02em' }}>
+              Bulk aggregate, delivered{' '}
+              <em style={{ color: '#E5701B', fontStyle: 'italic' }}>in {market.name}.</em>
             </h1>
-            <p className="text-gray-400 mt-4 max-w-xl text-lg">
-              {cards.length} materials available for same-day or scheduled delivery. Order online in minutes.
+            <p className="mt-5 max-w-xl text-base md:text-lg leading-relaxed" style={{ color: 'rgba(241,236,226,0.78)' }}>
+              {cards.length} materials in stock for same-day or scheduled delivery. Order online in minutes.
             </p>
-            <div className="mt-8 flex flex-wrap gap-6 text-sm text-gray-400">
+            <div className="mt-8 flex flex-wrap gap-6 text-xs uppercase tracking-[0.12em] font-semibold" style={{ color: 'rgba(241,236,226,0.68)', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>
               {[
                 { Icon: Truck, label: 'Same-day delivery' },
                 { Icon: ShieldCheck, label: 'Secure checkout' },
-                { Icon: Clock, label: 'Order in 5 min' },
+                { Icon: Clock, label: '5-minute order' },
               ].map(({ Icon, label }) => (
                 <div key={label} className="flex items-center gap-2">
-                  <Icon size={14} className="text-emerald-400" />{label}
+                  <Icon size={13} style={{ color: '#E5701B' }} />{label}
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="py-10 md:py-14">
+        <section className="py-12 md:py-16" style={{ background: '#F1ECE2' }}>
           <div className="container-main">
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Materials available in {market.name}</h2>
-            <p className="text-gray-500 text-sm mb-8">{cards.length} materials &middot; Same-day delivery available</p>
+            <div className="text-[10px] uppercase tracking-[0.14em] font-semibold mb-3" style={{ color: '#5C645F', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>Stock</div>
+            <h2 className="font-fraunces text-3xl md:text-4xl font-semibold mb-2" style={{ color: '#15201B', letterSpacing: '-0.02em' }}>
+              Materials available in {market.name}
+            </h2>
+            <p className="text-sm mb-8" style={{ color: '#5C645F' }}>{cards.length} materials &middot; Same-day delivery available</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {cards.map(card => (
                 <MaterialCard key={card.market_material_id} card={card} />
@@ -146,15 +150,19 @@ export default async function CityPage({ params }: Props) {
         </section>
 
         {/* SEO links to material pages */}
-        <section className="py-10 bg-white border-y border-gray-100">
+        <section className="py-12 border-y" style={{ background: '#E9E3D5', borderColor: 'rgba(21,32,27,0.10)' }}>
           <div className="container-main">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Browse by material in {market.name}</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div className="text-[10px] uppercase tracking-[0.14em] font-semibold mb-3" style={{ color: '#5C645F', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>Index</div>
+            <h2 className="font-fraunces text-2xl md:text-3xl font-semibold mb-6" style={{ color: '#15201B', letterSpacing: '-0.02em' }}>
+              Browse by material in {market.name}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {cards.map(card => (
                 <Link
                   key={card.slug}
                   href={`/${city}/${card.slug}`}
-                  className="px-4 py-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-emerald-50 hover:border-emerald-200 transition-colors text-sm font-medium text-gray-700 hover:text-emerald-700"
+                  className="px-4 py-3 rounded-xl border transition-colors text-sm font-medium hover:bg-[#FFFFFF]"
+                  style={{ background: 'rgba(255,255,255,0.6)', borderColor: 'rgba(21,32,27,0.08)', color: '#2A332E' }}
                 >
                   {card.name} in {market.name}
                 </Link>
@@ -162,25 +170,28 @@ export default async function CityPage({ params }: Props) {
             </div>
           </div>
         </section>
+
         {/* FAQ for AEO */}
-        <section className="py-10 md:py-14">
-          <div className="container-main">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
-            <div className="space-y-3 max-w-3xl">
+        <section className="py-14 md:py-20" style={{ background: '#F1ECE2' }}>
+          <div className="container-main max-w-3xl">
+            <div className="text-[10px] uppercase tracking-[0.14em] font-semibold mb-3" style={{ color: '#5C645F', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>Questions</div>
+            <h2 className="font-fraunces text-3xl md:text-4xl font-semibold mb-7" style={{ color: '#15201B', letterSpacing: '-0.02em' }}>
+              Frequently asked
+            </h2>
+            <div className="space-y-2">
               {cityFaqs.map((faq, i) => (
-                <details key={i} className="group border border-gray-200 rounded-xl overflow-hidden bg-white">
-                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                    <span className="text-sm font-semibold text-gray-900 pr-4">{faq.question}</span>
-                    <span className="text-gray-400 flex-shrink-0 transition-transform group-open:rotate-90">&#8250;</span>
+                <details key={i} className="group rounded-xl overflow-hidden border" style={{ background: '#FFFFFF', borderColor: 'rgba(21,32,27,0.10)' }}>
+                  <summary className="flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-[#F6F2E8]">
+                    <span className="text-sm font-semibold pr-4" style={{ color: '#15201B' }}>{faq.question}</span>
+                    <span className="flex-shrink-0 transition-transform group-open:rotate-90" style={{ color: '#5C645F' }}>&#8250;</span>
                   </summary>
-                  <div className="px-4 pb-4 text-sm text-gray-600 leading-relaxed">{faq.answer}</div>
+                  <div className="px-4 pb-4 text-sm leading-relaxed" style={{ color: '#2A332E' }}>{faq.answer}</div>
                 </details>
               ))}
             </div>
           </div>
         </section>
       </main>
-      <SiteFooter />
     </>
   )
 }

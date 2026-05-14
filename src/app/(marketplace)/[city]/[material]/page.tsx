@@ -1,8 +1,7 @@
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { deriveDisplayPrice, formatCurrency, unitLabel } from '@/lib/pricing-engine'
-import { SiteHeader } from '@/components/layout/site-header'
-import { SiteFooter } from '@/components/layout/site-footer'
 import { QuantityCalculator } from '@/components/marketplace/quantity-calculator'
 import Link from 'next/link'
 import { productSchema, breadcrumbSchema, faqSchema, getMaterialFAQs, jsonLd } from '@/lib/structured-data'
@@ -126,7 +125,6 @@ export default async function LocationMaterialPage({ params }: Props) {
 
   return (
     <>
-      <SiteHeader />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(
         productSchema({
           name: `${material.name} in ${cityDisplay}`, slug: material.slug,
@@ -142,57 +140,70 @@ export default async function LocationMaterialPage({ params }: Props) {
         ])
       ) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(faqSchema(faqs)) }} />
-      <main className="bg-gray-50/30">
-        {/* Hero */}
-        <section className="relative overflow-hidden bg-gray-900 py-16 md:py-20">
-          <div className="absolute inset-0">
-              {material.image_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={material.image_url} alt={material.name} className="absolute inset-0 w-full h-full object-cover opacity-30" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-900/90 to-gray-900/60" />
-          </div>
+      <main style={{ background: '#F1ECE2' }}>
+        {/* Hero — industrial commerce-panel */}
+        <section data-surface="commerce-panel" className="relative overflow-hidden py-16 md:py-24" style={{ background: '#14322A' }}>
+          {material.image_url && (
+            <Image
+              src={material.image_url}
+              alt={material.name}
+              fill
+              priority
+              sizes="100vw"
+              className="absolute inset-0 object-cover opacity-25"
+            />
+          )}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(120deg, rgba(15,41,32,0.92) 0%, rgba(20,50,42,0.78) 60%, rgba(20,50,42,0.4) 100%)' }} />
           <div className="container-main relative z-10">
-            <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium mb-4">
-              <MapPin size={14} />
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] mb-5" style={{ color: '#E5701B', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>
+              <MapPin size={13} />
               {cityDisplay}, {market.state}
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight max-w-3xl">
-              {material.name} Delivery<br />in {cityDisplay}
+            <h1 className="font-fraunces text-4xl sm:text-5xl md:text-6xl font-semibold leading-[1.05] tracking-tight max-w-3xl" style={{ color: '#F1ECE2', letterSpacing: '-0.02em' }}>
+              {material.name} delivered{' '}
+              <em style={{ color: '#E5701B', fontStyle: 'italic' }}>in {cityDisplay}.</em>
             </h1>
             {displayPrice != null && (
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-emerald-400">{formatCurrency(displayPrice)}</span>
-                <span className="text-gray-400">per {unitLabel(unit, 1)}</span>
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="font-fraunces text-3xl md:text-4xl font-semibold" style={{ color: '#F1ECE2', letterSpacing: '-0.015em' }}>{formatCurrency(displayPrice)}</span>
+                <span className="text-sm uppercase tracking-[0.1em]" style={{ color: 'rgba(241,236,226,0.6)', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>per {unitLabel(unit, 1)}</span>
               </div>
             )}
-            <p className="text-gray-400 mt-4 max-w-xl text-lg leading-relaxed">
+            <p className="mt-5 max-w-xl text-base md:text-lg leading-relaxed" style={{ color: 'rgba(241,236,226,0.78)' }}>
               {material.description}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Link href={`/browse/${material.slug}`} className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg py-4 px-8 rounded-2xl transition-all duration-200 shadow-2xl shadow-emerald-500/30">
-                Order Now
+            <div className="flex flex-col sm:flex-row gap-3 mt-9">
+              <Link
+                href={`/browse/${material.slug}`}
+                className="inline-flex items-center justify-center gap-2 font-semibold text-base py-4 px-8 rounded-xl transition-colors"
+                style={{ background: '#E5701B', color: '#F1ECE2' }}
+              >
+                Order now
               </Link>
-              <a href="#calculator" className="inline-flex items-center justify-center gap-2 bg-white/10 text-white border border-white/20 hover:bg-white/20 font-bold text-lg py-4 px-8 rounded-2xl transition-all duration-200">
-                Calculate Amount Needed
+              <a
+                href="#calculator"
+                className="inline-flex items-center justify-center gap-2 font-medium text-base py-4 px-8 rounded-xl transition-colors border"
+                style={{ background: 'rgba(241,236,226,0.06)', borderColor: 'rgba(241,236,226,0.18)', color: '#F1ECE2' }}
+              >
+                Calculate amount
               </a>
             </div>
           </div>
         </section>
 
-        {/* Quick facts */}
-        <section className="bg-white border-b border-gray-100 py-6">
-          <div className="container-main">
+        {/* Quick facts — dashboard chrome */}
+        <section className="border-b" style={{ background: '#F1ECE2', borderColor: 'rgba(21,32,27,0.10)' }}>
+          <div className="container-main py-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: 'Delivery', value: `From ${offering?.delivery_fee_base ? formatCurrency(offering.delivery_fee_base) : '$85'}` },
-                { label: 'Min Order', value: `${offering?.minimum_order_quantity ?? 2} ${unitLabel(unit, offering?.minimum_order_quantity ?? 2)}` },
-                { label: 'Typical Load', value: offering?.load_size_label ?? '14-ton load' },
+                { label: 'Min order', value: `${offering?.minimum_order_quantity ?? 2} ${unitLabel(unit, offering?.minimum_order_quantity ?? 2)}` },
+                { label: 'Typical load', value: offering?.load_size_label ?? '14-ton load' },
                 { label: 'Availability', value: 'In stock' },
               ].map(({ label, value }) => (
-                <div key={label} className="text-center p-3">
-                  <div className="text-lg font-extrabold text-gray-900">{value}</div>
-                  <div className="text-xs text-gray-500 font-medium mt-0.5">{label}</div>
+                <div key={label} className="px-3">
+                  <div className="text-[10px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: '#5C645F', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>{label}</div>
+                  <div className="font-fraunces text-xl md:text-2xl font-semibold" style={{ color: '#15201B', letterSpacing: '-0.015em' }}>{value}</div>
                 </div>
               ))}
             </div>
@@ -200,10 +211,13 @@ export default async function LocationMaterialPage({ params }: Props) {
         </section>
 
         {/* Calculator */}
-        <section id="calculator" className="py-12 md:py-16">
+        <section id="calculator" className="py-14 md:py-20" style={{ background: '#F1ECE2' }}>
           <div className="container-main max-w-3xl">
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">How much {material.name.toLowerCase()} do you need?</h2>
-            <p className="text-gray-500 mb-8">Enter your project dimensions and we&apos;ll calculate the exact amount.</p>
+            <div className="text-[10px] uppercase tracking-[0.14em] font-semibold mb-3" style={{ color: '#5C645F', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>Quantity</div>
+            <h2 className="font-fraunces text-3xl md:text-4xl font-semibold mb-3" style={{ color: '#15201B', letterSpacing: '-0.02em' }}>
+              How much {material.name.toLowerCase()} do you need?
+            </h2>
+            <p className="text-base md:text-lg mb-10" style={{ color: '#5C645F' }}>Enter your project dimensions and we&rsquo;ll calculate the exact amount.</p>
             {displayPrice != null && (
               <QuantityCalculator
                 materialName={material.name}
@@ -217,14 +231,17 @@ export default async function LocationMaterialPage({ params }: Props) {
         </section>
 
         {/* Use cases */}
-        <section className="py-12 md:py-16 bg-white border-y border-gray-100">
+        <section className="py-14 md:py-20 border-y" style={{ background: '#E9E3D5', borderColor: 'rgba(21,32,27,0.10)' }}>
           <div className="container-main max-w-3xl">
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-8">Common uses for {material.name.toLowerCase()}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="text-[10px] uppercase tracking-[0.14em] font-semibold mb-3" style={{ color: '#5C645F', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>Specification</div>
+            <h2 className="font-fraunces text-3xl md:text-4xl font-semibold mb-8" style={{ color: '#15201B', letterSpacing: '-0.02em' }}>
+              Common uses for {material.name.toLowerCase()}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {getUseCases(material.slug).map((uc, i) => (
-                <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
-                  <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-700 text-sm font-medium">{uc}</span>
+                <div key={i} className="flex items-start gap-3 p-4 rounded-xl border" style={{ background: '#FFFFFF', borderColor: 'rgba(21,32,27,0.08)' }}>
+                  <CheckCircle2 size={18} style={{ color: '#E5701B' }} className="flex-shrink-0 mt-0.5" />
+                  <span className="text-sm font-medium" style={{ color: '#2A332E' }}>{uc}</span>
                 </div>
               ))}
             </div>
@@ -232,39 +249,50 @@ export default async function LocationMaterialPage({ params }: Props) {
         </section>
 
         {/* FAQ for AEO */}
-        <section className="py-12 md:py-16">
+        <section className="py-14 md:py-20" style={{ background: '#F1ECE2' }}>
           <div className="container-main max-w-3xl">
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-6">{material.name} FAQ</h2>
-            <div className="space-y-3">
+            <div className="text-[10px] uppercase tracking-[0.14em] font-semibold mb-3" style={{ color: '#5C645F', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>Questions</div>
+            <h2 className="font-fraunces text-3xl md:text-4xl font-semibold mb-7" style={{ color: '#15201B', letterSpacing: '-0.02em' }}>
+              {material.name} FAQ
+            </h2>
+            <div className="space-y-2">
               {faqs.map((faq, i) => (
-                <details key={i} className="group border border-gray-200 rounded-xl overflow-hidden bg-white">
-                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                    <span className="text-sm font-semibold text-gray-900 pr-4">{faq.question}</span>
-                    <span className="text-gray-400 flex-shrink-0 transition-transform group-open:rotate-90">&#8250;</span>
+                <details key={i} className="group rounded-xl overflow-hidden border" style={{ background: '#FFFFFF', borderColor: 'rgba(21,32,27,0.10)' }}>
+                  <summary className="flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-[#F6F2E8]">
+                    <span className="text-sm font-semibold pr-4" style={{ color: '#15201B' }}>{faq.question}</span>
+                    <span className="flex-shrink-0 transition-transform group-open:rotate-90" style={{ color: '#5C645F' }}>&#8250;</span>
                   </summary>
-                  <div className="px-4 pb-4 text-sm text-gray-600 leading-relaxed">{faq.answer}</div>
+                  <div className="px-4 pb-4 text-sm leading-relaxed" style={{ color: '#2A332E' }}>{faq.answer}</div>
                 </details>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Local CTA */}
-        <section className="py-12 md:py-16">
+        {/* Local CTA — dark panel + orange button */}
+        <section className="py-14 md:py-20" style={{ background: '#F1ECE2' }}>
           <div className="container-main max-w-3xl">
-            <div className="bg-emerald-600 rounded-2xl p-8 md:p-12 text-center">
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3">
-                Get {material.name.toLowerCase()} delivered in {cityDisplay}
-              </h2>
-              <p className="text-emerald-100 mb-6">Order online in under 5 minutes. Same-day delivery available.</p>
-              <Link href={`/browse/${material.slug}`} className="inline-flex items-center justify-center bg-white text-emerald-700 hover:bg-emerald-50 font-bold text-lg py-4 px-8 rounded-2xl shadow-xl transition-all duration-200">
-                Order {material.name} Now
-              </Link>
+            <div data-surface="commerce-panel" className="rounded-2xl p-9 md:p-12 text-center relative overflow-hidden" style={{ background: '#14322A' }}>
+              <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(ellipse at 30% 0%, rgba(229,112,27,0.25) 0%, transparent 60%)' }} />
+              <div className="relative">
+                <div className="inline-block text-[10px] uppercase tracking-[0.14em] font-semibold mb-4" style={{ color: '#E5701B', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace' }}>Live in {cityDisplay}</div>
+                <h2 className="font-fraunces text-3xl md:text-4xl font-semibold mb-3" style={{ color: '#F1ECE2', letterSpacing: '-0.02em' }}>
+                  Get {material.name.toLowerCase()} delivered{' '}
+                  <em style={{ color: '#E5701B', fontStyle: 'italic' }}>in {cityDisplay}.</em>
+                </h2>
+                <p className="mb-7 text-base" style={{ color: 'rgba(241,236,226,0.72)' }}>Order online in under 5 minutes. Same-day delivery available.</p>
+                <Link
+                  href={`/browse/${material.slug}`}
+                  className="inline-flex items-center justify-center font-semibold text-base py-4 px-9 rounded-xl transition-colors"
+                  style={{ background: '#E5701B', color: '#F1ECE2' }}
+                >
+                  Order {material.name} now
+                </Link>
+              </div>
             </div>
           </div>
         </section>
       </main>
-      <SiteFooter />
     </>
   )
 }
