@@ -13,6 +13,7 @@ import { scrapeOshaEstSearch } from './osha-est-search';
 import { scrapeBbbLinkCheck } from './bbb-link-check';
 import { scrapeTdlrDisciplinary } from './tdlr-disciplinary';
 import { scrapeFmcsaSafer } from './fmcsa-safer';
+import { scrapeGoogleReviews } from './google-reviews';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -108,6 +109,13 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
     case 'fmcsa_safer':
       return scrapeFmcsaSafer({ legalName: input.legalName });
 
+    case 'google_reviews':
+      return scrapeGoogleReviews({
+        query_name: input.legalName,
+        jurisdiction: input.stateCode,
+        city: input.city,
+      });
+
     case 'denver_cpd':
     case 'cslb_ca':
     case 'roc_az':
@@ -119,7 +127,6 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
     case 'sec_edgar':
     case 'usaspending':
     case 'bbb_profile':
-    case 'google_reviews':
       throw new NotImplementedScraperError(
         `Scraper for ${sourceKey} not yet implemented (Tranche B/C)`,
         sourceKey,
