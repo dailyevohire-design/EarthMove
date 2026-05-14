@@ -20,31 +20,31 @@ export const ARTICLE_IMAGES: Record<string, string> = {
   // See followup #54.
 
   // DIY
-  'raising-low-spots-fill-dirt-howto': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/filldirt.png',
+  'raising-low-spots-fill-dirt-howto': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/filldirt.jpg',
   'decomposed-granite-patios-walkways': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Decomposed-Granite-square-b2fb2288366387dde0d5e1429e0ffe50-.jpg',
-  'pea-gravel-landscaping-sizing-depth-edging': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/pea%20gravel%20co.png',
-  'river-rock-vs-crushed-stone-drainage': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/crushed%20rock%20bull%20rock%20co.png',
+  'pea-gravel-landscaping-sizing-depth-edging': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/pea%20gravel%20co.jpg',
+  'river-rock-vs-crushed-stone-drainage': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/crushed%20rock%20bull%20rock%20co.jpg',
   // resolved duplicate (was filldirt.png — collided with raising-low-spots).
   // Brannan Select Fill stays in the soil-prep family without repeating the fill-dirt photo.
   'topsoil-new-lawns-depth-amendments': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Select-Fill-1-square-11d63ea9f6e2b2e94b8fd726959f2989-.jpg',
-  'gravel-shed-playset-bases': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Colorado%2057%20stone.png',
+  'gravel-shed-playset-bases': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Colorado%2057%20stone.jpg',
   'riprap-erosion-control-residential': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/9-Inch-L-Rip-Rap-Pit-R-1.jpg',
-  'mulch-alternatives-gravel-stone-dg': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/crusher%20fines%20co.png',
+  'mulch-alternatives-gravel-stone-dg': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/crusher%20fines%20co.jpg',
 
   // Contractor
-  'road-base-specs-tx-co-dot': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/basecoursee.png',
-  'recycled-concrete-aggregate-inspector-approval': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/recycled%20concrete%20co.png',
+  'road-base-specs-tx-co-dot': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/basecoursee.jpg',
+  'recycled-concrete-aggregate-inspector-approval': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/recycled%20concrete%20co.jpg',
   // gap: aggregate stand-in; a real compaction/Proctor process shot would be ideal
   'compaction-standards-proctor-density': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/crusher-fines-pitR-min.jpg',
   'subgrade-prep-parking-lots': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/class6-abc-pitR-min.jpg',
   'drainage-stone-retention-ponds': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/56-67-crushed-riprap-pit25-min.jpg',
   'riprap-classes-d50-fdot-txdot': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/12-Inch-M-Rip-Rap-Pit-R-1.jpg',
-  'concrete-sand-vs-mason-sand': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/concrete%20sand%20co.png',
-  'trench-backfill-pipe-bedding-final-cover': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/bedding%20sand.png',
+  'concrete-sand-vs-mason-sand': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/concrete%20sand%20co.jpg',
+  'trench-backfill-pipe-bedding-final-cover': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/bedding%20sand.jpg',
   // resolved duplicate (was class6-abc — collided with subgrade-prep). Structural-fill
   // photo is light-colored and avoids the gray-aggregate repetition. Still a proxy
   // until a real FL lime-rock/shell-rock photo arrives.
-  'lime-rock-shell-rock-florida-spec': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/structural%20fill%20co.png',
+  'lime-rock-shell-rock-florida-spec': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/structural%20fill%20co.jpg',
 
   // Calculators
   // resolved duplicate (was Colorado 57 stone — collided with gravel-shed). Brannan
