@@ -14,6 +14,41 @@ export const ARTICLE_IMAGES: Record<string, string> = {
   'cubic-yards-calculator': 'https://images.unsplash.com/photo-1699796553666-171dea76625b?w=1200&q=80',
   'three-thousand-dollar-mistake': 'https://images.unsplash.com/photo-1699032582554-7c1e6cfce1d1?w=1200&q=80',
 
+  // ─── V2 article cover images (round 1, May 14 2026) ──────────────────────
+  // 19 entries wiring previously-unmapped slugs to Supabase material-images
+  // bucket. 5 gaps flagged inline — replace when better photos exist.
+  // See followup #54.
+
+  // DIY
+  'raising-low-spots-fill-dirt-howto': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/filldirt.png',
+  'decomposed-granite-patios-walkways': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Decomposed-Granite-square-b2fb2288366387dde0d5e1429e0ffe50-.jpg',
+  'pea-gravel-landscaping-sizing-depth-edging': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/pea%20gravel%20co.png',
+  'river-rock-vs-crushed-stone-drainage': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/crushed%20rock%20bull%20rock%20co.png',
+  // gap: using filldirt as proxy until a real topsoil photo lands
+  'topsoil-new-lawns-depth-amendments': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/filldirt.png',
+  'gravel-shed-playset-bases': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Colorado%2057%20stone.png',
+  'riprap-erosion-control-residential': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/9-Inch-L-Rip-Rap-Pit-R-1.jpg',
+  'mulch-alternatives-gravel-stone-dg': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/crusher%20fines%20co.png',
+
+  // Contractor
+  'road-base-specs-tx-co-dot': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/basecoursee.png',
+  'recycled-concrete-aggregate-inspector-approval': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/recycled%20concrete%20co.png',
+  // gap: aggregate stand-in; a real compaction/Proctor process shot would be ideal
+  'compaction-standards-proctor-density': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/crusher-fines-pitR-min.jpg',
+  'subgrade-prep-parking-lots': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/class6-abc-pitR-min.jpg',
+  'drainage-stone-retention-ponds': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/56-67-crushed-riprap-pit25-min.jpg',
+  'riprap-classes-d50-fdot-txdot': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/12-Inch-M-Rip-Rap-Pit-R-1.jpg',
+  'concrete-sand-vs-mason-sand': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/concrete%20sand%20co.png',
+  'trench-backfill-pipe-bedding-final-cover': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/bedding%20sand.png',
+  // gap: needs FL lime rock / shell rock photo; class-6 ABC is a generic crushed-aggregate proxy
+  'lime-rock-shell-rock-florida-spec': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/class6-abc-pitR-min.jpg',
+
+  // Calculators
+  // gap: real calculator graphic would be better than a material photo
+  'tonnage-estimator-by-density': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Colorado%2057%20stone.png',
+  // gap: same
+  'driveway-gravel-cost-estimator': 'https://gaawvpzzmotimblyesfp.supabase.co/storage/v1/object/public/material-images/Pea-Gravel-square-2823924938d635fbd7f920a874dabd7a-.jpg',
+
   // ── Legacy slugs (kept for SEO continuity) ──
   'driveway-gravel-guide': 'https://images.unsplash.com/photo-1699796553666-171dea76625b?w=1200&q=80',
   'fill-dirt-vs-topsoil': 'https://images.unsplash.com/photo-1726413280663-1b048191e88e?w=1200&q=80',
