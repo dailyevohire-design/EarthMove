@@ -103,8 +103,6 @@ export async function scrapeGoogleReviews(
       body: JSON.stringify({
         textQuery,
         maxResultCount: 5,
-        includedType: 'general_contractor',
-        strictTypeFiltering: false,
       }),
       signal: controller.signal,
     });
