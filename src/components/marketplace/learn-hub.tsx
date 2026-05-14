@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getArticleImage } from '@/lib/article-images'
 import { ArrowRight, Clock } from 'lucide-react'
 import {
@@ -95,7 +96,14 @@ export function LearnHub() {
               <Link href={`/learn/${heroArticle.slug}`} className="lg:col-span-3 group block">
                 <div className="rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all duration-300 h-full">
                   <div className="relative h-64 md:h-80 overflow-hidden">
-                    <img src={getArticleImage(heroArticle.slug)} alt={heroArticle.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="eager" />
+                    <Image
+                      src={getArticleImage(heroArticle.slug)}
+                      alt={heroArticle.title}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     <div className="absolute top-4 left-4">
                       <span className="px-3 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold capitalize">{heroArticle.audience}</span>
@@ -120,7 +128,13 @@ export function LearnHub() {
                   <Link key={a.slug} href={`/learn/${a.slug}`} className="group block flex-1">
                     <div className="rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
                       <div className="relative h-36 overflow-hidden">
-                        <img src={getArticleImage(a.slug)} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+                        <Image
+                          src={getArticleImage(a.slug)}
+                          alt={a.title}
+                          fill
+                          sizes="(max-width: 1024px) 100vw, 40vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
                         <div className="absolute top-3 left-3">
                           <span className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold capitalize">{a.audience}</span>
                         </div>
@@ -142,7 +156,13 @@ export function LearnHub() {
               <Link key={a.slug} href={`/learn/${a.slug}`} className="group block">
                 <div className={`rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${a.audience === 'calculator' ? 'bg-gray-900 text-white' : 'bg-white'}`}>
                   <div className="relative h-44 overflow-hidden">
-                    <img src={getArticleImage(a.slug)} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                    <Image
+                      src={getArticleImage(a.slug)}
+                      alt={a.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute top-3 left-3">
                       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize ${
