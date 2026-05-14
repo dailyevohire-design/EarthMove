@@ -15,6 +15,7 @@ import { scrapeTdlrDisciplinary } from './tdlr-disciplinary';
 import { scrapeFmcsaSafer } from './fmcsa-safer';
 import { scrapeGoogleReviews } from './google-reviews';
 import { scrapeSecEdgar } from './sec-edgar';
+import { enforceSecEdgarStrictMatch } from './wrappers/sec-edgar-strict';
 import { scrapeUsaspending } from './usaspending';
 import { scrapeCcbOr } from './ccb-or';
 import { scrapeTxAssessor } from './tx-assessor';
@@ -120,11 +121,16 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
         city: input.city,
       });
 
-    case 'sec_edgar':
-      return scrapeSecEdgar({
+    case 'sec_edgar': {
+      const result = await scrapeSecEdgar({
         query_name: input.legalName,
         jurisdiction: input.stateCode,
       });
+      // Post-process: SEC EDGAR full-text matches any contractor with a
+      // shared word (e.g. "Austin Industries" -> "Trinity Industries Inc").
+      // Wrapper downgrades wrong-entity matches to source_not_applicable.
+      return enforceSecEdgarStrictMatch(input.legalName, result);
+    }
 
     case 'usaspending':
       return scrapeUsaspending({
