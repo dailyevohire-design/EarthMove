@@ -52,7 +52,7 @@ export function Hero({ projects }: { projects: Project[] }) {
 
         <h1 className="v3-hero-h">
           Delivered price.<br />
-          <em>In seconds.</em>
+          {' '}<em>In seconds.</em>
         </h1>
         <p className="v3-hero-sub">
           Aggregate routing infrastructure. ZIP, project, or takeoff in — verified yard, truck class, and dispatch sequence out.
