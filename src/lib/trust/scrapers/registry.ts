@@ -14,6 +14,7 @@ import { scrapeBbbLinkCheck } from './bbb-link-check';
 import { scrapeTdlrDisciplinary } from './tdlr-disciplinary';
 import { scrapeFmcsaSafer } from './fmcsa-safer';
 import { scrapeGoogleReviews } from './google-reviews';
+import { scrapeSecEdgar } from './sec-edgar';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -116,6 +117,12 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
         city: input.city,
       });
 
+    case 'sec_edgar':
+      return scrapeSecEdgar({
+        query_name: input.legalName,
+        jurisdiction: input.stateCode,
+      });
+
     case 'denver_cpd':
     case 'cslb_ca':
     case 'roc_az':
@@ -124,7 +131,6 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
     case 'dbpr_fl':
     case 'nclbgc_nc':
     case 'fl_sunbiz':
-    case 'sec_edgar':
     case 'usaspending':
     case 'bbb_profile':
       throw new NotImplementedScraperError(
