@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { UPL_DISCLAIMER } from '@/lib/collections/disclaimer'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Contractor Payment Kit — earthmove.io' }
 
 export default function CollectionsLandingPage() {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { TrustPublicClient } from './TrustPublicClient'
+import { MissionCounter } from '@/components/mission-counter'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,5 +31,10 @@ export default async function TrustPage() {
       .single()
     role = data?.role ?? null
   }
-  return <TrustPublicClient isLoggedIn={!!user} role={role} />
+  return (
+    <>
+      <MissionCounter />
+      <TrustPublicClient isLoggedIn={!!user} role={role} />
+    </>
+  )
 }

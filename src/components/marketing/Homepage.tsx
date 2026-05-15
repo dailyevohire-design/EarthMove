@@ -23,6 +23,7 @@ import { Dispatch } from './v3/Dispatch'
 import { ActivityFeed } from './v3/ActivityFeed'
 import { FootCTA } from './v3/FootCTA'
 import { V3Footer } from './v3/V3Footer'
+import { MissionCounter } from '@/components/mission-counter'
 
 export async function Homepage() {
   const supabase = await createClient()
@@ -70,6 +71,7 @@ export async function Homepage() {
           dfwYards={dfwYards}
         />
         <Hero projects={PROJECTS} />
+        <MissionCounter />
         <Metrics
           yardsCount={yardsCount}
           materialsCount={materialsCount}

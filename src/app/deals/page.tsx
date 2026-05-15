@@ -9,6 +9,8 @@ import {
 } from '@/components/design-system/earthmove-ds';
 import { DEALS, REASON_EXPLAINERS, type DealReason } from './deals-data';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Deals - EarthMove',
   description:
