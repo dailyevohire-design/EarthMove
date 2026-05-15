@@ -21,6 +21,7 @@ import { enforceOshaStrictMatch } from './wrappers/osha-strict';
 import { scrapeUsaspending } from './usaspending';
 import { scrapeCcbOr } from './ccb-or';
 import { scrapeTxAssessor } from './tx-assessor';
+import { scrapeTxWcVerify } from './state-insurance/tx-wc-verify';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -161,6 +162,9 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
         jurisdiction: input.stateCode,
         city: input.city,
       });
+
+    case 'tx_wc_verify':
+      return scrapeTxWcVerify({ legalName: input.legalName, stateCode: input.stateCode });
 
     case 'denver_cpd':
     case 'cslb_ca':
