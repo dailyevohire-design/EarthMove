@@ -18,7 +18,7 @@ function statusToFinding(rawStatus: string): {
   if (/dissol|forfeit|inactive|cancel|delinquent|revoked|terminated/.test(s)) {
     return { finding_type: 'business_inactive', active: false };
   }
-  if (/active|good\s*standing|current/.test(s)) {
+  if (/active|good\s*standing|current|complete|in\s+existence/.test(s)) {
     return { finding_type: 'business_active', active: true };
   }
   return { finding_type: 'open_web_verified', active: null };

@@ -188,7 +188,7 @@ export default function OpenWebFindingsTile({ openWeb, sweepRan = true }: Props)
       <p className="mt-4 pt-3 border-t border-stone-100 text-[11px] text-stone-500 leading-relaxed">
         {openWeb.newest_finding_age_minutes != null && `Newest finding: ${relativeAgeFromMinutes(openWeb.newest_finding_age_minutes)} · `}
         Sources: {openWeb.engines_used.join(' + ')}
-        {openWeb.corroboration_depth >= 2 && ' · Cross-engine corroboration is a Groundcheck patent-pending method (App. No. 64/053,971)'}
+        {openWeb.corroboration_depth >= 2 && ' · Cross-engine corroboration is a Groundcheck patent-pending method (multiple U.S. Provisional Applications)'}
       </p>
     </section>
   )
