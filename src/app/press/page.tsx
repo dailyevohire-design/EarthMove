@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
@@ -22,7 +24,7 @@ export default function PressPage() {
         <p className="mt-3 leading-relaxed">
           Groundcheck is a free public contractor verification platform operated
           by Earth Pro Connect LLC, a Denver-based construction technology company.
-          Available at <a href="/trust" className="underline">earthmove.io/trust</a>,
+          Available at <Link href="/trust" className="underline">earthmove.io/trust</Link>,
           Groundcheck compiles publicly available business records into a
           standardized trust report for any contractor, LLC, or supplier.
         </p>
