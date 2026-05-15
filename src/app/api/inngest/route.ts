@@ -10,6 +10,8 @@ import { opsPagerOnOrderConfirmed } from '@/inngest/functions/ops-pager'
 import { disasterIngestNws } from '@/inngest/functions/disaster-ingest-nws'
 import { disasterIngestFema } from '@/inngest/functions/disaster-ingest-fema'
 import { permitIngestAustin } from '@/inngest/functions/permit-ingest-austin'
+import { groundcheckAbandonRecoverable } from '@/inngest/functions/groundcheck-abandon-recoverable'
+import { sweepStaleSnoozedCards } from '@/inngest/functions/sweep-stale-snoozed-cards'
 
 export const runtime = 'nodejs'
 
@@ -22,6 +24,8 @@ export const inngestFunctions = [
   onTrustEvidenceAppended,
   onTrustReportCreated,
   opsPagerOnOrderConfirmed,
+  groundcheckAbandonRecoverable,
+  sweepStaleSnoozedCards,
 ]
 
 export const { GET, POST, PUT } = serve({
