@@ -28,6 +28,7 @@ export default async function ComplianceCenter() {
           <Link href="/admin/compliance/policies" className="text-stone-600 hover:underline">Policies</Link>
           <Link href="/admin/compliance/drills" className="text-stone-600 hover:underline">Restore drills</Link>
           <Link href="/admin/compliance/threat-model" className="text-stone-600 hover:underline">Threat model</Link>
+          <Link href="/admin/compliance/training" className="text-stone-600 hover:underline">Training</Link>
           <Link href="/admin/compliance/integrity" className="text-stone-600 hover:underline">Audit integrity</Link>
         </nav>
       </div>
