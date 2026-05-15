@@ -70,7 +70,7 @@
     "@vitejs/plugin-react": "^4.3.3",
     "dotenv": "^17.3.1",
     "eslint": "^8",
-    "eslint-config-next": "15.0.3",
+    "eslint-config-next": "15.5.18",
     "msw": "^2.14.2",
     "postcss": "^8",
     "server-only": "^0.0.1",
