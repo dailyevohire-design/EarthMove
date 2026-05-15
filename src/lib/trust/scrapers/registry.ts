@@ -22,6 +22,7 @@ import { scrapeUsaspending } from './usaspending';
 import { scrapeCcbOr } from './ccb-or';
 import { scrapeTxAssessor } from './tx-assessor';
 import { scrapeTxWcVerify } from './state-insurance/tx-wc-verify';
+import { scrapeCobaltIntelligence } from './cobalt-adapter';
 
 /**
  * Source registry — maps source_key to a scraper invocation.
@@ -165,6 +166,45 @@ async function dispatch(sourceKey: string, input: RunScraperInput): Promise<Scra
 
     case 'tx_wc_verify':
       return scrapeTxWcVerify({ legalName: input.legalName, stateCode: input.stateCode });
+
+    case 'cobalt_intelligence':
+      return scrapeCobaltIntelligence({ legalName: input.legalName, stateCode: input.stateCode });
+
+    case 'system_internal':
+      // Orchestrator emits name-discrepancy observations directly to
+      // persist-evidence under this source_key. Registry dispatch should never
+      // be hit — but a no-op case prevents source_error noise if it is.
+      return {
+        source_key: 'system_internal',
+        finding_type: 'source_not_applicable',
+        confidence: 'low_inference',
+        finding_summary: 'system_internal is emitted by orchestrator, not dispatched',
+        extracted_facts: {},
+        query_sent: null,
+        response_sha256: null,
+        response_snippet: null,
+        duration_ms: 0,
+        cost_cents: 0,
+      };
+
+    case 'llm_web_search':
+      // Real usage path: orchestrator-v2 calls scrapeClaudeWebSearchVerify
+      // directly as the cross-engine corroboration step (verify mode requires
+      // a Perplexity claim + citation_url which the registry can't provide).
+      // No-op here to silence source_error rows when the source key leaks
+      // into the dispatcher path.
+      return {
+        source_key: 'llm_web_search',
+        finding_type: 'source_not_applicable',
+        confidence: 'low_inference',
+        finding_summary: 'llm_web_search is invoked via cross-engine corroboration, not registry dispatch',
+        extracted_facts: {},
+        query_sent: null,
+        response_sha256: null,
+        response_snippet: null,
+        duration_ms: 0,
+        cost_cents: 0,
+      };
 
     case 'denver_cpd':
     case 'cslb_ca':
