@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import * as inngestModule from '../inngest-functions'
-import { inngestFunctions } from '@/app/api/inngest/route'
+import { inngestFunctions } from '@/lib/inngest-functions-registry'
 
 // Inngest's SDK doesn't export the InngestFunction class symbol, so this test
 // ducktypes via the runtime constructor name. Verified against the SDK in use:
