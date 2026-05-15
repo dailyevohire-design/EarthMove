@@ -42,7 +42,7 @@
     "inngest": "^4.2.6",
     "libphonenumber-js": "^1.12.42",
     "lucide-react": "^0.460.0",
-    "maplibre-gl": "^4.7.1",
+    "maplibre-gl": "^5.24.0",
     "marked": "^12",
     "next": "^16.2.1",
     "opossum": "^9.0.0",
