@@ -576,7 +576,7 @@ const FAQ_ITEMS: FaqItemData[] = [
     question: 'Is this a credit check or background check?',
     answer: (
       <>
-        No. Trust reports cover registered business entities only — LLCs, corporations, partnerships, and trusts. We do not pull personal credit, criminal history, SSN, or any consumer report data. For FCRA-regulated background checks on individual workers, we route through a licensed partner. <a href="#pricing">Learn about FCRA limits →</a>
+        No. Trust reports cover registered business entities only — LLCs, corporations, partnerships, and trusts. We do not pull personal credit, criminal history, SSN, or any consumer report data. For FCRA-regulated background checks on individual workers, we route through a licensed partner. <Link href="/trust/fcra">Learn about FCRA limits →</Link>
       </>
     ),
   },
@@ -1094,7 +1094,7 @@ export function TrustPublicClient({ isLoggedIn = false, role = null }: TrustPubl
                 <div className="stat">
                   A meaningful percentage of contractors fail at least one verification category. The first lookup is on us — find out before you sign.
                 </div>
-                <a href="#pricing" className="link">See sample report →</a>
+                <a href="#sample-report" className="link">See sample report →</a>
               </article>
 
               <article className="use-card">
@@ -1109,8 +1109,57 @@ export function TrustPublicClient({ isLoggedIn = false, role = null }: TrustPubl
                 <div className="stat">
                   Used by GCs across <b>8 launch states</b> to vet <b>1,247 vendors</b> this month.
                 </div>
-                <a href="#pricing" className="link">See sample report →</a>
+                <a href="#sample-report" className="link">See sample report →</a>
               </article>
+            </div>
+          </div>
+        </section>
+
+        {/* SAMPLE REPORT */}
+        <section
+          id="sample-report"
+          style={{
+            background: 'var(--paper-2, #E9E3D5)',
+            padding: '64px 24px',
+            scrollMarginTop: '80px',
+          }}
+        >
+          <div className="wrap" style={{ maxWidth: 880, margin: '0 auto' }}>
+            <div style={{ marginBottom: 28 }}>
+              <span className="label">Sample report</span>
+              <h2 style={{ marginTop: 8 }}>What a Groundcheck <em>actually looks like.</em></h2>
+              <p style={{ color: 'var(--ink-2)', maxWidth: 640, marginTop: 12 }}>
+                Live entity standing, license/insurance lapses, lien history, OFAC, and a per-category
+                risk breakdown. Redacted preview below — yours arrives in your inbox in under 60 seconds.
+              </p>
+            </div>
+            <div
+              style={{
+                background: '#fff',
+                border: '1px solid var(--hair, #D8D2C4)',
+                borderRadius: 12,
+                padding: 28,
+                fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+                fontSize: 13,
+                lineHeight: 1.7,
+                color: 'var(--ink, #15201B)',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {`SUBJECT       ████████ ████████ LLC
+ENTITY        Texas LLC · file #████████
+STANDING      ✔ Active · in good standing · 2026-05-15
+PRINCIPAL     ████████ ████████ (managing member)
+INSURANCE     ✔ GL $2M · WC $1M · auto $1M · all current
+LICENSES      ✔ TX state lic ████ · expires 2027-09 · no lapses
+LIENS         ⚠ 2 satisfied (>4 yrs) · 0 open
+OFAC          ✔ Clear
+SCORE         84 / 100 — LOW RISK`}
+            </div>
+            <div style={{ marginTop: 24 }}>
+              <Link href={SIGNUP_HREF} className="link">
+                Run your first check free →
+              </Link>
             </div>
           </div>
         </section>

@@ -9,24 +9,46 @@ import { MaterialGallery } from '@/components/material/material-gallery'
 import { productSchema, breadcrumbSchema, jsonLd } from '@/lib/structured-data'
 import { BrowseDetailClient, type RelatedMaterial } from './BrowseDetailClient'
 
+export const dynamic = 'force-dynamic'
+
 interface Props { params: Promise<{ slug: string }> }
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
 
 async function getPageData(slug: string) {
   const supabase = await createClient()
 
-  const { data: material } = await supabase
+  let { data: material } = await supabase
     .from('material_catalog')
     .select('*, category:material_categories(*)')
     .eq('slug', slug)
     .eq('is_active', true)
-    .single()
+    .maybeSingle()
+
+  // Fallback: fuzzy slug match against slugified name (catches catalog rows
+  // whose `slug` column drifted from the canonical slugify(name) output).
+  if (!material) {
+    const { data: candidates } = await supabase
+      .from('material_catalog')
+      .select('*, category:material_categories(*)')
+      .eq('is_active', true)
+    const match = (candidates ?? []).find(
+      (c: { name: string; slug: string }) => slugify(c.name) === slug || c.slug === slug,
+    )
+    if (match) material = match
+  }
 
   if (!material) return null
 
   const market = await getCurrentMarket()
   if (!market) return null
 
-  const { data: mm } = await supabase
+  let { data: mm } = await supabase
     .from('market_materials')
     .select('*')
     .eq('material_catalog_id', material.id)
@@ -34,6 +56,21 @@ async function getPageData(slug: string) {
     .eq('is_visible', true)
     .eq('is_available', true)
     .maybeSingle()
+
+  // If not available in the current market, fall back to any market that
+  // carries it — the user can still read product details. (404'ing here was
+  // the launch-blocking symptom from the CMO walkthrough.)
+  if (!mm) {
+    const { data: fallback } = await supabase
+      .from('market_materials')
+      .select('*')
+      .eq('material_catalog_id', material.id)
+      .eq('is_visible', true)
+      .eq('is_available', true)
+      .limit(1)
+      .maybeSingle()
+    mm = fallback
+  }
 
   if (!mm) return null
 

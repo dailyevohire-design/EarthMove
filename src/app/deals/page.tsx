@@ -24,23 +24,42 @@ export default function DealsPage() {
   return (
     <main style={{ background: 'var(--em-paper)', minHeight: '100vh' }} className="font-sans">
       <nav
-        className="flex items-center justify-between px-8 py-5 border-b"
+        className="flex items-center justify-between px-5 md:px-8 py-4 md:py-5 border-b"
         style={{ borderColor: 'var(--em-hair)' }}
       >
         <Wordmark href="/">EarthMove</Wordmark>
-        <div className="flex items-center gap-7 text-sm" style={{ color: 'var(--em-ink-2)' }}>
+        <div
+          className="hidden md:flex items-center gap-7 text-sm"
+          style={{ color: 'var(--em-ink-2)' }}
+        >
           <Link href="/browse" className="hover:underline underline-offset-4">Materials</Link>
           <Link href="/deals" className="font-semibold" style={{ color: 'var(--em-ink)' }}>Deals</Link>
           <Link href="/browse" className="hover:underline underline-offset-4">Place order</Link>
           <Link href="/dashboard/contractor" className="hover:underline underline-offset-4">Dashboard</Link>
         </div>
+        <Link
+          href="/browse"
+          className="md:hidden text-[13px] font-semibold px-3 py-1.5 rounded"
+          style={{ background: 'var(--em-orange)', color: 'white' }}
+        >
+          Order
+        </Link>
       </nav>
 
-      <section className="max-w-[1200px] mx-auto px-8 pt-12 pb-10">
+      <section className="max-w-[1200px] mx-auto px-5 md:px-8 pt-10 md:pt-12 pb-10">
         <div className="flex items-start justify-between gap-12 flex-wrap">
-          <div className="max-w-[640px]">
+          <div className="max-w-[640px] w-full">
             <SectionLabel>Below book - Dallas-Fort Worth - this week</SectionLabel>
-            <DisplayH1 size="lg" className="mt-4">
+            <DisplayH1
+              size="lg"
+              className="mt-4"
+              style={{
+                fontSize: 'clamp(32px, 6vw, 56px)',
+                lineHeight: 1.05,
+                overflowWrap: 'break-word',
+                maxWidth: '100%',
+              }}
+            >
               Real yards, real reasons, <em>real expiry windows.</em>
             </DisplayH1>
             <p className="mt-5 text-[15px] leading-relaxed" style={{ color: 'var(--em-ink-2)' }}>

@@ -22,6 +22,70 @@ const FILTERS = [
 
 type FilterKey = typeof FILTERS[number]['key']
 
+function nextFirstOfMonthLabel(): string {
+  const now = new Date()
+  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  return next.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+}
+
+function NewsletterForm() {
+  const [email, setEmail] = useState('')
+  const [state, setState] = useState<'idle' | 'submitting' | 'sent' | 'error'>('idle')
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email.includes('@')) {
+      setState('error')
+      return
+    }
+    setState('submitting')
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      setState(res.ok ? 'sent' : 'error')
+    } catch {
+      setState('error')
+    }
+  }
+
+  if (state === 'sent') {
+    return (
+      <div className="max-w-md mx-auto text-emerald-300 text-sm" role="status">
+        Subscribed — first guide drops {nextFirstOfMonthLabel()}.
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={submit} className="max-w-md mx-auto">
+      <div className="flex gap-2">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+          aria-label="Email for newsletter"
+          className="flex-1 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+        <button
+          type="submit"
+          disabled={state === 'submitting'}
+          className="px-6 py-3 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+        >
+          {state === 'submitting' ? 'Saving…' : 'Subscribe'}
+        </button>
+      </div>
+      {state === 'error' && (
+        <div className="mt-2 text-red-400 text-xs">Something went wrong. Try again.</div>
+      )}
+    </form>
+  )
+}
+
 /* ─── MAIN COMPONENT ─── */
 export function LearnHub() {
   const [filter, setFilter] = useState<FilterKey>('all')
@@ -195,10 +259,7 @@ export function LearnHub() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl font-extrabold text-white mb-2">Project guides, sent monthly.</h2>
           <p className="text-gray-500 mb-6">Spec deep-dives, calculators, and practical aggregate know-how. No spam.</p>
-          <div className="flex gap-2 max-w-md mx-auto">
-            <input type="email" placeholder="Enter your email" className="flex-1 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-            <button className="px-6 py-3 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors">Subscribe</button>
-          </div>
+          <NewsletterForm />
           <div className="flex flex-wrap justify-center gap-6 mt-8 text-sm text-gray-500">
             <span>📊 Weekly price alerts</span>
             <span>📖 Project guides</span>

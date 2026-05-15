@@ -1178,15 +1178,23 @@ export default async function LearnArticlePage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(crumbs) }} />
       {/* Hero */}
-      <div className="relative h-[300px] md:h-[400px] overflow-hidden">
+      <div className="relative h-[300px] md:h-[400px] overflow-hidden bg-stone-900">
         <img src={heroImage} alt={article.title} className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        {/* Stronger top-to-bottom gradient guarantees text contrast on any image */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/20" />
         <div className="absolute bottom-0 inset-x-0 p-6 md:p-10 max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold capitalize">{article.audience}</span>
-            <span className="text-white/70 text-xs flex items-center gap-1"><Clock size={11} /> {article.readTime} min read</span>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <span className="px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[11px] font-bold capitalize">{article.audience}</span>
+            <span className="px-2.5 py-1 rounded-full bg-black/55 backdrop-blur-sm text-white/90 text-[11px] font-medium flex items-center gap-1">
+              <Clock size={11} /> {article.readTime} min read
+            </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white leading-tight">{article.title}</h1>
+          <h1
+            className="text-3xl md:text-4xl font-extrabold leading-tight"
+            style={{ color: '#F5F1E8', textShadow: '0 2px 16px rgba(0,0,0,0.55)' }}
+          >
+            {article.title}
+          </h1>
         </div>
       </div>
 
