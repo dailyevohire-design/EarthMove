@@ -5,6 +5,7 @@ import { enqueueOrder } from '@/lib/dispatch'
 import { sendOrderConfirmation, sendGuestClaimAccount } from '@/lib/email'
 import { generateAndStoreCase } from '@/lib/collections/generator'
 import { inngest } from '@/lib/inngest'
+import { EventType, fireAndForget } from '@/lib/events'
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
@@ -164,6 +165,33 @@ export async function POST(req: NextRequest) {
           payload:     { stripe_session_id: session.id, amount: session.amount_total },
         })
 
+        // Command-center entity_events: marketplace conversion signal. Two
+        // events fire together — order.placed for funnel attribution,
+        // payment.succeeded for billing dashboards.
+        fireAndForget({
+          eventType: EventType.ORDER_PLACED,
+          entityType: 'order',
+          entityId: orderId,
+          source: 'stripe',
+          payload: {
+            amount_cents: session.amount_total,
+            stripe_session_id: session.id,
+            market_id: order.market_id ?? null,
+          },
+          actorId: order.customer_id ?? null,
+        })
+        fireAndForget({
+          eventType: EventType.PAYMENT_SUCCEEDED,
+          entityType: 'order',
+          entityId: orderId,
+          source: 'stripe',
+          payload: {
+            amount_cents: session.amount_total,
+            stripe_session_id: session.id,
+          },
+          actorId: order.customer_id ?? null,
+        })
+
         // Send post-payment emails after the webhook responds.
         // `after()` keeps the Fluid Compute instance alive to finish this work
         // without blocking our 2xx back to Stripe (which must be fast, < 5s).
@@ -245,6 +273,17 @@ export async function POST(req: NextRequest) {
             .update({ status: 'payment_failed' })
             .eq('id', orderId)
             .eq('status', 'pending_payment')
+          fireAndForget({
+            eventType: EventType.PAYMENT_FAILED,
+            entityType: 'order',
+            entityId: orderId,
+            source: 'stripe',
+            severity: 'warn',
+            payload: {
+              reason: 'session_expired',
+              stripe_session_id: session.id,
+            },
+          })
         }
         break
       }
@@ -257,6 +296,18 @@ export async function POST(req: NextRequest) {
             .update({ status: 'payment_failed' })
             .eq('id', orderId)
             .eq('stripe_payment_intent_id', pi.id)
+          fireAndForget({
+            eventType: EventType.PAYMENT_FAILED,
+            entityType: 'order',
+            entityId: orderId,
+            source: 'stripe',
+            severity: 'warn',
+            payload: {
+              reason: pi.last_payment_error?.message ?? 'unknown',
+              code: pi.last_payment_error?.code ?? null,
+              stripe_payment_intent_id: pi.id,
+            },
+          })
         }
         break
       }

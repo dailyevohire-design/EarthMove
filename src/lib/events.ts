@@ -53,6 +53,7 @@ export const EventType = {
   PAYMENT_SUCCEEDED:      'payment.succeeded',
   PAYMENT_FAILED:         'payment.failed',
   EMAIL_CONFIRM_PENDING:  'auth.email_confirm_pending',
+  CUSTOMER_SIGNUP_COMPLETED: 'customer.signup_completed',
   ERROR_5XX:              'error.5xx',
   RATING_SUBMITTED:       'rating.submitted',
   RATING_LOW:             'rating.low',
