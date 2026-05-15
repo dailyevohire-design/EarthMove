@@ -1,0 +1,13 @@
+-- Migration 258: ENTERPRISE COMPLIANCE FOUNDATION
+-- Applied via Supabase MCP on 2026-05-15. This file is a documentation marker;
+-- the live schema is authoritative. See /admin/compliance for current state.
+--
+-- Stands up `compliance` schema with 13 tables:
+--   data_classifications, subprocessors, policies, dsar_requests,
+--   erasure_requests, consent_records, access_reviews, incidents,
+--   vendor_assessments, encryption_keys, backup_verifications, uptime_log
+-- Plus functions: export_user_data, erase_user_data, record_consent,
+--   compliance_snapshot, public_subprocessors, fn_daily_backup_heartbeat
+-- Plus cron: compliance_daily_backup_heartbeat
+-- Seed: 15 subprocessors, 13 policies, 19 PII columns classified,
+--   6 encryption keys inventoried, 4 quarterly access reviews scheduled.

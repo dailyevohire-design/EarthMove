@@ -1,0 +1,16 @@
+-- Migration 259: ACQUISITION READINESS — depth on top of 258
+-- Applied via Supabase MCP on 2026-05-15. This file is a documentation marker.
+--
+-- Adds:
+--   - Merkle-chained admin_actions (prev_hash + row_hash + trigger)
+--     + security.fn_verify_admin_chain() for tamper-evidence verification
+--   - compliance.restore_drills (4 quarterly drills scheduled)
+--   - compliance.training_log (append-only)
+--   - compliance.architecture_decisions (5 ADRs seeded)
+--   - compliance.threat_model_items (10 STRIDE items)
+--   - compliance.insurance_coverage (5 records)
+--   - compliance.audit_attestations (SOC 2 + pen test scheduled)
+--   - compliance.fn_compliance_drift_check() daily cron
+--
+-- 259b/259c bug fixes also applied: raise_intervention dedup, entity_events
+-- source CHECK expansion.
