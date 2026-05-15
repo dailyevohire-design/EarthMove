@@ -34,7 +34,23 @@ describe('scrapeTxSosBiz', () => {
     expect(ev.extracted_facts.officers).toEqual([]);
   });
 
-  it('emits business_inactive when right_to_transact != A', async () => {
+  it('emits business_active when right_to_transact=A regardless of sos_status_code', async () => {
+    // Real-world bug: TX Comptroller returns SOS letters R, ?, C, Y, F for active
+    // entities. RTB is the authoritative signal; SOS=R/RTB=A is active, not inactive.
+    const fetchFn = vi.fn().mockResolvedValue(mockResponse([{
+      taxpayer_number: '32063342012',
+      taxpayer_name: 'TUCKER ROOFING SYSTEMS LLC',
+      taxpayer_organizational_type: 'CL',
+      sos_status_code: 'R',
+      right_to_transact_business_code: 'A',
+    }]));
+    const ev = await scrapeTxSosBiz({ legalName: 'Tucker Roofing Systems LLC', fetchFn });
+    expect(ev.finding_type).toBe('business_active');
+    expect(ev.extracted_facts.sos_status_code).toBe('R');
+    expect(ev.extracted_facts.right_to_transact_business_code).toBe('A');
+  });
+
+  it('emits business_inactive when right_to_transact=N', async () => {
     const fetchFn = vi.fn().mockResolvedValue(mockResponse([{
       taxpayer_number: '32095586189',
       taxpayer_name: 'ALBERTROSE TRANSPORTATION LLC',

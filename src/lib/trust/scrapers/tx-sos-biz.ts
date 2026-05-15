@@ -160,8 +160,17 @@ export async function scrapeTxSosBiz(input: TxSosBizInput): Promise<ScraperEvide
   const row = pickBestMatch(rows, legalName);
   const sosStatus = (row.sos_status_code ?? '').trim().toUpperCase();
   const rtbCode = (row.right_to_transact_business_code ?? '').trim().toUpperCase();
+  // RTB (Right To transact Business) is the authoritative signal per TX Comptroller
+  // schema. Real-world SOS codes include R, ?, C, Y, F — only F means forfeited.
+  // RTB=A overrides any SOS letter; RTB=N or SOS=F means inactive; everything
+  // else means the codes don't authoritatively classify and we report not_found
+  // rather than falsely emitting business_inactive on a registered entity.
   const findingType: TrustFindingType =
-    sosStatus === 'A' && rtbCode === 'A' ? 'business_active' : 'business_inactive';
+    rtbCode === 'A'
+      ? 'business_active'
+      : rtbCode === 'N' || sosStatus === 'F'
+        ? 'business_inactive'
+        : 'business_not_found';
 
   const responsibilityDate = parseTxDate(row.responsibility_beginning_date);
   const charterDate = parseTxDate(row.sos_charter_date);
