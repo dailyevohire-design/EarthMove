@@ -218,7 +218,7 @@ This research is published under Creative Commons Attribution-ShareAlike 4.0 Int
 
 Groundcheck is a free public contractor verification platform operated by Earth Pro Connect LLC. Available at earthmove.io/trust. Earth Pro Connect LLC has committed to providing 1.5 million meals through its partnership with Feeding America to support neighbors facing food insecurity.
 
-Patent-pending. U.S. Provisional Application No. 64/053,971, filed April 30, 2026.
+Patent-pending under multiple U.S. Provisional Patent Applications.
 
 ## Run audit
 
