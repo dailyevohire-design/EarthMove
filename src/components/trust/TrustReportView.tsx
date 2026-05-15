@@ -1,6 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { telemetry } from '@/lib/telemetry'
 import EntityConfirmationBanner from './EntityConfirmationBanner'
 import EntityDisambiguationCard from './EntityDisambiguationCard'
 import type { EntityCandidate } from '@/lib/trust/scrapers/types'
@@ -317,6 +319,16 @@ function formatOshaViolations(report: TrustReport): React.ReactNode {
 
 export default function TrustReportView({ report }: { report: TrustReport }) {
   const router = useRouter()
+
+  // subject_id sourced from report.contractor_id — TrustReport has no
+  // subject_id field; contractor_id is the entity being checked.
+  useEffect(() => {
+    telemetry.emit('groundcheck.report_viewed', {
+      subject_id: report?.contractor_id ?? null,
+      report_id: report?.id ?? null,
+      tier: report?.tier ?? null,
+    })
+  }, [report?.id, report?.contractor_id, report?.tier])
 
   // Entity-disambiguation-required branch — orchestrator found similar
   // candidates but no exact match. raw_report.disambiguation is projected

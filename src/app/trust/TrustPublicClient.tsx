@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { MobileNav } from '@/components/layout/mobile-nav'
+import { telemetry } from '@/lib/telemetry'
 
 const SIGNUP_HREF = '/signup?next=/trust&intent=trust-check'
 
@@ -636,8 +637,12 @@ export function TrustPublicClient({ isLoggedIn = false, role = null }: TrustPubl
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
   const [openFaqId, setOpenFaqId] = useState<string | null>(FAQ_ITEMS[0].id)
   const [openAccordionId, setOpenAccordionId] = useState<string | null>(ACCORDION_ITEMS[0].id)
+  const [gcCompany, setGcCompany] = useState('')
+  const [gcState, setGcState] = useState('CO')
+  const [gcCity, setGcCity] = useState('Denver')
 
   function onRunCheck() {
+    telemetry.emit('groundcheck.search', { company: gcCompany, state: gcState, city: gcCity })
     router.push(SIGNUP_HREF)
   }
 
@@ -765,7 +770,7 @@ export function TrustPublicClient({ isLoggedIn = false, role = null }: TrustPubl
                   <li><TierCheck /><span>PDF + email export · shareable links</span></li>
                   <li><TierCheck /><span>Email support</span></li>
                 </ul>
-                <Link href="/signup?plan=pro" className="cta primary">Start Pro <span className="arrow">→</span></Link>
+                <Link href="/signup?plan=pro" className="cta primary" onClick={() => telemetry.emit('groundcheck.upgrade_clicked', { from: 'tier-card', target: 'pro' })}>Start Pro <span className="arrow">→</span></Link>
               </article>
 
               {/* PREMIUM */}
@@ -795,7 +800,7 @@ export function TrustPublicClient({ isLoggedIn = false, role = null }: TrustPubl
                   <li><TierCheck /><span>API access for integrations</span></li>
                   <li><TierCheck /><span>Priority support · 24-hour response</span></li>
                 </ul>
-                <Link href="/signup?plan=premium" className="cta dark">Start Premium <span className="arrow">→</span></Link>
+                <Link href="/signup?plan=premium" className="cta dark" onClick={() => telemetry.emit('groundcheck.upgrade_clicked', { from: 'tier-card', target: 'premium' })}>Start Premium <span className="arrow">→</span></Link>
               </article>
 
               {/* ENTERPRISE */}
@@ -838,18 +843,18 @@ export function TrustPublicClient({ isLoggedIn = false, role = null }: TrustPubl
                       <path d="M14 14l4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                     </svg>
                   </span>
-                  <input type="text" placeholder="Type a company name or LLC…" autoFocus />
+                  <input type="text" placeholder="Type a company name or LLC…" autoFocus value={gcCompany} onChange={(e) => setGcCompany(e.target.value)} />
                   <span className="caret" />
                 </div>
                 <div className="submit-row">
                   <div className="geo">
                     <label htmlFor="gc-state">State</label>
-                    <select id="gc-state" defaultValue="CO">
+                    <select id="gc-state" value={gcState} onChange={(e) => setGcState(e.target.value)}>
                       <option>CO</option><option>TX</option><option>AZ</option><option>NV</option>
                       <option>GA</option><option>FL</option><option>NC</option><option>OR</option>
                     </select>
                     <label htmlFor="gc-city" style={{ marginLeft: '6px' }}>City</label>
-                    <input id="gc-city" type="text" defaultValue="Denver" />
+                    <input id="gc-city" type="text" value={gcCity} onChange={(e) => setGcCity(e.target.value)} />
                   </div>
                   <div className="legal">
                     {/* TODO C-Trust-2: revert pill + copy to "Free trial · Your first lookup is on us · No signup required" once anonymous lookups are wired up. */}
@@ -1057,7 +1062,7 @@ export function TrustPublicClient({ isLoggedIn = false, role = null }: TrustPubl
                   <p>This report is from cache (last updated <b>4 days ago</b>). Pro members run unlimited fresh reports with the latest data — and Premium adds enhanced entity verification for higher-stakes contracts.</p>
                 </div>
                 <div className="pw-actions">
-                  <a href="#pricing" className="btn btn-primary">Upgrade to Pro · $49.99/mo →</a>
+                  <a href="#pricing" className="btn btn-primary" onClick={() => telemetry.emit('groundcheck.upgrade_clicked', { from: 'paywall', target: 'pro' })}>Upgrade to Pro · $49.99/mo →</a>
                   <span className="pw-link"><a href="#pricing">See all plans →</a></span>
                 </div>
               </div>

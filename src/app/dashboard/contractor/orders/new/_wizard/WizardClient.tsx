@@ -13,6 +13,8 @@ import { Step5Review } from './Step5Review'
 import type { OrderDraftPayload } from '@/lib/contractor/wizard-state'
 import { canAdvance } from '@/lib/contractor/wizard-state'
 import type { MatchedSupplier } from '@/lib/services/place-order.service'
+import { telemetry } from '@/lib/telemetry'
+import { telemetryCart } from '@/lib/telemetry-cart'
 
 type Props = {
   profileId: string
@@ -86,6 +88,7 @@ export function WizardClient(p: Props) {
   }
 
   function gotoStep(n: 1 | 2 | 3 | 4 | 5) {
+    telemetry.emit('checkout.step_entered', { step: n, draft_id: p.draftId })
     setStep(n)
     schedule(payload, n)
   }
@@ -119,6 +122,17 @@ export function WizardClient(p: Props) {
 
   const requiresApproval =
     p.spendLimitCents != null && Math.round(preview.total * 100) > p.spendLimitCents
+
+  // Mirror cart state for command-center telemetry. Reads on every heartbeat
+  // (30s) via the getter wired in <TelemetryProvider>. Placed after preview
+  // because the useEffect deps reference it; spec said "before gotoStep" but
+  // those locals aren't declared yet there.
+  useEffect(() => {
+    telemetryCart.set({
+      value_cents: Math.round((preview?.total ?? 0) * 100),
+      item_count: s1?.material_catalog_id ? 1 : 0,
+    })
+  }, [preview?.total, s1?.material_catalog_id, s3?.supplier_offering_id])
 
   async function submit() {
     if (!canAdvance(payload, 4)) return
@@ -178,18 +192,26 @@ export function WizardClient(p: Props) {
             <Step1Material
               materials={p.materials}
               value={{ material_catalog_id: s1?.material_catalog_id }}
-              onChange={(m) => patch({
-                ...payload,
-                step1: {
-                  material_catalog_id: m.id,
-                  material_name: m.name,
-                  material_slug: m.slug,
-                  default_unit: m.default_unit,
-                },
-                // reset downstream steps that depend on material
-                step2: payload.step2 ? { ...payload.step2, unit: m.default_unit } : undefined,
-                step3: undefined,
-              })}
+              onChange={(m) => {
+                if (m.id !== s1?.material_catalog_id) {
+                  if (s1?.material_slug && s1.material_slug !== m.slug) {
+                    telemetry.emit('cart.material_removed', { slug: s1.material_slug })
+                  }
+                  telemetry.emit('cart.material_added', { slug: m.slug, material_id: m.id })
+                }
+                patch({
+                  ...payload,
+                  step1: {
+                    material_catalog_id: m.id,
+                    material_name: m.name,
+                    material_slug: m.slug,
+                    default_unit: m.default_unit,
+                  },
+                  // reset downstream steps that depend on material
+                  step2: payload.step2 ? { ...payload.step2, unit: m.default_unit } : undefined,
+                  step3: undefined,
+                })
+              }}
             />
           )}
 
