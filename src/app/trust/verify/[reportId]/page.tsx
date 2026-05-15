@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/server';
+import { PressWindowGuard } from '@/components/trust/PressWindowGuard';
 import { verifyChain, type EvidenceChainNode } from '@/lib/trust/chain-verify';
 import EntityConfirmationBanner from '@/components/trust/EntityConfirmationBanner';
 import { HomeownerAlerts } from '@/components/groundcheck/HomeownerAlerts';
@@ -89,6 +90,7 @@ export default async function TrustVerifyPage({ params }: VerifyPageProps) {
   const sources = report.data_sources_searched ?? [];
 
   return (
+    <PressWindowGuard reportId={reportId}>
     <div className="min-h-screen bg-stone-50">
       <div className="max-w-md mx-auto px-4 py-10 sm:py-14">
         <header className="mb-8 text-center">
@@ -183,6 +185,7 @@ export default async function TrustVerifyPage({ params }: VerifyPageProps) {
         </footer>
       </div>
     </div>
+    </PressWindowGuard>
   );
 }
 
