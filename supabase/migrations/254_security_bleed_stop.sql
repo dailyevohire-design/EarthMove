@@ -1,0 +1,1 @@
+-- DOC COPY of MCP-applied migration 254. Live state via security.v_rls_status.

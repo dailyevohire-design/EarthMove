@@ -12,10 +12,13 @@ import { disasterIngestFema } from '@/inngest/functions/disaster-ingest-fema'
 import { permitIngestAustin } from '@/inngest/functions/permit-ingest-austin'
 import { groundcheckAbandonRecoverable } from '@/inngest/functions/groundcheck-abandon-recoverable'
 import { sweepStaleSnoozedCards } from '@/inngest/functions/sweep-stale-snoozed-cards'
+import { securityCanaryAlert } from '@/inngest/security/canary-alert'
+import { securityHoneypotSwarm } from '@/inngest/security/honeypot-swarm'
+import { securityTrustVelocity } from '@/inngest/security/trust-velocity'
 
 export const runtime = 'nodejs'
 
-export const inngestFunctions = [
+const inngestFunctions = [
   disasterIngestNws,
   disasterIngestFema,
   permitIngestAustin,
@@ -26,6 +29,9 @@ export const inngestFunctions = [
   opsPagerOnOrderConfirmed,
   groundcheckAbandonRecoverable,
   sweepStaleSnoozedCards,
+  securityCanaryAlert,
+  securityHoneypotSwarm,
+  securityTrustVelocity,
 ]
 
 export const { GET, POST, PUT } = serve({

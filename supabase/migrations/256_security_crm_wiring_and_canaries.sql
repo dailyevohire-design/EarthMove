@@ -1,0 +1,1 @@
+-- DOC COPY of MCP-applied migration 256. 5 bridge triggers + 6 canaries planted.

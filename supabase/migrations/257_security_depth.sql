@@ -1,0 +1,2 @@
+-- DOC COPY of MCP-applied migration 257. Rate limiter, admin audit, RLS regress
+-- alert, trust velocity anomaly, canary orphan check, fn_is_admin.

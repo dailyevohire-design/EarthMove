@@ -1,0 +1,1 @@
+-- DOC COPY of MCP-applied migration 255. security schema + 10 log tables + crons.
