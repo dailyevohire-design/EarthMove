@@ -1,5 +1,5 @@
 // Cheap UA-based bot filter for telemetry endpoints. Goal isn't perfect detection —
-// just keeps obvious crawlers out of live_sessions and entity_events.
+// just keeps obvious crawlers out of entity_events and the Realtime presence channel.
 
 const BOT_UA_RE = /bot|crawler|spider|crawling|headless|lighthouse|axios|curl|wget|python-requests|go-http-client|java\/|node-fetch|got\/|httpx|scrapy|phantom|slimerjs|googlebot|bingbot|yandex|baidu|duckduckbot|facebookexternalhit|whatsapp|telegram|preview|monitor|uptimerobot|pingdom|statuscake|newrelic|datadog/i;
 

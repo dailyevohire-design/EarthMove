@@ -17,7 +17,13 @@ const SESSION_COOKIE = '__es_sid';
 const MAX_EVENTS_PER_BATCH = 50;
 const MAX_PAYLOAD_BYTES = 4096;
 
-type IngestBody = { events?: TelemetryEvent[] };
+type IngestBody = {
+  events?: TelemetryEvent[];
+  // Client-supplied engagement signal. Replaces the prior live_sessions lookup —
+  // the heartbeat route that maintained that row is gone; presence state lives
+  // in Supabase Realtime now and isn't queryable server-side.
+  engagement?: { has_cart?: boolean; has_groundcheck?: boolean; has_signed_in?: boolean };
+};
 
 function isUuid(v: unknown): v is string {
   return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
@@ -48,7 +54,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, accepted: 0, reason: 'no_session' });
   }
 
-  // Get auth + cart context from live_sessions row to make sampling decisions.
+  // Engagement now comes from the client-supplied body. The presence layer holds
+  // the canonical has_cart/has_groundcheck flags; we still cross-check has_signed_in
+  // against the auth cookie so clients can't fake "engaged" to bypass sampling.
   const svc = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -67,14 +75,11 @@ export async function POST(req: Request) {
   );
   const { data: { user } } = await ssr.auth.getUser();
 
-  const { data: sessionRow } = await svc
-    .from('live_sessions')
-    .select('has_cart, has_groundcheck, has_signed_in')
-    .eq('session_id', sessionId)
-    .maybeSingle();
-
   const sessionIsEngaged = Boolean(
-    sessionRow?.has_signed_in || sessionRow?.has_cart || sessionRow?.has_groundcheck || user
+    user ||
+      body.engagement?.has_cart ||
+      body.engagement?.has_groundcheck ||
+      body.engagement?.has_signed_in
   );
 
   // Sampling: page.view / page.idle for anon-cold sessions get 10% sampling.

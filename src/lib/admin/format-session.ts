@@ -1,49 +1,24 @@
-export type LiveSession = {
-  session_id: string;
-  user_id: string | null;
-  role: string | null;
-  first_seen_at: string;
-  last_seen_at: string;
-  current_path: string | null;
-  referrer: string | null;
-  city: string | null;
-  region: string | null;
-  country: string | null;
-  device: string | null;
-  user_agent: string | null;
-  ip: string | null;
-  utm_source: string | null;
-  utm_medium: string | null;
-  utm_campaign: string | null;
-  utm_term: string | null;
-  utm_content: string | null;
-  cart_value_cents: number;
-  cart_item_count: number;
-  cart_market_slug: string | null;
-  has_signed_in: boolean;
-  has_cart: boolean;
-  has_groundcheck: boolean;
-  page_view_count: number;
-  active?: boolean;
-  seconds_since_last_seen?: number;
-  session_duration_seconds?: number;
-};
+import type { PresenceState } from '@/lib/realtime/presence-client';
+
+// LiveSession is now an alias for the presence shape — admin grid renders presence
+// entries directly, no more live_sessions DB rows.
+export type LiveSession = PresenceState;
 
 export function flagEmoji(cc: string | null | undefined): string {
   if (!cc || cc.length !== 2) return '🌐';
   return String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 127397 + c.charCodeAt(0)));
 }
 
-export function timeAgo(iso: string): string {
-  const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+export function timeAgo(ms: number): string {
+  const s = Math.max(0, Math.floor((Date.now() - ms) / 1000));
   if (s < 60) return `${s}s`;
   if (s < 3600) return `${Math.floor(s / 60)}m`;
   if (s < 86400) return `${Math.floor(s / 3600)}h`;
   return `${Math.floor(s / 86400)}d`;
 }
 
-export function durationLabel(iso: string): string {
-  const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+export function durationLabel(ms: number): string {
+  const s = Math.max(0, Math.floor((Date.now() - ms) / 1000));
   if (s < 60) return `${s}s`;
   if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`;
   const h = Math.floor(s / 3600);
@@ -65,8 +40,4 @@ export function roleBadge(role: string | null | undefined): { label: string; cls
 
 export function formatCents(cents: number): string {
   return `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-}
-
-export function isStale(s: LiveSession, nowMs: number): boolean {
-  return nowMs - new Date(s.last_seen_at).getTime() > 90_000;
 }

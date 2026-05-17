@@ -11,7 +11,7 @@ import {
   formatCents,
 } from '@/lib/admin/format-session';
 
-function DeviceIcon({ d }: { d: string | null }) {
+function DeviceIcon({ d }: { d: 'mobile' | 'desktop' | 'tablet' }) {
   if (d === 'mobile') return <Smartphone className="w-3 h-3" />;
   if (d === 'tablet') return <Tablet className="w-3 h-3" />;
   return <Monitor className="w-3 h-3" />;
@@ -29,7 +29,7 @@ export function LiveSessionTile({ s }: { s: LiveSession }) {
         <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wide ring-1 ring-inset ${badge.cls}`}>
           {badge.label}
         </span>
-        <span className="text-[10px] text-stone-400">{timeAgo(s.last_seen_at)} ago</span>
+        <span className="text-[10px] text-stone-400">{timeAgo(s.first_seen_at)} on site</span>
       </div>
 
       <div className="font-mono text-[11px] text-stone-700 break-all line-clamp-1">

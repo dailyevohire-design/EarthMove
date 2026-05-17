@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { createServerClient } from '@supabase/ssr';
 import { LiveGrid } from '@/components/admin/command/live-grid';
-import type { LiveSession } from '@/lib/admin/format-session';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -33,13 +32,6 @@ export default async function LivePage() {
     .maybeSingle();
   if (profile?.role !== 'admin') redirect('/');
 
-  const { data: sessions } = await supabase
-    .from('live_sessions_active')
-    .select('*')
-    .order('cart_value_cents', { ascending: false, nullsFirst: false })
-    .order('last_seen_at', { ascending: false })
-    .limit(200);
-
   return (
     <main className="min-h-screen bg-stone-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -53,7 +45,7 @@ export default async function LivePage() {
           <h1 className="font-serif text-3xl text-stone-900 mt-1">Live</h1>
           <p className="text-sm text-stone-600 mt-1">Everyone on earthmove.io right now</p>
         </header>
-        <LiveGrid initialSessions={(sessions ?? []) as LiveSession[]} />
+        <LiveGrid />
       </div>
     </main>
   );
