@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { PressWindowGuard } from '@/components/trust/PressWindowGuard';
 import { verifyChain, type EvidenceChainNode } from '@/lib/trust/chain-verify';
 import EntityConfirmationBanner from '@/components/trust/EntityConfirmationBanner';
 import { HomeownerAlerts } from '@/components/groundcheck/HomeownerAlerts';
+import { WatchToggle } from '@/components/trust/WatchToggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,6 +83,10 @@ export default async function TrustVerifyPage({ params }: VerifyPageProps) {
   if (!data) notFound();
 
   const { report, verified, evidence_count, hasChain } = data;
+
+  const authClient = await createClient();
+  const { data: authData } = await authClient.auth.getUser();
+  const isAuthenticated = !!authData?.user;
   const reportDate = new Date(report.created_at).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -144,6 +149,25 @@ export default async function TrustVerifyPage({ params }: VerifyPageProps) {
             <Field label="Report date" value={reportDate} />
             {hasChain && <Field label="Evidence rows" value={String(evidence_count)} />}
           </dl>
+
+          {report.contractor_id && (
+            <div className="mt-6 pt-6 border-t border-stone-200">
+              {isAuthenticated ? (
+                <WatchToggle
+                  contractorId={report.contractor_id}
+                  contractorName={report.contractor_name}
+                />
+              ) : (
+                <Link
+                  href={`/login?next=/trust/verify/${report.id}`}
+                  className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                >
+                  <span aria-hidden="true">+</span>
+                  <span>Sign in to watch this contractor</span>
+                </Link>
+              )}
+            </div>
+          )}
 
           {sources.length > 0 && (
             <div className="mt-6 pt-6 border-t border-stone-200">
