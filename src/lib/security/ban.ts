@@ -1,12 +1,16 @@
 import { createPublicClient } from './server-client';
 
 // In-memory ban list: load every active ban once on cold start, refresh in the
-// background every 5 minutes, do O(1) Set lookups on every request. The previous
-// per-IP RPC pattern hit Supabase on first request per IP and returned 406 every
-// time because the security schema is not in API.exposed_schemas. Migration 276
-// adds public.fn_active_bans / public.fn_ban_ip wrappers so the reads succeed
-// from the public schema, and this cache cuts request count from ~one-per-page to
-// ~one-per-refresh-window per Vercel isolate.
+// background every 5 minutes, do O(1) Set lookups on every request.
+//
+// Why we call public.fn_active_bans / public.fn_ban_ip and not security.* directly:
+// the security schema is intentionally absent from API.exposed_schemas so its 30+
+// tables and functions (banned_ips, honeypot_hits, ai_injection_attempts, etc.) are
+// not discoverable via the PostgREST OpenAPI surface. The two public wrappers
+// (migration 276) are the deliberate, minimal interface the app is allowed to use;
+// adding more security-schema callers means adding more wrappers, not exposing the
+// schema. See migration 276 header for the historical 406 incident that motivated
+// the wrappers.
 
 type BanCache = {
   bans: Set<string>;
